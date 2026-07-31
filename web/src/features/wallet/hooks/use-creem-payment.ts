@@ -36,13 +36,22 @@ export function useCreemPayment() {
         payment_method: 'creem',
       })
 
-      if (isApiSuccess(response) && response.data?.checkout_url) {
-        window.open(response.data.checkout_url, '_blank')
+      const payload = response.data
+      const checkoutUrl =
+        typeof payload === 'object' && payload ? payload.checkout_url : ''
+
+      if (isApiSuccess(response) && checkoutUrl) {
+        window.open(checkoutUrl, '_blank')
         toast.success(i18next.t('Redirecting to Creem checkout...'))
         return true
       }
 
-      toast.error(response.message || i18next.t('Payment request failed'))
+      // The backend always sets message to the literal "error" and returns the
+      // human-readable reason in data, so prefer data when it is a string.
+      const reason = typeof payload === 'string' ? payload.trim() : ''
+      toast.error(
+        reason || response.message || i18next.t('Payment request failed')
+      )
       return false
     } catch (_error) {
       toast.error(i18next.t('Payment request failed'))
