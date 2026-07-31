@@ -39,6 +39,23 @@ function isSafariBrowser(): boolean {
 }
 
 /**
+ * Reject non-navigable schemes (e.g. javascript:, data:) and relative URLs.
+ * Only http/https are allowed for backend-provided redirect targets.
+ */
+export function isSafeHttpCheckoutUrl(value: string): boolean {
+  const trimmed = value.trim()
+  if (!trimmed) {
+    return false
+  }
+  try {
+    const u = new URL(trimmed)
+    return u.protocol === 'http:' || u.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
+/**
  * Submit payment form (for non-Stripe payments)
  */
 export function submitPaymentForm(

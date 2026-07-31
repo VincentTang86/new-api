@@ -21,9 +21,13 @@ import { useState, useCallback } from 'react'
 import { toast } from 'sonner'
 
 import { requestCreemPayment, isApiSuccess } from '../api'
+import { isSafeHttpCheckoutUrl } from '../lib/payment'
 
 /**
- * Hook for handling Creem payment processing
+ * Hook for handling Creem payment processing.
+ *
+ * Same-tab redirect (window.location.href) rather than window.open: the
+ * user-gesture context is lost across the await, so popups get blocked.
  */
 export function useCreemPayment() {
   const [processing, setProcessing] = useState(false)
@@ -41,8 +45,12 @@ export function useCreemPayment() {
         typeof payload === 'object' && payload ? payload.checkout_url : ''
 
       if (isApiSuccess(response) && checkoutUrl) {
-        window.open(checkoutUrl, '_blank')
+        if (!isSafeHttpCheckoutUrl(checkoutUrl)) {
+          toast.error(i18next.t('Invalid payment redirect URL'))
+          return false
+        }
         toast.success(i18next.t('Redirecting to Creem checkout...'))
+        window.location.href = checkoutUrl
         return true
       }
 
