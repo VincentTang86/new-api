@@ -26,9 +26,15 @@ For commercial licensing, please contact support@quantumnous.com
  * that activates it. Loaded globally so font-switching is instantaneous
  * with no FOUT once the variable is fetched. */
 @import '@fontsource-variable/lora';
+/* Typeface pair the public marketing surfaces are drawn in. Self-hosted so the
+ * design's Google Fonts <link> does not become a third-party request.
+ * See `public-design.css` for the scope that applies them. */
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/jetbrains-mono';
 
 @import './theme.css';
 @import './theme-presets.css';
+@import './public-design.css';
 
 /* Shiki dual themes: token colors follow dark theme (pre background stays `bg-background` on the block) */
 @layer components {
@@ -402,39 +408,11 @@ For commercial licensing, please contact support@quantumnous.com
       transform: scale(1);
     }
   }
-
-  /* Vertical scroll animation for icon lists */
-  @keyframes scroll-up {
-    0% {
-      transform: translateY(0);
-    }
-    100% {
-      transform: translateY(-50%);
-    }
-  }
-
-  .animate-scroll-up {
-    animation: scroll-up 20s linear infinite;
-    will-change: transform;
-  }
-
-  .animate-scroll-down {
-    animation: scroll-up 20s linear infinite reverse;
-    will-change: transform;
-  }
-
-  /* Pause animation on hover */
-  .scroll-container:hover .animate-scroll-up,
-  .scroll-container:hover .animate-scroll-down {
-    animation-play-state: paused;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .animate-appear,
   .animate-appear-zoom,
-  .animate-scroll-up,
-  .animate-scroll-down,
   [data-slot='table'] tbody tr {
     animation: none !important;
     opacity: 1;
@@ -605,48 +583,4 @@ For commercial licensing, please contact support@quantumnous.com
 .content-auto {
   content-visibility: auto;
   contain-intrinsic-size: 0 80px;
-}
-
-/* ── Hero terminal demo animations ── */
-@keyframes terminal-demo-blink {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0;
-  }
-}
-.terminal-demo-blink {
-  animation: terminal-demo-blink 1s step-end infinite;
-}
-
-@keyframes terminal-demo-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-.terminal-demo-spin {
-  animation: terminal-demo-spin 0.8s linear infinite;
-}
-
-@keyframes terminal-demo-pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-.terminal-demo-pulse {
-  animation: terminal-demo-pulse 1.5s ease-in-out infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .terminal-demo-blink,
-  .terminal-demo-spin,
-  .terminal-demo-pulse {
-    animation: none !important;
-  }
 }

@@ -66,8 +66,11 @@ import {
   getDynamicPricingTiers,
   isDynamicPricingModel,
 } from '../lib/dynamic-price'
-import { parseTags } from '../lib/filters'
-import { getAvailableGroups, isTokenBasedModel } from '../lib/model-helpers'
+import {
+  getAvailableGroups,
+  isTokenBasedModel,
+  parseTags,
+} from '../lib/model-helpers'
 import { formatFixedPrice, formatGroupPrice } from '../lib/price'
 import type {
   ModelCapability,

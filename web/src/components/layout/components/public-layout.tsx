@@ -16,8 +16,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
+import { usePublicFooterColumns } from '../hooks/use-public-footer'
 import type { TopNavLink } from '../types'
+import { Footer, type FooterProps } from './footer'
 import { PublicHeader, type PublicHeaderProps } from './public-header'
+
+/**
+ * TODO(product): confirm the support address before launch — it is published
+ * in the footer of every public page.
+ */
+const PUBLIC_SUPPORT_EMAIL = 'support@fairrouter.com'
 
 type PublicLayoutProps = {
   children: React.ReactNode
@@ -30,11 +38,19 @@ type PublicLayoutProps = {
   showNotifications?: boolean
   logo?: React.ReactNode
   siteName?: string
+  /** Passed through to the shared footer; omit for the default footer. */
+  footerProps?: FooterProps
+  /** Opt out only for pages that render their own closing chrome. */
+  showFooter?: boolean
 }
 
 export function PublicLayout(props: PublicLayoutProps) {
+  const footerColumns = usePublicFooterColumns()
+
   return (
-    <div className='bg-background text-foreground relative min-h-svh overflow-x-clip'>
+    // `public-design` scopes the design file's raw palette, font pair and
+    // dark-mode repaint to the public shell — see styles/public-design.css.
+    <div className='public-design min-h-svh overflow-x-hidden bg-white'>
       <PublicHeader
         navContent={props.navContent}
         navLinks={props.navLinks}
@@ -47,11 +63,17 @@ export function PublicLayout(props: PublicLayoutProps) {
       />
 
       {props.showMainContainer !== false ? (
-        <main className='container px-4 py-6 pt-20 md:px-4'>
-          {props.children}
-        </main>
+        <main className='container px-4 py-6 md:px-4'>{props.children}</main>
       ) : (
         props.children
+      )}
+
+      {props.showFooter !== false && (
+        <Footer
+          columns={footerColumns}
+          supportEmail={PUBLIC_SUPPORT_EMAIL}
+          {...props.footerProps}
+        />
       )}
     </div>
   )

@@ -29,16 +29,18 @@ interface FooterLink {
   href: string
 }
 
-interface FooterColumnProps {
+export interface FooterColumnProps {
   title: string
   links: FooterLink[]
 }
 
-interface FooterProps {
+export interface FooterProps {
   logo?: string
   name?: string
   columns?: FooterColumnProps[]
   copyright?: string
+  /** Rendered under the brand column when the page supplies one. */
+  supportEmail?: string
   className?: string
 }
 
@@ -59,7 +61,7 @@ function FooterLinkItem(props: { link: FooterLink }) {
         href={props.link.href}
         target='_blank'
         rel='noopener noreferrer'
-        className='text-muted-foreground hover:text-foreground text-sm transition-colors duration-200'
+        className='text-xs text-gray-500 transition-colors hover:text-gray-900'
       >
         {label}
       </a>
@@ -69,7 +71,7 @@ function FooterLinkItem(props: { link: FooterLink }) {
   return (
     <Link
       to={props.link.href}
-      className='text-muted-foreground hover:text-foreground text-sm transition-colors duration-200'
+      className='text-xs text-gray-500 transition-colors hover:text-gray-900'
     >
       {label}
     </Link>
@@ -248,52 +250,59 @@ export function Footer(props: FooterProps) {
 
   return (
     <footer
-      className={cn('border-border/40 relative z-10 border-t', props.className)}
+      className={cn(
+        'relative z-10 border-t border-gray-200 bg-white',
+        props.className
+      )}
     >
-      <div className='mx-auto max-w-6xl px-6 py-12 md:py-16'>
-        <div className='flex flex-col justify-between gap-10 md:flex-row md:gap-16'>
+      <div className='mx-auto w-full max-w-[1440px] px-8 py-10 max-[640px]:px-5'>
+        <div className='flex flex-col items-start justify-between gap-6 md:flex-row md:items-center'>
           {/* Brand column */}
           <div className='shrink-0'>
-            <Link to='/' className='group flex items-center gap-2.5'>
+            <Link
+              to='/'
+              className='mb-1 flex items-center gap-2.5 text-sm font-semibold text-gray-900'
+            >
               <img
                 src={displayLogo}
                 alt={displayName}
-                className='size-7 rounded-lg object-contain'
+                className='size-[22px] rounded object-contain'
               />
-              <span className='text-sm font-semibold tracking-tight'>
-                {displayName}
-              </span>
+              {displayName}
             </Link>
-            <p className='text-muted-foreground/60 mt-3 max-w-[200px] text-xs leading-relaxed'>
-              {t('Powerful API Management Platform')}
-            </p>
+            {props.supportEmail ? (
+              <p className='text-xs text-gray-400'>
+                {t('Support')}:{' '}
+                <a
+                  href={`mailto:${props.supportEmail}`}
+                  className='transition-colors hover:text-gray-600'
+                >
+                  {props.supportEmail}
+                </a>
+              </p>
+            ) : null}
           </div>
 
-          {/* Links columns */}
-          {isDemoSiteMode && (
-            <div className='grid grid-cols-3 gap-8 md:gap-16'>
-              {displayColumns.map((column, index) => (
-                <div key={index}>
-                  <p className='text-muted-foreground/50 mb-3 text-xs font-medium tracking-wider uppercase'>
-                    {t(column.title)}
-                  </p>
-                  <ul className='space-y-2.5'>
-                    {column.links.map((link, linkIndex) => (
-                      <li key={linkIndex}>
-                        <FooterLinkItem link={link} />
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
+          {/* Links. Demo sites get the built-in fallback set; other pages opt
+              in by passing their own. Flattened to a single wrapping row —
+              column headings would outweigh three or four links. */}
+          {(props.columns || isDemoSiteMode) && (
+            <ul className='flex flex-wrap gap-x-6 gap-y-2'>
+              {displayColumns.flatMap((column) =>
+                column.links.map((link) => (
+                  <li key={`${column.title}:${link.href}`}>
+                    <FooterLinkItem link={link} />
+                  </li>
+                ))
+              )}
+            </ul>
           )}
         </div>
 
         {/* Copyright + optional legal links inline on the left, project
             attribution on the right; wraps on narrow screens. */}
-        <div className='border-border/30 mt-12 flex flex-col items-center justify-between gap-x-3 gap-y-2 border-t pt-6 sm:flex-row'>
-          <div className='text-muted-foreground/40 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs sm:justify-start'>
+        <div className='mt-8 flex flex-col items-center justify-between gap-x-3 gap-y-2 border-t border-gray-100 pt-6 sm:flex-row'>
+          <div className='flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs text-gray-400 sm:justify-start'>
             <span>
               &copy; {currentYear} {displayName}.{' '}
               {props.copyright ?? t('footer.defaultCopyright')}

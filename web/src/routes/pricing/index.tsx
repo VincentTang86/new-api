@@ -19,10 +19,14 @@ For commercial licensing, please contact support@quantumnous.com
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import z from 'zod'
 
-import { Pricing } from '@/features/pricing'
+import { ModelsPricing } from '@/features/models-pricing'
 import { getFreshModuleAccess } from '@/lib/nav-modules'
 import { useAuthStore } from '@/stores/auth-store'
 
+// The page itself no longer reads these — it renders a curated static table.
+// The schema stays because other features still deep-link here with filters
+// (features/rankings/components/entity-links.tsx, features/dashboard's overview
+// dashboard), and dropping it would make those links throw on navigation.
 const pricingSearchSchema = z.object({
   search: z.string().optional(),
   sort: z.string().optional(),
@@ -53,5 +57,5 @@ export const Route = createFileRoute('/pricing/')({
       }
     }
   },
-  component: Pricing,
+  component: ModelsPricing,
 })

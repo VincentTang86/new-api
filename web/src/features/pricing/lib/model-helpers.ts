@@ -107,3 +107,14 @@ export function replaceModelInPath(path: string, modelName: string): string {
 export function isTokenBasedModel(model: PricingModel): boolean {
   return model.quota_type === QUOTA_TYPE_VALUES.TOKEN
 }
+
+/**
+ * The backend stores model tags as one delimited string; callers need the list.
+ */
+export function parseTags(tagsString?: string): string[] {
+  if (!tagsString) return []
+  return tagsString
+    .split(/[,;|\s]+/)
+    .map((tag) => tag.trim())
+    .filter(Boolean)
+}

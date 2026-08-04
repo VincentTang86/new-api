@@ -27,6 +27,29 @@ export const STATIC_I18N_KEYS = [
   'Docs',
   'About',
 
+  // Landing page pricing table (column labels and status values are declared
+  // as constants and translated at render time)
+  'Model',
+  'Input / 1M',
+  'Output / 1M',
+  'Official input / 1M',
+  'Official output / 1M',
+  'Input savings',
+  'Output savings',
+  'Context',
+  'Status',
+  'Details →',
+
+  // Landing page footer columns (titles and link labels are data, translated
+  // by the shared Footer component)
+  'Product',
+  'Developers',
+  'Legal',
+  'Models & Pricing',
+  'API Docs',
+  'Terms of Service',
+  'Privacy Policy',
+
   // Sidebar views (drill-in workspaces)
   'System Settings',
   'Back to Dashboard',
@@ -554,6 +577,7 @@ export const STATIC_I18N_KEYS = [
   // Misc
   'Cancel',
   'Status',
+  'Details →',
   'Upgrade Group',
   'Regenerate',
   'Untitled',

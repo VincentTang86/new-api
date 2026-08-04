@@ -17,6 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
+import { Menu, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -38,6 +39,10 @@ import type { TopNavLink } from '../types'
 import { HeaderLogo } from './header-logo'
 
 const AUTH_PROMPT_SECONDS = 5
+
+/** The design's icon-button chrome, shared by the language and theme triggers. */
+const ICON_TRIGGER_CLASS =
+  'size-8 rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-900 [&_svg]:size-[15px]'
 
 type AuthPromptTarget = {
   title: string
@@ -75,7 +80,6 @@ export function PublicHeader(props: PublicHeaderProps) {
 
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [authPromptTarget, setAuthPromptTarget] =
     useState<AuthPromptTarget | null>(null)
@@ -97,20 +101,6 @@ export function PublicHeader(props: PublicHeaderProps) {
   const isAuthenticated = !!user
   const displaySiteName = customSiteName || systemName
   const links = dynamicLinks.length > 0 ? dynamicLinks : navLinks
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20)
-    onScroll()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
-
-  useEffect(() => {
-    document.body.style.overflow = mobileOpen ? 'hidden' : ''
-    return () => {
-      document.body.style.overflow = ''
-    }
-  }, [mobileOpen])
 
   useEffect(() => {
     if (!authPromptTarget) return
@@ -173,196 +163,142 @@ export function PublicHeader(props: PublicHeaderProps) {
     [t]
   )
 
+  const desktopLinkClass = (link: TopNavLink) =>
+    cn(
+      'rounded-md px-2.5 py-1.5 text-[13px] whitespace-nowrap transition-colors',
+      pathname === link.href
+        ? 'bg-indigo-50 font-medium text-indigo-600'
+        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900',
+      link.disabled && 'pointer-events-none opacity-50'
+    )
+
+  const mobileLinkClass = (link: TopNavLink) =>
+    cn(
+      'text-sm text-gray-700',
+      link.disabled && 'pointer-events-none opacity-50'
+    )
+
   return (
     <>
-      <header className='pointer-events-none fixed inset-x-0 top-0 z-50'>
-        <div
-          className={cn(
-            'pointer-events-auto mx-auto transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]',
-            scrolled ? 'max-w-[52rem] px-3 pt-3' : 'max-w-7xl px-4 pt-0 md:px-6'
-          )}
-        >
-          <nav
-            className={cn(
-              'flex items-center justify-between transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]',
-              scrolled
-                ? 'bg-background/60 ring-border/50 h-12 rounded-2xl pr-1.5 pl-4 shadow-[0_2px_16px_-6px_rgba(0,0,0,0.08),0_0_0_0.5px_rgba(0,0,0,0.02)] ring-[0.5px] backdrop-blur-2xl dark:shadow-[0_2px_16px_-6px_rgba(0,0,0,0.4)]'
-                : 'h-16 px-2'
-            )}
-          >
-            {/* Logo */}
-            <Link
-              to={homeUrl}
-              className='group flex shrink-0 items-center gap-2.5'
-            >
-              <div className='flex size-7 shrink-0 items-center justify-center transition-all duration-300 group-hover:scale-105'>
-                {loading ? (
-                  <Skeleton className='size-full rounded-lg' />
-                ) : customLogo ? (
-                  customLogo
-                ) : (
-                  <HeaderLogo
-                    src={systemLogo}
-                    loading={loading}
-                    logoLoaded={logoLoaded}
-                    className='size-full rounded-lg object-contain'
-                  />
-                )}
-              </div>
-              <span className='text-sm font-semibold tracking-tight'>
-                {loading ? <Skeleton className='h-4 w-16' /> : displaySiteName}
-              </span>
-            </Link>
-
-            {/* Desktop nav */}
-            <div className='hidden items-center gap-0.5 sm:flex'>
-              {links.map((link, i) => {
-                const isActive = pathname === link.href
-                if (link.external) {
-                  return (
-                    <a
-                      key={i}
-                      href={link.href}
-                      target='_blank'
-                      rel='noopener noreferrer'
-                      aria-disabled={link.disabled}
-                      tabIndex={link.disabled ? -1 : undefined}
-                      onClick={(event) => handleNavLinkClick(event, link)}
-                      className={cn(
-                        'text-muted-foreground hover:text-foreground rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors duration-200',
-                        link.disabled && 'pointer-events-none opacity-50'
-                      )}
-                    >
-                      {t(link.title)}
-                    </a>
-                  )
-                }
-                return (
-                  <Link
-                    key={i}
-                    to={link.href}
-                    disabled={link.disabled}
-                    onClick={(event) => handleNavLinkClick(event, link)}
-                    className={cn(
-                      'rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors duration-200',
-                      isActive
-                        ? 'text-foreground'
-                        : 'text-muted-foreground hover:text-foreground',
-                      link.disabled && 'pointer-events-none opacity-50'
-                    )}
-                  >
-                    {t(link.title)}
-                  </Link>
-                )
-              })}
-
-              {(showLanguageSwitcher ||
-                showThemeSwitch ||
-                showNotifications) && (
-                <div className='bg-border/40 mx-2 h-4 w-px' />
-              )}
-
-              {showLanguageSwitcher && <LanguageSwitcher />}
-              {showThemeSwitch && <ThemeSwitch />}
-              {showNotifications && (
-                <NotificationPopover
-                  open={notifications.popoverOpen}
-                  onOpenChange={notifications.setPopoverOpen}
-                  unreadCount={notifications.unreadCount}
-                  activeTab={notifications.activeTab}
-                  onTabChange={notifications.setActiveTab}
-                  notice={notifications.notice}
-                  announcements={notifications.announcements}
-                  loading={notifications.loading}
-                />
-              )}
-
-              {showAuthButtons && (
-                <>
-                  <div className='bg-border/40 mx-1 h-4 w-px' />
-                  {loading ? (
-                    <Skeleton className='h-8 w-20 rounded-lg' />
-                  ) : isAuthenticated ? (
-                    <ProfileDropdown />
-                  ) : (
-                    <Button
-                      size='sm'
-                      className='h-8 rounded-lg px-3.5 text-xs font-medium'
-                      render={<Link to='/sign-in' />}
-                    >
-                      {t('Sign in')}
-                    </Button>
-                  )}
-                </>
-              )}
-            </div>
-
-            {/* Mobile: compact actions + hamburger */}
-            <div className='flex items-center gap-2 sm:hidden'>
-              {showThemeSwitch && <ThemeSwitch />}
-              {showAuthButtons && !loading && isAuthenticated && (
-                <ProfileDropdown />
-              )}
-              <Button
-                type='button'
-                variant='ghost'
-                size='icon'
-                className='size-9'
-                onClick={() => setMobileOpen((v) => !v)}
-                aria-label={t('Toggle navigation menu')}
-              >
-                <div className='relative size-4'>
-                  <span
-                    className={cn(
-                      'absolute inset-x-0 block h-[1.5px] origin-center rounded-full bg-current transition-all duration-300',
-                      mobileOpen ? 'top-[7px] rotate-45' : 'top-[3px]'
-                    )}
-                  />
-                  <span
-                    className={cn(
-                      'absolute inset-x-0 top-[7px] block h-[1.5px] rounded-full bg-current transition-all duration-300',
-                      mobileOpen ? 'scale-x-0 opacity-0' : 'opacity-100'
-                    )}
-                  />
-                  <span
-                    className={cn(
-                      'absolute inset-x-0 block h-[1.5px] origin-center rounded-full bg-current transition-all duration-300',
-                      mobileOpen ? 'top-[7px] -rotate-45' : 'top-[11px]'
-                    )}
-                  />
-                </div>
-              </Button>
-            </div>
-          </nav>
-        </div>
-      </header>
-
-      {/* Mobile full-screen overlay */}
-      <div
+      <header
         className={cn(
-          'bg-background/98 fixed inset-0 z-40 backdrop-blur-2xl transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] sm:pointer-events-none sm:hidden',
-          mobileOpen
-            ? 'pointer-events-auto opacity-100'
-            : 'pointer-events-none opacity-0'
+          'sticky top-0 z-50 border-b border-gray-200 bg-white',
+          props.className
         )}
       >
-        <div className='flex h-full flex-col justify-between px-8 pt-20 pb-10'>
-          <nav className='flex flex-col gap-1'>
-            {links.map((link, i) => {
-              const isActive = pathname === link.href
-              const linkClassName = cn(
-                'flex items-center gap-3 py-3 text-base font-medium tracking-tight transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]',
-                mobileOpen
-                  ? 'translate-y-0 opacity-100'
-                  : 'translate-y-4 opacity-0',
-                isActive ? 'text-foreground' : 'text-muted-foreground',
-                link.disabled && 'pointer-events-none opacity-50'
+        <nav className='mx-auto flex h-14 w-full max-w-[1440px] items-center justify-between gap-4 px-8 max-[640px]:px-5'>
+          <Link
+            to={homeUrl}
+            className='flex shrink-0 items-center gap-2.5'
+            aria-label={displaySiteName}
+          >
+            <span className='flex size-7 shrink-0 items-center justify-center'>
+              {loading ? (
+                <Skeleton className='size-full rounded-lg' />
+              ) : customLogo ? (
+                customLogo
+              ) : (
+                <HeaderLogo
+                  src={systemLogo}
+                  loading={loading}
+                  logoLoaded={logoLoaded}
+                  className='size-full rounded-lg object-contain'
+                />
+              )}
+            </span>
+            <span className='text-[15px] font-semibold tracking-tight text-gray-900'>
+              {loading ? <Skeleton className='h-4 w-16' /> : displaySiteName}
+            </span>
+          </Link>
+
+          <div className='hidden items-center gap-0.5 md:flex'>
+            {links.map((link, i) =>
+              link.external ? (
+                <a
+                  key={i}
+                  href={link.href}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  aria-disabled={link.disabled}
+                  tabIndex={link.disabled ? -1 : undefined}
+                  onClick={(event) => handleNavLinkClick(event, link)}
+                  className={desktopLinkClass(link)}
+                >
+                  {t(link.title)}
+                </a>
+              ) : (
+                <Link
+                  key={i}
+                  to={link.href}
+                  disabled={link.disabled}
+                  onClick={(event) => handleNavLinkClick(event, link)}
+                  className={desktopLinkClass(link)}
+                >
+                  {t(link.title)}
+                </Link>
               )
-              const transitionStyle = {
-                transitionDelay: mobileOpen ? `${100 + i * 50}ms` : '0ms',
-              }
-              if (link.external) {
-                return (
+            )}
+
+            {(showLanguageSwitcher || showThemeSwitch || showNotifications) && (
+              <div className='mx-2 h-4 w-px shrink-0 bg-gray-200' />
+            )}
+
+            {showLanguageSwitcher && (
+              <LanguageSwitcher className={ICON_TRIGGER_CLASS} />
+            )}
+            {showThemeSwitch && <ThemeSwitch className={ICON_TRIGGER_CLASS} />}
+            {showNotifications && (
+              <NotificationPopover
+                open={notifications.popoverOpen}
+                onOpenChange={notifications.setPopoverOpen}
+                unreadCount={notifications.unreadCount}
+                activeTab={notifications.activeTab}
+                onTabChange={notifications.setActiveTab}
+                notice={notifications.notice}
+                announcements={notifications.announcements}
+                loading={notifications.loading}
+              />
+            )}
+
+            {showAuthButtons &&
+              (loading ? (
+                <Skeleton className='ml-1.5 h-8 w-20 rounded-md' />
+              ) : isAuthenticated ? (
+                <span className='ml-1.5 flex items-center'>
+                  <ProfileDropdown />
+                </span>
+              ) : (
+                <Link
+                  to='/sign-in'
+                  className='ml-1.5 rounded-md border border-gray-300 px-3.5 py-1.5 text-[13px] font-medium whitespace-nowrap text-gray-700 transition-colors hover:border-indigo-400 hover:text-indigo-600'
+                >
+                  {t('Sign in')}
+                </Link>
+              ))}
+          </div>
+
+          <div className='flex items-center gap-1 md:hidden'>
+            {showLanguageSwitcher && (
+              <LanguageSwitcher className={ICON_TRIGGER_CLASS} />
+            )}
+            {showThemeSwitch && <ThemeSwitch className={ICON_TRIGGER_CLASS} />}
+            <button
+              type='button'
+              className='p-1.5 text-gray-600'
+              onClick={() => setMobileOpen((open) => !open)}
+              aria-expanded={mobileOpen}
+              aria-label={t('Toggle navigation menu')}
+            >
+              {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
+        </nav>
+
+        {mobileOpen && (
+          <div className='border-t border-gray-200 bg-white md:hidden'>
+            <div className='flex flex-col gap-3 px-5 py-4'>
+              {links.map((link, i) =>
+                link.external ? (
                   <a
                     key={i}
                     href={link.href}
@@ -371,49 +307,38 @@ export function PublicHeader(props: PublicHeaderProps) {
                     aria-disabled={link.disabled}
                     tabIndex={link.disabled ? -1 : undefined}
                     onClick={(event) => handleNavLinkClick(event, link, true)}
-                    className={linkClassName}
-                    style={transitionStyle}
+                    className={mobileLinkClass(link)}
                   >
                     {t(link.title)}
                   </a>
+                ) : (
+                  <Link
+                    key={i}
+                    to={link.href}
+                    disabled={link.disabled}
+                    onClick={(event) => handleNavLinkClick(event, link, true)}
+                    className={mobileLinkClass(link)}
+                  >
+                    {t(link.title)}
+                  </Link>
                 )
-              }
-              return (
-                <Link
-                  key={i}
-                  to={link.href}
-                  disabled={link.disabled}
-                  onClick={(event) => handleNavLinkClick(event, link, true)}
-                  className={linkClassName}
-                  style={transitionStyle}
-                >
-                  {t(link.title)}
-                </Link>
-              )
-            })}
-          </nav>
+              )}
 
-          <div
-            className={cn(
-              'flex flex-col gap-3 transition-all duration-500',
-              mobileOpen
-                ? 'translate-y-0 opacity-100'
-                : 'translate-y-4 opacity-0'
-            )}
-            style={{ transitionDelay: mobileOpen ? '250ms' : '0ms' }}
-          >
-            {showAuthButtons && (
-              <Link
-                to={isAuthenticated ? '/dashboard' : '/sign-in'}
-                onClick={() => setMobileOpen(false)}
-                className='bg-foreground text-background inline-flex h-10 items-center justify-center rounded-lg text-sm font-medium transition-opacity hover:opacity-90 active:opacity-80'
-              >
-                {isAuthenticated ? t('Go to Dashboard') : t('Sign in')}
-              </Link>
-            )}
+              {showAuthButtons && !loading && (
+                <div className='border-t border-gray-200 pt-3'>
+                  <Link
+                    to={isAuthenticated ? '/dashboard' : '/sign-in'}
+                    onClick={() => setMobileOpen(false)}
+                    className='inline-block rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700'
+                  >
+                    {isAuthenticated ? t('Go to Dashboard') : t('Sign in')}
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      </div>
+        )}
+      </header>
 
       <Dialog
         open={!!authPromptTarget}
