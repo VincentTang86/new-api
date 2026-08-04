@@ -17,22 +17,22 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { Link } from '@tanstack/react-router'
-import { ArrowRight, Clock } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { cn } from '@/lib/utils'
 
 import { LANDING_CONTAINER, LANDING_SECTION_IDS } from '../../constants'
-import { LANDING_PRICING_TABLE } from '../../data/models'
-import { formatPricingUpdatedAt } from '../../lib/pricing'
+import { useLandingPricingRows } from '../../lib/use-landing-pricing-rows'
 import { PricingModelList } from '../pricing/pricing-model-list'
 
+/** How many models the home teaser shows before "View all models". */
+const PREVIEW_ROW_LIMIT = 10
+
 export function LandingPricingPreview() {
-  const { t, i18n } = useTranslation()
-  const updatedAt = formatPricingUpdatedAt(
-    LANDING_PRICING_TABLE.updatedAt,
-    i18n.language
-  )
+  const { t } = useTranslation()
+  const { rows, isLoading, isError, refetch } = useLandingPricingRows()
+  const previewRows = rows.slice(0, PREVIEW_ROW_LIMIT)
 
   return (
     <section
@@ -41,22 +41,20 @@ export function LandingPricingPreview() {
     >
       <div className='mb-8'>
         <h2 className='mb-3 text-3xl font-semibold tracking-tight text-gray-900 max-[640px]:text-2xl'>
-          {t('{{count}} models, clear pricing', {
-            count: LANDING_PRICING_TABLE.rows.length,
-          })}
+          {t('Models & pricing, made clear')}
         </h2>
-        <div className='flex flex-wrap items-center justify-between gap-2'>
-          <p className='text-sm text-gray-500'>
-            {t('Our discounted prices vs. official rates, USD per 1M tokens')}
-          </p>
-          <p className='flex items-center gap-1 font-mono text-xs text-gray-400'>
-            <Clock size={11} aria-hidden />
-            {t('Updated {{date}}', { date: updatedAt })}
-          </p>
-        </div>
+        <p className='text-sm text-gray-500'>
+          {t('Our discounted prices vs. official rates, USD per 1M tokens')}
+        </p>
       </div>
 
-      <PricingModelList rows={LANDING_PRICING_TABLE.rows} variant='preview' />
+      <PricingModelList
+        rows={previewRows}
+        variant='preview'
+        isLoading={isLoading}
+        isError={isError}
+        onRetry={refetch}
+      />
 
       <div className='mt-4 flex flex-wrap items-center justify-between gap-2'>
         <p className='text-xs text-gray-400'>

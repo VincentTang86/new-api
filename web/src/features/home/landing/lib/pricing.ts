@@ -22,10 +22,13 @@ import { toIntlLocale } from '@/i18n/languages'
 export const LANDING_PRICE_PLACEHOLDER = '—'
 
 /**
- * Input price, USD per 1M tokens.
+ * Price in USD per 1M tokens, fixed-point.
  *
- * Three decimals below $1 so sub-cent rates stay legible instead of collapsing
- * to "$0.08"; two decimals above. Matches the design's own rule.
+ * This is a USD comparison table by design ("USD / 1M Tokens", vendor list
+ * prices are USD), so prices are formatted in USD here rather than through the
+ * console's display-currency helper. Input prices keep three decimals below a
+ * dollar so sub-cent rates stay legible ("$0.075"), two decimals from a dollar
+ * up ("$1.00"). Matches the design's own rule.
  */
 export function formatInputPrice(value: number): string {
   if (!Number.isFinite(value) || value < 0) return LANDING_PRICE_PLACEHOLDER
@@ -33,8 +36,8 @@ export function formatInputPrice(value: number): string {
 }
 
 /**
- * Output price, USD per 1M tokens. Always two decimals — output rates in the
- * catalogue never fall below a cent, so the extra digit only adds noise.
+ * Output price, USD per 1M tokens. Always two decimals — output rates never
+ * fall far below a cent, so the extra digit only adds noise.
  */
 export function formatOutputPrice(value: number): string {
   if (!Number.isFinite(value) || value < 0) return LANDING_PRICE_PLACEHOLDER
@@ -65,16 +68,4 @@ export function formatSavingsPercent(ratio: number, language?: string): string {
     style: 'percent',
     maximumFractionDigits: 0,
   }).format(ratio)
-}
-
-/** Localized "last verified" date for the pricing table caption. */
-export function formatPricingUpdatedAt(
-  isoDate: string,
-  language?: string
-): string {
-  const parsed = new Date(isoDate)
-  if (Number.isNaN(parsed.getTime())) return isoDate
-  return new Intl.DateTimeFormat(toIntlLocale(language), {
-    dateStyle: 'medium',
-  }).format(parsed)
 }

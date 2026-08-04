@@ -18,7 +18,7 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { useTranslation } from 'react-i18next'
 
-import type { LandingModelRow } from '../../types'
+import type { PricingRow } from '../../types'
 import type { PricingListVariant } from './pricing-model-list'
 import { PricingPreviewRow } from './pricing-preview-row'
 
@@ -95,7 +95,7 @@ const COLUMNS = [
 ] as const
 
 interface PricingPreviewTableProps {
-  rows: readonly LandingModelRow[]
+  rows: readonly PricingRow[]
   variant: PricingListVariant
 }
 

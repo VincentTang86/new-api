@@ -20,7 +20,10 @@ import { LANDING_PROVIDERS } from '../../lib/providers'
 import type { LandingProviderKey } from '../../types'
 
 interface ProviderMarkProps {
-  provider: LandingProviderKey
+  /** Resolved vendor, or null when the backend vendor matched no known chip. */
+  provider: LandingProviderKey | null
+  /** Vendor/model label, used for the neutral fallback initial. */
+  label: string
   /**
    * The home preview reduces the vendor to an accent dot; the catalogue page
    * gives it the full brand chip.
@@ -31,27 +34,41 @@ interface ProviderMarkProps {
 /**
  * Vendor marker beside a model name. Decorative — the vendor is already
  * conveyed by the model name next to it, so it carries no accessible name.
+ * Backend models whose vendor matches no known chip fall back to a neutral
+ * marker rather than being dropped.
  */
 export function ProviderMark(props: ProviderMarkProps) {
-  const provider = LANDING_PROVIDERS[props.provider]
+  const provider = props.provider ? LANDING_PROVIDERS[props.provider] : null
 
   if (props.variant === 'dot') {
     return (
       <span
         aria-hidden
         className='inline-block size-2 shrink-0 rounded-full'
-        style={{ backgroundColor: provider?.dot ?? 'currentColor' }}
+        style={{ backgroundColor: provider?.dot ?? '#9ca3af' }}
       />
     )
   }
 
+  if (provider) {
+    return (
+      <span
+        aria-hidden
+        className='flex size-7 shrink-0 items-center justify-center rounded'
+        style={{ background: provider.chip.bg }}
+      >
+        <provider.chip.Icon size={14} className='text-white' />
+      </span>
+    )
+  }
+
+  const initial = props.label.trim().charAt(0).toUpperCase() || '?'
   return (
     <span
       aria-hidden
-      className='flex size-7 shrink-0 items-center justify-center rounded'
-      style={{ background: provider?.chip.bg }}
+      className='flex size-7 shrink-0 items-center justify-center rounded bg-gray-200 text-[11px] font-semibold text-gray-600'
     >
-      <provider.chip.Icon size={14} className='text-white' />
+      {initial}
     </span>
   )
 }

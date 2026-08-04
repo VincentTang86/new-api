@@ -1,0 +1,81 @@
+{
+  "updatedAt": "2026-08-04",
+  "models": {
+    "deepseek-v4-pro": {
+      "officialInput": 2.5,
+      "officialOutput": 5
+    },
+    "qwen3.8-max": {
+      "officialInput": 2.5,
+      "officialOutput": 7.5
+    },
+    "kimi/kimi-k3": {
+      "officialInput": 4,
+      "officialOutput": 20
+    },
+    "deepseek-v4-flash-0731": {
+      "officialInput": 0.2,
+      "officialOutput": 0.4
+    },
+    "gpt-4o": {
+      "displayName": "GPT-4o",
+      "officialInput": 2.5,
+      "officialOutput": 10,
+      "context": "128K"
+    },
+    "gpt-4o-mini": {
+      "displayName": "GPT-4o mini",
+      "officialInput": 0.15,
+      "officialOutput": 0.6,
+      "context": "128K"
+    },
+    "claude-3-5-sonnet": {
+      "displayName": "Claude 3.5 Sonnet",
+      "officialInput": 3,
+      "officialOutput": 15,
+      "context": "200K"
+    },
+    "claude-3-haiku": {
+      "displayName": "Claude 3 Haiku",
+      "officialInput": 0.25,
+      "officialOutput": 1.25,
+      "context": "200K"
+    },
+    "gemini-1.5-pro": {
+      "displayName": "Gemini 1.5 Pro",
+      "officialInput": 3.5,
+      "officialOutput": 21,
+      "context": "2M"
+    },
+    "gemini-1.5-flash": {
+      "displayName": "Gemini 1.5 Flash",
+      "officialInput": 0.35,
+      "officialOutput": 1.05,
+      "context": "1M"
+    },
+    "deepseek-v3": {
+      "displayName": "DeepSeek V3",
+      "officialInput": 0.27,
+      "officialOutput": 1.1,
+      "context": "64K"
+    },
+    "deepseek-r1": {
+      "displayName": "DeepSeek R1",
+      "officialInput": 0.55,
+      "officialOutput": 2.19,
+      "context": "64K"
+    },
+    "llama-3.1-405b": {
+      "displayName": "Llama 3.1 405B",
+      "officialInput": 1.79,
+      "officialOutput": 1.79,
+      "context": "128K"
+    },
+    "qwen2.5-72b": {
+      "displayName": "Qwen2.5 72B",
+      "officialInput": 0.4,
+      "officialOutput": 1.2,
+      "context": "128K"
+    }
+  }
+}

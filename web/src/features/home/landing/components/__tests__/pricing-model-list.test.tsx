@@ -21,7 +21,7 @@ import { after, describe, test } from 'node:test'
 
 import { Window } from 'happy-dom'
 
-import type { LandingModelRow } from '../../types'
+import type { PricingRow } from '../../types'
 
 const domWindow = new Window()
 const domGlobals = [
@@ -86,28 +86,36 @@ const reactTestGlobals = globalThis as typeof globalThis & {
 }
 reactTestGlobals.IS_REACT_ACT_ENVIRONMENT = true
 
-const SAMPLE_ROWS: LandingModelRow[] = [
+// The adapter has already formatted every value; the list only lays them out.
+const SAMPLE_ROWS: PricingRow[] = [
   {
-    name: 'GPT-4o',
     modelId: 'gpt-4o',
+    name: 'GPT-4o',
     provider: 'openai',
-    inputPrice: 1.25,
-    outputPrice: 5,
-    officialInputPrice: 2.5,
-    officialOutputPrice: 10,
+    vendorLabel: 'OpenAI',
+    isPerRequest: false,
+    frInput: '$1.25',
+    frOutput: '$5.00',
+    officialInput: '$2.50',
+    officialOutput: '$10.00',
+    savingsInput: '50%',
+    savingsOutput: '50%',
     context: '128K',
-    status: 'available',
   },
   {
-    name: 'DeepSeek R1',
     modelId: 'deepseek-r1',
+    name: 'DeepSeek R1',
     provider: 'deepseek',
-    inputPrice: 0.55,
-    outputPrice: 2.19,
-    officialInputPrice: 0.55,
-    officialOutputPrice: 2.19,
+    vendorLabel: 'DeepSeek',
+    isPerRequest: false,
+    frInput: '$0.55',
+    frOutput: '$2.19',
+    // No configured list price → official and savings collapse to a dash.
+    officialInput: '—',
+    officialOutput: '—',
+    savingsInput: '—',
+    savingsOutput: '—',
     context: '64K',
-    status: 'maintenance',
   },
 ]
 
@@ -117,7 +125,7 @@ type Rendered = {
 }
 
 async function renderList(
-  rows: readonly LandingModelRow[],
+  rows: readonly PricingRow[],
   variant: PricingListVariant = 'preview'
 ): Promise<Rendered> {
   const container = document.createElement('div')
@@ -227,9 +235,9 @@ describe('PricingModelList', () => {
     await unmountList(rendered)
   })
 
-  test('suppresses the savings figure when we are not cheaper', async () => {
-    // DeepSeek R1 is priced at the vendor rate; a "0%" or negative saving must
-    // never reach the page.
+  test('renders the pre-formatted dash when a row has no savings', async () => {
+    // A row the adapter could not compute savings for arrives with a dash in
+    // both savings cells; the list must render it verbatim, not blank.
     const rendered = await renderList(SAMPLE_ROWS)
     const bodyRows = [...rendered.container.querySelectorAll('tbody tr')]
     const cells = [...bodyRows[1].querySelectorAll('td')]
@@ -238,21 +246,6 @@ describe('PricingModelList', () => {
     assert.equal(cells[5].textContent, '—')
 
     await unmountList(rendered)
-  })
-
-  test('de-emphasises a model under maintenance only in the home preview', async () => {
-    // The preview dims a model that cannot be called right now; the catalogue
-    // page is the full list and shows every model at the same weight.
-    const preview = await renderList(SAMPLE_ROWS, 'preview')
-    const previewRows = [...preview.container.querySelectorAll('tbody tr')]
-    assert.doesNotMatch(previewRows[0].className, /opacity-60/)
-    assert.match(previewRows[1].className, /opacity-60/)
-    await unmountList(preview)
-
-    const catalogue = await renderList(SAMPLE_ROWS, 'catalogue')
-    const catalogueRows = [...catalogue.container.querySelectorAll('tbody tr')]
-    assert.doesNotMatch(catalogueRows[1].className, /opacity-60/)
-    await unmountList(catalogue)
   })
 
   test('renders a fallback instead of an empty table shell', async () => {

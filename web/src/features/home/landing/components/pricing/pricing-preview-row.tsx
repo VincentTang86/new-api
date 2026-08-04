@@ -21,35 +21,35 @@ import { useTranslation } from 'react-i18next'
 
 import { cn } from '@/lib/utils'
 
-import { formatInputPrice, formatOutputPrice } from '../../lib/pricing'
-import type { LandingModelRow } from '../../types'
+import { LANDING_PRICE_PLACEHOLDER } from '../../lib/pricing'
+import type { PricingRow } from '../../types'
 import type { PricingListVariant } from './pricing-model-list'
 import { ProviderMark } from './provider-mark'
-import { SavingsCell } from './savings-cell'
+import { SavingsText } from './savings-cell'
 
 interface PricingPreviewRowProps {
-  row: LandingModelRow
+  row: PricingRow
   variant: PricingListVariant
 }
 
 export function PricingPreviewRow(props: PricingPreviewRowProps) {
   const { t } = useTranslation()
   const row = props.row
-  // The home preview dims models under maintenance in place; the catalogue
-  // page lists every model at full weight.
-  const isDimmed = props.variant === 'preview' && row.status === 'maintenance'
+
+  // Per-request models bill by call, so the discounted price lives in the input
+  // cell as "$X / call" and the output cell has no meaning.
+  const frInput = row.isPerRequest
+    ? t('{{price}} / call', { price: row.frInput })
+    : row.frInput
+  const frOutput = row.isPerRequest ? LANDING_PRICE_PLACEHOLDER : row.frOutput
 
   return (
-    <tr
-      className={cn(
-        'border-b border-gray-100 transition-colors last:border-b-0',
-        isDimmed ? 'opacity-60' : 'hover:bg-gray-50'
-      )}
-    >
+    <tr className='border-b border-gray-100 transition-colors last:border-b-0 hover:bg-gray-50'>
       <th scope='row' className='px-4 py-3.5 text-left font-normal'>
         <div className='flex items-center gap-2.5'>
           <ProviderMark
             provider={row.provider}
+            label={row.vendorLabel}
             variant={props.variant === 'preview' ? 'dot' : 'chip'}
           />
           <div className='min-w-0'>
@@ -61,28 +61,32 @@ export function PricingPreviewRow(props: PricingPreviewRowProps) {
         </div>
       </th>
       <td className='px-4 py-3.5 text-right font-mono font-medium text-indigo-700'>
-        {formatInputPrice(row.inputPrice)}
+        {frInput}
       </td>
       <td className='px-4 py-3.5 text-right font-mono font-medium text-indigo-700'>
-        {formatOutputPrice(row.outputPrice)}
+        {frOutput}
       </td>
-      <td className='px-4 py-3.5 text-right font-mono text-gray-400 line-through'>
-        {formatInputPrice(row.officialInputPrice)}
+      <td
+        className={cn(
+          'px-4 py-3.5 text-right font-mono text-gray-400',
+          row.officialInput !== LANDING_PRICE_PLACEHOLDER && 'line-through'
+        )}
+      >
+        {row.officialInput}
       </td>
-      <td className='px-4 py-3.5 text-right font-mono text-gray-400 line-through'>
-        {formatOutputPrice(row.officialOutputPrice)}
+      <td
+        className={cn(
+          'px-4 py-3.5 text-right font-mono text-gray-400',
+          row.officialOutput !== LANDING_PRICE_PLACEHOLDER && 'line-through'
+        )}
+      >
+        {row.officialOutput}
       </td>
       <td className='px-4 py-3.5 text-right font-mono'>
-        <SavingsCell
-          ourPrice={row.inputPrice}
-          officialPrice={row.officialInputPrice}
-        />
+        <SavingsText value={row.savingsInput} />
       </td>
       <td className='px-4 py-3.5 text-right font-mono'>
-        <SavingsCell
-          ourPrice={row.outputPrice}
-          officialPrice={row.officialOutputPrice}
-        />
+        <SavingsText value={row.savingsOutput} />
       </td>
       <td className='px-4 py-3.5 text-right font-mono text-gray-500'>
         {row.context}

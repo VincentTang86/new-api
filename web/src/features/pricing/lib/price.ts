@@ -103,6 +103,24 @@ function hasRatio(value: number | null | undefined): boolean {
 }
 
 /**
+ * Raw token price in USD per 1M tokens for a resolved group ratio, before any
+ * recharge-rate or display-currency conversion.
+ *
+ * The public marketing table computes "savings vs official list price" from
+ * this pure USD figure against a configured official price (also USD), so the
+ * percentage is independent of the viewer's display currency. Display strings
+ * still go through formatPrice/formatCurrencyFromUSD. Returns NaN when the
+ * price type's ratio is missing (same convention as calculateTokenPrice).
+ */
+export function tokenPriceUSD(
+  model: PricingModel,
+  type: PriceType,
+  groupRatio: number
+): number {
+  return calculateTokenPrice(model, type, groupRatio)
+}
+
+/**
  * Apply recharge rate to price
  *
  * priceRate represents how much users need to recharge (in the display currency)

@@ -16,8 +16,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-export type LandingModelStatus = 'available' | 'high-latency' | 'maintenance'
-
 export type LandingProviderKey =
   | 'openai'
   | 'anthropic'
@@ -31,30 +29,37 @@ export type LandingProviderKey =
   | 'doubao'
   | 'xai'
 
-export interface LandingModelRow {
-  /** Vendor product name. Brand literal, never translated. */
-  name: string
-  /** API model id, also the /pricing/$modelId route param. */
+/**
+ * One display row of the pricing table, fully derived from the backend
+ * `/api/pricing` model plus the hand-maintained MODEL_CATALOG supplement.
+ *
+ * The adapter (`lib/build-pricing-rows.ts`) pre-formats every value to a string
+ * so the table/accordion stay presentational. Missing figures (unconfigured
+ * official price, savings we cannot honestly claim, no context) arrive as the
+ * placeholder dash, never as an empty cell.
+ */
+export interface PricingRow {
+  /** Backend model_name; also the /pricing/$modelId route param. */
   modelId: string
-  provider: LandingProviderKey
-  /** Our discounted price, USD per 1M tokens. */
-  inputPrice: number
-  outputPrice: number
-  /** Vendor list price, USD per 1M tokens. */
-  officialInputPrice: number
-  officialOutputPrice: number
-  /** Pre-formatted context window label, e.g. '128K'. Brand literal. */
+  /** Friendly name when the catalog provides one, else the model id. */
+  name: string
+  /** Resolved vendor for the row marker, or null for the neutral fallback. */
+  provider: LandingProviderKey | null
+  /** Vendor label backing the neutral fallback initial. */
+  vendorLabel: string
+  /** Per-request (按次) models price by call, not by token. */
+  isPerRequest: boolean
+  /** Formatted FR (discounted) price. Per-request rows carry it in frInput. */
+  frInput: string
+  frOutput: string
+  /** Vendor list price from the catalog, or the placeholder dash. */
+  officialInput: string
+  officialOutput: string
+  /** Savings vs the list price, or the placeholder dash. */
+  savingsInput: string
+  savingsOutput: string
+  /** Context window from the catalog, or the placeholder dash. */
   context: string
-  status: LandingModelStatus
-}
-
-export interface LandingPricingTable {
-  /**
-   * ISO 8601 date the prices below were last verified. Rendered through
-   * toIntlLocale() so ja/zh visitors do not see an English date.
-   */
-  updatedAt: string
-  rows: readonly LandingModelRow[]
 }
 
 export type LandingCodeLanguage = 'python' | 'javascript' | 'curl'

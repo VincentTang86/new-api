@@ -21,15 +21,11 @@ import { useTranslation } from 'react-i18next'
 import { PublicLayout } from '@/components/layout'
 import { PricingModelList } from '@/features/home/landing/components/pricing/pricing-model-list'
 import { LANDING_CONTAINER } from '@/features/home/landing/constants'
-import { LANDING_PRICING_TABLE } from '@/features/home/landing/data/models'
-import { formatPricingUpdatedAt } from '@/features/home/landing/lib/pricing'
+import { useLandingPricingRows } from '@/features/home/landing/lib/use-landing-pricing-rows'
 
 export function ModelsPricing() {
-  const { t, i18n } = useTranslation()
-  const updatedAt = formatPricingUpdatedAt(
-    LANDING_PRICING_TABLE.updatedAt,
-    i18n.language
-  )
+  const { t } = useTranslation()
+  const { rows, isLoading, isError, refetch } = useLandingPricingRows()
 
   return (
     <PublicLayout showMainContainer={false}>
@@ -40,23 +36,19 @@ export function ModelsPricing() {
             <h1 className='mb-4 text-[36px] font-semibold tracking-tight text-gray-900 max-[640px]:text-2xl'>
               {t('Models & Pricing')}
             </h1>
-            <div className='flex flex-wrap items-center justify-between gap-2'>
-              <p className='text-sm text-gray-500'>
-                {t(
-                  'Our discounted prices vs. official rates, USD per 1M tokens'
-                )}
-              </p>
-              <p className='font-mono text-xs whitespace-nowrap text-gray-400'>
-                {t('Updated {{date}}', { date: updatedAt })}
-              </p>
-            </div>
+            <p className='text-sm text-gray-500'>
+              {t('Our discounted prices vs. official rates, USD per 1M tokens')}
+            </p>
           </div>
         </div>
 
         <div className={`${LANDING_CONTAINER} py-10`}>
           <PricingModelList
-            rows={LANDING_PRICING_TABLE.rows}
+            rows={rows}
             variant='catalogue'
+            isLoading={isLoading}
+            isError={isError}
+            onRetry={refetch}
           />
 
           <p className='mt-6 text-xs leading-relaxed text-gray-400'>

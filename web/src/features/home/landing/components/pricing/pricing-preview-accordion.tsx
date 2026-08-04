@@ -21,14 +21,14 @@ import { ChevronDown, ChevronUp } from 'lucide-react'
 import { useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { formatInputPrice, formatOutputPrice } from '../../lib/pricing'
-import type { LandingModelRow } from '../../types'
+import { LANDING_PRICE_PLACEHOLDER } from '../../lib/pricing'
+import type { PricingRow } from '../../types'
 import type { PricingListVariant } from './pricing-model-list'
 import { ProviderMark } from './provider-mark'
-import { SavingsCell } from './savings-cell'
+import { SavingsText } from './savings-cell'
 
 interface PricingPreviewAccordionProps {
-  rows: readonly LandingModelRow[]
+  rows: readonly PricingRow[]
   variant: PricingListVariant
 }
 
@@ -50,6 +50,12 @@ export function PricingPreviewAccordion(props: PricingPreviewAccordionProps) {
         const isOpen = openId === row.modelId
         const panelId = `${panelIdPrefix}-${row.modelId}`
         const Chevron = isOpen ? ChevronUp : ChevronDown
+        const frInput = row.isPerRequest
+          ? t('{{price}} / call', { price: row.frInput })
+          : row.frInput
+        const frOutput = row.isPerRequest
+          ? LANDING_PRICE_PLACEHOLDER
+          : row.frOutput
         return (
           <div
             key={row.modelId}
@@ -65,6 +71,7 @@ export function PricingPreviewAccordion(props: PricingPreviewAccordionProps) {
               <span className='flex items-center gap-2.5'>
                 <ProviderMark
                   provider={row.provider}
+                  label={row.vendorLabel}
                   variant={props.variant === 'preview' ? 'dot' : 'chip'}
                 />
                 <span className='text-sm font-medium text-gray-900'>
@@ -84,7 +91,7 @@ export function PricingPreviewAccordion(props: PricingPreviewAccordionProps) {
                       {t('Input / 1M')}
                     </dt>
                     <dd className='font-mono font-medium text-indigo-700'>
-                      {formatInputPrice(row.inputPrice)}
+                      {frInput}
                     </dd>
                   </div>
                   <div>
@@ -92,23 +99,35 @@ export function PricingPreviewAccordion(props: PricingPreviewAccordionProps) {
                       {t('Output / 1M')}
                     </dt>
                     <dd className='font-mono font-medium text-indigo-700'>
-                      {formatOutputPrice(row.outputPrice)}
+                      {frOutput}
                     </dd>
                   </div>
                   <div>
                     <dt className='mb-1 text-xs text-gray-400'>
                       {t('Official input / 1M')}
                     </dt>
-                    <dd className='font-mono text-gray-400 line-through'>
-                      {formatInputPrice(row.officialInputPrice)}
+                    <dd
+                      className={
+                        row.officialInput === LANDING_PRICE_PLACEHOLDER
+                          ? 'font-mono text-gray-400'
+                          : 'font-mono text-gray-400 line-through'
+                      }
+                    >
+                      {row.officialInput}
                     </dd>
                   </div>
                   <div>
                     <dt className='mb-1 text-xs text-gray-400'>
                       {t('Official output / 1M')}
                     </dt>
-                    <dd className='font-mono text-gray-400 line-through'>
-                      {formatOutputPrice(row.officialOutputPrice)}
+                    <dd
+                      className={
+                        row.officialOutput === LANDING_PRICE_PLACEHOLDER
+                          ? 'font-mono text-gray-400'
+                          : 'font-mono text-gray-400 line-through'
+                      }
+                    >
+                      {row.officialOutput}
                     </dd>
                   </div>
                   <div>
@@ -116,10 +135,7 @@ export function PricingPreviewAccordion(props: PricingPreviewAccordionProps) {
                       {t('Input savings')}
                     </dt>
                     <dd className='font-mono'>
-                      <SavingsCell
-                        ourPrice={row.inputPrice}
-                        officialPrice={row.officialInputPrice}
-                      />
+                      <SavingsText value={row.savingsInput} />
                     </dd>
                   </div>
                   <div>
@@ -127,10 +143,7 @@ export function PricingPreviewAccordion(props: PricingPreviewAccordionProps) {
                       {t('Output savings')}
                     </dt>
                     <dd className='font-mono'>
-                      <SavingsCell
-                        ourPrice={row.outputPrice}
-                        officialPrice={row.officialOutputPrice}
-                      />
+                      <SavingsText value={row.savingsOutput} />
                     </dd>
                   </div>
                   <div>

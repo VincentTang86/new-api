@@ -16,32 +16,20 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { useTranslation } from 'react-i18next'
+import { LANDING_PRICE_PLACEHOLDER } from '../../lib/pricing'
 
-import {
-  LANDING_PRICE_PLACEHOLDER,
-  calculateSavingsRatio,
-  formatSavingsPercent,
-} from '../../lib/pricing'
-
-interface SavingsCellProps {
-  ourPrice: number
-  officialPrice: number
+interface SavingsTextProps {
+  /** Pre-formatted savings string from the adapter, or the placeholder dash. */
+  value: string
 }
 
-export function SavingsCell(props: SavingsCellProps) {
-  const { i18n } = useTranslation()
-  const ratio = calculateSavingsRatio(props.ourPrice, props.officialPrice)
-
-  // No baseline, or we are not cheaper — say nothing rather than render a
-  // zero or negative "saving".
-  if (ratio === null) {
+/**
+ * Renders a savings figure in the accent colour, or a muted dash when there is
+ * nothing to claim. The percentage itself is computed in build-pricing-rows.
+ */
+export function SavingsText(props: SavingsTextProps) {
+  if (props.value === LANDING_PRICE_PLACEHOLDER) {
     return <span className='text-gray-400'>{LANDING_PRICE_PLACEHOLDER}</span>
   }
-
-  return (
-    <span className='font-medium text-emerald-600'>
-      {formatSavingsPercent(ratio, i18n.language)}
-    </span>
-  )
+  return <span className='font-medium text-emerald-600'>{props.value}</span>
 }
