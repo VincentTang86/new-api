@@ -23,7 +23,7 @@ import type { LandingPricingTable } from '../types'
  *
  * TODO(product): before launch, replace every row with the models we actually
  * sell, our real discounted prices, and vendor list prices taken from a source
- * we can cite. Then bump `updatedAt` and point `source` at that citation.
+ * we can cite. Then bump `updatedAt`.
  *
  * This table is maintained by hand and is NOT connected to billing. The backend
  * stores internal ratios only (`model.Pricing`) and has no upstream list price,
@@ -34,10 +34,6 @@ import type { LandingPricingTable } from '../types'
  */
 export const LANDING_PRICING_TABLE: LandingPricingTable = {
   updatedAt: '2026-08-04',
-  source: {
-    label: 'models.dev',
-    href: 'https://models.dev',
-  },
   rows: [
     {
       name: 'GPT-4o',

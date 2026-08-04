@@ -62,15 +62,7 @@ export function ModelsPricing() {
           <p className='mt-6 text-xs leading-relaxed text-gray-400'>
             {t(
               'Discounted rates shown. Official prices are sourced from each provider’s public pricing page. Savings are calculated against those rates. Your invoice reflects actual usage.'
-            )}{' '}
-            <a
-              href={LANDING_PRICING_TABLE.source.href}
-              target='_blank'
-              rel='noopener noreferrer'
-              className='underline underline-offset-2 hover:text-gray-600'
-            >
-              {LANDING_PRICING_TABLE.source.label}
-            </a>
+            )}
           </p>
         </div>
       </main>

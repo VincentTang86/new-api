@@ -40,7 +40,7 @@ export interface LandingModelRow {
   /** Our discounted price, USD per 1M tokens. */
   inputPrice: number
   outputPrice: number
-  /** Vendor list price, USD per 1M tokens. See LandingPricingTable.source. */
+  /** Vendor list price, USD per 1M tokens. */
   officialInputPrice: number
   officialOutputPrice: number
   /** Pre-formatted context window label, e.g. '128K'. Brand literal. */
@@ -54,8 +54,6 @@ export interface LandingPricingTable {
    * toIntlLocale() so ja/zh visitors do not see an English date.
    */
   updatedAt: string
-  /** Attribution for the official-price columns. Required, not decorative. */
-  source: { label: string; href: string }
   rows: readonly LandingModelRow[]
 }
 
