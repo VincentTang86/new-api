@@ -17,6 +17,30 @@
       "officialInput": 0.2,
       "officialOutput": 0.4
     },
+    "qwen3.7-max": {
+      "officialInput": 2.236,
+      "officialOutput": 6.695
+    },
+    "qwen3.7-plus": {
+      "officialInput": 0.364,
+      "officialOutput": 1.495
+    },
+    "qwen3.7-flash": {
+      "officialInput": 0.039,
+      "officialOutput": 0.156
+    },
+    "ZHIPU/GLM-5.2": {
+      "officialInput": 1.495,
+      "officialOutput": 5.2
+    },
+    "MiniMax/MiniMax-M3": {
+      "officialInput": 0.91,
+      "officialOutput": 3.64
+    },
+    "MiniMax/MiniMax-M2.7": {
+      "officialInput": 0.39,
+      "officialOutput": 1.56
+    },
     "gpt-4o": {
       "displayName": "GPT-4o",
       "officialInput": 2.5,
