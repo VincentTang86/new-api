@@ -5226,10 +5226,8 @@
     "Zoom": "Zoom",
     "API Docs": "Documentation API",
     "Models & Pricing": "Modèles & Tarifs",
-    "10 curated models · One OpenAI-compatible API": "10 modèles sélectionnés · Une API compatible OpenAI",
     "Fair prices. Real models.": "Des prix justes. De vrais modèles.",
     "Reliable access.": "Un accès fiable.",
-    "Call 10 curated models with one API key, at a lower price.": "Utilisez une seule clé API pour accéder à 10 modèles IA sélectionnés à des prix réduits.",
     "The model ID you request is the model that runs — no swaps, no silent downgrades.": "Le modèle que vous choisissez est le modèle que vous obtenez — sans substitution cachée ni déclassement.",
     "Create an API key": "Créer une clé API",
     "View models & pricing": "Voir les modèles & tarifs",
@@ -5270,7 +5268,6 @@
     "We obtain discounted rates through volume purchasing and partner channels, then share the majority of those savings with users. The discount amount and its source are documented on each model’s detail page.": "Nous obtenons des tarifs remisés via des achats en volume et des canaux partenaires, puis partageons la majorité des économies avec les utilisateurs.",
     "How do I migrate from OpenAI?": "Comment migrer depuis OpenAI ?",
     "Which models are supported?": "Quels modèles sont pris en charge ?",
-    "Ten curated models from OpenAI, Anthropic, Google, DeepSeek, Meta, Alibaba, Kimi, Zhipu, MiniMax, and Doubao. See the pricing table above for the full list and current status.": "Dix modèles sélectionnés auprès des principaux fournisseurs. Consultez le tableau des tarifs ci-dessus pour la liste complète.",
     "How does billing work?": "Comment fonctionne la facturation ?",
     "You are billed per actual token consumed, with separate rates for input and output. There is no minimum spend, subscription, or platform surcharge. Requests are rejected when your balance is insufficient — no overdraft.": "Facturation par token réellement consommé, avec des tarifs séparés pour l'entrée et la sortie. Aucune dépense minimale ni frais de plateforme.",
     "Am I charged for failed requests?": "Suis-je facturé pour les requêtes échouées ?",
@@ -5298,6 +5295,13 @@
     "Request and response content is not used for training or analysis. Logs are retained for billing reconciliation and incident investigation only. See the privacy policy for details.": "Le contenu des requêtes et des réponses n'est pas utilisé pour l'entraînement ni l'analyse. Les journaux sont conservés uniquement pour le rapprochement de facturation et l'investigation d'incidents. Voir la politique de confidentialité.",
     "Developers": "Développeurs",
     "Details →": "Détails →",
-    "Code sample language": "Langage de l'exemple de code"
+    "Code sample language": "Langage de l'exemple de code",
+    "{{modelCount}} curated models · One OpenAI-compatible API": "{{modelCount}} modèles sélectionnés · Une API compatible OpenAI",
+    "Curated models · One OpenAI-compatible API": "Modèles sélectionnés · Une API compatible OpenAI",
+    "Call {{modelCount}} curated models with one API key, at a lower price.": "Utilisez une seule clé API pour accéder à {{modelCount}} modèles IA sélectionnés à des prix réduits.",
+    "Call our curated models with one API key, at a lower price.": "Utilisez une seule clé API pour accéder à tous les modèles IA sélectionnés à des prix réduits.",
+    "{{modelCount}} curated models from {{providers}}. See the pricing table above for the full list and current status.": "{{modelCount}} modèles sélectionnés auprès de {{providers}}. Consultez le tableau des tarifs ci-dessus pour la liste complète.",
+    "Curated models from {{providers}}. See the pricing table above for the full list and current status.": "Modèles sélectionnés auprès de {{providers}}. Consultez le tableau des tarifs ci-dessus pour la liste complète.",
+    "leading providers": "principaux fournisseurs"
   }
 }

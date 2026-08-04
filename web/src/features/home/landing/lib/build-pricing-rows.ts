@@ -62,7 +62,7 @@ const VENDOR_ALIASES: Array<[string, LandingProviderKey]> = [
   ['xai', 'xai'],
 ]
 
-function resolveProviderKey(
+export function resolveProviderKey(
   vendorName: string | undefined,
   modelName: string
 ): LandingProviderKey | null {

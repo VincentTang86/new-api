@@ -5226,10 +5226,8 @@
     "Zoom": "ズーム",
     "API Docs": "APIドキュメント",
     "Models & Pricing": "モデルと料金",
-    "10 curated models · One OpenAI-compatible API": "10の厳選モデル · OpenAI互換API",
     "Fair prices. Real models.": "公正な価格。本物のモデル。",
     "Reliable access.": "安定したアクセス。",
-    "Call 10 curated models with one API key, at a lower price.": "1つのAPIキーで10の厳選AIモデルを低価格で利用できます。",
     "The model ID you request is the model that runs — no swaps, no silent downgrades.": "選んだモデルがそのまま使われます。隠れた代替やダウングレードはありません。",
     "Create an API key": "APIキーを作成",
     "View models & pricing": "モデルと料金を見る",
@@ -5270,7 +5268,6 @@
     "We obtain discounted rates through volume purchasing and partner channels, then share the majority of those savings with users. The discount amount and its source are documented on each model’s detail page.": "ボリューム購入とパートナーチャンネルを通じて割引価格を取得し、その大部分をユーザーに還元しています。",
     "How do I migrate from OpenAI?": "OpenAIから移行するには？",
     "Which models are supported?": "どのモデルが対応していますか？",
-    "Ten curated models from OpenAI, Anthropic, Google, DeepSeek, Meta, Alibaba, Kimi, Zhipu, MiniMax, and Doubao. See the pricing table above for the full list and current status.": "OpenAI、Anthropic、Google、DeepSeek、Meta、Alibaba、Kimi、Zhipu、MiniMax、Doubaoの10モデル。上の料金表をご覧ください。",
     "How does billing work?": "料金はどのように計算されますか？",
     "You are billed per actual token consumed, with separate rates for input and output. There is no minimum spend, subscription, or platform surcharge. Requests are rejected when your balance is insufficient — no overdraft.": "実際に消費したトークン数に基づいて課金されます。最低利用額やサブスクリプション料金はありません。",
     "Am I charged for failed requests?": "リクエストが失敗した場合、課金されますか？",
@@ -5298,6 +5295,13 @@
     "Request and response content is not used for training or analysis. Logs are retained for billing reconciliation and incident investigation only. See the privacy policy for details.": "リクエストとレスポンスの内容は学習や分析には使用されません。ログは請求の照合と障害調査のためだけに保持されます。詳細はプライバシーポリシーをご覧ください。",
     "Developers": "開発者",
     "Details →": "詳細 →",
-    "Code sample language": "コードサンプルの言語"
+    "Code sample language": "コードサンプルの言語",
+    "{{modelCount}} curated models · One OpenAI-compatible API": "{{modelCount}}の厳選モデル · OpenAI互換API",
+    "Curated models · One OpenAI-compatible API": "厳選モデル · OpenAI互換API",
+    "Call {{modelCount}} curated models with one API key, at a lower price.": "1つのAPIキーで{{modelCount}}の厳選AIモデルを低価格で利用できます。",
+    "Call our curated models with one API key, at a lower price.": "1つのAPIキーですべての厳選AIモデルを低価格で利用できます。",
+    "{{modelCount}} curated models from {{providers}}. See the pricing table above for the full list and current status.": "{{providers}}の厳選モデル{{modelCount}}件。上の料金表をご覧ください。",
+    "Curated models from {{providers}}. See the pricing table above for the full list and current status.": "{{providers}}の厳選モデルを提供しています。上の料金表をご覧ください。",
+    "leading providers": "主要プロバイダー"
   }
 }

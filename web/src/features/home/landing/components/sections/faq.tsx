@@ -21,15 +21,27 @@ import { useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { useSystemConfig } from '@/hooks/use-system-config'
+import { toIntlLocale } from '@/i18n/languages'
 import { cn } from '@/lib/utils'
 
 import { LANDING_CONTAINER, LANDING_SECTION_IDS } from '../../constants'
+import { useLandingModelSummary } from '../../lib/use-landing-model-summary'
 
 export function LandingFaq() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { systemName } = useSystemConfig()
+  const { count, providers } = useLandingModelSummary()
   const panelIdPrefix = useId()
   const [openKey, setOpenKey] = useState<string | null>(null)
+
+  // Locale-aware "A, B, and C" — the conjunction and separator differ per
+  // language, so the list is never assembled by hand.
+  const providerList =
+    providers.length > 0
+      ? new Intl.ListFormat(toIntlLocale(i18n.language), {
+          type: 'conjunction',
+        }).format(providers)
+      : t('leading providers')
 
   const items = [
     {
@@ -57,9 +69,16 @@ export function LandingFaq() {
     {
       key: 'models',
       q: t('Which models are supported?'),
-      a: t(
-        'Ten curated models from OpenAI, Anthropic, Google, DeepSeek, Meta, Alibaba, Kimi, Zhipu, MiniMax, and Doubao. See the pricing table above for the full list and current status.'
-      ),
+      a:
+        count === null
+          ? t(
+              'Curated models from {{providers}}. See the pricing table above for the full list and current status.',
+              { providers: providerList }
+            )
+          : t(
+              '{{modelCount}} curated models from {{providers}}. See the pricing table above for the full list and current status.',
+              { modelCount: count, providers: providerList }
+            ),
     },
     {
       key: 'billing',

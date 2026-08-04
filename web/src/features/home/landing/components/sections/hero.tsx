@@ -23,6 +23,7 @@ import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 
 import { LANDING_CONTAINER } from '../../constants'
+import { useLandingModelSummary } from '../../lib/use-landing-model-summary'
 import { LandingProviderRow } from './provider-row'
 
 interface LandingHeroProps {
@@ -31,11 +32,30 @@ interface LandingHeroProps {
 
 export function LandingHero(props: LandingHeroProps) {
   const { t } = useTranslation()
+  const { count } = useLandingModelSummary()
 
   const primaryLabel = props.isAuthenticated
     ? t('Go to console')
     : t('Create an API key')
   const primaryTarget = props.isAuthenticated ? '/keys' : '/register'
+
+  // Until the catalog answers, the copy drops the number rather than showing a
+  // guess that would then flip to a different one.
+  const eyebrow =
+    count === null
+      ? t('Curated models · One OpenAI-compatible API')
+      : t('{{modelCount}} curated models · One OpenAI-compatible API', {
+          modelCount: count,
+        })
+  const subhead =
+    count === null
+      ? t('Call our curated models with one API key, at a lower price.')
+      : t(
+          'Call {{modelCount}} curated models with one API key, at a lower price.',
+          {
+            modelCount: count,
+          }
+        )
 
   return (
     <section
@@ -46,7 +66,7 @@ export function LandingHero(props: LandingHeroProps) {
     >
       <div className='max-w-[720px]'>
         <p className='mb-4 font-mono text-sm tracking-wide text-indigo-600'>
-          {t('10 curated models · One OpenAI-compatible API')}
+          {eyebrow}
         </p>
 
         <h1 className='mb-4 text-[52px] leading-[1.12] font-semibold tracking-tight text-gray-900 max-[640px]:text-[36px]'>
@@ -56,7 +76,7 @@ export function LandingHero(props: LandingHeroProps) {
         </h1>
 
         <p className='mb-2 text-[17px] leading-relaxed text-gray-700 max-[640px]:text-base'>
-          {t('Call 10 curated models with one API key, at a lower price.')}
+          {subhead}
         </p>
         <p className='mb-8 text-[17px] leading-relaxed text-gray-500 max-[640px]:text-base'>
           {t(

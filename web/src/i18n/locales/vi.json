@@ -5226,10 +5226,8 @@
     "Zoom": "Zoom",
     "API Docs": "Tài liệu API",
     "Models & Pricing": "Mô hình & Giá",
-    "10 curated models · One OpenAI-compatible API": "10 mô hình được chọn lọc · Một API tương thích OpenAI",
     "Fair prices. Real models.": "Giá công bằng. Mô hình thực.",
     "Reliable access.": "Truy cập ổn định.",
-    "Call 10 curated models with one API key, at a lower price.": "Sử dụng một API key để truy cập 10 mô hình AI được chọn lọc với giá thấp hơn.",
     "The model ID you request is the model that runs — no swaps, no silent downgrades.": "Mô hình bạn chọn là mô hình bạn nhận được, không có sự thay thế hay hạ cấp ẩn.",
     "Create an API key": "Tạo API Key",
     "View models & pricing": "Xem Mô hình & Giá",
@@ -5270,7 +5268,6 @@
     "We obtain discounted rates through volume purchasing and partner channels, then share the majority of those savings with users. The discount amount and its source are documented on each model’s detail page.": "Chúng tôi có giá chiết khấu qua mua hàng số lượng lớn và kênh đối tác, sau đó chia phần lớn khoản tiết kiệm cho người dùng.",
     "How do I migrate from OpenAI?": "Cách di chuyển từ OpenAI?",
     "Which models are supported?": "Hỗ trợ những mô hình nào?",
-    "Ten curated models from OpenAI, Anthropic, Google, DeepSeek, Meta, Alibaba, Kimi, Zhipu, MiniMax, and Doubao. See the pricing table above for the full list and current status.": "Mười mô hình được chọn lọc từ các nhà cung cấp hàng đầu. Xem bảng giá ở trên để biết danh sách đầy đủ.",
     "How does billing work?": "Cách tính phí?",
     "You are billed per actual token consumed, with separate rates for input and output. There is no minimum spend, subscription, or platform surcharge. Requests are rejected when your balance is insufficient — no overdraft.": "Tính phí theo token thực tế tiêu thụ, với giá riêng cho đầu vào và đầu ra. Không có chi tiêu tối thiểu hay phí nền tảng.",
     "Am I charged for failed requests?": "Có bị tính phí khi yêu cầu thất bại không?",
@@ -5298,6 +5295,13 @@
     "Request and response content is not used for training or analysis. Logs are retained for billing reconciliation and incident investigation only. See the privacy policy for details.": "Nội dung yêu cầu và phản hồi không được dùng để huấn luyện hay phân tích. Nhật ký chỉ được lưu để đối soát hóa đơn và điều tra sự cố. Xem chính sách bảo mật để biết chi tiết.",
     "Developers": "Nhà phát triển",
     "Details →": "Chi tiết →",
-    "Code sample language": "Ngôn ngữ đoạn mã"
+    "Code sample language": "Ngôn ngữ đoạn mã",
+    "{{modelCount}} curated models · One OpenAI-compatible API": "{{modelCount}} mô hình được chọn lọc · Một API tương thích OpenAI",
+    "Curated models · One OpenAI-compatible API": "Mô hình được chọn lọc · Một API tương thích OpenAI",
+    "Call {{modelCount}} curated models with one API key, at a lower price.": "Sử dụng một API key để truy cập {{modelCount}} mô hình AI được chọn lọc với giá thấp hơn.",
+    "Call our curated models with one API key, at a lower price.": "Sử dụng một API key để truy cập mọi mô hình AI được chọn lọc với giá thấp hơn.",
+    "{{modelCount}} curated models from {{providers}}. See the pricing table above for the full list and current status.": "{{modelCount}} mô hình được chọn lọc từ {{providers}}. Xem bảng giá ở trên để biết danh sách đầy đủ.",
+    "Curated models from {{providers}}. See the pricing table above for the full list and current status.": "Các mô hình được chọn lọc từ {{providers}}. Xem bảng giá ở trên để biết danh sách đầy đủ.",
+    "leading providers": "các nhà cung cấp hàng đầu"
   }
 }

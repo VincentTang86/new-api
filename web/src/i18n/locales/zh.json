@@ -5226,10 +5226,8 @@
     "Zoom": "缩放",
     "API Docs": "API 文档",
     "Models & Pricing": "模型与价格",
-    "10 curated models · One OpenAI-compatible API": "10 个精选模型 · 一个兼容 OpenAI 的 API",
     "Fair prices. Real models.": "原模型，不缩水；",
     "Reliable access.": "价格更低，调用更稳",
-    "Call 10 curated models with one API key, at a lower price.": "用一个 API Key 调用 10 个精选模型，价格更低。",
     "The model ID you request is the model that runs — no swaps, no silent downgrades.": "请求哪个模型就路由哪个模型，不调包、不降级。",
     "Create an API key": "创建 API Key",
     "View models & pricing": "查看模型与价格",
@@ -5270,7 +5268,6 @@
     "We obtain discounted rates through volume purchasing and partner channels, then share the majority of those savings with users. The discount amount and its source are documented on each model’s detail page.": "我们通过批量采购和合作渠道获得折扣价格，并将折扣的主要部分让利给用户。折扣来源和比例均在模型详情页公开说明。",
     "How do I migrate from OpenAI?": "如何从 OpenAI API 迁移？",
     "Which models are supported?": "支持哪些模型？",
-    "Ten curated models from OpenAI, Anthropic, Google, DeepSeek, Meta, Alibaba, Kimi, Zhipu, MiniMax, and Doubao. See the pricing table above for the full list and current status.": "目前提供 10 个精选模型，涵盖 OpenAI、Anthropic、Google、DeepSeek、Meta、Alibaba、Kimi、Zhipu、MiniMax、Doubao 旗下主流模型。完整列表和最新状态见上方价格表。",
     "How does billing work?": "如何计费？",
     "You are billed per actual token consumed, with separate rates for input and output. There is no minimum spend, subscription, or platform surcharge. Requests are rejected when your balance is insufficient — no overdraft.": "按实际消耗的 Token 数量计费，输入和输出分别计价。不收取最低消费、月租或平台附加费。账户余额不足时请求会被拒绝，不会透支。",
     "Am I charged for failed requests?": "请求失败是否扣费？",
@@ -5298,6 +5295,13 @@
     "Request and response content is not used for training or analysis. Logs are retained for billing reconciliation and incident investigation only. See the privacy policy for details.": "请求和响应内容不会用于训练或分析。日志仅用于账单核对和故障排查。详见隐私政策。",
     "Developers": "开发者",
     "Details →": "查看详情 →",
-    "Code sample language": "代码示例语言"
+    "Code sample language": "代码示例语言",
+    "{{modelCount}} curated models · One OpenAI-compatible API": "{{modelCount}} 个精选模型 · 一个兼容 OpenAI 的 API",
+    "Curated models · One OpenAI-compatible API": "精选模型 · 一个兼容 OpenAI 的 API",
+    "Call {{modelCount}} curated models with one API key, at a lower price.": "用一个 API Key 调用 {{modelCount}} 个精选模型，价格更低。",
+    "Call our curated models with one API key, at a lower price.": "用一个 API Key 调用全部精选模型，价格更低。",
+    "{{modelCount}} curated models from {{providers}}. See the pricing table above for the full list and current status.": "目前提供 {{modelCount}} 个精选模型，涵盖 {{providers}} 旗下主流模型。完整列表和最新状态见上方价格表。",
+    "Curated models from {{providers}}. See the pricing table above for the full list and current status.": "目前提供的精选模型涵盖 {{providers}} 旗下主流模型。完整列表和最新状态见上方价格表。",
+    "leading providers": "主流厂商"
   }
 }

@@ -5226,10 +5226,8 @@
     "Zoom": "Zoom",
     "API Docs": "API Docs",
     "Models & Pricing": "Models & Pricing",
-    "10 curated models · One OpenAI-compatible API": "10 curated models · One OpenAI-compatible API",
     "Fair prices. Real models.": "Fair prices. Real models.",
     "Reliable access.": "Reliable access.",
-    "Call 10 curated models with one API key, at a lower price.": "Use one API key to access 10 selected AI models at lower prices.",
     "The model ID you request is the model that runs — no swaps, no silent downgrades.": "The model you choose is the model you get, with no hidden substitutions or downgrades.",
     "Create an API key": "Create API Key",
     "View models & pricing": "View Models & Pricing",
@@ -5270,7 +5268,6 @@
     "We obtain discounted rates through volume purchasing and partner channels, then share the majority of those savings with users. The discount amount and its source are documented on each model’s detail page.": "We obtain discounted rates through volume purchasing and partner channels, then share the majority of those savings with users. The discount amount and its source are documented on each model's detail page.",
     "How do I migrate from OpenAI?": "How do I migrate from OpenAI?",
     "Which models are supported?": "Which models are supported?",
-    "Ten curated models from OpenAI, Anthropic, Google, DeepSeek, Meta, Alibaba, Kimi, Zhipu, MiniMax, and Doubao. See the pricing table above for the full list and current status.": "Ten curated models from OpenAI, Anthropic, Google, DeepSeek, Meta, Alibaba, Kimi, Zhipu, MiniMax, and Doubao. See the pricing table above for the full list and current status.",
     "How does billing work?": "How does billing work?",
     "You are billed per actual token consumed, with separate rates for input and output. There is no minimum spend, subscription, or platform surcharge. Requests are rejected when your balance is insufficient — no overdraft.": "You are billed per actual token consumed, with separate rates for input and output. There is no minimum spend, subscription, or platform surcharge. Requests are rejected when your balance is insufficient — no overdraft.",
     "Am I charged for failed requests?": "Am I charged for failed requests?",
@@ -5298,6 +5295,13 @@
     "Request and response content is not used for training or analysis. Logs are retained for billing reconciliation and incident investigation only. See the privacy policy for details.": "Request and response content is not used for training or analysis. Logs are retained for billing reconciliation and incident investigation only. See the privacy policy for details.",
     "Developers": "Developers",
     "Details →": "Details →",
-    "Code sample language": "Code sample language"
+    "Code sample language": "Code sample language",
+    "{{modelCount}} curated models · One OpenAI-compatible API": "{{modelCount}} curated models · One OpenAI-compatible API",
+    "Curated models · One OpenAI-compatible API": "Curated models · One OpenAI-compatible API",
+    "Call {{modelCount}} curated models with one API key, at a lower price.": "Use one API key to access {{modelCount}} selected AI models at lower prices.",
+    "Call our curated models with one API key, at a lower price.": "Use one API key to access every selected AI model at lower prices.",
+    "{{modelCount}} curated models from {{providers}}. See the pricing table above for the full list and current status.": "{{modelCount}} curated models from {{providers}}. See the pricing table above for the full list and current status.",
+    "Curated models from {{providers}}. See the pricing table above for the full list and current status.": "Curated models from {{providers}}. See the pricing table above for the full list and current status.",
+    "leading providers": "leading providers"
   }
 }

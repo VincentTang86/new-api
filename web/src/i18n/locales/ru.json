@@ -5226,10 +5226,8 @@
     "Zoom": "Zoom",
     "API Docs": "Документация API",
     "Models & Pricing": "Модели и цены",
-    "10 curated models · One OpenAI-compatible API": "10 отобранных моделей · Один OpenAI-совместимый API",
     "Fair prices. Real models.": "Честные цены. Реальные модели.",
     "Reliable access.": "Стабильный доступ.",
-    "Call 10 curated models with one API key, at a lower price.": "Используйте один API-ключ для доступа к 10 ИИ-моделям по сниженным ценам.",
     "The model ID you request is the model that runs — no swaps, no silent downgrades.": "Выбранная модель — это именно та модель, которая выполняется. Никаких скрытых замен или даунгрейдов.",
     "Create an API key": "Создать API-ключ",
     "View models & pricing": "Модели и цены",
@@ -5270,7 +5268,6 @@
     "We obtain discounted rates through volume purchasing and partner channels, then share the majority of those savings with users. The discount amount and its source are documented on each model’s detail page.": "Мы получаем скидочные цены через объёмные закупки и партнёрские каналы, затем передаём большую часть экономии пользователям.",
     "How do I migrate from OpenAI?": "Как мигрировать с OpenAI?",
     "Which models are supported?": "Какие модели поддерживаются?",
-    "Ten curated models from OpenAI, Anthropic, Google, DeepSeek, Meta, Alibaba, Kimi, Zhipu, MiniMax, and Doubao. See the pricing table above for the full list and current status.": "Десять отобранных моделей от ведущих провайдеров. Полный список — в таблице цен выше.",
     "How does billing work?": "Как работает тарификация?",
     "You are billed per actual token consumed, with separate rates for input and output. There is no minimum spend, subscription, or platform surcharge. Requests are rejected when your balance is insufficient — no overdraft.": "Оплата по фактически потреблённым токенам, отдельно для ввода и вывода. Минимальных расходов и подписок нет.",
     "Am I charged for failed requests?": "Списываются ли средства за неудачные запросы?",
@@ -5298,6 +5295,13 @@
     "Request and response content is not used for training or analysis. Logs are retained for billing reconciliation and incident investigation only. See the privacy policy for details.": "Содержимое запросов и ответов не используется для обучения или анализа. Логи хранятся только для сверки счетов и расследования инцидентов. Подробности — в политике конфиденциальности.",
     "Developers": "Разработчикам",
     "Details →": "Подробнее →",
-    "Code sample language": "Язык примера кода"
+    "Code sample language": "Язык примера кода",
+    "{{modelCount}} curated models · One OpenAI-compatible API": "{{modelCount}} отобранных моделей · Один OpenAI-совместимый API",
+    "Curated models · One OpenAI-compatible API": "Отобранные модели · Один OpenAI-совместимый API",
+    "Call {{modelCount}} curated models with one API key, at a lower price.": "Используйте один API-ключ для доступа к {{modelCount}} ИИ-моделям по сниженным ценам.",
+    "Call our curated models with one API key, at a lower price.": "Используйте один API-ключ для доступа ко всем отобранным ИИ-моделям по сниженным ценам.",
+    "{{modelCount}} curated models from {{providers}}. See the pricing table above for the full list and current status.": "{{modelCount}} отобранных моделей от {{providers}}. Полный список — в таблице цен выше.",
+    "Curated models from {{providers}}. See the pricing table above for the full list and current status.": "Отобранные модели от {{providers}}. Полный список — в таблице цен выше.",
+    "leading providers": "ведущих провайдеров"
   }
 }
