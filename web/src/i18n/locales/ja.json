@@ -2704,7 +2704,6 @@
     "Model regex cannot be empty": "モデル正規表現は空にできません",
     "Model scope": "モデル範囲",
     "Model selected": "選択済みモデル",
-    "Model Square": "モデル広場",
     "Model Tags": "モデルタグ",
     "Model to use for testing": "テストに使用するモデル",
     "Model to use when testing channel connectivity": "チャネル接続性をテストする際に使用するモデル",

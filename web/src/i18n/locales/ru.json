@@ -2704,7 +2704,6 @@
     "Model regex cannot be empty": "Регулярное выражение модели не может быть пустым",
     "Model scope": "Область моделей",
     "Model selected": "Модель выбрана",
-    "Model Square": "Витрина моделей",
     "Model Tags": "Теги моделей",
     "Model to use for testing": "Модель для использования при тестировании",
     "Model to use when testing channel connectivity": "Модель для использования при тестировании подключения канала",
