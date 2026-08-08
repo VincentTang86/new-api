@@ -1,105 +1,49 @@
 {
-  "updatedAt": "2026-08-04",
+  "updatedAt": "2026-08-08",
   "models": {
-    "deepseek-v4-pro": {
-      "officialInput": 2.5,
-      "officialOutput": 5
-    },
-    "qwen3.8-max": {
-      "officialInput": 2.5,
-      "officialOutput": 7.5
-    },
-    "kimi/kimi-k3": {
-      "officialInput": 4,
-      "officialOutput": 20
+    "deepseek-v4-flash": {
+      "officialInput": 0.14,
+      "officialOutput": 0.28
     },
     "deepseek-v4-flash-0731": {
-      "officialInput": 0.2,
-      "officialOutput": 0.4
+      "officialInput": 0.14,
+      "officialOutput": 0.28
     },
-    "qwen3.7-max": {
-      "officialInput": 2.236,
-      "officialOutput": 6.695
+    "glm-5.1": {
+      "officialInput": 0.26,
+      "officialOutput": 4.4
     },
-    "qwen3.7-plus": {
-      "officialInput": 0.364,
-      "officialOutput": 1.495
+    "glm-5.2": {
+      "officialInput": 1.4,
+      "officialOutput": 4.4
+    },
+    "glm-5.2-fast-preview": {
+      "officialInput": 2.4,
+      "officialOutput": 8.4
+    },
+    "kimi-k2.7-code": {
+      "officialInput": 0.95,
+      "officialOutput": 4
+    },
+    "qwen3.6-flash": {
+      "officialInput": 0.18,
+      "officialOutput": 1.08
+    },
+    "qwen3.6-plus": {
+      "officialInput": 0.3,
+      "officialOutput": 1.8
     },
     "qwen3.7-flash": {
-      "officialInput": 0.039,
-      "officialOutput": 0.156
+      "officialInput": 0.03,
+      "officialOutput": 0.12
     },
-    "ZHIPU/GLM-5.2": {
-      "officialInput": 1.495,
-      "officialOutput": 5.2
+    "qwen3.7-max": {
+      "officialInput": 1.8,
+      "officialOutput": 5.4
     },
-    "MiniMax/MiniMax-M3": {
-      "officialInput": 0.91,
-      "officialOutput": 3.64
-    },
-    "MiniMax/MiniMax-M2.7": {
-      "officialInput": 0.39,
-      "officialOutput": 1.56
-    },
-    "gpt-4o": {
-      "displayName": "GPT-4o",
-      "officialInput": 2.5,
-      "officialOutput": 10,
-      "context": "128K"
-    },
-    "gpt-4o-mini": {
-      "displayName": "GPT-4o mini",
-      "officialInput": 0.15,
-      "officialOutput": 0.6,
-      "context": "128K"
-    },
-    "claude-3-5-sonnet": {
-      "displayName": "Claude 3.5 Sonnet",
-      "officialInput": 3,
-      "officialOutput": 15,
-      "context": "200K"
-    },
-    "claude-3-haiku": {
-      "displayName": "Claude 3 Haiku",
-      "officialInput": 0.25,
-      "officialOutput": 1.25,
-      "context": "200K"
-    },
-    "gemini-1.5-pro": {
-      "displayName": "Gemini 1.5 Pro",
-      "officialInput": 3.5,
-      "officialOutput": 21,
-      "context": "2M"
-    },
-    "gemini-1.5-flash": {
-      "displayName": "Gemini 1.5 Flash",
-      "officialInput": 0.35,
-      "officialOutput": 1.05,
-      "context": "1M"
-    },
-    "deepseek-v3": {
-      "displayName": "DeepSeek V3",
-      "officialInput": 0.27,
-      "officialOutput": 1.1,
-      "context": "64K"
-    },
-    "deepseek-r1": {
-      "displayName": "DeepSeek R1",
-      "officialInput": 0.55,
-      "officialOutput": 2.19,
-      "context": "64K"
-    },
-    "llama-3.1-405b": {
-      "displayName": "Llama 3.1 405B",
-      "officialInput": 1.79,
-      "officialOutput": 1.79,
-      "context": "128K"
-    },
-    "qwen2.5-72b": {
-      "displayName": "Qwen2.5 72B",
-      "officialInput": 0.4,
-      "officialOutput": 1.2,
-      "context": "128K"
+    "qwen3.7-plus": {
+      "officialInput": 1.8,
+      "officialOutput": 5.4
     }
   }
 }
