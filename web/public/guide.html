@@ -1,0 +1,2963 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fair Router — User Guide</title>
+    <meta
+      name="description"
+      content="How to sign up, create an API key, add credit and call models through the Fair Router API gateway."
+    />
+    <link rel="icon" href="/fairrouter-favicon.ico" />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #ffffff;
+        --bg-soft: #f8fafc;
+        --fg: #0f172a;
+        --fg-muted: #52607a;
+        --border: #e2e8f0;
+        --accent: #4f46e5;
+        --accent-soft: #eef2ff;
+        --code-bg: #0f172a;
+        --code-fg: #e2e8f0;
+        --note-bg: #f5f6ff;
+      }
+
+      :root[data-theme='dark'] {
+        --bg: #0b1120;
+        --bg-soft: #111a2e;
+        --fg: #e7ecf5;
+        --fg-muted: #9aa8c0;
+        --border: #22304d;
+        --accent: #a5b4fc;
+        --accent-soft: #1b2547;
+        --code-bg: #060b16;
+        --code-fg: #dbe3f3;
+        --note-bg: #16203a;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+        scroll-padding-top: 80px;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans',
+          'Noto Sans SC', 'Noto Sans JP', Roboto, 'Helvetica Neue', Arial,
+          sans-serif;
+        font-size: 16px;
+        line-height: 1.7;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.875em;
+        background: var(--bg-soft);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: 0.1em 0.35em;
+        overflow-wrap: anywhere;
+      }
+
+      header.topbar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 12px 24px;
+        border-bottom: 1px solid var(--border);
+        background: color-mix(in srgb, var(--bg) 92%, transparent);
+        backdrop-filter: blur(8px);
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 650;
+        letter-spacing: -0.01em;
+        color: var(--fg);
+      }
+
+      .brand:hover {
+        text-decoration: none;
+      }
+
+      .brand img {
+        height: 26px;
+        width: auto;
+      }
+
+      .brand-sub {
+        color: var(--fg-muted);
+        font-weight: 450;
+      }
+
+      .topbar-spacer {
+        flex: 1;
+      }
+
+      select#lang {
+        appearance: none;
+        background: var(--bg-soft);
+        color: var(--fg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 6px 30px 6px 10px;
+        font: inherit;
+        font-size: 0.875rem;
+        cursor: pointer;
+        background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+          linear-gradient(135deg, currentColor 50%, transparent 50%);
+        background-position:
+          calc(100% - 15px) 55%,
+          calc(100% - 10px) 55%;
+        background-size:
+          5px 5px,
+          5px 5px;
+        background-repeat: no-repeat;
+      }
+
+      .topbar-link {
+        font-size: 0.875rem;
+        white-space: nowrap;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 250px minmax(0, 1fr);
+        gap: 48px;
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 40px 24px 96px;
+      }
+
+      nav.toc {
+        position: sticky;
+        top: 76px;
+        align-self: start;
+        max-height: calc(100vh - 110px);
+        overflow-y: auto;
+        font-size: 0.875rem;
+      }
+
+      nav.toc p {
+        margin: 0 0 10px;
+        font-size: 0.72rem;
+        font-weight: 650;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        color: var(--fg-muted);
+      }
+
+      nav.toc ol {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        counter-reset: toc;
+      }
+
+      nav.toc a {
+        display: block;
+        padding: 5px 10px;
+        border-radius: 6px;
+        color: var(--fg-muted);
+        counter-increment: toc;
+      }
+
+      nav.toc a::before {
+        content: counter(toc) '. ';
+        opacity: 0.6;
+      }
+
+      nav.toc a:hover {
+        background: var(--bg-soft);
+        color: var(--fg);
+        text-decoration: none;
+      }
+
+      nav.toc a.active {
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-weight: 600;
+      }
+
+      main {
+        min-width: 0;
+      }
+
+      .page-head {
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 28px;
+        margin-bottom: 8px;
+      }
+
+      .eyebrow {
+        display: inline-block;
+        font-size: 0.72rem;
+        font-weight: 650;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        color: var(--accent);
+      }
+
+      h1 {
+        margin: 10px 0 12px;
+        font-size: clamp(1.9rem, 4vw, 2.5rem);
+        line-height: 1.2;
+        letter-spacing: -0.02em;
+      }
+
+      .tagline {
+        margin: 0;
+        color: var(--fg-muted);
+        font-size: 1.05rem;
+      }
+
+      section {
+        padding-top: 44px;
+      }
+
+      section > h2 {
+        margin: 0 0 14px;
+        font-size: 1.45rem;
+        letter-spacing: -0.015em;
+        scroll-margin-top: 80px;
+      }
+
+      section h3 {
+        margin: 28px 0 10px;
+        font-size: 1.05rem;
+      }
+
+      section p {
+        margin: 0 0 14px;
+      }
+
+      section ul,
+      section ol {
+        margin: 0 0 14px;
+        padding-left: 22px;
+      }
+
+      section li {
+        margin-bottom: 7px;
+      }
+
+      .note {
+        margin: 18px 0;
+        padding: 14px 16px;
+        border: 1px solid var(--border);
+        border-left: 3px solid var(--accent);
+        border-radius: 8px;
+        background: var(--note-bg);
+        color: var(--fg-muted);
+        font-size: 0.94rem;
+      }
+
+      .note strong {
+        color: var(--fg);
+      }
+
+      .table-wrap {
+        overflow-x: auto;
+        margin: 0 0 18px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+      }
+
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 0.94rem;
+      }
+
+      th,
+      td {
+        text-align: left;
+        padding: 11px 14px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+      }
+
+      th {
+        background: var(--bg-soft);
+        font-weight: 600;
+        white-space: nowrap;
+      }
+
+      tr:last-child td {
+        border-bottom: none;
+      }
+
+      .code {
+        position: relative;
+        margin: 0 0 18px;
+        border-radius: 10px;
+        background: var(--code-bg);
+        overflow: hidden;
+      }
+
+      .code pre {
+        margin: 0;
+        padding: 16px 18px;
+        overflow-x: auto;
+        color: var(--code-fg);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.84rem;
+        line-height: 1.65;
+      }
+
+      .code button {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        padding: 4px 10px;
+        border: 1px solid rgba(226, 232, 240, 0.25);
+        border-radius: 6px;
+        background: rgba(15, 23, 42, 0.6);
+        color: #cbd5e1;
+        font: inherit;
+        font-size: 0.75rem;
+        cursor: pointer;
+      }
+
+      .code button:hover {
+        color: #fff;
+        border-color: rgba(226, 232, 240, 0.5);
+      }
+
+      footer.page-footer {
+        border-top: 1px solid var(--border);
+        margin-top: 56px;
+        padding-top: 22px;
+        color: var(--fg-muted);
+        font-size: 0.875rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 20px;
+      }
+
+      @media (max-width: 900px) {
+        .layout {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 0;
+          padding: 28px 20px 72px;
+        }
+
+        nav.toc {
+          position: static;
+          max-height: none;
+          margin-bottom: 24px;
+          padding-bottom: 20px;
+          border-bottom: 1px solid var(--border);
+        }
+
+        .brand-sub {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/">
+        <img id="brand-logo" src="/fairrouter-logo-light.svg" alt="Fair Router" />
+        <span class="brand-sub" id="brand-sub">User Guide</span>
+      </a>
+      <span class="topbar-spacer"></span>
+      <a class="topbar-link" id="link-console" href="/dashboard">Console</a>
+      <select id="lang" aria-label="Language"></select>
+    </header>
+
+    <div class="layout">
+      <nav class="toc" aria-label="Contents">
+        <p id="toc-label">Contents</p>
+        <ol id="toc"></ol>
+      </nav>
+      <main>
+        <div class="page-head">
+          <span class="eyebrow" id="eyebrow">Fair Router</span>
+          <h1 id="title"></h1>
+          <p class="tagline" id="tagline"></p>
+        </div>
+        <div id="sections"></div>
+        <footer class="page-footer">
+          <a href="/">fairrouter.ai</a>
+          <a href="/pricing" id="link-pricing">Models &amp; Pricing</a>
+          <a href="/about" id="link-about">About</a>
+          <a href="/privacy-policy" id="link-privacy">Privacy Policy</a>
+          <a href="/user-agreement" id="link-terms">Terms of Service</a>
+        </footer>
+      </main>
+    </div>
+
+    <script>
+      /* ------------------------------------------------------------------
+       * Language-neutral snippets. Shared by every translation so the code a
+       * reader copies is identical regardless of the language they read in.
+       * ---------------------------------------------------------------- */
+      var SAMPLES = {
+        curl:
+          'curl https://fairrouter.ai/v1/chat/completions \\\n' +
+          '  -H "Content-Type: application/json" \\\n' +
+          '  -H "Authorization: Bearer $FAIRROUTER_API_KEY" \\\n' +
+          "  -d '{\n" +
+          '    "model": "deepseek-v4-flash",\n' +
+          '    "messages": [\n' +
+          '      {"role": "user", "content": "Hello"}\n' +
+          '    ]\n' +
+          "  }'",
+        python:
+          'from openai import OpenAI\n\n' +
+          'client = OpenAI(\n' +
+          '    base_url="https://fairrouter.ai/v1",\n' +
+          '    api_key="sk-your-key",\n' +
+          ')\n\n' +
+          'response = client.chat.completions.create(\n' +
+          '    model="deepseek-v4-flash",\n' +
+          '    messages=[{"role": "user", "content": "Hello"}],\n' +
+          ')\n\n' +
+          'print(response.choices[0].message.content)',
+        node:
+          'import OpenAI from "openai"\n\n' +
+          'const client = new OpenAI({\n' +
+          '  baseURL: "https://fairrouter.ai/v1",\n' +
+          '  apiKey: process.env.FAIRROUTER_API_KEY,\n' +
+          '})\n\n' +
+          'const response = await client.chat.completions.create({\n' +
+          '  model: "deepseek-v4-flash",\n' +
+          '  messages: [{ role: "user", content: "Hello" }],\n' +
+          '})\n\n' +
+          'console.log(response.choices[0].message.content)',
+        stream:
+          'stream = client.chat.completions.create(\n' +
+          '    model="deepseek-v4-flash",\n' +
+          '    messages=[{"role": "user", "content": "Hello"}],\n' +
+          '    stream=True,\n' +
+          ')\n\n' +
+          'for chunk in stream:\n' +
+          '    delta = chunk.choices[0].delta.content\n' +
+          '    if delta:\n' +
+          '        print(delta, end="")',
+        models:
+          'curl https://fairrouter.ai/v1/models \\\n' +
+          '  -H "Authorization: Bearer $FAIRROUTER_API_KEY"',
+      }
+
+      var LANGS = [
+        { code: 'en', label: 'English', html: 'en' },
+        { code: 'zhCN', label: '简体中文', html: 'zh-CN' },
+        { code: 'zhTW', label: '繁體中文', html: 'zh-TW' },
+        { code: 'fr', label: 'Français', html: 'fr' },
+        { code: 'ru', label: 'Русский', html: 'ru' },
+        { code: 'ja', label: '日本語', html: 'ja' },
+        { code: 'vi', label: 'Tiếng Việt', html: 'vi' },
+      ]
+
+      /* Section ids are shared across languages so #anchors survive a switch. */
+      var CONTENT = {}
+
+      CONTENT.en = {
+        title: 'User Guide',
+        tagline:
+          'Everything you need to go from a new account to your first model response, and to run Fair Router day to day.',
+        toc: 'Contents',
+        sub: 'User Guide',
+        copy: 'Copy',
+        copied: 'Copied',
+        nav: {
+          console: 'Console',
+          pricing: 'Models & Pricing',
+          about: 'About',
+          privacy: 'Privacy Policy',
+          terms: 'Terms of Service',
+        },
+        sections: [
+          {
+            id: 'start',
+            t: 'Getting started',
+            b: [
+              [
+                'p',
+                'Fair Router is an AI API gateway. One account, one key and one base URL give you every model in our catalog, billed per token from a prepaid balance. There is no subscription and no minimum commitment.',
+              ],
+              [
+                'p',
+                'If you have ever called the OpenAI API you already know how to use Fair Router: point your SDK at [[https://fairrouter.ai/v1]], use your Fair Router key, and pick a model ID from [Models & Pricing](/pricing).',
+              ],
+              ['h3', 'Three steps to your first response'],
+              [
+                'steps',
+                [
+                  'Create an account and sign in.',
+                  'Add credit in **Wallet**, then create a key in **API Keys**.',
+                  'Point any OpenAI-compatible SDK or app at [[https://fairrouter.ai/v1]].',
+                ],
+              ],
+            ],
+          },
+          {
+            id: 'account',
+            t: 'Create your account',
+            b: [
+              [
+                'p',
+                'Open [fairrouter.ai](/) and choose **Sign up**.',
+              ],
+              [
+                'ul',
+                [
+                  'Pick a username and a password of 8–20 characters, then confirm the password.',
+                  'An email address is not required to register.',
+                  'You land in the console as soon as the account is created.',
+                ],
+              ],
+              [
+                'note',
+                '**Add an email address in Profile right after signing in.** Password recovery sends a reset link to the address on your account, so without one there is no self-service way back into a locked account.',
+              ],
+            ],
+          },
+          {
+            id: 'console',
+            t: 'Around the console',
+            b: [
+              ['p', 'Everything you need sits in the left sidebar of the console.'],
+              [
+                'table',
+                [
+                  ['Where', 'What you do there'],
+                  ['Playground', 'Try a model in the browser before writing any code.'],
+                  ['Chat', 'Hand a key straight to a connected chat application.'],
+                  ['Overview / Dashboard', 'Charts of requests, tokens and spend over time.'],
+                  ['API Keys', 'Create, edit, disable and delete keys.'],
+                  ['Usage Logs', 'One row per request: model, tokens, cost.'],
+                  ['Task Logs', 'Requests submitted as long-running asynchronous jobs.'],
+                  ['Wallet', 'Balance, top-ups and order history.'],
+                  ['Profile', 'Email, password, two-factor authentication, sessions.'],
+                ],
+              ],
+            ],
+          },
+          {
+            id: 'keys',
+            t: 'Create an API key',
+            b: [
+              [
+                'p',
+                'Go to **API Keys** and choose **Create API Key**. Only the name is mandatory; the defaults are right for a first key.',
+              ],
+              [
+                'table',
+                [
+                  ['Field', 'What it means'],
+                  ['Name', 'How the key is labelled in your list. Name it after the app or machine that will use it.'],
+                  ['Group', 'The routing group the key uses, which also decides the price. Leave it on [[default]] unless support tells you otherwise.'],
+                  ['Expiration Time', 'Never, or a preset or custom expiry. An expired key stops working but stays in the list.'],
+                  ['Quantity', 'Create several keys in one go.'],
+                  ['Quota / Unlimited Quota', 'A spending cap for this key. Usage is always deducted from your account balance; the cap only limits how much this one key may spend.'],
+                  ['Model Limits', 'Restrict the key to selected model IDs. Leave it empty to allow every model in the catalog.'],
+                  ['IP Whitelist', 'Accept requests only from these addresses or CIDR ranges.'],
+                ],
+              ],
+              [
+                'p',
+                'After saving, open the ⋯ menu on the row and choose **Copy Key**. Keys start with [[sk-]].',
+              ],
+              [
+                'note',
+                'Treat a key like a password. Give each application its own key so you can disable one without breaking the others, and delete any key that has been pasted somewhere public.',
+              ],
+            ],
+          },
+          {
+            id: 'first-call',
+            t: 'Make your first request',
+            b: [
+              [
+                'p',
+                'The base URL is [[https://fairrouter.ai/v1]]. Everything else is the standard OpenAI request format.',
+              ],
+              ['code', 'curl'],
+              ['h3', 'Python'],
+              ['code', 'python'],
+              ['h3', 'JavaScript / TypeScript'],
+              ['code', 'node'],
+              ['h3', 'Streaming'],
+              ['p', 'Set [[stream]] to true and read the response as it arrives.'],
+              ['code', 'stream'],
+              ['h3', 'Which model IDs can I use?'],
+              [
+                'p',
+                'The exact IDs are listed on [Models & Pricing](/pricing) and returned by the models endpoint:',
+              ],
+              ['code', 'models'],
+            ],
+          },
+          {
+            id: 'endpoints',
+            t: 'Supported endpoints',
+            b: [
+              [
+                'p',
+                'Fair Router accepts the OpenAI request format and also speaks the Anthropic and Gemini formats, so tools that support only one of them still work.',
+              ],
+              [
+                'table',
+                [
+                  ['Endpoint', 'What it is for'],
+                  ['POST /v1/chat/completions', 'Chat completions, streaming supported (OpenAI format).'],
+                  ['POST /v1/responses', 'OpenAI Responses API.'],
+                  ['POST /v1/messages', 'Anthropic Messages format.'],
+                  ['POST /v1beta/models/…', 'Gemini format.'],
+                  ['GET /v1/models', 'The models your key is allowed to call.'],
+                  ['POST /v1/embeddings', 'Text embeddings.'],
+                  ['POST /v1/images/generations', 'Image generation and editing.'],
+                  ['POST /v1/audio/speech', 'Text to speech, transcription and translation.'],
+                  ['POST /v1/rerank', 'Reranking.'],
+                ],
+              ],
+              [
+                'note',
+                'What an endpoint can actually return depends on the models in the catalog. Fair Router currently publishes text models, so chat-style requests are what most accounts use.',
+              ],
+            ],
+          },
+          {
+            id: 'models',
+            t: 'Models and pricing',
+            b: [
+              [
+                'p',
+                '[Models & Pricing](/pricing) is public — you can read it before creating an account. Each row shows the input and output price per one million tokens in US dollars, next to the provider’s official list price so the saving is visible.',
+              ],
+              [
+                'p',
+                'Text models are billed per token: input tokens × input price, plus output tokens × output price. Where a model supports prompt caching, cached input tokens are billed at the lower cached rate. The exact token counts and the exact charge for every request appear in **Usage Logs**.',
+              ],
+              ['p', 'Your balance and every price on the site are shown in US dollars.'],
+              [
+                'note',
+                'The price applied to a request comes from the model plus the group of the key that made it. Unless support has moved you to a special group, everything runs on [[default]] and matches the public pricing page.',
+              ],
+            ],
+          },
+          {
+            id: 'credit',
+            t: 'Add credit',
+            b: [
+              ['p', 'Fair Router is prepaid: you add credit, and each request draws from that balance.'],
+              [
+                'steps',
+                [
+                  'Open **Wallet** in the console. The cards at the top show Current Balance, Total Usage and API Requests.',
+                  'Choose one of the preset amounts, or enter a custom amount.',
+                  'Continue to checkout and pay by card, bank transfer or WeChat Pay.',
+                  'The balance updates as soon as the payment is confirmed. Past top-ups are listed under Order History.',
+                ],
+              ],
+              [
+                'p',
+                'If you were given a redemption code, enter it in the code box on the same page and choose **Redeem**.',
+              ],
+              [
+                'note',
+                'There is no automatic top-up. At a zero balance requests are rejected with an insufficient-quota error until you add credit, so keep an eye on the Wallet card or the Overview page.',
+              ],
+            ],
+          },
+          {
+            id: 'usage',
+            t: 'Track usage and spend',
+            b: [
+              [
+                'p',
+                '**Usage Logs** lists one row per request with the time, model, key, prompt and completion tokens, and the amount charged. Filter by date range, model or key to find a specific call, and export the filtered rows when you need them outside the console.',
+              ],
+              [
+                'p',
+                '**Task Logs** covers requests submitted as asynchronous jobs rather than answered in the response.',
+              ],
+              [
+                'p',
+                '**Overview** and **Dashboard** turn the same data into charts — spend per day, requests per model — which is the fastest way to spot a client calling more than you expected.',
+              ],
+            ],
+          },
+          {
+            id: 'apps',
+            t: 'Use Fair Router in other apps',
+            b: [
+              [
+                'p',
+                'Any application with an “OpenAI compatible” or “custom base URL” option works with Fair Router. Give it:',
+              ],
+              [
+                'ul',
+                [
+                  'API base URL: [[https://fairrouter.ai/v1]] — some apps ask for [[https://fairrouter.ai]] and add [[/v1]] themselves.',
+                  'API key: your [[sk-…]] key.',
+                  'Model: an ID from [Models & Pricing](/pricing).',
+                ],
+              ],
+              [
+                'p',
+                'The ⋯ menu on each key row shortens this. **Copy Connection Info** copies the address and the key together, the **Chat** submenu hands them straight to a supported app (Cherry Studio, LobeChat, DeepChat, OpenCat, AMA, AI as Workspace, FluentRead, AionUI), and **CC Switch** prepares the settings for Claude Code–style tools.',
+              ],
+              [
+                'note',
+                'If an app rejects the connection, check that the base URL has no trailing slash, and that the key has not expired or been restricted to other models.',
+              ],
+            ],
+          },
+          {
+            id: 'playground',
+            t: 'Test in the Playground',
+            b: [
+              [
+                'p',
+                '**Playground** runs a chat against any model your account can reach, straight from the console and without a key. It is the quickest way to compare two models on the same prompt, or to confirm a model is answering before you debug your own code.',
+              ],
+              [
+                'note',
+                'Playground calls are real API calls: they appear in Usage Logs and are charged to your balance like any other request.',
+              ],
+            ],
+          },
+          {
+            id: 'security',
+            t: 'Account and security',
+            b: [
+              ['p', '**Profile** holds everything about the account itself.'],
+              [
+                'ul',
+                [
+                  'Update your username and display name, and set the interface language.',
+                  'Bind an email address and change your password.',
+                  'Turn on two-factor authentication (TOTP) and keep the backup codes somewhere safe.',
+                  'Review recent login sessions and sign out any device you do not recognise.',
+                  'Generate a system access token if you want to manage the account programmatically. That token is for account management only — model calls use your API keys.',
+                ],
+              ],
+            ],
+          },
+          {
+            id: 'errors',
+            t: 'Common errors',
+            b: [
+              [
+                'table',
+                [
+                  ['Response', 'What it means', 'What to do'],
+                  ['401', 'The key is missing, mistyped or deleted.', 'Check the [[Authorization: Bearer sk-…]] header and copy the key again.'],
+                  ['403 insufficient quota', 'Your balance, or the key’s own quota, is exhausted.', 'Add credit in Wallet, or raise the quota on the key.'],
+                  ['403 other', 'The key is disabled or expired, the caller’s IP is outside the whitelist, or Model Limits excludes the model.', 'Edit the key in API Keys.'],
+                  ['404 model not found', 'The model ID does not exist, or is not available to the key’s group.', 'Copy the ID from Models & Pricing.'],
+                  ['429', 'You have exceeded the request rate limit.', 'Slow down and retry with backoff.'],
+                  ['5xx', 'The upstream provider failed or timed out.', 'Retry; if it persists, send us the time and model of the request.'],
+                ],
+              ],
+              [
+                'p',
+                'Failed requests are recorded in Usage Logs too, so the log row is usually the fastest way to see what the gateway saw.',
+              ],
+            ],
+          },
+          {
+            id: 'support',
+            t: 'Get help',
+            b: [
+              [
+                'p',
+                'Email [fairrouter@protonmail.com](mailto:fairrouter@protonmail.com). A person reads every message, normally within one business day and never later than seven. Include your account name, and for a specific request the time and model from Usage Logs.',
+              ],
+              [
+                'p',
+                'Billing, invoice and refund questions go to the same address — mention the order reference from Order History.',
+              ],
+            ],
+          },
+        ],
+      }
+
+      CONTENT.zhCN = {
+        title: '用户指南',
+        tagline:
+          '从注册账号到发出第一个模型请求，以及日常使用 Fair Router 需要知道的全部内容。',
+        toc: '目录',
+        sub: '用户指南',
+        copy: '复制',
+        copied: '已复制',
+        nav: {
+          console: '控制台',
+          pricing: '模型与价格',
+          about: '关于',
+          privacy: '隐私政策',
+          terms: '服务条款',
+        },
+        sections: [
+          {
+            id: 'start',
+            t: '快速开始',
+            b: [
+              [
+                'p',
+                'Fair Router 是一个 AI API 网关。一个账号、一个密钥、一个接口地址，即可调用目录中的所有模型，按 token 从预付余额中扣费。无需订阅，也没有最低消费。',
+              ],
+              [
+                'p',
+                '如果你调用过 OpenAI API，就已经会用 Fair Router：把 SDK 的接口地址指向 [[https://fairrouter.ai/v1]]，使用 Fair Router 的密钥，再从[模型与价格](/pricing)页面挑一个模型 ID 即可。',
+              ],
+              ['h3', '三步拿到第一个回复'],
+              [
+                'steps',
+                [
+                  '注册账号并登录。',
+                  '在**钱包**中充值，然后在 **API 密钥**中创建密钥。',
+                  '把任意兼容 OpenAI 的 SDK 或应用指向 [[https://fairrouter.ai/v1]]。',
+                ],
+              ],
+            ],
+          },
+          {
+            id: 'account',
+            t: '注册账号',
+            b: [
+              ['p', '打开 [fairrouter.ai](/)，点击**注册**。'],
+              [
+                'ul',
+                [
+                  '填写用户名和 8–20 位的密码，并再次确认密码。',
+                  '当前注册不需要邮箱。',
+                  '账号创建完成后会直接进入控制台。',
+                ],
+              ],
+              [
+                'note',
+                '**登录后请尽快在「个人资料」中绑定邮箱。**找回密码时重置链接会发送到账号绑定的邮箱，没有邮箱就无法自助找回账号。',
+              ],
+            ],
+          },
+          {
+            id: 'console',
+            t: '控制台一览',
+            b: [
+              ['p', '常用功能都在控制台左侧的侧边栏里。'],
+              [
+                'table',
+                [
+                  ['位置', '用途'],
+                  ['游乐场', '写代码之前，先在浏览器里试用模型。'],
+                  ['聊天', '把密钥直接交给已接入的聊天应用。'],
+                  ['概览 / 数据看板', '请求量、token 量和消费的趋势图表。'],
+                  ['API 密钥', '创建、编辑、禁用和删除密钥。'],
+                  ['使用日志', '每个请求一行：模型、token、费用。'],
+                  ['任务日志', '以异步任务方式提交的请求。'],
+                  ['钱包', '余额、充值和订单历史。'],
+                  ['个人资料', '邮箱、密码、两步验证、登录设备。'],
+                ],
+              ],
+            ],
+          },
+          {
+            id: 'keys',
+            t: '创建 API 密钥',
+            b: [
+              [
+                'p',
+                '进入 **API 密钥**，点击**创建 API 密钥**。只有名称是必填项，其余保持默认即可创建第一个密钥。',
+              ],
+              [
+                'table',
+                [
+                  ['字段', '含义'],
+                  ['名称', '密钥在列表中的标识。建议按使用它的应用或机器命名。'],
+                  ['分组', '密钥使用的路由分组，同时决定价格。除非客服另有说明，保持 [[default]] 即可。'],
+                  ['过期时间', '永不过期，或选择预设 / 自定义时间。过期后密钥停止工作，但仍保留在列表中。'],
+                  ['数量', '一次创建多个密钥。'],
+                  ['额度 / 无限配额', '该密钥的消费上限。费用始终从账户余额扣除，这个上限只限制这一个密钥能花多少。'],
+                  ['模型限制', '限制该密钥只能调用指定模型 ID。留空表示允许目录中的全部模型。'],
+                  ['IP 白名单', '只接受来自这些地址或 CIDR 网段的请求。'],
+                ],
+              ],
+              [
+                'p',
+                '保存后，点击该行的 ⋯ 菜单选择**复制密钥**。密钥以 [[sk-]] 开头。',
+              ],
+              [
+                'note',
+                '请像对待密码一样保管密钥。给每个应用单独分配密钥，这样禁用其中一个不会影响其他应用；一旦密钥被贴到公开场合，请立即删除。',
+              ],
+            ],
+          },
+          {
+            id: 'first-call',
+            t: '发出第一个请求',
+            b: [
+              [
+                'p',
+                '接口地址是 [[https://fairrouter.ai/v1]]，其余完全是标准的 OpenAI 请求格式。',
+              ],
+              ['code', 'curl'],
+              ['h3', 'Python'],
+              ['code', 'python'],
+              ['h3', 'JavaScript / TypeScript'],
+              ['code', 'node'],
+              ['h3', '流式输出'],
+              ['p', '把 [[stream]] 设为 true，即可边生成边接收。'],
+              ['code', 'stream'],
+              ['h3', '可以用哪些模型 ID？'],
+              [
+                'p',
+                '完整列表见[模型与价格](/pricing)页面，也可以通过模型接口获取：',
+              ],
+              ['code', 'models'],
+            ],
+          },
+          {
+            id: 'endpoints',
+            t: '支持的接口',
+            b: [
+              [
+                'p',
+                'Fair Router 接受 OpenAI 请求格式，同时兼容 Anthropic 和 Gemini 格式，只支持其中某一种格式的工具同样可以直接使用。',
+              ],
+              [
+                'table',
+                [
+                  ['接口', '用途'],
+                  ['POST /v1/chat/completions', '对话补全，支持流式（OpenAI 格式）。'],
+                  ['POST /v1/responses', 'OpenAI Responses 接口。'],
+                  ['POST /v1/messages', 'Anthropic Messages 格式。'],
+                  ['POST /v1beta/models/…', 'Gemini 格式。'],
+                  ['GET /v1/models', '当前密钥可调用的模型列表。'],
+                  ['POST /v1/embeddings', '文本向量化。'],
+                  ['POST /v1/images/generations', '图像生成与编辑。'],
+                  ['POST /v1/audio/speech', '语音合成、语音转写与翻译。'],
+                  ['POST /v1/rerank', '重排序。'],
+                ],
+              ],
+              [
+                'note',
+                '接口能返回什么，取决于目录中上架了哪些模型。Fair Router 目前提供的是文本模型，因此绝大多数账号使用的是对话类请求。',
+              ],
+            ],
+          },
+          {
+            id: 'models',
+            t: '模型与价格',
+            b: [
+              [
+                'p',
+                '[模型与价格](/pricing)页面对所有人公开，注册前即可查看。每一行给出每百万 token 的输入价和输出价（美元），并同时列出厂商官方定价，便于直接对比节省幅度。',
+              ],
+              [
+                'p',
+                '文本模型按 token 计费：输入 token × 输入价，加上输出 token × 输出价。模型支持提示缓存时，命中缓存的输入 token 按更低的缓存价计费。每个请求的实际 token 数和实际扣费都可以在**使用日志**中查到。',
+              ],
+              ['p', '余额和站点上的所有价格均以美元显示。'],
+              [
+                'note',
+                '一个请求的价格由模型和发起请求的密钥所属分组共同决定。除非客服为你单独调整过分组，否则都运行在 [[default]] 分组，与公开定价页面一致。',
+              ],
+            ],
+          },
+          {
+            id: 'credit',
+            t: '充值',
+            b: [
+              ['p', 'Fair Router 采用预付费：先充值，之后每个请求从余额中扣除。'],
+              [
+                'steps',
+                [
+                  '打开控制台的**钱包**页面，顶部卡片显示当前余额、总用量和 API 请求数。',
+                  '选择一个预设金额，或输入自定义金额。',
+                  '进入收银台，使用银行卡、银行转账或微信支付完成付款。',
+                  '支付确认后余额立即到账，历史充值记录在订单历史中查看。',
+                ],
+              ],
+              [
+                'p',
+                '如果你拿到了兑换码，在同一页面的兑换码输入框中填写并点击**兑换额度**。',
+              ],
+              [
+                'note',
+                '系统不会自动充值。余额为零时，请求会返回额度不足的错误，直到重新充值为止，因此请留意钱包卡片或概览页面的余额。',
+              ],
+            ],
+          },
+          {
+            id: 'usage',
+            t: '查看用量与消费',
+            b: [
+              [
+                'p',
+                '**使用日志**为每个请求记录一行，包含时间、模型、密钥、输入与输出 token 以及扣费金额。可以按时间范围、模型或密钥筛选定位某一次调用，也可以把筛选结果导出，在控制台之外使用。',
+              ],
+              ['p', '**任务日志**记录以异步任务方式提交、而非在响应中直接返回结果的请求。'],
+              [
+                'p',
+                '**概览**和**数据看板**把同一批数据做成图表——每日消费、各模型请求量——这是发现某个客户端调用量异常的最快方式。',
+              ],
+            ],
+          },
+          {
+            id: 'apps',
+            t: '在第三方应用中使用',
+            b: [
+              [
+                'p',
+                '任何提供「兼容 OpenAI」或「自定义接口地址」选项的应用都可以接入 Fair Router，填写：',
+              ],
+              [
+                'ul',
+                [
+                  '接口地址：[[https://fairrouter.ai/v1]]——部分应用只需要填 [[https://fairrouter.ai]]，会自行拼接 [[/v1]]。',
+                  'API 密钥：你的 [[sk-…]] 密钥。',
+                  '模型：来自[模型与价格](/pricing)页面的模型 ID。',
+                ],
+              ],
+              [
+                'p',
+                '每个密钥行的 ⋯ 菜单可以简化这一步：**复制连接信息**会把地址和密钥一起复制；**聊天**子菜单可直接把配置交给已支持的应用（Cherry Studio、LobeChat、DeepChat、OpenCat、AMA 问天、AI as Workspace、流畅阅读、AionUI）；**CC Switch** 则用于 Claude Code 一类工具的配置。',
+              ],
+              [
+                'note',
+                '如果应用提示连接失败，请检查接口地址结尾是否多了斜杠，以及密钥是否已过期或被限制为其他模型。',
+              ],
+            ],
+          },
+          {
+            id: 'playground',
+            t: '在游乐场中试用',
+            b: [
+              [
+                'p',
+                '**游乐场**可以直接在控制台中与账号可用的任意模型对话，无需密钥。想用同一个提示词对比两个模型，或者在排查自己代码之前先确认模型能正常回复，用它最快。',
+              ],
+              [
+                'note',
+                '游乐场的调用是真实的 API 调用：同样会记录在使用日志中，并从余额扣费。',
+              ],
+            ],
+          },
+          {
+            id: 'security',
+            t: '账号与安全',
+            b: [
+              ['p', '**个人资料**页面管理账号本身的一切设置。'],
+              [
+                'ul',
+                [
+                  '修改用户名和显示名称，设置界面语言。',
+                  '绑定邮箱、修改密码。',
+                  '开启两步验证（TOTP），并妥善保存备份码。',
+                  '查看近期登录会话，退出任何不认识的设备。',
+                  '需要以程序方式管理账号时，可生成系统访问令牌。该令牌仅用于账号管理，调用模型请使用 API 密钥。',
+                ],
+              ],
+            ],
+          },
+          {
+            id: 'errors',
+            t: '常见错误',
+            b: [
+              [
+                'table',
+                [
+                  ['返回', '含义', '处理方式'],
+                  ['401', '密钥缺失、填错或已被删除。', '检查 [[Authorization: Bearer sk-…]] 请求头，并重新复制密钥。'],
+                  ['403 额度不足', '账户余额或该密钥自身的额度已用尽。', '在钱包中充值，或提高该密钥的额度。'],
+                  ['403 其他', '密钥被禁用或已过期、调用方 IP 不在白名单内，或模型限制排除了该模型。', '在 API 密钥页面编辑该密钥。'],
+                  ['404 模型不存在', '模型 ID 不存在，或该密钥所属分组不可用。', '从模型与价格页面复制正确的模型 ID。'],
+                  ['429', '超出请求频率限制。', '降低请求频率，并采用退避重试。'],
+                  ['5xx', '上游供应商失败或超时。', '重试；若持续出现，请把请求时间和模型发给我们。'],
+                ],
+              ],
+              [
+                'p',
+                '失败的请求同样会记录在使用日志中，查看对应日志行通常是最快的排查方式。',
+              ],
+            ],
+          },
+          {
+            id: 'support',
+            t: '获取帮助',
+            b: [
+              [
+                'p',
+                '发送邮件至 [fairrouter@protonmail.com](mailto:fairrouter@protonmail.com)。每封邮件都有专人查看，通常在 1 个工作日内回复，最迟不超过 7 天。请附上账号名称；如果是某一次具体请求的问题，请附上使用日志中的时间和模型。',
+              ],
+              [
+                'p',
+                '付款、发票与退款问题同样发送到该邮箱——请一并提供订单历史中的订单号。',
+              ],
+            ],
+          },
+        ],
+      }
+
+      CONTENT.zhTW = {
+        title: '使用者指南',
+        tagline:
+          '從註冊帳號到送出第一個模型請求，以及日常使用 Fair Router 需要知道的全部內容。',
+        toc: '目錄',
+        sub: '使用者指南',
+        copy: '複製',
+        copied: '已複製',
+        nav: {
+          console: '控制台',
+          pricing: '模型與價格',
+          about: '關於',
+          privacy: '隱私政策',
+          terms: '服務條款',
+        },
+        sections: [
+          {
+            id: 'start',
+            t: '快速開始',
+            b: [
+              [
+                'p',
+                'Fair Router 是一個 AI API 閘道。一個帳號、一組金鑰、一個介面位址，即可呼叫目錄中的所有模型，依 token 從預付餘額扣款。不需訂閱，也沒有最低消費。',
+              ],
+              [
+                'p',
+                '如果你呼叫過 OpenAI API，就已經會用 Fair Router：把 SDK 的介面位址指向 [[https://fairrouter.ai/v1]]，使用 Fair Router 的金鑰，再從[模型與價格](/pricing)頁面挑一個模型 ID 即可。',
+              ],
+              ['h3', '三步取得第一個回覆'],
+              [
+                'steps',
+                [
+                  '註冊帳號並登入。',
+                  '在**錢包**中儲值，然後在 **API 金鑰**中建立金鑰。',
+                  '把任意相容 OpenAI 的 SDK 或應用程式指向 [[https://fairrouter.ai/v1]]。',
+                ],
+              ],
+            ],
+          },
+          {
+            id: 'account',
+            t: '註冊帳號',
+            b: [
+              ['p', '開啟 [fairrouter.ai](/)，點選**註冊**。'],
+              [
+                'ul',
+                [
+                  '填寫使用者名稱與 8–20 位的密碼，並再次確認密碼。',
+                  '目前註冊不需要電子郵件。',
+                  '帳號建立完成後會直接進入控制台。',
+                ],
+              ],
+              [
+                'note',
+                '**登入後請盡快在「個人資料」中綁定電子郵件。**忘記密碼時，重設連結會寄到帳號綁定的信箱，沒有信箱就無法自助取回帳號。',
+              ],
+            ],
+          },
+          {
+            id: 'console',
+            t: '控制台導覽',
+            b: [
+              ['p', '常用功能都在控制台左側的側邊欄。'],
+              [
+                'table',
+                [
+                  ['位置', '用途'],
+                  ['遊樂場', '寫程式之前，先在瀏覽器中試用模型。'],
+                  ['聊天', '把金鑰直接交給已接入的聊天應用程式。'],
+                  ['概覽 / 數據看板', '請求量、token 量與消費的趨勢圖表。'],
+                  ['API 金鑰', '建立、編輯、停用與刪除金鑰。'],
+                  ['使用日誌', '每個請求一列：模型、token、費用。'],
+                  ['任務日誌', '以非同步任務方式送出的請求。'],
+                  ['錢包', '餘額、儲值與訂單歷史。'],
+                  ['個人資料', '電子郵件、密碼、兩步驟驗證、登入裝置。'],
+                ],
+              ],
+            ],
+          },
+          {
+            id: 'keys',
+            t: '建立 API 金鑰',
+            b: [
+              [
+                'p',
+                '進入 **API 金鑰**，點選**建立 API 金鑰**。只有名稱是必填，其餘維持預設即可建立第一組金鑰。',
+              ],
+              [
+                'table',
+                [
+                  ['欄位', '說明'],
+                  ['名稱', '金鑰在清單中的識別名稱，建議依使用它的應用或機器命名。'],
+                  ['分組', '金鑰使用的路由分組，同時決定價格。除非客服另有說明，維持 [[default]] 即可。'],
+                  ['過期時間', '永不過期，或選擇預設 / 自訂時間。過期後金鑰停止運作，但仍保留在清單中。'],
+                  ['數量', '一次建立多組金鑰。'],
+                  ['額度 / 無限配額', '此金鑰的消費上限。費用一律從帳戶餘額扣除，這個上限只限制這一組金鑰能花多少。'],
+                  ['模型限制', '限制該金鑰只能呼叫指定的模型 ID。留空表示允許目錄中的全部模型。'],
+                  ['IP 白名單', '只接受來自這些位址或 CIDR 網段的請求。'],
+                ],
+              ],
+              [
+                'p',
+                '儲存後，點選該列的 ⋯ 選單並選擇**複製金鑰**。金鑰以 [[sk-]] 開頭。',
+              ],
+              [
+                'note',
+                '請把金鑰視同密碼保管。為每個應用程式各配一組金鑰，停用其中一組時不會影響其他應用；金鑰一旦貼到公開場合，請立即刪除。',
+              ],
+            ],
+          },
+          {
+            id: 'first-call',
+            t: '送出第一個請求',
+            b: [
+              [
+                'p',
+                '介面位址是 [[https://fairrouter.ai/v1]]，其餘完全是標準的 OpenAI 請求格式。',
+              ],
+              ['code', 'curl'],
+              ['h3', 'Python'],
+              ['code', 'python'],
+              ['h3', 'JavaScript / TypeScript'],
+              ['code', 'node'],
+              ['h3', '串流輸出'],
+              ['p', '把 [[stream]] 設為 true，即可邊生成邊接收。'],
+              ['code', 'stream'],
+              ['h3', '可以使用哪些模型 ID？'],
+              ['p', '完整清單見[模型與價格](/pricing)頁面，也可以透過模型介面取得：'],
+              ['code', 'models'],
+            ],
+          },
+          {
+            id: 'endpoints',
+            t: '支援的介面',
+            b: [
+              [
+                'p',
+                'Fair Router 接受 OpenAI 請求格式，同時相容 Anthropic 與 Gemini 格式，只支援其中一種格式的工具也能直接使用。',
+              ],
+              [
+                'table',
+                [
+                  ['介面', '用途'],
+                  ['POST /v1/chat/completions', '對話補全，支援串流（OpenAI 格式）。'],
+                  ['POST /v1/responses', 'OpenAI Responses 介面。'],
+                  ['POST /v1/messages', 'Anthropic Messages 格式。'],
+                  ['POST /v1beta/models/…', 'Gemini 格式。'],
+                  ['GET /v1/models', '目前金鑰可呼叫的模型清單。'],
+                  ['POST /v1/embeddings', '文字向量化。'],
+                  ['POST /v1/images/generations', '影像生成與編輯。'],
+                  ['POST /v1/audio/speech', '語音合成、語音轉文字與翻譯。'],
+                  ['POST /v1/rerank', '重新排序。'],
+                ],
+              ],
+              [
+                'note',
+                '介面能回傳什麼，取決於目錄中上架了哪些模型。Fair Router 目前提供文字模型，因此多數帳號使用的是對話類請求。',
+              ],
+            ],
+          },
+          {
+            id: 'models',
+            t: '模型與價格',
+            b: [
+              [
+                'p',
+                '[模型與價格](/pricing)頁面對所有人公開，註冊前即可查看。每一列列出每百萬 token 的輸入價與輸出價（美元），並同時附上廠商官方定價，方便直接比較節省幅度。',
+              ],
+              [
+                'p',
+                '文字模型依 token 計費：輸入 token × 輸入價，加上輸出 token × 輸出價。模型支援提示快取時，命中快取的輸入 token 以較低的快取價計費。每個請求的實際 token 數與實際扣款都可在**使用日誌**中查到。',
+              ],
+              ['p', '餘額與站上所有價格均以美元顯示。'],
+              [
+                'note',
+                '一個請求的價格由模型與送出請求的金鑰所屬分組共同決定。除非客服為你另行調整分組，否則都執行在 [[default]] 分組，與公開定價頁面一致。',
+              ],
+            ],
+          },
+          {
+            id: 'credit',
+            t: '儲值',
+            b: [
+              ['p', 'Fair Router 採預付制：先儲值，之後每個請求從餘額扣除。'],
+              [
+                'steps',
+                [
+                  '開啟控制台的**錢包**頁面，上方卡片顯示目前餘額、總用量與 API 請求數。',
+                  '選擇預設金額，或輸入自訂金額。',
+                  '進入結帳頁，使用信用卡、銀行轉帳或微信支付完成付款。',
+                  '付款確認後餘額立即到帳，歷史儲值紀錄可在訂單歷史查看。',
+                ],
+              ],
+              [
+                'p',
+                '若你拿到了兌換碼，在同一頁面的兌換碼欄位輸入並點選**兌換額度**。',
+              ],
+              [
+                'note',
+                '系統不會自動儲值。餘額歸零時，請求會回傳額度不足的錯誤，直到重新儲值為止，請留意錢包卡片或概覽頁面的餘額。',
+              ],
+            ],
+          },
+          {
+            id: 'usage',
+            t: '查看用量與消費',
+            b: [
+              [
+                'p',
+                '**使用日誌**為每個請求記錄一列，包含時間、模型、金鑰、輸入與輸出 token 以及扣款金額。可依時間範圍、模型或金鑰篩選定位某次呼叫，也可將篩選結果匯出，在控制台之外使用。',
+              ],
+              ['p', '**任務日誌**記錄以非同步任務方式送出、而非直接在回應中返回結果的請求。'],
+              [
+                'p',
+                '**概覽**與**數據看板**把同一批資料製成圖表——每日消費、各模型請求量——這是發現某個用戶端呼叫量異常的最快方式。',
+              ],
+            ],
+          },
+          {
+            id: 'apps',
+            t: '在第三方應用中使用',
+            b: [
+              [
+                'p',
+                '任何提供「相容 OpenAI」或「自訂介面位址」選項的應用程式都可以接上 Fair Router，填入：',
+              ],
+              [
+                'ul',
+                [
+                  '介面位址：[[https://fairrouter.ai/v1]]——部分應用只需填 [[https://fairrouter.ai]]，會自行補上 [[/v1]]。',
+                  'API 金鑰：你的 [[sk-…]] 金鑰。',
+                  '模型：來自[模型與價格](/pricing)頁面的模型 ID。',
+                ],
+              ],
+              [
+                'p',
+                '每列金鑰的 ⋯ 選單可簡化這個步驟：**複製連接資訊**會把位址與金鑰一起複製；**聊天**子選單可直接把設定交給已支援的應用（Cherry Studio、LobeChat、DeepChat、OpenCat、AMA 問天、AI as Workspace、流暢閱讀、AionUI）；**CC Switch** 則用於 Claude Code 這類工具的設定。',
+              ],
+              [
+                'note',
+                '若應用顯示連線失敗，請檢查介面位址結尾是否多了斜線，以及金鑰是否已過期或被限制為其他模型。',
+              ],
+            ],
+          },
+          {
+            id: 'playground',
+            t: '在遊樂場中試用',
+            b: [
+              [
+                'p',
+                '**遊樂場**可直接在控制台與帳號可用的任意模型對話，不需要金鑰。想用同一段提示詞比較兩個模型，或在除錯自己的程式前先確認模型能正常回覆，用它最快。',
+              ],
+              [
+                'note',
+                '遊樂場的呼叫是真實的 API 呼叫：同樣會記錄在使用日誌中，並從餘額扣款。',
+              ],
+            ],
+          },
+          {
+            id: 'security',
+            t: '帳號與安全',
+            b: [
+              ['p', '**個人資料**頁面管理帳號本身的所有設定。'],
+              [
+                'ul',
+                [
+                  '修改使用者名稱與顯示名稱，設定介面語言。',
+                  '綁定電子郵件、修改密碼。',
+                  '開啟兩步驟驗證（TOTP），並妥善保存備援碼。',
+                  '檢視近期登入工作階段，登出任何不認識的裝置。',
+                  '需要以程式方式管理帳號時，可產生系統存取權杖。該權杖僅供帳號管理，呼叫模型請使用 API 金鑰。',
+                ],
+              ],
+            ],
+          },
+          {
+            id: 'errors',
+            t: '常見錯誤',
+            b: [
+              [
+                'table',
+                [
+                  ['回應', '含義', '處理方式'],
+                  ['401', '金鑰缺失、填錯或已被刪除。', '檢查 [[Authorization: Bearer sk-…]] 標頭，並重新複製金鑰。'],
+                  ['403 額度不足', '帳戶餘額或該金鑰本身的額度已用盡。', '在錢包中儲值，或提高該金鑰的額度。'],
+                  ['403 其他', '金鑰被停用或已過期、呼叫端 IP 不在白名單內，或模型限制排除了該模型。', '在 API 金鑰頁面編輯該金鑰。'],
+                  ['404 模型不存在', '模型 ID 不存在，或該金鑰所屬分組無法使用。', '從模型與價格頁面複製正確的模型 ID。'],
+                  ['429', '超出請求頻率限制。', '降低請求頻率，並採退避重試。'],
+                  ['5xx', '上游供應商失敗或逾時。', '重試；若持續發生，請把請求時間與模型提供給我們。'],
+                ],
+              ],
+              [
+                'p',
+                '失敗的請求同樣會記錄在使用日誌中，查看對應的日誌列通常是最快的排查方式。',
+              ],
+            ],
+          },
+          {
+            id: 'support',
+            t: '取得協助',
+            b: [
+              [
+                'p',
+                '請寄信至 [fairrouter@protonmail.com](mailto:fairrouter@protonmail.com)。每封信都有專人閱讀，通常於 1 個工作天內回覆，最遲不超過 7 天。請附上帳號名稱；若是特定請求的問題，請附上使用日誌中的時間與模型。',
+              ],
+              [
+                'p',
+                '付款、發票與退款問題同樣寄到這個信箱——並請提供訂單歷史中的訂單編號。',
+              ],
+            ],
+          },
+        ],
+      }
+
+      CONTENT.fr = {
+        title: 'Guide de l’utilisateur',
+        tagline:
+          'Tout ce qu’il faut pour passer d’un compte neuf à votre première réponse de modèle, puis utiliser Fair Router au quotidien.',
+        toc: 'Sommaire',
+        sub: 'Guide',
+        copy: 'Copier',
+        copied: 'Copié',
+        nav: {
+          console: 'Console',
+          pricing: 'Modèles & Tarifs',
+          about: 'À propos',
+          privacy: 'Politique de confidentialité',
+          terms: 'Conditions d’utilisation',
+        },
+        sections: [
+          {
+            id: 'start',
+            t: 'Démarrer',
+            b: [
+              [
+                'p',
+                'Fair Router est une passerelle d’API pour l’IA. Un compte, une clé et une URL de base donnent accès à tous les modèles du catalogue, facturés au token depuis un solde prépayé. Sans abonnement ni engagement minimum.',
+              ],
+              [
+                'p',
+                'Si vous avez déjà appelé l’API OpenAI, vous savez déjà utiliser Fair Router : pointez votre SDK vers [[https://fairrouter.ai/v1]], utilisez votre clé Fair Router et choisissez un identifiant de modèle sur la page [Modèles & Tarifs](/pricing).',
+              ],
+              ['h3', 'Trois étapes jusqu’à la première réponse'],
+              [
+                'steps',
+                [
+                  'Créez un compte et connectez-vous.',
+                  'Créditez votre compte dans **Portefeuille**, puis créez une clé dans **Clés API**.',
+                  'Pointez n’importe quel SDK ou application compatible OpenAI vers [[https://fairrouter.ai/v1]].',
+                ],
+              ],
+            ],
+          },
+          {
+            id: 'account',
+            t: 'Créer votre compte',
+            b: [
+              ['p', 'Ouvrez [fairrouter.ai](/) et choisissez **S’inscrire**.'],
+              [
+                'ul',
+                [
+                  'Choisissez un nom d’utilisateur et un mot de passe de 8 à 20 caractères, puis confirmez-le.',
+                  'Aucune adresse e-mail n’est requise pour l’inscription.',
+                  'Vous arrivez dans la console dès la création du compte.',
+                ],
+              ],
+              [
+                'note',
+                '**Ajoutez une adresse e-mail dans Profil dès votre première connexion.** La récupération de mot de passe envoie un lien de réinitialisation à l’adresse enregistrée : sans elle, aucun moyen de récupérer seul un compte verrouillé.',
+              ],
+            ],
+          },
+          {
+            id: 'console',
+            t: 'Visite de la console',
+            b: [
+              ['p', 'Tout se trouve dans la barre latérale gauche de la console.'],
+              [
+                'table',
+                [
+                  ['Où', 'Ce que vous y faites'],
+                  ['Aire de jeux', 'Essayer un modèle dans le navigateur avant d’écrire du code.'],
+                  ['Discuter', 'Transmettre une clé directement à une application de chat connectée.'],
+                  ['Vue d’ensemble / Tableau de bord', 'Graphiques des requêtes, des tokens et des dépenses dans le temps.'],
+                  ['Clés API', 'Créer, modifier, désactiver et supprimer des clés.'],
+                  ['Journaux d’utilisation', 'Une ligne par requête : modèle, tokens, coût.'],
+                  ['Journaux de tâches', 'Requêtes soumises sous forme de tâches asynchrones.'],
+                  ['Portefeuille', 'Solde, rechargements et historique des commandes.'],
+                  ['Profil', 'E-mail, mot de passe, double authentification, sessions.'],
+                ],
+              ],
+            ],
+          },
+          {
+            id: 'keys',
+            t: 'Créer une clé API',
+            b: [
+              [
+                'p',
+                'Allez dans **Clés API** puis **Créer une clé API**. Seul le nom est obligatoire ; les valeurs par défaut conviennent pour une première clé.',
+              ],
+              [
+                'table',
+                [
+                  ['Champ', 'Signification'],
+                  ['Nom', 'Le libellé de la clé dans votre liste. Nommez-la d’après l’application ou la machine qui l’utilisera.'],
+                  ['Groupe', 'Le groupe de routage utilisé par la clé, qui détermine aussi le prix. Laissez [[default]] sauf indication contraire du support.'],
+                  ['Heure d’expiration', 'Jamais, ou une échéance prédéfinie ou personnalisée. Une clé expirée cesse de fonctionner mais reste dans la liste.'],
+                  ['Quantité', 'Créer plusieurs clés en une fois.'],
+                  ['Quota / Quota illimité', 'Un plafond de dépense pour cette clé. La consommation est toujours déduite du solde du compte ; le plafond limite seulement ce que cette clé peut dépenser.'],
+                  ['Limites du modèle', 'Restreindre la clé à certains identifiants de modèles. Laissez vide pour autoriser tout le catalogue.'],
+                  ['Liste blanche d’IP', 'N’accepter que les requêtes provenant de ces adresses ou plages CIDR.'],
+                ],
+              ],
+              [
+                'p',
+                'Après l’enregistrement, ouvrez le menu ⋯ de la ligne et choisissez **Copier la clé**. Les clés commencent par [[sk-]].',
+              ],
+              [
+                'note',
+                'Traitez une clé comme un mot de passe. Donnez une clé distincte à chaque application, afin de pouvoir en désactiver une sans casser les autres, et supprimez toute clé publiée quelque part par erreur.',
+              ],
+            ],
+          },
+          {
+            id: 'first-call',
+            t: 'Votre première requête',
+            b: [
+              [
+                'p',
+                'L’URL de base est [[https://fairrouter.ai/v1]]. Tout le reste suit le format de requête standard d’OpenAI.',
+              ],
+              ['code', 'curl'],
+              ['h3', 'Python'],
+              ['code', 'python'],
+              ['h3', 'JavaScript / TypeScript'],
+              ['code', 'node'],
+              ['h3', 'Streaming'],
+              ['p', 'Mettez [[stream]] à true et lisez la réponse au fil de son arrivée.'],
+              ['code', 'stream'],
+              ['h3', 'Quels identifiants de modèles utiliser ?'],
+              [
+                'p',
+                'La liste exacte figure sur [Modèles & Tarifs](/pricing) et est renvoyée par le point de terminaison des modèles :',
+              ],
+              ['code', 'models'],
+            ],
+          },
+          {
+            id: 'endpoints',
+            t: 'Points de terminaison pris en charge',
+            b: [
+              [
+                'p',
+                'Fair Router accepte le format de requête OpenAI et parle également les formats Anthropic et Gemini : les outils qui n’en gèrent qu’un seul fonctionnent donc aussi.',
+              ],
+              [
+                'table',
+                [
+                  ['Point de terminaison', 'Usage'],
+                  ['POST /v1/chat/completions', 'Complétions de chat, streaming pris en charge (format OpenAI).'],
+                  ['POST /v1/responses', 'API Responses d’OpenAI.'],
+                  ['POST /v1/messages', 'Format Anthropic Messages.'],
+                  ['POST /v1beta/models/…', 'Format Gemini.'],
+                  ['GET /v1/models', 'Les modèles que votre clé peut appeler.'],
+                  ['POST /v1/embeddings', 'Plongements de texte.'],
+                  ['POST /v1/images/generations', 'Génération et édition d’images.'],
+                  ['POST /v1/audio/speech', 'Synthèse vocale, transcription et traduction.'],
+                  ['POST /v1/rerank', 'Reclassement.'],
+                ],
+              ],
+              [
+                'note',
+                'Ce qu’un point de terminaison peut réellement renvoyer dépend des modèles du catalogue. Fair Router publie aujourd’hui des modèles de texte : les requêtes de type chat sont donc celles utilisées par la plupart des comptes.',
+              ],
+            ],
+          },
+          {
+            id: 'models',
+            t: 'Modèles et tarifs',
+            b: [
+              [
+                'p',
+                'La page [Modèles & Tarifs](/pricing) est publique : vous pouvez la consulter avant de créer un compte. Chaque ligne indique le prix d’entrée et de sortie par million de tokens en dollars américains, à côté du tarif officiel du fournisseur, afin que l’économie soit visible.',
+              ],
+              [
+                'p',
+                'Les modèles de texte sont facturés au token : tokens d’entrée × prix d’entrée, plus tokens de sortie × prix de sortie. Lorsqu’un modèle prend en charge la mise en cache des prompts, les tokens d’entrée servis depuis le cache sont facturés au tarif de cache, plus bas. Le décompte exact et le montant exact de chaque requête apparaissent dans les **Journaux d’utilisation**.',
+              ],
+              ['p', 'Votre solde et tous les prix du site sont affichés en dollars américains.'],
+              [
+                'note',
+                'Le prix appliqué à une requête dépend du modèle et du groupe de la clé qui l’a émise. Sauf si le support vous a placé dans un groupe particulier, tout passe par [[default]] et correspond à la page de tarifs publique.',
+              ],
+            ],
+          },
+          {
+            id: 'credit',
+            t: 'Créditer le compte',
+            b: [
+              [
+                'p',
+                'Fair Router fonctionne en prépayé : vous créditez le compte, et chaque requête puise dans ce solde.',
+              ],
+              [
+                'steps',
+                [
+                  'Ouvrez **Portefeuille** dans la console. Les cartes du haut indiquent le solde actuel, l’utilisation totale et le nombre de requêtes API.',
+                  'Choisissez un montant prédéfini ou saisissez un montant personnalisé.',
+                  'Passez au paiement et réglez par carte, virement bancaire ou WeChat Pay.',
+                  'Le solde est mis à jour dès la confirmation du paiement. Les rechargements passés figurent dans l’historique des commandes.',
+                ],
+              ],
+              [
+                'p',
+                'Si vous disposez d’un code de rachat, saisissez-le dans le champ prévu sur la même page et choisissez **Utiliser**.',
+              ],
+              [
+                'note',
+                'Il n’y a pas de rechargement automatique. À solde nul, les requêtes sont rejetées avec une erreur de quota insuffisant jusqu’au prochain rechargement : surveillez la carte Portefeuille ou la page Vue d’ensemble.',
+              ],
+            ],
+          },
+          {
+            id: 'usage',
+            t: 'Suivre l’utilisation et les dépenses',
+            b: [
+              [
+                'p',
+                'Les **Journaux d’utilisation** affichent une ligne par requête avec l’heure, le modèle, la clé, les tokens d’entrée et de sortie, et le montant facturé. Filtrez par période, modèle ou clé pour retrouver un appel précis, et exportez les lignes filtrées si vous en avez besoin hors de la console.',
+              ],
+              [
+                'p',
+                'Les **Journaux de tâches** couvrent les requêtes soumises comme tâches asynchrones plutôt que traitées dans la réponse.',
+              ],
+              [
+                'p',
+                '**Vue d’ensemble** et **Tableau de bord** transforment ces mêmes données en graphiques — dépense par jour, requêtes par modèle — le moyen le plus rapide de repérer un client qui appelle plus que prévu.',
+              ],
+            ],
+          },
+          {
+            id: 'apps',
+            t: 'Utiliser Fair Router dans d’autres applications',
+            b: [
+              [
+                'p',
+                'Toute application proposant une option « compatible OpenAI » ou « URL de base personnalisée » fonctionne avec Fair Router. Indiquez-lui :',
+              ],
+              [
+                'ul',
+                [
+                  'URL de base de l’API : [[https://fairrouter.ai/v1]] — certaines applications demandent [[https://fairrouter.ai]] et ajoutent [[/v1]] elles-mêmes.',
+                  'Clé API : votre clé [[sk-…]].',
+                  'Modèle : un identifiant issu de [Modèles & Tarifs](/pricing).',
+                ],
+              ],
+              [
+                'p',
+                'Le menu ⋯ de chaque ligne raccourcit l’opération : **Copier les infos de connexion** copie l’adresse et la clé ensemble, le sous-menu **Discuter** les transmet directement à une application prise en charge (Cherry Studio, LobeChat, DeepChat, OpenCat, AMA, AI as Workspace, FluentRead, AionUI), et **CC Switch** prépare la configuration des outils de type Claude Code.',
+              ],
+              [
+                'note',
+                'Si une application refuse la connexion, vérifiez que l’URL de base ne se termine pas par une barre oblique, et que la clé n’a pas expiré ni été restreinte à d’autres modèles.',
+              ],
+            ],
+          },
+          {
+            id: 'playground',
+            t: 'Tester dans l’Aire de jeux',
+            b: [
+              [
+                'p',
+                'L’**Aire de jeux** lance une conversation avec n’importe quel modèle accessible à votre compte, directement depuis la console et sans clé. C’est le moyen le plus rapide de comparer deux modèles sur le même prompt, ou de vérifier qu’un modèle répond avant de déboguer votre propre code.',
+              ],
+              [
+                'note',
+                'Les appels depuis l’Aire de jeux sont de vrais appels API : ils apparaissent dans les journaux d’utilisation et sont débités de votre solde comme les autres.',
+              ],
+            ],
+          },
+          {
+            id: 'security',
+            t: 'Compte et sécurité',
+            b: [
+              ['p', 'Le **Profil** regroupe tout ce qui concerne le compte lui-même.'],
+              [
+                'ul',
+                [
+                  'Modifier votre nom d’utilisateur et votre nom affiché, et choisir la langue de l’interface.',
+                  'Associer une adresse e-mail et changer votre mot de passe.',
+                  'Activer la double authentification (TOTP) et conserver les codes de secours en lieu sûr.',
+                  'Consulter les sessions de connexion récentes et déconnecter tout appareil inconnu.',
+                  'Générer un jeton d’accès système pour piloter le compte par programme. Ce jeton sert uniquement à la gestion du compte — les appels de modèles utilisent vos clés API.',
+                ],
+              ],
+            ],
+          },
+          {
+            id: 'errors',
+            t: 'Erreurs courantes',
+            b: [
+              [
+                'table',
+                [
+                  ['Réponse', 'Signification', 'Que faire'],
+                  ['401', 'La clé est absente, mal saisie ou supprimée.', 'Vérifiez l’en-tête [[Authorization: Bearer sk-…]] et recopiez la clé.'],
+                  ['403 quota insuffisant', 'Votre solde, ou le quota propre à la clé, est épuisé.', 'Créditez le compte dans Portefeuille, ou augmentez le quota de la clé.'],
+                  ['403 autre', 'La clé est désactivée ou expirée, l’IP appelante est hors de la liste blanche, ou les limites du modèle excluent ce modèle.', 'Modifiez la clé dans Clés API.'],
+                  ['404 modèle introuvable', 'L’identifiant du modèle n’existe pas, ou n’est pas disponible pour le groupe de la clé.', 'Copiez l’identifiant depuis Modèles & Tarifs.'],
+                  ['429', 'Vous avez dépassé la limite de débit des requêtes.', 'Ralentissez et réessayez avec un délai progressif.'],
+                  ['5xx', 'Le fournisseur en amont a échoué ou expiré.', 'Réessayez ; si cela persiste, envoyez-nous l’heure et le modèle de la requête.'],
+                ],
+              ],
+              [
+                'p',
+                'Les requêtes en échec sont également enregistrées dans les journaux d’utilisation : la ligne de journal est en général le moyen le plus rapide de voir ce que la passerelle a reçu.',
+              ],
+            ],
+          },
+          {
+            id: 'support',
+            t: 'Obtenir de l’aide',
+            b: [
+              [
+                'p',
+                'Écrivez à [fairrouter@protonmail.com](mailto:fairrouter@protonmail.com). Une personne lit chaque message, normalement sous un jour ouvré et jamais au-delà de sept. Indiquez le nom de votre compte et, pour une requête précise, l’heure et le modèle relevés dans les journaux d’utilisation.',
+              ],
+              [
+                'p',
+                'Les questions de facturation, de facture et de remboursement vont à la même adresse — mentionnez la référence de commande figurant dans l’historique des commandes.',
+              ],
+            ],
+          },
+        ],
+      }
+
+      CONTENT.ru = {
+        title: 'Руководство пользователя',
+        tagline:
+          'Всё, что нужно, чтобы пройти путь от нового аккаунта до первого ответа модели и повседневно работать с Fair Router.',
+        toc: 'Содержание',
+        sub: 'Руководство',
+        copy: 'Копировать',
+        copied: 'Скопировано',
+        nav: {
+          console: 'Консоль',
+          pricing: 'Модели и цены',
+          about: 'О проекте',
+          privacy: 'Политика конфиденциальности',
+          terms: 'Условия использования',
+        },
+        sections: [
+          {
+            id: 'start',
+            t: 'Начало работы',
+            b: [
+              [
+                'p',
+                'Fair Router — это шлюз для AI API. Один аккаунт, один ключ и один базовый адрес дают доступ ко всем моделям каталога с оплатой за токены из предоплаченного баланса. Без подписки и минимальных обязательств.',
+              ],
+              [
+                'p',
+                'Если вы уже обращались к API OpenAI, то умеете работать и с Fair Router: укажите в SDK адрес [[https://fairrouter.ai/v1]], используйте ключ Fair Router и выберите идентификатор модели на странице [Модели и цены](/pricing).',
+              ],
+              ['h3', 'Три шага до первого ответа'],
+              [
+                'steps',
+                [
+                  'Создайте аккаунт и войдите.',
+                  'Пополните баланс в разделе **Кошелек**, затем создайте ключ в разделе **Ключи API**.',
+                  'Направьте любой совместимый с OpenAI SDK или приложение на [[https://fairrouter.ai/v1]].',
+                ],
+              ],
+            ],
+          },
+          {
+            id: 'account',
+            t: 'Создание аккаунта',
+            b: [
+              ['p', 'Откройте [fairrouter.ai](/) и выберите **Регистрация**.'],
+              [
+                'ul',
+                [
+                  'Придумайте имя пользователя и пароль длиной 8–20 символов, затем подтвердите пароль.',
+                  'Адрес электронной почты для регистрации сейчас не требуется.',
+                  'Сразу после создания аккаунта вы попадаете в консоль.',
+                ],
+              ],
+              [
+                'note',
+                '**Сразу после входа добавьте адрес электронной почты в разделе «Профиль».** Восстановление пароля отправляет ссылку на почту, указанную в аккаунте, поэтому без неё самостоятельно вернуть доступ не получится.',
+              ],
+            ],
+          },
+          {
+            id: 'console',
+            t: 'Обзор консоли',
+            b: [
+              ['p', 'Всё необходимое находится в левой боковой панели консоли.'],
+              [
+                'table',
+                [
+                  ['Раздел', 'Что там делают'],
+                  ['Песочница', 'Попробовать модель в браузере, ещё не написав код.'],
+                  ['Чат', 'Передать ключ сразу в подключённое приложение для чата.'],
+                  ['Обзор / Панель управления', 'Графики запросов, токенов и расходов во времени.'],
+                  ['Ключи API', 'Создание, изменение, отключение и удаление ключей.'],
+                  ['Журнал использования', 'По строке на каждый запрос: модель, токены, стоимость.'],
+                  ['Журнал задач', 'Запросы, отправленные как асинхронные задачи.'],
+                  ['Кошелек', 'Баланс, пополнения и история заказов.'],
+                  ['Профиль', 'Почта, пароль, двухфакторная аутентификация, сессии.'],
+                ],
+              ],
+            ],
+          },
+          {
+            id: 'keys',
+            t: 'Создание ключа API',
+            b: [
+              [
+                'p',
+                'Перейдите в **Ключи API** и выберите **Создать ключ API**. Обязательно только название; остальные значения по умолчанию подходят для первого ключа.',
+              ],
+              [
+                'table',
+                [
+                  ['Поле', 'Что означает'],
+                  ['Название', 'Как ключ подписан в списке. Назовите его по приложению или машине, которая будет его использовать.'],
+                  ['Группа', 'Группа маршрутизации ключа, от неё же зависит цена. Оставьте [[default]], если поддержка не указала иное.'],
+                  ['Время истечения срока действия', 'Никогда либо готовый или произвольный срок. Истёкший ключ перестаёт работать, но остаётся в списке.'],
+                  ['Количество', 'Создать несколько ключей сразу.'],
+                  ['Квота / Неограниченная квота', 'Лимит расходов для этого ключа. Списание всегда идёт с баланса аккаунта; лимит ограничивает только траты одного ключа.'],
+                  ['Лимиты модели', 'Разрешить ключу только выбранные идентификаторы моделей. Пустое значение — доступен весь каталог.'],
+                  ['Белый список IP', 'Принимать запросы только с этих адресов или диапазонов CIDR.'],
+                ],
+              ],
+              [
+                'p',
+                'После сохранения откройте меню ⋯ в строке и выберите **Копировать ключ**. Ключи начинаются с [[sk-]].',
+              ],
+              [
+                'note',
+                'Относитесь к ключу как к паролю. Выдавайте каждому приложению отдельный ключ, чтобы отключение одного не ломало остальные, и удаляйте любой ключ, попавший в публичный доступ.',
+              ],
+            ],
+          },
+          {
+            id: 'first-call',
+            t: 'Первый запрос',
+            b: [
+              [
+                'p',
+                'Базовый адрес — [[https://fairrouter.ai/v1]]. Всё остальное соответствует стандартному формату запросов OpenAI.',
+              ],
+              ['code', 'curl'],
+              ['h3', 'Python'],
+              ['code', 'python'],
+              ['h3', 'JavaScript / TypeScript'],
+              ['code', 'node'],
+              ['h3', 'Потоковый вывод'],
+              ['p', 'Установите [[stream]] в true и читайте ответ по мере поступления.'],
+              ['code', 'stream'],
+              ['h3', 'Какие идентификаторы моделей доступны?'],
+              [
+                'p',
+                'Точный список приведён на странице [Модели и цены](/pricing) и возвращается эндпоинтом моделей:',
+              ],
+              ['code', 'models'],
+            ],
+          },
+          {
+            id: 'endpoints',
+            t: 'Поддерживаемые эндпоинты',
+            b: [
+              [
+                'p',
+                'Fair Router принимает формат запросов OpenAI, а также понимает форматы Anthropic и Gemini, поэтому инструменты, поддерживающие только один из них, тоже работают.',
+              ],
+              [
+                'table',
+                [
+                  ['Эндпоинт', 'Назначение'],
+                  ['POST /v1/chat/completions', 'Чат-дополнения, поддерживается потоковая передача (формат OpenAI).'],
+                  ['POST /v1/responses', 'API Responses от OpenAI.'],
+                  ['POST /v1/messages', 'Формат Anthropic Messages.'],
+                  ['POST /v1beta/models/…', 'Формат Gemini.'],
+                  ['GET /v1/models', 'Модели, доступные вашему ключу.'],
+                  ['POST /v1/embeddings', 'Векторные представления текста.'],
+                  ['POST /v1/images/generations', 'Генерация и редактирование изображений.'],
+                  ['POST /v1/audio/speech', 'Синтез речи, расшифровка и перевод аудио.'],
+                  ['POST /v1/rerank', 'Переранжирование.'],
+                ],
+              ],
+              [
+                'note',
+                'Что именно вернёт эндпоинт, зависит от моделей в каталоге. Сейчас Fair Router публикует текстовые модели, поэтому большинство аккаунтов использует запросы чат-формата.',
+              ],
+            ],
+          },
+          {
+            id: 'models',
+            t: 'Модели и цены',
+            b: [
+              [
+                'p',
+                'Страница [Модели и цены](/pricing) открыта всем — её можно изучить до регистрации. В каждой строке указана цена входных и выходных токенов за миллион в долларах США рядом с официальной ценой поставщика, чтобы экономия была видна сразу.',
+              ],
+              [
+                'p',
+                'Текстовые модели тарифицируются по токенам: входные токены × цена входа плюс выходные токены × цена выхода. Если модель поддерживает кеширование промптов, входные токены из кеша считаются по сниженной цене кеша. Точное число токенов и точная сумма по каждому запросу видны в **Журнале использования**.',
+              ],
+              ['p', 'Баланс и все цены на сайте отображаются в долларах США.'],
+              [
+                'note',
+                'Цена запроса складывается из модели и группы того ключа, которым он отправлен. Если поддержка не переводила вас в особую группу, всё идёт через [[default]] и совпадает с публичной страницей цен.',
+              ],
+            ],
+          },
+          {
+            id: 'credit',
+            t: 'Пополнение баланса',
+            b: [
+              [
+                'p',
+                'Fair Router работает по предоплате: вы пополняете баланс, и каждый запрос списывается с него.',
+              ],
+              [
+                'steps',
+                [
+                  'Откройте **Кошелек** в консоли. Карточки сверху показывают текущий баланс, общее использование и число запросов API.',
+                  'Выберите одну из готовых сумм или введите свою.',
+                  'Перейдите к оплате картой, банковским переводом или через WeChat Pay.',
+                  'Баланс обновляется сразу после подтверждения платежа. Прошлые пополнения — в истории заказов.',
+                ],
+              ],
+              [
+                'p',
+                'Если вам выдали код активации, введите его в поле кода на этой же странице и нажмите **Обменять квоту**.',
+              ],
+              [
+                'note',
+                'Автопополнения нет. При нулевом балансе запросы отклоняются с ошибкой о нехватке квоты до следующего пополнения, поэтому следите за карточкой Кошелька или страницей Обзор.',
+              ],
+            ],
+          },
+          {
+            id: 'usage',
+            t: 'Контроль расхода',
+            b: [
+              [
+                'p',
+                '**Журнал использования** содержит по строке на запрос: время, модель, ключ, входные и выходные токены и списанную сумму. Фильтруйте по периоду, модели или ключу, чтобы найти конкретный вызов, и выгружайте отфильтрованные строки, если они нужны вне консоли.',
+              ],
+              [
+                'p',
+                '**Журнал задач** охватывает запросы, отправленные как асинхронные задачи, а не отвеченные сразу.',
+              ],
+              [
+                'p',
+                '**Обзор** и **Панель управления** превращают те же данные в графики — расходы по дням, запросы по моделям — это самый быстрый способ заметить клиента, который обращается чаще ожидаемого.',
+              ],
+            ],
+          },
+          {
+            id: 'apps',
+            t: 'Использование в сторонних приложениях',
+            b: [
+              [
+                'p',
+                'Подойдёт любое приложение с настройкой «совместимо с OpenAI» или «свой базовый адрес». Укажите в нём:',
+              ],
+              [
+                'ul',
+                [
+                  'Базовый адрес API: [[https://fairrouter.ai/v1]] — некоторые приложения просят [[https://fairrouter.ai]] и сами добавляют [[/v1]].',
+                  'Ключ API: ваш ключ [[sk-…]].',
+                  'Модель: идентификатор со страницы [Модели и цены](/pricing).',
+                ],
+              ],
+              [
+                'p',
+                'Меню ⋯ в строке ключа сокращает эти шаги: **Копировать данные подключения** копирует адрес и ключ вместе, подменю **Чат** передаёт их сразу в поддерживаемое приложение (Cherry Studio, LobeChat, DeepChat, OpenCat, AMA, AI as Workspace, FluentRead, AionUI), а **CC Switch** готовит настройки для инструментов вроде Claude Code.',
+              ],
+              [
+                'note',
+                'Если приложение не подключается, проверьте, что в базовом адресе нет завершающей косой черты и что ключ не истёк и не ограничен другими моделями.',
+              ],
+            ],
+          },
+          {
+            id: 'playground',
+            t: 'Проверка в Песочнице',
+            b: [
+              [
+                'p',
+                '**Песочница** ведёт диалог с любой доступной аккаунту моделью прямо из консоли и без ключа. Это самый быстрый способ сравнить две модели на одном промпте или убедиться, что модель отвечает, прежде чем отлаживать собственный код.',
+              ],
+              [
+                'note',
+                'Вызовы из Песочницы — настоящие вызовы API: они попадают в журнал использования и списываются с баланса так же, как любые другие.',
+              ],
+            ],
+          },
+          {
+            id: 'security',
+            t: 'Аккаунт и безопасность',
+            b: [
+              ['p', 'В разделе **Профиль** собрано всё, что касается самого аккаунта.'],
+              [
+                'ul',
+                [
+                  'Изменить имя пользователя и отображаемое имя, выбрать язык интерфейса.',
+                  'Привязать адрес электронной почты и сменить пароль.',
+                  'Включить двухфакторную аутентификацию (TOTP) и надёжно сохранить резервные коды.',
+                  'Просмотреть недавние сессии входа и завершить сессию любого незнакомого устройства.',
+                  'Создать системный токен доступа для программного управления аккаунтом. Этот токен нужен только для управления аккаунтом — вызовы моделей выполняются ключами API.',
+                ],
+              ],
+            ],
+          },
+          {
+            id: 'errors',
+            t: 'Частые ошибки',
+            b: [
+              [
+                'table',
+                [
+                  ['Ответ', 'Что означает', 'Что делать'],
+                  ['401', 'Ключ отсутствует, введён с ошибкой или удалён.', 'Проверьте заголовок [[Authorization: Bearer sk-…]] и скопируйте ключ заново.'],
+                  ['403, недостаточно квоты', 'Исчерпан баланс или собственная квота ключа.', 'Пополните баланс в Кошельке либо увеличьте квоту ключа.'],
+                  ['403, прочее', 'Ключ отключён или истёк, IP вызывающей стороны вне белого списка, либо модель исключена лимитами модели.', 'Отредактируйте ключ в разделе Ключи API.'],
+                  ['404, модель не найдена', 'Идентификатор модели не существует или недоступен группе ключа.', 'Скопируйте идентификатор со страницы Модели и цены.'],
+                  ['429', 'Превышен лимит частоты запросов.', 'Снизьте частоту и повторяйте с нарастающей паузой.'],
+                  ['5xx', 'Сбой или таймаут на стороне поставщика.', 'Повторите запрос; если повторяется, пришлите нам время запроса и модель.'],
+                ],
+              ],
+              [
+                'p',
+                'Неудачные запросы тоже записываются в журнал использования, поэтому строка журнала — обычно самый быстрый способ увидеть, что получил шлюз.',
+              ],
+            ],
+          },
+          {
+            id: 'support',
+            t: 'Поддержка',
+            b: [
+              [
+                'p',
+                'Пишите на [fairrouter@protonmail.com](mailto:fairrouter@protonmail.com). Каждое письмо читает человек, обычно ответ приходит в течение одного рабочего дня и не позднее семи. Укажите имя аккаунта, а для конкретного запроса — время и модель из журнала использования.',
+              ],
+              [
+                'p',
+                'Вопросы об оплате, счетах и возвратах — на тот же адрес; укажите номер заказа из истории заказов.',
+              ],
+            ],
+          },
+        ],
+      }
+
+      CONTENT.ja = {
+        title: 'ユーザーガイド',
+        tagline:
+          'アカウント作成から最初のモデル応答まで、そして Fair Router を日常的に使うために必要なことをまとめています。',
+        toc: '目次',
+        sub: 'ユーザーガイド',
+        copy: 'コピー',
+        copied: 'コピーしました',
+        nav: {
+          console: 'コンソール',
+          pricing: 'モデルと料金',
+          about: 'このサービスについて',
+          privacy: 'プライバシーポリシー',
+          terms: '利用規約',
+        },
+        sections: [
+          {
+            id: 'start',
+            t: 'はじめに',
+            b: [
+              [
+                'p',
+                'Fair Router は AI API ゲートウェイです。1 つのアカウント、1 つのキー、1 つのベース URL でカタログ内のすべてのモデルを利用でき、料金は前払い残高からトークン単位で差し引かれます。サブスクリプションも最低利用額もありません。',
+              ],
+              [
+                'p',
+                'OpenAI API を使ったことがあれば、Fair Router の使い方はすでに分かっています。SDK のベース URL を [[https://fairrouter.ai/v1]] に向け、Fair Router のキーを設定し、[モデルと料金](/pricing)ページからモデル ID を選ぶだけです。',
+              ],
+              ['h3', '最初の応答までの 3 ステップ'],
+              [
+                'steps',
+                [
+                  'アカウントを作成してログインします。',
+                  '**ウォレット**でチャージし、**APIキー**でキーを作成します。',
+                  'OpenAI 互換の SDK やアプリのベース URL を [[https://fairrouter.ai/v1]] に設定します。',
+                ],
+              ],
+            ],
+          },
+          {
+            id: 'account',
+            t: 'アカウントを作成する',
+            b: [
+              ['p', '[fairrouter.ai](/) を開き、**登録**を選びます。'],
+              [
+                'ul',
+                [
+                  'ユーザー名と 8〜20 文字のパスワードを入力し、パスワードを再入力して確認します。',
+                  '現在、登録にメールアドレスは必要ありません。',
+                  'アカウント作成後、そのままコンソールに移動します。',
+                ],
+              ],
+              [
+                'note',
+                '**ログインしたら、まず「プロフィール」でメールアドレスを登録してください。**パスワードの再設定リンクはアカウントに登録されたアドレスへ送られるため、未登録のままではロックされたアカウントを自分で復旧できません。',
+              ],
+            ],
+          },
+          {
+            id: 'console',
+            t: 'コンソールの構成',
+            b: [
+              ['p', '必要な機能はすべてコンソール左側のサイドバーにあります。'],
+              [
+                'table',
+                [
+                  ['場所', 'できること'],
+                  ['プレイグラウンド', 'コードを書く前にブラウザーでモデルを試す。'],
+                  ['チャット', 'キーを対応チャットアプリへそのまま渡す。'],
+                  ['概要 / ダッシュボード', 'リクエスト数・トークン数・利用金額の推移グラフ。'],
+                  ['APIキー', 'キーの作成・編集・無効化・削除。'],
+                  ['利用履歴', 'リクエスト 1 件につき 1 行：モデル、トークン、料金。'],
+                  ['タスクログ', '非同期ジョブとして送信されたリクエスト。'],
+                  ['ウォレット', '残高、チャージ、注文履歴。'],
+                  ['プロフィール', 'メール、パスワード、二段階認証、ログインセッション。'],
+                ],
+              ],
+            ],
+          },
+          {
+            id: 'keys',
+            t: 'API キーを作成する',
+            b: [
+              [
+                'p',
+                '**APIキー**を開き、**APIキーを作成**を選びます。必須項目は名称だけで、他は既定値のままで最初のキーとして問題ありません。',
+              ],
+              [
+                'table',
+                [
+                  ['項目', '意味'],
+                  ['名称', '一覧に表示されるキーの名前。使用するアプリやマシンの名前を付けると分かりやすくなります。'],
+                  ['グループ', 'キーが使うルーティンググループで、料金もこれで決まります。サポートから指示がなければ [[default]] のままにしてください。'],
+                  ['有効期限', '無期限、またはプリセット／任意の期限。期限切れのキーは使えなくなりますが一覧には残ります。'],
+                  ['数量', 'キーをまとめて複数作成します。'],
+                  ['クォータ / 無制限のクォータ', 'このキーの利用上限額です。料金は常にアカウント残高から差し引かれ、この上限はこのキーが使える金額だけを制限します。'],
+                  ['モデル制限', '指定したモデル ID だけに制限します。空欄ならカタログ内のすべてのモデルを利用できます。'],
+                  ['IP ホワイトリスト', 'ここに記載したアドレスまたは CIDR 範囲からのリクエストのみ受け付けます。'],
+                ],
+              ],
+              [
+                'p',
+                '保存したら、その行の ⋯ メニューから**キーをコピー**を選びます。キーは [[sk-]] で始まります。',
+              ],
+              [
+                'note',
+                'キーはパスワードと同じように扱ってください。アプリごとに別のキーを発行しておけば、1 つを無効化しても他に影響しません。公開の場に貼り付けてしまったキーは必ず削除してください。',
+              ],
+            ],
+          },
+          {
+            id: 'first-call',
+            t: '最初のリクエストを送る',
+            b: [
+              [
+                'p',
+                'ベース URL は [[https://fairrouter.ai/v1]] です。それ以外は標準的な OpenAI のリクエスト形式と同じです。',
+              ],
+              ['code', 'curl'],
+              ['h3', 'Python'],
+              ['code', 'python'],
+              ['h3', 'JavaScript / TypeScript'],
+              ['code', 'node'],
+              ['h3', 'ストリーミング'],
+              ['p', '[[stream]] を true にすると、生成されたそばから応答を受け取れます。'],
+              ['code', 'stream'],
+              ['h3', '使えるモデル ID は？'],
+              [
+                'p',
+                '正確な一覧は[モデルと料金](/pricing)ページに掲載されており、モデル一覧エンドポイントからも取得できます。',
+              ],
+              ['code', 'models'],
+            ],
+          },
+          {
+            id: 'endpoints',
+            t: '対応エンドポイント',
+            b: [
+              [
+                'p',
+                'Fair Router は OpenAI 形式のリクエストを受け付けるほか、Anthropic 形式と Gemini 形式にも対応しているため、いずれか 1 つの形式にしか対応していないツールでもそのまま利用できます。',
+              ],
+              [
+                'table',
+                [
+                  ['エンドポイント', '用途'],
+                  ['POST /v1/chat/completions', 'チャット補完。ストリーミング対応（OpenAI 形式）。'],
+                  ['POST /v1/responses', 'OpenAI Responses API。'],
+                  ['POST /v1/messages', 'Anthropic Messages 形式。'],
+                  ['POST /v1beta/models/…', 'Gemini 形式。'],
+                  ['GET /v1/models', 'そのキーで呼び出せるモデル一覧。'],
+                  ['POST /v1/embeddings', 'テキストの埋め込み。'],
+                  ['POST /v1/images/generations', '画像の生成と編集。'],
+                  ['POST /v1/audio/speech', '音声合成、文字起こし、翻訳。'],
+                  ['POST /v1/rerank', 'リランキング。'],
+                ],
+              ],
+              [
+                'note',
+                '各エンドポイントが実際に何を返せるかは、カタログにあるモデル次第です。現在 Fair Router が提供しているのはテキストモデルのため、ほとんどのアカウントはチャット系のリクエストを利用しています。',
+              ],
+            ],
+          },
+          {
+            id: 'models',
+            t: 'モデルと料金',
+            b: [
+              [
+                'p',
+                '[モデルと料金](/pricing)ページは公開されており、アカウント作成前でも確認できます。各行には 100 万トークンあたりの入力・出力価格が米ドルで表示され、提供元の公式価格も併記されるので、どれだけ安いかがひと目で分かります。',
+              ],
+              [
+                'p',
+                'テキストモデルはトークン課金です。入力トークン × 入力単価に、出力トークン × 出力単価を加えた金額になります。プロンプトキャッシュに対応したモデルでは、キャッシュされた入力トークンはより安いキャッシュ単価で計算されます。リクエストごとの正確なトークン数と請求額は**利用履歴**で確認できます。',
+              ],
+              ['p', '残高およびサイト上のすべての価格は米ドル表示です。'],
+              [
+                'note',
+                'リクエストに適用される価格は、モデルと、そのリクエストを送ったキーのグループで決まります。サポートが特別なグループを設定していない限り、すべて [[default]] で動作し、公開されている料金ページと一致します。',
+              ],
+            ],
+          },
+          {
+            id: 'credit',
+            t: '残高をチャージする',
+            b: [
+              ['p', 'Fair Router は前払い制です。チャージした残高から各リクエストの料金が引き落とされます。'],
+              [
+                'steps',
+                [
+                  'コンソールの**ウォレット**を開きます。上部のカードに現在の残高、総使用量、API リクエスト数が表示されます。',
+                  'プリセット金額を選ぶか、カスタム金額を入力します。',
+                  '決済画面へ進み、カード、銀行振込、または WeChat Pay で支払います。',
+                  '決済が確認されると残高はすぐに反映されます。過去のチャージは注文履歴で確認できます。',
+                ],
+              ],
+              [
+                'p',
+                '引き換えコードをお持ちの場合は、同じページのコード入力欄に入力し、**引き換え**を選びます。',
+              ],
+              [
+                'note',
+                '自動チャージはありません。残高がゼロになるとチャージするまでリクエストはクォータ不足エラーで拒否されるため、ウォレットのカードや概要ページで残高を確認してください。',
+              ],
+            ],
+          },
+          {
+            id: 'usage',
+            t: '利用状況と支出を確認する',
+            b: [
+              [
+                'p',
+                '**利用履歴**にはリクエストごとに 1 行が記録され、時刻、モデル、キー、入力・出力トークン数、請求額が並びます。期間・モデル・キーで絞り込めば特定の呼び出しを探せますし、絞り込んだ結果はエクスポートしてコンソールの外でも利用できます。',
+              ],
+              ['p', '**タスクログ**は、応答内で結果を返さず非同期ジョブとして処理されたリクエストを記録します。'],
+              [
+                'p',
+                '**概要**と**ダッシュボード**は同じデータをグラフ化します。日別の利用金額やモデル別のリクエスト数を見れば、想定より多く呼び出しているクライアントをすばやく見つけられます。',
+              ],
+            ],
+          },
+          {
+            id: 'apps',
+            t: '他のアプリで使う',
+            b: [
+              [
+                'p',
+                '「OpenAI 互換」や「カスタムベース URL」の設定があるアプリならそのまま利用できます。次の値を設定してください。',
+              ],
+              [
+                'ul',
+                [
+                  'API ベース URL：[[https://fairrouter.ai/v1]]（アプリによっては [[https://fairrouter.ai]] を入力すると自動で [[/v1]] を付けます）',
+                  'API キー：[[sk-…]] で始まるキー',
+                  'モデル：[モデルと料金](/pricing)ページに記載の ID',
+                ],
+              ],
+              [
+                'p',
+                'キー一覧の各行にある ⋯ メニューを使うと手間が省けます。**接続情報をコピー**でアドレスとキーをまとめてコピーでき、**チャット**サブメニューは対応アプリ（Cherry Studio、LobeChat、DeepChat、OpenCat、AMA、AI as Workspace、FluentRead、AionUI）へ直接設定を渡します。**CC Switch** は Claude Code 系ツール向けの設定を用意します。',
+              ],
+              [
+                'note',
+                'アプリが接続を拒否する場合は、ベース URL の末尾にスラッシュが付いていないか、キーが期限切れになっていないか、モデル制限で別のモデルに限定されていないかを確認してください。',
+              ],
+            ],
+          },
+          {
+            id: 'playground',
+            t: 'プレイグラウンドで試す',
+            b: [
+              [
+                'p',
+                '**プレイグラウンド**では、キーを用意しなくてもコンソールから、アカウントで利用できる任意のモデルとチャットできます。同じプロンプトで 2 つのモデルを比べたいときや、自分のコードを調べる前にモデルが応答するか確かめたいときに最も手軽です。',
+              ],
+              [
+                'note',
+                'プレイグラウンドの呼び出しも実際の API 呼び出しです。利用履歴に記録され、他のリクエストと同じく残高から課金されます。',
+              ],
+            ],
+          },
+          {
+            id: 'security',
+            t: 'アカウントとセキュリティ',
+            b: [
+              ['p', 'アカウント自体の設定は**プロフィール**にまとまっています。'],
+              [
+                'ul',
+                [
+                  'ユーザー名と表示名の変更、インターフェース言語の設定。',
+                  'メールアドレスの登録とパスワードの変更。',
+                  '二段階認証（TOTP）の有効化。バックアップコードは安全な場所に保管してください。',
+                  '最近のログインセッションを確認し、心当たりのない端末をログアウトさせる。',
+                  'アカウントをプログラムから管理したい場合はシステムアクセストークンを発行できます。このトークンはアカウント管理専用で、モデルの呼び出しには API キーを使います。',
+                ],
+              ],
+            ],
+          },
+          {
+            id: 'errors',
+            t: 'よくあるエラー',
+            b: [
+              [
+                'table',
+                [
+                  ['レスポンス', '意味', '対処'],
+                  ['401', 'キーが未設定、誤入力、または削除済み。', '[[Authorization: Bearer sk-…]] ヘッダーを確認し、キーをコピーし直します。'],
+                  ['403 クォータ不足', '残高またはキー自身のクォータを使い切っています。', 'ウォレットでチャージするか、キーのクォータを引き上げます。'],
+                  ['403 その他', 'キーが無効化・期限切れ、呼び出し元 IP がホワイトリスト外、またはモデル制限でそのモデルが除外されています。', 'APIキー画面でキーを編集します。'],
+                  ['404 モデルが見つからない', 'モデル ID が存在しないか、キーのグループでは利用できません。', 'モデルと料金ページから ID をコピーします。'],
+                  ['429', 'リクエストのレート制限を超えています。', '間隔を空け、バックオフしながら再試行します。'],
+                  ['5xx', '上流プロバイダーの障害またはタイムアウト。', '再試行してください。続く場合はリクエストの時刻とモデルをお知らせください。'],
+                ],
+              ],
+              [
+                'p',
+                '失敗したリクエストも利用履歴に記録されるため、該当行を見るのがゲートウェイ側の状況を把握する最短の方法です。',
+              ],
+            ],
+          },
+          {
+            id: 'support',
+            t: 'サポート',
+            b: [
+              [
+                'p',
+                '[fairrouter@protonmail.com](mailto:fairrouter@protonmail.com) までメールでご連絡ください。すべてのメールを担当者が確認し、通常 1 営業日以内、遅くとも 7 日以内に返信します。アカウント名を明記し、特定のリクエストについては利用履歴の時刻とモデルも添えてください。',
+              ],
+              [
+                'p',
+                '支払い・請求書・返金に関するお問い合わせも同じアドレスへどうぞ。注文履歴に記載の注文番号を併せてお知らせください。',
+              ],
+            ],
+          },
+        ],
+      }
+
+      CONTENT.vi = {
+        title: 'Hướng dẫn sử dụng',
+        tagline:
+          'Mọi thứ bạn cần để đi từ một tài khoản mới đến phản hồi đầu tiên của mô hình, và để dùng Fair Router hằng ngày.',
+        toc: 'Mục lục',
+        sub: 'Hướng dẫn',
+        copy: 'Sao chép',
+        copied: 'Đã sao chép',
+        nav: {
+          console: 'Bảng điều khiển',
+          pricing: 'Mô hình & Giá',
+          about: 'Giới thiệu',
+          privacy: 'Chính sách bảo mật',
+          terms: 'Điều khoản dịch vụ',
+        },
+        sections: [
+          {
+            id: 'start',
+            t: 'Bắt đầu',
+            b: [
+              [
+                'p',
+                'Fair Router là một cổng API cho AI. Một tài khoản, một khóa và một địa chỉ gốc cho bạn dùng mọi mô hình trong danh mục, tính phí theo token từ số dư trả trước. Không thuê bao, không cam kết tối thiểu.',
+              ],
+              [
+                'p',
+                'Nếu bạn từng gọi API của OpenAI thì bạn đã biết dùng Fair Router: trỏ SDK tới [[https://fairrouter.ai/v1]], dùng khóa Fair Router của bạn và chọn một mã mô hình trên trang [Mô hình & Giá](/pricing).',
+              ],
+              ['h3', 'Ba bước tới phản hồi đầu tiên'],
+              [
+                'steps',
+                [
+                  'Tạo tài khoản và đăng nhập.',
+                  'Nạp tiền trong **Ví**, rồi tạo khóa trong **Khóa API**.',
+                  'Trỏ bất kỳ SDK hoặc ứng dụng tương thích OpenAI nào tới [[https://fairrouter.ai/v1]].',
+                ],
+              ],
+            ],
+          },
+          {
+            id: 'account',
+            t: 'Tạo tài khoản',
+            b: [
+              ['p', 'Mở [fairrouter.ai](/) và chọn **Đăng ký**.'],
+              [
+                'ul',
+                [
+                  'Chọn tên đăng nhập và mật khẩu dài 8–20 ký tự, sau đó nhập lại mật khẩu để xác nhận.',
+                  'Hiện tại việc đăng ký không yêu cầu địa chỉ email.',
+                  'Bạn vào thẳng bảng điều khiển ngay khi tài khoản được tạo.',
+                ],
+              ],
+              [
+                'note',
+                '**Hãy thêm địa chỉ email trong Hồ sơ ngay sau khi đăng nhập.** Chức năng khôi phục mật khẩu gửi liên kết đặt lại tới email gắn với tài khoản, nên nếu thiếu email bạn sẽ không thể tự lấy lại tài khoản bị khóa.',
+              ],
+            ],
+          },
+          {
+            id: 'console',
+            t: 'Tổng quan bảng điều khiển',
+            b: [
+              ['p', 'Mọi thứ bạn cần đều nằm ở thanh bên trái của bảng điều khiển.'],
+              [
+                'table',
+                [
+                  ['Vị trí', 'Dùng để làm gì'],
+                  ['Sân chơi', 'Thử một mô hình ngay trên trình duyệt trước khi viết mã.'],
+                  ['Trò chuyện', 'Đưa khóa thẳng sang một ứng dụng chat đã hỗ trợ.'],
+                  ['Tổng quan / Bảng điều khiển', 'Biểu đồ số yêu cầu, số token và chi tiêu theo thời gian.'],
+                  ['Khóa API', 'Tạo, sửa, vô hiệu hóa và xóa khóa.'],
+                  ['Nhật ký sử dụng', 'Mỗi yêu cầu một dòng: mô hình, token, chi phí.'],
+                  ['Nhật ký tác vụ', 'Các yêu cầu gửi dưới dạng tác vụ bất đồng bộ.'],
+                  ['Ví', 'Số dư, các lần nạp tiền và lịch sử đơn hàng.'],
+                  ['Hồ sơ', 'Email, mật khẩu, xác thực hai yếu tố, phiên đăng nhập.'],
+                ],
+              ],
+            ],
+          },
+          {
+            id: 'keys',
+            t: 'Tạo khóa API',
+            b: [
+              [
+                'p',
+                'Vào **Khóa API** rồi chọn **Tạo Khóa API**. Chỉ tên là bắt buộc; các giá trị mặc định đã phù hợp cho khóa đầu tiên.',
+              ],
+              [
+                'table',
+                [
+                  ['Trường', 'Ý nghĩa'],
+                  ['Tên', 'Nhãn của khóa trong danh sách. Nên đặt theo ứng dụng hoặc máy sẽ dùng khóa đó.'],
+                  ['Nhóm', 'Nhóm định tuyến mà khóa sử dụng, đồng thời quyết định giá. Hãy để [[default]] trừ khi bộ phận hỗ trợ hướng dẫn khác.'],
+                  ['Thời gian hết hạn', 'Không hết hạn, hoặc chọn mốc có sẵn hay tùy chỉnh. Khóa hết hạn sẽ ngừng hoạt động nhưng vẫn nằm trong danh sách.'],
+                  ['Số lượng', 'Tạo nhiều khóa cùng lúc.'],
+                  ['Hạn mức / Hạn mức không giới hạn', 'Trần chi tiêu của riêng khóa này. Chi phí luôn trừ vào số dư tài khoản; trần này chỉ giới hạn mức chi của một khóa.'],
+                  ['Giới hạn Mô hình', 'Chỉ cho phép khóa gọi những mã mô hình được chọn. Để trống nghĩa là dùng được toàn bộ danh mục.'],
+                  ['Danh sách IP cho phép', 'Chỉ nhận yêu cầu từ các địa chỉ hoặc dải CIDR này.'],
+                ],
+              ],
+              [
+                'p',
+                'Sau khi lưu, mở menu ⋯ ở dòng tương ứng và chọn **Sao chép khóa**. Khóa bắt đầu bằng [[sk-]].',
+              ],
+              [
+                'note',
+                'Hãy coi khóa như mật khẩu. Cấp cho mỗi ứng dụng một khóa riêng để có thể vô hiệu hóa một khóa mà không ảnh hưởng các ứng dụng khác, và xóa ngay khóa đã lỡ dán ở nơi công khai.',
+              ],
+            ],
+          },
+          {
+            id: 'first-call',
+            t: 'Gửi yêu cầu đầu tiên',
+            b: [
+              [
+                'p',
+                'Địa chỉ gốc là [[https://fairrouter.ai/v1]]. Phần còn lại đúng theo định dạng yêu cầu chuẩn của OpenAI.',
+              ],
+              ['code', 'curl'],
+              ['h3', 'Python'],
+              ['code', 'python'],
+              ['h3', 'JavaScript / TypeScript'],
+              ['code', 'node'],
+              ['h3', 'Truyền theo luồng'],
+              ['p', 'Đặt [[stream]] thành true để nhận phản hồi ngay khi nó được sinh ra.'],
+              ['code', 'stream'],
+              ['h3', 'Dùng được những mã mô hình nào?'],
+              [
+                'p',
+                'Danh sách chính xác có trên trang [Mô hình & Giá](/pricing) và cũng được trả về bởi endpoint mô hình:',
+              ],
+              ['code', 'models'],
+            ],
+          },
+          {
+            id: 'endpoints',
+            t: 'Các endpoint được hỗ trợ',
+            b: [
+              [
+                'p',
+                'Fair Router nhận định dạng yêu cầu của OpenAI, đồng thời hiểu cả định dạng Anthropic và Gemini, nên những công cụ chỉ hỗ trợ một trong số đó vẫn dùng được.',
+              ],
+              [
+                'table',
+                [
+                  ['Endpoint', 'Dùng cho'],
+                  ['POST /v1/chat/completions', 'Hoàn thành hội thoại, hỗ trợ truyền theo luồng (định dạng OpenAI).'],
+                  ['POST /v1/responses', 'API Responses của OpenAI.'],
+                  ['POST /v1/messages', 'Định dạng Anthropic Messages.'],
+                  ['POST /v1beta/models/…', 'Định dạng Gemini.'],
+                  ['GET /v1/models', 'Các mô hình mà khóa của bạn được phép gọi.'],
+                  ['POST /v1/embeddings', 'Vector hóa văn bản.'],
+                  ['POST /v1/images/generations', 'Tạo và chỉnh sửa hình ảnh.'],
+                  ['POST /v1/audio/speech', 'Chuyển văn bản thành giọng nói, chuyển giọng nói thành văn bản và dịch.'],
+                  ['POST /v1/rerank', 'Xếp hạng lại.'],
+                ],
+              ],
+              [
+                'note',
+                'Một endpoint thực sự trả về được gì còn tùy vào các mô hình trong danh mục. Hiện Fair Router cung cấp mô hình văn bản, nên phần lớn tài khoản dùng các yêu cầu dạng hội thoại.',
+              ],
+            ],
+          },
+          {
+            id: 'models',
+            t: 'Mô hình và giá',
+            b: [
+              [
+                'p',
+                'Trang [Mô hình & Giá](/pricing) là công khai — bạn có thể xem trước khi tạo tài khoản. Mỗi dòng hiển thị giá đầu vào và đầu ra cho mỗi triệu token bằng đô la Mỹ, đặt cạnh giá niêm yết chính thức của nhà cung cấp để thấy rõ mức tiết kiệm.',
+              ],
+              [
+                'p',
+                'Mô hình văn bản tính phí theo token: token đầu vào × giá đầu vào, cộng token đầu ra × giá đầu ra. Với mô hình hỗ trợ bộ nhớ đệm prompt, token đầu vào lấy từ bộ nhớ đệm được tính theo mức giá đệm thấp hơn. Số token và số tiền chính xác của từng yêu cầu đều hiển thị trong **Nhật ký sử dụng**.',
+              ],
+              ['p', 'Số dư và mọi mức giá trên trang đều hiển thị bằng đô la Mỹ.'],
+              [
+                'note',
+                'Giá áp cho một yêu cầu phụ thuộc vào mô hình và nhóm của khóa đã gửi yêu cầu đó. Trừ khi bộ phận hỗ trợ chuyển bạn sang nhóm riêng, mọi thứ đều chạy trên [[default]] và khớp với trang giá công khai.',
+              ],
+            ],
+          },
+          {
+            id: 'credit',
+            t: 'Nạp tiền',
+            b: [
+              ['p', 'Fair Router hoạt động theo hình thức trả trước: bạn nạp tiền, mỗi yêu cầu trừ dần vào số dư đó.'],
+              [
+                'steps',
+                [
+                  'Mở **Ví** trong bảng điều khiển. Các thẻ phía trên hiển thị số dư hiện tại, tổng mức sử dụng và số yêu cầu API.',
+                  'Chọn một mức tiền có sẵn hoặc nhập số tiền tùy chỉnh.',
+                  'Chuyển sang trang thanh toán và trả bằng thẻ, chuyển khoản ngân hàng hoặc WeChat Pay.',
+                  'Số dư được cập nhật ngay khi thanh toán được xác nhận. Các lần nạp trước đó nằm trong lịch sử đơn hàng.',
+                ],
+              ],
+              [
+                'p',
+                'Nếu bạn được cấp mã đổi thưởng, hãy nhập vào ô mã trên cùng trang đó rồi chọn **Đổi**.',
+              ],
+              [
+                'note',
+                'Không có nạp tiền tự động. Khi số dư về 0, các yêu cầu sẽ bị từ chối kèm lỗi thiếu hạn mức cho tới khi bạn nạp thêm, vì vậy hãy theo dõi thẻ Ví hoặc trang Tổng quan.',
+              ],
+            ],
+          },
+          {
+            id: 'usage',
+            t: 'Theo dõi mức dùng và chi tiêu',
+            b: [
+              [
+                'p',
+                '**Nhật ký sử dụng** liệt kê mỗi yêu cầu một dòng, gồm thời điểm, mô hình, khóa, token đầu vào và đầu ra, cùng số tiền đã tính. Lọc theo khoảng thời gian, mô hình hoặc khóa để tìm một lần gọi cụ thể, và xuất các dòng đã lọc khi cần dùng ngoài bảng điều khiển.',
+              ],
+              [
+                'p',
+                '**Nhật ký tác vụ** ghi lại những yêu cầu được gửi dưới dạng tác vụ bất đồng bộ thay vì trả kết quả ngay trong phản hồi.',
+              ],
+              [
+                'p',
+                '**Tổng quan** và **Bảng điều khiển** chuyển cùng dữ liệu đó thành biểu đồ — chi tiêu theo ngày, số yêu cầu theo mô hình — cách nhanh nhất để phát hiện một ứng dụng đang gọi nhiều hơn dự kiến.',
+              ],
+            ],
+          },
+          {
+            id: 'apps',
+            t: 'Dùng Fair Router trong ứng dụng khác',
+            b: [
+              [
+                'p',
+                'Mọi ứng dụng có tùy chọn “tương thích OpenAI” hoặc “địa chỉ gốc tùy chỉnh” đều dùng được với Fair Router. Hãy nhập:',
+              ],
+              [
+                'ul',
+                [
+                  'Địa chỉ gốc API: [[https://fairrouter.ai/v1]] — một số ứng dụng chỉ cần [[https://fairrouter.ai]] và tự thêm [[/v1]].',
+                  'Khóa API: khóa [[sk-…]] của bạn.',
+                  'Mô hình: một mã lấy từ [Mô hình & Giá](/pricing).',
+                ],
+              ],
+              [
+                'p',
+                'Menu ⋯ ở mỗi dòng khóa giúp rút ngắn việc này: **Sao chép thông tin kết nối** chép cả địa chỉ lẫn khóa, menu con **Trò chuyện** chuyển thẳng cấu hình sang ứng dụng được hỗ trợ (Cherry Studio, LobeChat, DeepChat, OpenCat, AMA, AI as Workspace, FluentRead, AionUI), còn **CC Switch** chuẩn bị cấu hình cho các công cụ kiểu Claude Code.',
+              ],
+              [
+                'note',
+                'Nếu ứng dụng báo không kết nối được, hãy kiểm tra địa chỉ gốc không có dấu gạch chéo ở cuối, và khóa chưa hết hạn hay bị giới hạn sang mô hình khác.',
+              ],
+            ],
+          },
+          {
+            id: 'playground',
+            t: 'Thử trong Sân chơi',
+            b: [
+              [
+                'p',
+                '**Sân chơi** cho phép trò chuyện với bất kỳ mô hình nào tài khoản của bạn dùng được, ngay trong bảng điều khiển và không cần khóa. Đây là cách nhanh nhất để so sánh hai mô hình trên cùng một prompt, hoặc xác nhận mô hình vẫn trả lời trước khi bạn gỡ lỗi mã của mình.',
+              ],
+              [
+                'note',
+                'Các lần gọi từ Sân chơi là lệnh gọi API thật: chúng xuất hiện trong nhật ký sử dụng và bị trừ vào số dư như mọi yêu cầu khác.',
+              ],
+            ],
+          },
+          {
+            id: 'security',
+            t: 'Tài khoản và bảo mật',
+            b: [
+              ['p', '**Hồ sơ** chứa mọi thiết lập liên quan tới chính tài khoản.'],
+              [
+                'ul',
+                [
+                  'Đổi tên đăng nhập và tên hiển thị, chọn ngôn ngữ giao diện.',
+                  'Gắn địa chỉ email và đổi mật khẩu.',
+                  'Bật xác thực hai yếu tố (TOTP) và cất mã dự phòng ở nơi an toàn.',
+                  'Xem các phiên đăng nhập gần đây và đăng xuất mọi thiết bị lạ.',
+                  'Tạo mã truy cập hệ thống nếu bạn muốn quản lý tài khoản bằng chương trình. Mã này chỉ dùng để quản lý tài khoản — gọi mô hình thì dùng khóa API.',
+                ],
+              ],
+            ],
+          },
+          {
+            id: 'errors',
+            t: 'Lỗi thường gặp',
+            b: [
+              [
+                'table',
+                [
+                  ['Phản hồi', 'Nghĩa là gì', 'Cần làm gì'],
+                  ['401', 'Thiếu khóa, gõ sai hoặc khóa đã bị xóa.', 'Kiểm tra header [[Authorization: Bearer sk-…]] và sao chép lại khóa.'],
+                  ['403 thiếu hạn mức', 'Số dư tài khoản, hoặc hạn mức riêng của khóa, đã cạn.', 'Nạp tiền trong Ví, hoặc nâng hạn mức của khóa.'],
+                  ['403 lý do khác', 'Khóa bị vô hiệu hóa hoặc hết hạn, IP gọi nằm ngoài danh sách cho phép, hoặc Giới hạn Mô hình loại trừ mô hình đó.', 'Sửa khóa trong mục Khóa API.'],
+                  ['404 không tìm thấy mô hình', 'Mã mô hình không tồn tại, hoặc không khả dụng với nhóm của khóa.', 'Sao chép mã từ trang Mô hình & Giá.'],
+                  ['429', 'Bạn đã vượt giới hạn tần suất yêu cầu.', 'Giảm nhịp gọi và thử lại có giãn cách tăng dần.'],
+                  ['5xx', 'Nhà cung cấp phía trên gặp lỗi hoặc quá thời gian.', 'Thử lại; nếu vẫn lặp lại, hãy gửi cho chúng tôi thời điểm và mô hình của yêu cầu.'],
+                ],
+              ],
+              [
+                'p',
+                'Các yêu cầu thất bại cũng được ghi vào nhật ký sử dụng, nên xem dòng nhật ký tương ứng thường là cách nhanh nhất để biết cổng đã nhận được gì.',
+              ],
+            ],
+          },
+          {
+            id: 'support',
+            t: 'Nhận hỗ trợ',
+            b: [
+              [
+                'p',
+                'Gửi email tới [fairrouter@protonmail.com](mailto:fairrouter@protonmail.com). Mọi thư đều có người đọc, thường trả lời trong vòng một ngày làm việc và không quá bảy ngày. Hãy ghi tên tài khoản, và với một yêu cầu cụ thể thì kèm thời điểm cùng mô hình lấy từ nhật ký sử dụng.',
+              ],
+              [
+                'p',
+                'Các câu hỏi về thanh toán, hóa đơn và hoàn tiền cũng gửi tới địa chỉ này — kèm mã đơn hàng trong lịch sử đơn hàng.',
+              ],
+            ],
+          },
+        ],
+      }
+
+      /* ------------------------------------------------------------------
+       * Rendering
+       * ---------------------------------------------------------------- */
+      var STORAGE_KEY = 'fr-guide-lang'
+
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+      }
+
+      /* Inline markup used inside the content strings:
+       *   [[…]]        -> <code>
+       *   **…**        -> <strong>
+       *   [text](href) -> <a>
+       */
+      function inline(value) {
+        return escapeHtml(value)
+          .replace(/\[\[([^\]]+)\]\]/g, '<code>$1</code>')
+          .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+          .replace(
+            /\[([^\]]+)\]\(([^)]+)\)/g,
+            '<a href="$2">$1</a>'
+          )
+      }
+
+      function renderBlock(block, strings) {
+        var kind = block[0]
+        var value = block[1]
+
+        if (kind === 'p') return '<p>' + inline(value) + '</p>'
+        if (kind === 'h3') return '<h3>' + inline(value) + '</h3>'
+        if (kind === 'note') return '<div class="note">' + inline(value) + '</div>'
+        if (kind === 'ul' || kind === 'steps') {
+          var tag = kind === 'ul' ? 'ul' : 'ol'
+          var items = value
+            .map(function (item) {
+              return '<li>' + inline(item) + '</li>'
+            })
+            .join('')
+          return '<' + tag + '>' + items + '</' + tag + '>'
+        }
+        if (kind === 'table') {
+          var head = value[0]
+            .map(function (cell) {
+              return '<th>' + inline(cell) + '</th>'
+            })
+            .join('')
+          var body = value
+            .slice(1)
+            .map(function (row) {
+              return (
+                '<tr>' +
+                row
+                  .map(function (cell) {
+                    return '<td>' + inline(cell) + '</td>'
+                  })
+                  .join('') +
+                '</tr>'
+              )
+            })
+            .join('')
+          return (
+            '<div class="table-wrap"><table><thead><tr>' +
+            head +
+            '</tr></thead><tbody>' +
+            body +
+            '</tbody></table></div>'
+          )
+        }
+        if (kind === 'code') {
+          var snippet = SAMPLES[value] || ''
+          return (
+            '<div class="code"><button type="button" data-copy>' +
+            escapeHtml(strings.copy) +
+            '</button><pre>' +
+            escapeHtml(snippet) +
+            '</pre></div>'
+          )
+        }
+        return ''
+      }
+
+      function render(code) {
+        var data = CONTENT[code] || CONTENT.en
+        var meta = LANGS.filter(function (item) {
+          return item.code === code
+        })[0]
+
+        document.documentElement.lang = meta ? meta.html : 'en'
+        document.title = 'Fair Router — ' + data.title
+        document.getElementById('title').textContent = data.title
+        document.getElementById('tagline').textContent = data.tagline
+        document.getElementById('toc-label').textContent = data.toc
+        document.getElementById('brand-sub').textContent = data.sub
+        document.getElementById('link-console').textContent = data.nav.console
+        document.getElementById('link-pricing').textContent = data.nav.pricing
+        document.getElementById('link-about').textContent = data.nav.about
+        document.getElementById('link-privacy').textContent = data.nav.privacy
+        document.getElementById('link-terms').textContent = data.nav.terms
+
+        document.getElementById('toc').innerHTML = data.sections
+          .map(function (section) {
+            return (
+              '<li><a href="#' +
+              section.id +
+              '">' +
+              escapeHtml(section.t) +
+              '</a></li>'
+            )
+          })
+          .join('')
+
+        document.getElementById('sections').innerHTML = data.sections
+          .map(function (section) {
+            return (
+              '<section id="' +
+              section.id +
+              '"><h2>' +
+              escapeHtml(section.t) +
+              '</h2>' +
+              section.b
+                .map(function (block) {
+                  return renderBlock(block, data)
+                })
+                .join('') +
+              '</section>'
+            )
+          })
+          .join('')
+
+        bindCopyButtons(data)
+        markActiveTocEntry()
+      }
+
+      function bindCopyButtons(strings) {
+        var buttons = document.querySelectorAll('[data-copy]')
+        Array.prototype.forEach.call(buttons, function (button) {
+          button.addEventListener('click', function () {
+            var snippet = button.parentNode.querySelector('pre').textContent
+            navigator.clipboard.writeText(snippet).then(function () {
+              button.textContent = strings.copied
+              setTimeout(function () {
+                button.textContent = strings.copy
+              }, 1500)
+            })
+          })
+        })
+      }
+
+      function markActiveTocEntry() {
+        var links = document.querySelectorAll('nav.toc a')
+        var sections = document.querySelectorAll('main section')
+        if (!sections.length) return
+
+        var current = sections[0].id
+        Array.prototype.forEach.call(sections, function (section) {
+          if (section.getBoundingClientRect().top <= 120) current = section.id
+        })
+
+        Array.prototype.forEach.call(links, function (link) {
+          link.classList.toggle(
+            'active',
+            link.getAttribute('href') === '#' + current
+          )
+        })
+      }
+
+      /* Match the console: theme lives in the `vite-ui-theme` cookie the app
+       * writes, and the reader's saved guide language falls back to the
+       * language i18next stored for the console. */
+      function readCookie(name) {
+        var match = document.cookie.match(
+          new RegExp('(?:^|; )' + name + '=([^;]*)')
+        )
+        return match ? decodeURIComponent(match[1]) : null
+      }
+
+      function applyTheme() {
+        var stored = readCookie('vite-ui-theme') || 'system'
+        var dark =
+          stored === 'dark' ||
+          (stored !== 'light' &&
+            window.matchMedia('(prefers-color-scheme: dark)').matches)
+        document.documentElement.setAttribute(
+          'data-theme',
+          dark ? 'dark' : 'light'
+        )
+        document.getElementById('brand-logo').src = dark
+          ? '/fairrouter-logo-dark.svg'
+          : '/fairrouter-logo-light.svg'
+      }
+
+      function initialLanguage() {
+        var codes = LANGS.map(function (item) {
+          return item.code
+        })
+        var saved = null
+        try {
+          saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('i18nextLng')
+        } catch (error) {
+          saved = null
+        }
+        if (saved && codes.indexOf(saved) !== -1) return saved
+
+        var browser = (navigator.language || 'en').toLowerCase()
+        if (browser.indexOf('zh') === 0) {
+          return browser.indexOf('tw') !== -1 ||
+            browser.indexOf('hk') !== -1 ||
+            browser.indexOf('hant') !== -1
+            ? 'zhTW'
+            : 'zhCN'
+        }
+        var base = browser.split('-')[0]
+        return codes.indexOf(base) !== -1 ? base : 'en'
+      }
+
+      var select = document.getElementById('lang')
+      select.innerHTML = LANGS.map(function (item) {
+        return '<option value="' + item.code + '">' + item.label + '</option>'
+      }).join('')
+
+      var active = initialLanguage()
+      select.value = active
+      select.addEventListener('change', function () {
+        active = select.value
+        try {
+          localStorage.setItem(STORAGE_KEY, active)
+        } catch (error) {
+          /* private browsing — the choice simply does not persist */
+        }
+        render(active)
+      })
+
+      applyTheme()
+      window
+        .matchMedia('(prefers-color-scheme: dark)')
+        .addEventListener('change', applyTheme)
+      render(active)
+      window.addEventListener('scroll', markActiveTocEntry, { passive: true })
+    </script>
+  </body>
+</html>
