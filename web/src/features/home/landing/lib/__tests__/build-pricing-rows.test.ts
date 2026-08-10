@@ -125,6 +125,25 @@ describe('buildPricingRows', () => {
     assert.equal(unknown.vendorLabel, 'ACME')
   })
 
+  test('orders rows A→Z by displayed name, digit-aware and case-insensitive', () => {
+    const rows = buildPricingRows({
+      models: [
+        tokenModel({ model_name: 'qwen3.10-plus' }),
+        tokenModel({ model_name: 'GLM-5.2' }),
+        tokenModel({ model_name: 'qwen3.6-plus' }),
+        tokenModel({ model_name: 'deepseek-v4-flash' }),
+      ],
+      language: 'en',
+      // The display name wins over the model id, so the sort must follow it.
+      catalog: { 'deepseek-v4-flash': { displayName: 'Zeta Flash' } },
+    })
+
+    assert.deepEqual(
+      rows.map((row) => row.modelId),
+      ['GLM-5.2', 'qwen3.6-plus', 'qwen3.10-plus', 'deepseek-v4-flash']
+    )
+  })
+
   test('prefers the catalog display name over the raw model id', () => {
     const row = build(tokenModel(), {
       'demo-model': { displayName: 'Demo Model' },

@@ -116,11 +116,15 @@ interface BuildPricingRowsParams {
  * this is a USD comparison table by design, independent of the console's
  * display currency. Everything the table renders is a string so the
  * presentational components carry no pricing logic.
+ *
+ * Rows come out sorted A→Z by displayed name, so the catalogue reads
+ * predictably and the home preview's first ten are the alphabetical head
+ * rather than whatever order the backend happened to return.
  */
 export function buildPricingRows(params: BuildPricingRowsParams): PricingRow[] {
   const { models, language, catalog: catalogMap } = params
 
-  return models.map((model) => {
+  const rows = models.map((model) => {
     const catalog = catalogMap[model.model_name] ?? {}
     const isPerRequest = model.quota_type === QUOTA_TYPE_VALUES.REQUEST
     const groupRatio = getDisplayGroupRatio(model)
@@ -165,4 +169,11 @@ export function buildPricingRows(params: BuildPricingRowsParams): PricingRow[] {
       savingsOutput: formatSavings(catalog.officialOutput, outputUSD, language),
     }
   })
+
+  // Case-insensitive and digit-aware, so `qwen3.6` precedes `qwen3.10` instead
+  // of sorting by codepoint. Fixed to 'en' because this catalogue is English
+  // model ids in every UI language.
+  return rows.sort((a, b) =>
+    a.name.localeCompare(b.name, 'en', { numeric: true, sensitivity: 'base' })
+  )
 }
