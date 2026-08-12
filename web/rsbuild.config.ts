@@ -64,6 +64,9 @@ export default defineConfig(({ envMode }) => {
     },
     html: {
       template: './index.html',
+      // Without this, Rsbuild falls back to the public/favicon.ico convention and
+      // injects the pre-fork icon after the template's own <link rel="icon"> tags.
+      favicon: './public/fairrouter-favicon.ico',
     },
     server: {
       host: '0.0.0.0',
