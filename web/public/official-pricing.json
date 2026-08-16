@@ -1,71 +1,77 @@
 {
-  "updatedAt": "2026-08-08",
+  "updatedAt": "2026-08-16",
   "models": {
     "deepseek-v4-flash": {
       "officialInput": 0.14,
-      "officialOutput": 0.28,
-      "openrouterInput": 0.14,
-      "openrouterOutput": 0.28
+      "officialOutput": 0.27,
+      "openrouterInput": 0.15,
+      "openrouterOutput": 0.3
     },
     "deepseek-v4-flash-0731": {
-      "officialInput": 0.14,
-      "officialOutput": 0.28,
-      "openrouterInput": 0.14,
-      "openrouterOutput": 0.28
+      "officialInput": 0.18,
+      "officialOutput": 0.36,
+      "openrouterInput": 0.2,
+      "openrouterOutput": 0.41
     },
     "glm-5.1": {
-      "officialInput": 0.26,
-      "officialOutput": 4.4,
+      "officialInput": 0.22,
+      "officialOutput": 3.7,
       "openrouterInput": 0.26,
-      "openrouterOutput": 4.4
+      "openrouterOutput": 4.36
     },
     "glm-5.2": {
-      "officialInput": 1.4,
-      "officialOutput": 4.4,
-      "openrouterInput": 1.4,
-      "openrouterOutput": 4.4
+      "officialInput": 1.52,
+      "officialOutput": 4.78,
+      "openrouterInput": 1.84,
+      "openrouterOutput": 5.77
     },
     "glm-5.2-fast-preview": {
-      "officialInput": 2.4,
-      "officialOutput": 8.4,
-      "openrouterInput": 2.4,
-      "openrouterOutput": 8.4
+      "officialInput": 3.31,
+      "officialOutput": 11.6,
+      "openrouterInput": 4.2,
+      "openrouterOutput": 14.7
     },
     "kimi-k2.7-code": {
-      "officialInput": 0.95,
-      "officialOutput": 4,
-      "openrouterInput": 0.95,
-      "openrouterOutput": 4
+      "officialInput": 0.97,
+      "officialOutput": 4.06,
+      "openrouterInput": 1.17,
+      "openrouterOutput": 4.9
     },
     "qwen3.6-flash": {
-      "officialInput": 0.18,
-      "officialOutput": 1.08,
-      "openrouterInput": 0.18,
-      "openrouterOutput": 1.08
+      "officialInput": 0.17,
+      "officialOutput": 0.99,
+      "openrouterInput": 0.19,
+      "openrouterOutput": 1.1
     },
     "qwen3.6-plus": {
-      "officialInput": 0.3,
-      "officialOutput": 1.8,
-      "openrouterInput": 0.3,
-      "openrouterOutput": 1.8
+      "officialInput": 0.29,
+      "officialOutput": 1.76,
+      "openrouterInput": 0.35,
+      "openrouterOutput": 2.08
     },
     "qwen3.7-flash": {
-      "officialInput": 0.03,
-      "officialOutput": 0.12,
-      "openrouterInput": 0.03,
+      "officialInput": 0.026,
+      "officialOutput": 0.1,
+      "openrouterInput": 0.029,
       "openrouterOutput": 0.12
     },
     "qwen3.7-max": {
-      "officialInput": 1.8,
-      "officialOutput": 5.4,
-      "openrouterInput": 1.8,
-      "openrouterOutput": 5.4
+      "officialInput": 1.89,
+      "officialOutput": 5.67,
+      "openrouterInput": 2.39,
+      "openrouterOutput": 7.18
     },
     "qwen3.7-plus": {
-      "officialInput": 1.8,
-      "officialOutput": 5.4,
-      "openrouterInput": 1.8,
-      "openrouterOutput": 5.4
+      "officialInput": 1.76,
+      "officialOutput": 5.29,
+      "openrouterInput": 2.08,
+      "openrouterOutput": 6.24
+    },
+    "qwen3.8-max": {
+      "officialInput": 2.7,
+      "officialOutput": 8.1,
+      "openrouterInput": 3.42,
+      "openrouterOutput": 10.3
     }
   }
 }
