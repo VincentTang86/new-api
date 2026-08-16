@@ -383,7 +383,10 @@
   <body>
     <header class="topbar">
       <a class="brand" href="/">
-        <img id="brand-logo" src="/fairrouter-logo-light.svg" alt="Fair Router" />
+        <!-- Decorative: the brand name sits next to it as real text, so an alt
+             would just make screen readers say "FairRouter" twice. -->
+        <img src="/fairrouter-mark.png" alt="" />
+        <span>FairRouter</span>
         <span class="brand-sub" id="brand-sub">User Guide</span>
       </a>
       <span class="topbar-spacer"></span>
@@ -2906,9 +2909,6 @@
           'data-theme',
           dark ? 'dark' : 'light'
         )
-        document.getElementById('brand-logo').src = dark
-          ? '/fairrouter-logo-dark.svg'
-          : '/fairrouter-logo-light.svg'
       }
 
       function initialLanguage() {
