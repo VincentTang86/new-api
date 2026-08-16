@@ -16,9 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { createContext, useContext, useEffect, useState } from 'react'
-
-import { CommandMenu } from '@/components/command-menu'
+import { createContext, useContext, useState } from 'react'
 
 type SearchContextType = {
   open: boolean
@@ -31,24 +29,19 @@ type SearchProviderProps = {
   children: React.ReactNode
 }
 
+/**
+ * The console search entry point is currently hidden: the header renders with
+ * `showSearch={false}` and the ⌘K shortcut plus the `CommandMenu` mount are
+ * both withdrawn, because the command palette indexes stale routes and is not
+ * usable yet. The context itself stays so consumers keep compiling — re-mount
+ * `CommandMenu` here and restore the keydown listener once search works again.
+ */
 export function SearchProvider({ children }: SearchProviderProps) {
   const [open, setOpen] = useState(false)
-
-  useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault()
-        setOpen((open) => !open)
-      }
-    }
-    document.addEventListener('keydown', down)
-    return () => document.removeEventListener('keydown', down)
-  }, [])
 
   return (
     <SearchContext.Provider value={{ open, setOpen }}>
       {children}
-      <CommandMenu />
     </SearchContext.Provider>
   )
 }
