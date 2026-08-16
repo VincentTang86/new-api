@@ -115,8 +115,22 @@ export type ThemeCustomization = {
   contentLayout: ContentLayout
 }
 
+/**
+ * Out-of-the-box console appearance.
+ *
+ * `preset: 'anthropic'` is a product decision: the public pages run on their
+ * own `--pd-*` palette (see styles/public-design.css) whose warm canvas and
+ * coral accent the console's neutral `:root` baseline does not match. The
+ * Anthropic preset is the closest sibling in the theme system, so shipping it
+ * as the default keeps both halves of the product visually related. Users who
+ * picked a preset explicitly are unaffected — their choice lives in the
+ * `theme_preset` cookie.
+ *
+ * NOTE: index.html carries an inline pre-paint script that mirrors this
+ * default. Change one, change the other.
+ */
 export const DEFAULT_THEME_CUSTOMIZATION: ThemeCustomization = {
-  preset: 'default',
+  preset: 'anthropic',
   font: 'default',
   radius: 'default',
   scale: 'default',

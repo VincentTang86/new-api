@@ -48,6 +48,62 @@
   </head>
 
   <body>
+    <!--
+      Paint the theme before the bundle boots. React writes these same
+      attributes from ThemeCustomizationProvider / ThemeProvider, but only
+      after hydration, so without this the shell flashes the neutral :root
+      baseline (white) before settling on the Anthropic cream default.
+      The values below MUST stay in sync with src/lib/theme-customization.ts
+      and src/context/theme-provider.tsx.
+    -->
+    <script>
+      ;(function () {
+        try {
+          var read = function (name) {
+            var match = document.cookie.match('(?:^|; )' + name + '=([^;]*)')
+            return match ? match[1] : ''
+          }
+          // THEME_PRESETS — cookies are user-writable, so only known values
+          // are allowed through to the attribute.
+          var presets = [
+            'default',
+            'anthropic',
+            'simple-large',
+            'underground',
+            'rose-garden',
+            'lake-view',
+            'sunset-glow',
+            'forest-whisper',
+            'ocean-breeze',
+            'lavender-dream',
+          ]
+          // PRESET_DEFAULT_FONT — presets absent from this map resolve to sans.
+          var serifPresets = { anthropic: 1 }
+
+          // DEFAULT_THEME_CUSTOMIZATION.preset
+          var preset = read('theme_preset')
+          if (presets.indexOf(preset) < 0) preset = 'anthropic'
+
+          var font = read('theme_font')
+          if (font !== 'sans' && font !== 'serif') {
+            font = serifPresets[preset] ? 'serif' : 'sans'
+          }
+
+          document.body.setAttribute('data-theme-preset', preset)
+          document.body.setAttribute('data-theme-font', font)
+
+          var mode = read('vite-ui-theme')
+          if (mode !== 'light' && mode !== 'dark') {
+            mode = window.matchMedia('(prefers-color-scheme: dark)').matches
+              ? 'dark'
+              : 'light'
+          }
+          document.documentElement.classList.add(mode)
+        } catch (e) {
+          // Theming is cosmetic — never let it block the app from booting.
+        }
+      })()
+    </script>
     <div id="root" translate="no" class="notranslate"></div>
   </body>
 </html>

@@ -135,11 +135,17 @@ export function ThemeCustomizationProvider(props: {
 
   // Mirror state to the <body> via data-* attributes so theme-presets.css can
   // override CSS variables at the right cascade layer.
+  //
+  // The preset attribute is always written, including for the default preset.
+  // The other axes below drop their attribute when they match the default,
+  // because their default IS the `:root` baseline. `preset` cannot do that: its
+  // default is `anthropic`, whose palette lives behind
+  // `[data-theme-preset='anthropic']`, so omitting the attribute would leave the
+  // neutral baseline showing. theme-presets.css is written for an
+  // always-present attribute (`[data-theme-preset]:not([data-theme-preset='default'])`),
+  // so spelling out `default` changes nothing for that preset.
   useEffect(() => {
-    applyAttribute(
-      'data-theme-preset',
-      preset === DEFAULT_THEME_CUSTOMIZATION.preset ? null : preset
-    )
+    applyAttribute('data-theme-preset', preset)
   }, [preset])
 
   // Font is the one axis where we resolve before writing the attribute:
