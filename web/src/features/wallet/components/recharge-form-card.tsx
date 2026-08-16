@@ -196,7 +196,7 @@ export function RechargeFormCard({
 
   return (
     <TitledCard
-      title={t('Add Funds')}
+      title={t('Add Credits')}
       description={t('Choose an amount and payment method')}
       icon={<WalletCards className='h-4 w-4' />}
       iconTone='success'
