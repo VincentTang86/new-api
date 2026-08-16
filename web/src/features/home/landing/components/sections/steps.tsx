@@ -35,7 +35,7 @@ export function LandingSteps() {
     },
     {
       key: 'key',
-      title: t('Create an API key'),
+      title: t('Create API Key'),
       desc: t('Generate a key for your project from the dashboard.'),
     },
     {
@@ -48,8 +48,8 @@ export function LandingSteps() {
   ]
 
   return (
-    <section className={cn(LANDING_CONTAINER, 'py-20')}>
-      <h2 className='mb-12 text-3xl font-semibold tracking-tight text-gray-900 max-[640px]:text-2xl'>
+    <section className={cn(LANDING_CONTAINER, 'py-16')}>
+      <h2 className='pd-font-display mb-12 text-[40px] font-extrabold tracking-tight text-(--pd-ink-strong) max-[640px]:text-[28px]'>
         {t('Get started in three steps')}
       </h2>
       <ol className='grid grid-cols-3 gap-8 max-[640px]:grid-cols-1'>
@@ -57,14 +57,16 @@ export function LandingSteps() {
           <li key={step.key} className='flex flex-col'>
             <span
               aria-hidden
-              className='mb-4 font-mono text-4xl font-semibold text-gray-100'
+              className='mb-4 flex size-8 items-center justify-center rounded-lg bg-(--pd-accent-bg) font-mono text-sm font-bold text-(--pd-primary)'
             >
-              0{index + 1}
+              {index + 1}
             </span>
-            <h3 className='mb-2 text-base font-semibold text-gray-900'>
+            <h3 className='pd-font-display mb-2 text-xl font-bold text-(--pd-ink-strong)'>
               {step.title}
             </h3>
-            <p className='text-sm leading-relaxed text-gray-600'>{step.desc}</p>
+            <p className='text-base leading-[1.6] text-(--pd-muted)'>
+              {step.desc}
+            </p>
           </li>
         ))}
       </ol>

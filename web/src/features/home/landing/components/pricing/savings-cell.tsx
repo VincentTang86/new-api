@@ -16,20 +16,52 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { LANDING_PRICE_PLACEHOLDER } from '../../lib/pricing'
+import { useTranslation } from 'react-i18next'
 
-interface SavingsTextProps {
-  /** Pre-formatted savings string from the adapter, or the placeholder dash. */
-  value: string
+import { LANDING_PRICE_PLACEHOLDER } from '../../lib/pricing'
+import type { PricingRow } from '../../types'
+
+interface SavingsBadgeProps {
+  row: PricingRow
 }
 
 /**
- * Renders a savings figure in the accent colour, or a muted dash when there is
- * nothing to claim. The percentage itself is computed in build-pricing-rows.
+ * The design's combined savings pill: "In 20% · Out 20%" on the success tint.
+ * Per-request rows carry a single figure; when no honest claim exists for the
+ * selected benchmark the cell degrades to a muted dash. The percentages are
+ * computed in build-pricing-rows.
  */
-export function SavingsText(props: SavingsTextProps) {
-  if (props.value === LANDING_PRICE_PLACEHOLDER) {
-    return <span className='text-gray-400'>{LANDING_PRICE_PLACEHOLDER}</span>
+export function SavingsBadge(props: SavingsBadgeProps) {
+  const { t } = useTranslation()
+  const row = props.row
+
+  const hasInput = row.savingsInput !== LANDING_PRICE_PLACEHOLDER
+  const hasOutput =
+    !row.isPerRequest && row.savingsOutput !== LANDING_PRICE_PLACEHOLDER
+
+  let label = ''
+  if (row.isPerRequest) {
+    if (hasInput) label = row.savingsInput
+  } else if (hasInput && hasOutput) {
+    label = t('In {{in}} · Out {{out}}', {
+      in: row.savingsInput,
+      out: row.savingsOutput,
+    })
+  } else if (hasInput) {
+    label = t('In {{in}}', { in: row.savingsInput })
+  } else if (hasOutput) {
+    label = t('Out {{out}}', { out: row.savingsOutput })
   }
-  return <span className='font-medium text-emerald-600'>{props.value}</span>
+
+  if (!label) {
+    return (
+      <span className='text-(--pd-faint)'>{LANDING_PRICE_PLACEHOLDER}</span>
+    )
+  }
+
+  return (
+    <span className='inline-flex rounded-md bg-(--pd-success-bg) px-2 py-1 text-xs font-bold whitespace-nowrap text-(--pd-success)'>
+      {label}
+    </span>
+  )
 }

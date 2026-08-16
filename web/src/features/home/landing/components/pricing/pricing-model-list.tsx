@@ -18,7 +18,7 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { useTranslation } from 'react-i18next'
 
-import type { PricingRow } from '../../types'
+import type { PricingBenchmark, PricingRow } from '../../types'
 import { PricingPreviewAccordion } from './pricing-preview-accordion'
 import { PricingPreviewTable } from './pricing-preview-table'
 
@@ -32,6 +32,8 @@ export type PricingListVariant = 'preview' | 'catalogue'
 interface PricingModelListProps {
   rows: readonly PricingRow[]
   variant: PricingListVariant
+  /** Which benchmark the comparison columns show; names their headers. */
+  benchmark: PricingBenchmark
   /** The data is fetched live from /api/pricing, so surface its async states. */
   isLoading?: boolean
   isError?: boolean
@@ -41,7 +43,7 @@ interface PricingModelListProps {
 const SKELETON_ROW_KEYS = ['s1', 's2', 's3', 's4', 's5', 's6']
 
 /**
- * One responsive presentation of the catalogue: a nine-column table from `md`
+ * One responsive presentation of the catalogue: a seven-column table from `md`
  * up, a per-model accordion below it. Shared by both pages so they never drift.
  * Owns the loading / error / empty states of the live pricing feed.
  */
@@ -50,15 +52,15 @@ export function PricingModelList(props: PricingModelListProps) {
 
   if (props.isLoading) {
     return (
-      <div className='overflow-hidden rounded-md border border-gray-200'>
+      <div className='overflow-hidden rounded-2xl border border-(--pd-border)'>
         {SKELETON_ROW_KEYS.map((key) => (
           <div
             key={key}
-            className='flex items-center gap-3 border-b border-gray-100 px-4 py-4 last:border-b-0'
+            className='flex items-center gap-3 border-b border-(--pd-border-soft) px-4 py-4 last:border-b-0'
           >
-            <div className='size-7 shrink-0 animate-pulse rounded bg-gray-100' />
-            <div className='h-4 w-40 animate-pulse rounded bg-gray-100' />
-            <div className='ml-auto h-4 w-24 animate-pulse rounded bg-gray-100' />
+            <div className='size-7 shrink-0 animate-pulse rounded bg-(--pd-surface-muted)' />
+            <div className='h-4 w-40 animate-pulse rounded bg-(--pd-surface-muted)' />
+            <div className='ml-auto h-4 w-24 animate-pulse rounded bg-(--pd-surface-muted)' />
           </div>
         ))}
       </div>
@@ -67,15 +69,15 @@ export function PricingModelList(props: PricingModelListProps) {
 
   if (props.isError) {
     return (
-      <div className='rounded-md border border-dashed border-gray-200 px-4 py-12 text-center'>
-        <p className='text-sm text-gray-500'>
+      <div className='rounded-2xl border border-dashed border-(--pd-border) px-4 py-12 text-center'>
+        <p className='text-sm text-(--pd-muted-3)'>
           {t('Could not load models. Please try again.')}
         </p>
         {props.onRetry ? (
           <button
             type='button'
             onClick={props.onRetry}
-            className='mt-3 text-xs text-indigo-600 transition-colors hover:text-indigo-800'
+            className='mt-3 cursor-pointer text-xs text-(--pd-primary) transition-opacity hover:opacity-80'
           >
             {t('Retry')}
           </button>
@@ -86,7 +88,7 @@ export function PricingModelList(props: PricingModelListProps) {
 
   if (props.rows.length === 0) {
     return (
-      <p className='rounded-md border border-dashed border-gray-200 px-4 py-12 text-center text-sm text-gray-500'>
+      <p className='rounded-2xl border border-dashed border-(--pd-border) px-4 py-12 text-center text-sm text-(--pd-muted-3)'>
         {t('No models are available right now.')}
       </p>
     )
@@ -94,8 +96,16 @@ export function PricingModelList(props: PricingModelListProps) {
 
   return (
     <>
-      <PricingPreviewTable rows={props.rows} variant={props.variant} />
-      <PricingPreviewAccordion rows={props.rows} variant={props.variant} />
+      <PricingPreviewTable
+        rows={props.rows}
+        variant={props.variant}
+        benchmark={props.benchmark}
+      />
+      <PricingPreviewAccordion
+        rows={props.rows}
+        variant={props.variant}
+        benchmark={props.benchmark}
+      />
     </>
   )
 }

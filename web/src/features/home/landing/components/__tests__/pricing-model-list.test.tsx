@@ -100,7 +100,6 @@ const SAMPLE_ROWS: PricingRow[] = [
     officialOutput: '$10.00',
     savingsInput: '50%',
     savingsOutput: '50%',
-    context: '128K',
   },
   {
     modelId: 'deepseek-r1',
@@ -115,7 +114,6 @@ const SAMPLE_ROWS: PricingRow[] = [
     officialOutput: '—',
     savingsInput: '—',
     savingsOutput: '—',
-    context: '64K',
   },
 ]
 
@@ -136,7 +134,9 @@ async function renderList(
   const indexRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/',
-    component: () => <PricingModelList rows={rows} variant={variant} />,
+    component: () => (
+      <PricingModelList rows={rows} variant={variant} benchmark='official' />
+    ),
   })
   const modelRoute = createRoute({
     getParentRoute: () => rootRoute,
@@ -169,24 +169,22 @@ after(async () => {
 })
 
 describe('PricingModelList', () => {
-  test('renders the nine designed columns in order, each a column header', async () => {
+  test('renders the seven designed columns in order, each a column header', async () => {
     const rendered = await renderList(SAMPLE_ROWS)
     const headers = [...rendered.container.querySelectorAll('thead th')]
 
-    assert.equal(headers.length, 9)
+    assert.equal(headers.length, 7)
     assert.deepEqual(
       headers.map((th) => th.textContent),
       [
         'Model',
-        'Input / 1M',
-        'Output / 1M',
-        'Official input / 1M',
-        'Official output / 1M',
-        'Input savings',
-        'Output savings',
-        'Context',
-        // The last column carries the per-row Details link and is unlabelled
-        // by design.
+        'FR Input / 1M',
+        'FR Output / 1M',
+        'Official Input / 1M',
+        'Official Output / 1M',
+        'Savings',
+        // The last column carries the per-row View link and is unlabelled by
+        // design.
         '',
       ]
     )
@@ -198,7 +196,7 @@ describe('PricingModelList', () => {
   })
 
   test('ships both responsive presentations, gated by the md breakpoint', async () => {
-    // Nine columns cannot fit a phone. The contract is table-above-md /
+    // Seven columns cannot fit a phone. The contract is table-above-md /
     // accordion-below-md — not a horizontally scrolling table.
     const rendered = await renderList(SAMPLE_ROWS)
 
@@ -235,15 +233,17 @@ describe('PricingModelList', () => {
     await unmountList(rendered)
   })
 
-  test('renders the pre-formatted dash when a row has no savings', async () => {
-    // A row the adapter could not compute savings for arrives with a dash in
-    // both savings cells; the list must render it verbatim, not blank.
+  test('collapses the savings pill to a dash when a row has no savings', async () => {
+    // A row the adapter could not compute savings for arrives with dashes in
+    // both savings fields; the combined pill must degrade to a single dash.
     const rendered = await renderList(SAMPLE_ROWS)
     const bodyRows = [...rendered.container.querySelectorAll('tbody tr')]
-    const cells = [...bodyRows[1].querySelectorAll('td')]
 
-    assert.equal(cells[4].textContent, '—')
-    assert.equal(cells[5].textContent, '—')
+    const withSavings = [...bodyRows[0].querySelectorAll('td')]
+    assert.equal(withSavings[4].textContent, 'In 50% · Out 50%')
+
+    const withoutSavings = [...bodyRows[1].querySelectorAll('td')]
+    assert.equal(withoutSavings[4].textContent, '—')
 
     await unmountList(rendered)
   })

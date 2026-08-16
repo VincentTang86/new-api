@@ -27,9 +27,12 @@ For commercial licensing, please contact support@quantumnous.com
  * (`lib/build-pricing-rows.ts`) merges the parsed map onto each backend model:
  *
  *   - official* → the vendor's public list price, USD per 1M tokens
- *     (officialRequestPrice for 按次 / per-request models). Savings are computed
- *     as (official − FR) / official, so a model with no official entry simply
- *     shows a dash in the official + savings columns.
+ *     (officialRequestPrice for 按次 / per-request models).
+ *   - openrouter* → OpenRouter's public list price for the same model, used
+ *     when the visitor flips the "Compare with" toggle to OpenRouter.
+ *   Savings are computed as (benchmark − FR) / benchmark against whichever
+ *   benchmark is selected, so a model with no entry for that source simply
+ *   shows a dash in the benchmark + savings columns.
  *   - context → context-window label, e.g. '128K'. Brand literal.
  *   - displayName → friendly name; falls back to the model_name when absent.
  *
@@ -57,6 +60,11 @@ export interface OfficialPricingEntry {
   officialOutput?: number
   /** Vendor list price, USD per call (按次 / per-request models). */
   officialRequestPrice?: number
+  /** OpenRouter list price, USD per 1M tokens (token / 按 Token models). */
+  openrouterInput?: number
+  openrouterOutput?: number
+  /** OpenRouter list price, USD per call (按次 / per-request models). */
+  openrouterRequestPrice?: number
   /** Context-window label, e.g. '128K'. */
   context?: string
 }
@@ -113,6 +121,17 @@ export function parseOfficialPricing(raw: unknown): OfficialPricingMap {
     const officialRequestPrice = readPrice(source.officialRequestPrice)
     if (officialRequestPrice !== undefined) {
       entry.officialRequestPrice = officialRequestPrice
+    }
+
+    const openrouterInput = readPrice(source.openrouterInput)
+    if (openrouterInput !== undefined) entry.openrouterInput = openrouterInput
+    const openrouterOutput = readPrice(source.openrouterOutput)
+    if (openrouterOutput !== undefined) {
+      entry.openrouterOutput = openrouterOutput
+    }
+    const openrouterRequestPrice = readPrice(source.openrouterRequestPrice)
+    if (openrouterRequestPrice !== undefined) {
+      entry.openrouterRequestPrice = openrouterRequestPrice
     }
 
     parsed[modelName] = entry

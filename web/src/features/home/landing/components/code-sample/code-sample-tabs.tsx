@@ -49,7 +49,7 @@ export function CodeSampleTabs(props: CodeSampleTabsProps) {
 
   return (
     <div
-      className='overflow-hidden rounded-md border border-gray-200'
+      className='overflow-hidden rounded-xl border border-(--pd-border)'
       style={{ background: LANDING_CODE_SURFACE }}
     >
       <div
@@ -70,7 +70,7 @@ export function CodeSampleTabs(props: CodeSampleTabsProps) {
                 className={cn(
                   'px-4 py-2.5 font-mono text-xs transition-colors',
                   isActive
-                    ? 'border-b border-indigo-400 text-white'
+                    ? 'border-b border-(--pd-primary) text-white'
                     : 'text-gray-500 hover:text-gray-300'
                 )}
               >

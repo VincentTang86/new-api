@@ -17,31 +17,106 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 /*
- * Public marketing surfaces render against the raw Tailwind palette the design
- * file is drawn in (gray / indigo / emerald) rather than the app's semantic
- * tokens, so the components can carry the same utility classes as the design
- * source and stay diffable against it.
+ * Public marketing surfaces render the FairRouter Figma Make design. The
+ * design's palette, font pair and radii live here as `--pd-*` tokens scoped
+ * to `.public-design`; components consume them via Tailwind variable
+ * shorthand (`bg-(--pd-canvas)`, `text-(--pd-primary)`, …) so dark mode is a
+ * single variable flip below instead of per-class overrides.
  *
- * Everything below is a scoped port of the design's own `src/index.css` — the
- * font pair, the page canvas, and the global dark-mode repaint — confined to
- * `.public-design`. The console keeps the semantic-token theme system
- * untouched: no rule here targets a semantic utility or escapes the scope.
+ * The console keeps the semantic-token theme system untouched: no rule here
+ * targets a semantic utility or escapes the scope.
  */
 
 .public-design {
+  /* Brand */
+  --pd-primary: #ff5a5f;
+  --pd-gradient-from: #ff5a5f;
+  --pd-gradient-to: #c2185b;
+
+  /* Surfaces */
+  --pd-canvas: #fcfbfa;
+  --pd-surface: #ffffff;
+  --pd-surface-alt: #fafbfc;
+  --pd-surface-muted: #f7f7f8;
+  --pd-table-head: #f1f3f5;
+  --pd-accent-bg: #fff1f0;
+  --pd-accent-bg-hover: #fff8f7;
+
+  /* Ink */
+  --pd-ink-strong: #0f172a;
+  --pd-ink: #111827;
+  --pd-muted: #475569;
+  --pd-muted-2: #6b7280;
+  --pd-muted-3: #64748b;
+  --pd-faint: #9ca3af;
+
+  /* Lines */
+  --pd-border: #e5e7eb;
+  --pd-border-soft: #e2e8f0;
+
+  /* Status */
+  --pd-success: #059669;
+  --pd-success-bg: #ecfdf5;
+
   --font-mono:
     'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
 
-  font-family: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, sans-serif;
-  color: #111827;
+  font-family:
+    'Geist Variable', 'Inter Variable', 'Inter', ui-sans-serif, system-ui,
+    sans-serif;
+  color: var(--pd-ink);
   scrollbar-color: #d1d5db transparent;
 }
 
-/* The canvas itself is `bg-white` on the shell element, exactly as in the
- * design's root layout, so the repaint below carries it into dark mode. */
+/* Hero backdrop: the design's soft radial brand glow behind the headline.
+ * (The mock also tiled its logo mark as a texture; that layer occluded the
+ * vendor strip, so it is intentionally dropped.) */
+.public-design .pd-hero-glow {
+  background-image: radial-gradient(
+    ellipse 60% 55% at 50% 20%,
+    color-mix(in srgb, var(--pd-primary) 7%, transparent),
+    transparent 70%
+  );
+}
+
+/* Display face (logo, headings) — the design's Outfit. */
+.public-design .pd-font-display {
+  font-family:
+    'Outfit Variable', 'Geist Variable', 'Inter Variable', ui-sans-serif,
+    system-ui, sans-serif;
+}
+
+/* Dark mode: flip the token layer once. The design ships light-only, so the
+ * dark palette extends its slate ramp; the brand red is lifted one step for
+ * contrast on dark canvases. */
 .dark .public-design {
   color-scheme: dark;
   color: #e2e8f0;
+
+  --pd-primary: #ff6b70;
+  --pd-gradient-from: #ff6b70;
+  --pd-gradient-to: #d81b60;
+
+  --pd-canvas: #0f172a;
+  --pd-surface: #111827;
+  --pd-surface-alt: #16203a;
+  --pd-surface-muted: #1e293b;
+  --pd-table-head: #1e293b;
+  --pd-accent-bg: rgb(255 90 95 / 0.12);
+  --pd-accent-bg-hover: rgb(255 90 95 / 0.08);
+
+  --pd-ink-strong: #f8fafc;
+  --pd-ink: #f1f5f9;
+  --pd-muted: #cbd5e1;
+  --pd-muted-2: #94a3b8;
+  --pd-muted-3: #94a3b8;
+  --pd-faint: #64748b;
+
+  --pd-border: #334155;
+  --pd-border-soft: #1e293b;
+
+  --pd-success: #34d399;
+  --pd-success-bg: rgb(5 150 105 / 0.15);
 }
 
 .public-design :is(code, pre, .font-mono) {

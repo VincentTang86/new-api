@@ -43,27 +43,24 @@ export function LandingCodeSample() {
     (status?.docs_link as string | undefined) || LANDING_FALLBACK_DOCS_URL
 
   return (
-    <section
-      id={LANDING_SECTION_IDS.code}
-      className='border-t border-gray-100 bg-gray-50 py-20'
-    >
+    <section id={LANDING_SECTION_IDS.code} className='py-16'>
       <div className={LANDING_CONTAINER}>
         <div className='max-w-[720px]'>
-          <h2 className='mb-3 text-3xl font-semibold tracking-tight text-gray-900 max-[640px]:text-2xl'>
+          <h2 className='pd-font-display mb-3 text-[40px] font-extrabold tracking-tight text-(--pd-ink-strong) max-[640px]:text-[28px]'>
             {t('Change two lines, start calling')}
           </h2>
-          <p className='mb-8 text-sm text-gray-500'>
+          <p className='mb-8 text-base text-(--pd-muted)'>
             {t(
               'Already using the OpenAI SDK? Only base_url and api_key need to change.'
             )}
           </p>
           <CodeSampleTabs baseUrl={baseUrl} />
-          <p className='mt-4 text-sm text-gray-500'>
+          <p className='mt-4 text-sm text-(--pd-muted-3)'>
             <a
               href={docsUrl}
               target='_blank'
               rel='noopener noreferrer'
-              className='text-indigo-600 transition-colors hover:text-indigo-800'
+              className='text-(--pd-primary) transition-colors hover:opacity-80'
             >
               {t('Read the quickstart guide')}
             </a>

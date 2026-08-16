@@ -17,7 +17,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { Link } from '@tanstack/react-router'
-import { ArrowRight } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { useStatus } from '@/hooks/use-status'
@@ -37,34 +36,32 @@ export function LandingFinalCta(props: LandingFinalCtaProps) {
   const docsUrl =
     (status?.docs_link as string | undefined) || LANDING_FALLBACK_DOCS_URL
 
-  const primaryLabel = props.isAuthenticated
-    ? t('Go to console')
-    : t('Get Started')
   const primaryTarget = props.isAuthenticated ? '/keys' : '/register'
 
   return (
-    // Full-bleed brand band closing the page — the only inverted section.
-    <section className='border-t border-gray-100 bg-indigo-600 py-20'>
-      <div className={`${LANDING_CONTAINER} text-center`}>
-        <h2 className='mb-3 text-3xl font-semibold tracking-tight text-white max-[640px]:text-2xl'>
-          {t('Start your next model call at a lower cost')}
-        </h2>
-        <p className='mb-8 text-sm text-indigo-200'>
-          {t('No commitment. Pay only for what you use.')}
-        </p>
-        <div className='flex flex-wrap justify-center gap-3'>
+    // Gradient brand card closing the page — the only inverted surface.
+    <section className={`${LANDING_CONTAINER} py-16`}>
+      <div className='relative flex flex-col items-center gap-8 rounded-3xl border border-white/40 bg-linear-to-r from-(--pd-gradient-from) to-(--pd-gradient-to) p-20 drop-shadow-[0px_18px_20px_rgba(0,0,0,0.1)] max-[640px]:p-8'>
+        <div className='flex flex-col items-center gap-4 text-center'>
+          <h2 className='pd-font-display text-[48px] leading-[1.15] font-extrabold text-white max-[640px]:text-[30px]'>
+            {t('Start your next model call at a lower cost')}
+          </h2>
+          <p className='max-w-[600px] text-lg text-white/80 max-[640px]:text-base'>
+            {t('No commitment. Pay only for what you use.')}
+          </p>
+        </div>
+        <div className='flex flex-wrap items-center justify-center gap-4'>
           <Link
             to={primaryTarget}
-            className='inline-flex items-center gap-2 rounded-md bg-white px-5 py-2.5 text-sm font-medium text-indigo-700 transition-colors hover:bg-indigo-50'
+            className='flex items-center justify-center rounded-lg bg-white px-7 py-3.5 text-sm font-semibold whitespace-nowrap text-(--pd-primary) transition-opacity hover:opacity-90'
           >
-            {primaryLabel}
-            <ArrowRight size={14} aria-hidden />
+            {t('Start Building')}
           </Link>
           <a
             href={docsUrl}
             target='_blank'
             rel='noopener noreferrer'
-            className='inline-flex items-center gap-2 rounded-md border border-indigo-500 bg-indigo-700 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-indigo-800'
+            className='flex items-center justify-center rounded-lg border-[1.5px] border-white/50 px-7 py-3.5 text-sm font-medium whitespace-nowrap text-white transition-colors hover:bg-white/10'
           >
             {t('View API Docs')}
           </a>

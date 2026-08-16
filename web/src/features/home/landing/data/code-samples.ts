@@ -32,7 +32,7 @@ export function buildLandingCodeSamples(
   return [
     {
       language: 'python',
-      label: 'Python',
+      label: 'main.py',
       snippet: `from openai import OpenAI
 
 client = OpenAI(
@@ -49,7 +49,7 @@ print(response.choices[0].message.content)`,
     },
     {
       language: 'javascript',
-      label: 'JavaScript',
+      label: 'server.js',
       snippet: `import OpenAI from "openai"
 
 const client = new OpenAI({
@@ -66,7 +66,7 @@ console.log(response.choices[0].message.content)`,
     },
     {
       language: 'curl',
-      label: 'cURL',
+      label: 'request.sh',
       snippet: `curl ${baseUrl}/chat/completions \\
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer ${API_KEY_PLACEHOLDER}" \\

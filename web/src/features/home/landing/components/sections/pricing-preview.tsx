@@ -20,54 +20,72 @@ import { Link } from '@tanstack/react-router'
 import { ArrowRight } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
+import { useSystemConfig } from '@/hooks/use-system-config'
 import { cn } from '@/lib/utils'
 
 import { LANDING_CONTAINER, LANDING_SECTION_IDS } from '../../constants'
 import { useLandingPricingRows } from '../../lib/use-landing-pricing-rows'
 import { PricingModelList } from '../pricing/pricing-model-list'
+import { PricingTableControls } from '../pricing/pricing-table-controls'
 
 /** How many models the home teaser shows before "View all models". */
 const PREVIEW_ROW_LIMIT = 10
 
 export function LandingPricingPreview() {
   const { t } = useTranslation()
-  const { rows, isLoading, isError, refetch } = useLandingPricingRows()
-  const previewRows = rows.slice(0, PREVIEW_ROW_LIMIT)
+  const { systemName } = useSystemConfig()
+  const table = useLandingPricingRows()
+  const previewRows = table.rows.slice(0, PREVIEW_ROW_LIMIT)
 
   return (
     <section
       id={LANDING_SECTION_IDS.pricing}
-      className={cn(LANDING_CONTAINER, 'py-20')}
+      className={cn(LANDING_CONTAINER, 'py-16')}
     >
-      <div className='mb-8'>
-        <h2 className='mb-3 text-3xl font-semibold tracking-tight text-gray-900 max-[640px]:text-2xl'>
+      <div className='mb-6'>
+        <h2 className='pd-font-display mb-3 text-[40px] font-extrabold tracking-tight text-(--pd-ink-strong) max-[640px]:text-[28px]'>
           {t('Models & pricing, made clear')}
         </h2>
-        <p className='text-sm text-gray-500'>
-          {t('Our discounted prices vs. official rates, USD per 1M tokens')}
+        <p className='text-base text-(--pd-muted)'>
+          {t(
+            'Compare {{name}} rates with the selected benchmark. Prices are shown in USD per million tokens.',
+            { name: systemName }
+          )}
         </p>
       </div>
+
+      <PricingTableControls
+        groups={table.groups}
+        selectedGroup={table.selectedGroup}
+        onGroupChange={table.setSelectedGroup}
+        benchmark={table.benchmark}
+        onBenchmarkChange={table.setBenchmark}
+        providers={table.providers}
+        providerFilter={table.providerFilter}
+        onProviderChange={table.setProviderFilter}
+      />
 
       <PricingModelList
         rows={previewRows}
         variant='preview'
-        isLoading={isLoading}
-        isError={isError}
-        onRetry={refetch}
+        benchmark={table.benchmark}
+        isLoading={table.isLoading}
+        isError={table.isError}
+        onRetry={table.refetch}
       />
 
       <div className='mt-4 flex flex-wrap items-center justify-between gap-2'>
-        <p className='text-xs text-gray-400'>
+        <p className='text-[13px] text-(--pd-muted-3)'>
           {t(
-            'Discounted rates shown. Official prices are sourced from each provider’s public pricing page. Savings are calculated against those rates. Your invoice reflects actual usage.'
+            "Comparison rates come from the selected source's public model listings. Savings are calculated against that rate."
           )}
         </p>
         <Link
           to='/pricing'
-          className='flex items-center gap-1 text-xs whitespace-nowrap text-indigo-600 transition-colors hover:text-indigo-800'
+          className='flex items-center gap-1 text-[13px] font-medium whitespace-nowrap text-(--pd-primary) transition-opacity hover:opacity-80'
         >
           {t('View all models')}
-          <ArrowRight size={11} aria-hidden />
+          <ArrowRight size={12} aria-hidden />
         </Link>
       </div>
     </section>

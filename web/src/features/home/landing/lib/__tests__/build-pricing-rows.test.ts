@@ -21,13 +21,15 @@ import { describe, test } from 'node:test'
 
 import type { PricingModel } from '@/features/pricing/types'
 
+import type { PricingBenchmark } from '../../types'
 import { buildPricingRows } from '../build-pricing-rows'
 import type { OfficialPricingMap } from '../official-pricing'
 import { LANDING_PRICE_PLACEHOLDER } from '../pricing'
 
 // A token model priced so that FR input = model_ratio*2*groupRatio = 1.25 and
-// FR output = *completion_ratio = 5.00. Against a $2.50 / $10 list price that is
-// exactly a 50% saving on both — the invariant the marketing page sells.
+// FR output = *completion_ratio = 5.00 at ratio 1. Against a $2.50 / $10 list
+// price that is exactly a 50% saving on both — the invariant the marketing
+// page sells.
 function tokenModel(overrides: Partial<PricingModel> = {}): PricingModel {
   return {
     id: 1,
@@ -41,14 +43,31 @@ function tokenModel(overrides: Partial<PricingModel> = {}): PricingModel {
   }
 }
 
-function build(model: PricingModel, catalog: OfficialPricingMap) {
-  return buildPricingRows({ models: [model], language: 'en', catalog })[0]
+interface BuildOverrides {
+  selectedGroup?: string
+  groupRatio?: Record<string, number>
+  benchmark?: PricingBenchmark
+}
+
+function build(
+  model: PricingModel,
+  catalog: OfficialPricingMap,
+  overrides: BuildOverrides = {}
+) {
+  return buildPricingRows({
+    models: [model],
+    language: 'en',
+    catalog,
+    selectedGroup: overrides.selectedGroup ?? 'default',
+    groupRatio: overrides.groupRatio ?? { default: 1 },
+    benchmark: overrides.benchmark ?? 'official',
+  })[0]
 }
 
 describe('buildPricingRows', () => {
-  test('computes savings from the backend ratio against the configured list price', () => {
+  test('computes savings from the backend ratio against the official list price', () => {
     const row = build(tokenModel(), {
-      'demo-model': { officialInput: 2.5, officialOutput: 10, context: '128K' },
+      'demo-model': { officialInput: 2.5, officialOutput: 10 },
     })
 
     assert.equal(row.isPerRequest, false)
@@ -60,27 +79,105 @@ describe('buildPricingRows', () => {
     assert.equal(row.officialOutput, '$10.00')
     assert.equal(row.savingsInput, '50%')
     assert.equal(row.savingsOutput, '50%')
-    assert.equal(row.context, '128K')
   })
 
-  test('follows the group ratio, so a discounted group deepens the saving', () => {
+  test('prices FR by the selected group ratio, so a cheaper tier deepens the saving', () => {
     // groupRatio 0.5 halves FR input to 0.625 → 75% off the $2.50 list price.
     const row = build(
-      tokenModel({ enable_groups: ['vip'], group_ratio: { vip: 0.5 } }),
-      { 'demo-model': { officialInput: 2.5 } }
+      tokenModel({ enable_groups: ['vip'] }),
+      { 'demo-model': { officialInput: 2.5 } },
+      { selectedGroup: 'vip', groupRatio: { vip: 0.5 } }
     )
+    assert.equal(row.frInput, '$0.625')
     assert.equal(row.savingsInput, '75%')
   })
 
-  test('shows a dash for models with no configured list price or context', () => {
-    const row = build(tokenModel(), {})
+  test('official benchmark stays fixed while the group ratio changes FR', () => {
+    const catalog: OfficialPricingMap = {
+      'demo-model': { officialInput: 2.5 },
+    }
+    const fullPrice = build(
+      tokenModel({ enable_groups: ['a', 'b'] }),
+      catalog,
+      {
+        selectedGroup: 'a',
+        groupRatio: { a: 1, b: 0.8 },
+      }
+    )
+    const discounted = build(
+      tokenModel({ enable_groups: ['a', 'b'] }),
+      catalog,
+      { selectedGroup: 'b', groupRatio: { a: 1, b: 0.8 } }
+    )
+
+    assert.equal(fullPrice.officialInput, '$2.50')
+    assert.equal(discounted.officialInput, '$2.50')
+    assert.notEqual(fullPrice.frInput, discounted.frInput)
+    assert.equal(discounted.frInput, '$1.00')
+  })
+
+  test('the openrouter benchmark reads the openrouter columns of the catalog', () => {
+    const catalog: OfficialPricingMap = {
+      'demo-model': {
+        officialInput: 2.5,
+        officialOutput: 10,
+        openrouterInput: 5,
+        openrouterOutput: 20,
+      },
+    }
+    const row = build(tokenModel(), catalog, { benchmark: 'openrouter' })
+
+    assert.equal(row.officialInput, '$5.00')
+    assert.equal(row.officialOutput, '$20.00')
+    assert.equal(row.savingsInput, '75%')
+    assert.equal(row.savingsOutput, '75%')
+  })
+
+  test('a benchmark with no data shows dashes even when the other one is set', () => {
+    const row = build(
+      tokenModel(),
+      { 'demo-model': { officialInput: 2.5, officialOutput: 10 } },
+      { benchmark: 'openrouter' }
+    )
     assert.equal(row.officialInput, LANDING_PRICE_PLACEHOLDER)
     assert.equal(row.officialOutput, LANDING_PRICE_PLACEHOLDER)
     assert.equal(row.savingsInput, LANDING_PRICE_PLACEHOLDER)
     assert.equal(row.savingsOutput, LANDING_PRICE_PLACEHOLDER)
-    assert.equal(row.context, LANDING_PRICE_PLACEHOLDER)
     // The model is still listed — the product decision is to show everything.
     assert.equal(row.modelId, 'demo-model')
+  })
+
+  test('drops models not enabled for the selected group, honoring the "all" convention', () => {
+    const rows = buildPricingRows({
+      models: [
+        tokenModel({ model_name: 'in-group', enable_groups: ['vip'] }),
+        tokenModel({ model_name: 'out-of-group', enable_groups: ['default'] }),
+        tokenModel({ model_name: 'always-on', enable_groups: ['all'] }),
+      ],
+      language: 'en',
+      catalog: {},
+      selectedGroup: 'vip',
+      groupRatio: { vip: 0.5 },
+      benchmark: 'official',
+    })
+
+    assert.deepEqual(rows.map((row) => row.modelId).sort(), [
+      'always-on',
+      'in-group',
+    ])
+  })
+
+  test('an empty selected group lists everything at ratio 1', () => {
+    const rows = buildPricingRows({
+      models: [tokenModel({ enable_groups: ['vip'] })],
+      language: 'en',
+      catalog: {},
+      selectedGroup: '',
+      groupRatio: { vip: 0.5 },
+      benchmark: 'official',
+    })
+    assert.equal(rows.length, 1)
+    assert.equal(rows[0].frInput, '$1.25')
   })
 
   test('never claims a saving when the list price is not higher', () => {
@@ -90,24 +187,31 @@ describe('buildPricingRows', () => {
     assert.equal(row.savingsInput, LANDING_PRICE_PLACEHOLDER)
   })
 
-  test('treats per-request models as billed by call', () => {
+  test('treats per-request models as billed by call, per benchmark', () => {
     const model = tokenModel({
       model_name: 'flux-1.1-pro',
       quota_type: 1,
       model_price: 0.04,
     })
-    const row = build(model, {
-      'flux-1.1-pro': { officialRequestPrice: 0.08 },
-    })
+    const catalog: OfficialPricingMap = {
+      'flux-1.1-pro': {
+        officialRequestPrice: 0.08,
+        openrouterRequestPrice: 0.05,
+      },
+    }
+    const official = build(model, catalog)
 
-    assert.equal(row.isPerRequest, true)
+    assert.equal(official.isPerRequest, true)
     // Per-call price is USD too; three decimals below a dollar.
-    assert.equal(row.frInput, '$0.040')
-    assert.equal(row.frOutput, '')
-    assert.equal(row.savingsInput, '50%')
+    assert.equal(official.frInput, '$0.040')
+    assert.equal(official.frOutput, '')
+    assert.equal(official.savingsInput, '50%')
     // The output side has no meaning for a per-call price.
-    assert.equal(row.officialOutput, LANDING_PRICE_PLACEHOLDER)
-    assert.equal(row.savingsOutput, LANDING_PRICE_PLACEHOLDER)
+    assert.equal(official.officialOutput, LANDING_PRICE_PLACEHOLDER)
+    assert.equal(official.savingsOutput, LANDING_PRICE_PLACEHOLDER)
+
+    const openrouter = build(model, catalog, { benchmark: 'openrouter' })
+    assert.equal(openrouter.savingsInput, '20%')
   })
 
   test('resolves the vendor chip from vendor name or model id, else null', () => {
@@ -136,6 +240,9 @@ describe('buildPricingRows', () => {
       language: 'en',
       // The display name wins over the model id, so the sort must follow it.
       catalog: { 'deepseek-v4-flash': { displayName: 'Zeta Flash' } },
+      selectedGroup: 'default',
+      groupRatio: { default: 1 },
+      benchmark: 'official',
     })
 
     assert.deepEqual(

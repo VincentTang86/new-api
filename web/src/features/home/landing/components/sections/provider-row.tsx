@@ -21,33 +21,41 @@ import { useTranslation } from 'react-i18next'
 import { LANDING_PROVIDER_ORDER } from '../../constants'
 import { LANDING_PROVIDERS } from '../../lib/providers'
 
+/**
+ * "MODELS FROM" strip under the hero. Real vendor marks (lobehub icons on
+ * their brand chip) beside the vendor name — the design mock shipped broken
+ * placeholder images here, so the chip treatment is deliberately our own:
+ * icon and label sit side by side, nothing overlaps.
+ */
 export function LandingProviderRow() {
   const { t } = useTranslation()
 
   return (
-    <div className='mt-14 border-t border-gray-100 pt-10'>
-      <p className='mb-5 font-mono text-xs tracking-widest text-gray-400 uppercase'>
-        {t('Supported providers')}
+    <div className='flex w-full flex-col items-center gap-5 pt-2'>
+      <p className='text-xs font-bold tracking-widest text-(--pd-muted-2) uppercase'>
+        {t('Models from')}
       </p>
-      <ul className='flex flex-wrap gap-2.5'>
+      <ul className='flex flex-wrap items-center justify-center gap-x-4 gap-y-3'>
         {LANDING_PROVIDER_ORDER.map((key) => {
           const provider = LANDING_PROVIDERS[key]
           return (
             <li
               key={key}
-              className='inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 transition-colors hover:border-gray-300'
+              className='inline-flex items-center gap-2 rounded-xl py-1'
             >
               <span
-                className='flex size-6 shrink-0 items-center justify-center rounded'
+                className='flex size-[18px] shrink-0 items-center justify-center rounded'
                 style={{ background: provider.chip.bg }}
               >
                 <provider.chip.Icon
-                  size={14}
+                  size={12}
                   className='text-white'
                   aria-hidden
                 />
               </span>
-              {provider.label}
+              <span className='text-[15px] font-medium whitespace-nowrap text-(--pd-ink)'>
+                {provider.label}
+              </span>
             </li>
           )
         })}

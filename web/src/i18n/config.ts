@@ -53,10 +53,15 @@ i18n
       escapeValue: false, // not needed for react as it escapes by default
     },
     detection: {
-      order: ['localStorage', 'navigator'],
+      // First visits land on English regardless of the browser locale (product
+      // requirement), so `navigator` is deliberately absent: only an explicit
+      // choice persisted in localStorage picks a language, everything else
+      // falls back to `fallbackLng`.
+      order: ['localStorage'],
       caches: ['localStorage'],
-      // Browsers report `zh-CN`/`zh-TW`/`zh`; map them onto our `zhCN`/`zhTW`
-      // codes (non-Chinese codes pass through for normal supportedLngs matching).
+      // localStorage may still hold `zh-CN`/`zh-TW` style values written by
+      // older builds; map them onto our `zhCN`/`zhTW` codes (non-Chinese codes
+      // pass through for normal supportedLngs matching).
       convertDetectedLanguage,
     },
   })

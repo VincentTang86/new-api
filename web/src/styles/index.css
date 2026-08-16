@@ -26,11 +26,15 @@ For commercial licensing, please contact support@quantumnous.com
  * that activates it. Loaded globally so font-switching is instantaneous
  * with no FOUT once the variable is fetched. */
 @import '@fontsource-variable/lora';
-/* Typeface pair the public marketing surfaces are drawn in. Self-hosted so the
- * design's Google Fonts <link> does not become a third-party request.
- * See `public-design.css` for the scope that applies them. */
+/* Typefaces the public marketing surfaces are drawn in (Outfit for display,
+ * Geist for body, JetBrains Mono for model names/prices, Inter as fallback).
+ * Self-hosted so the design's Google Fonts <link> does not become a
+ * third-party request. See `public-design.css` for the scope that applies
+ * them. */
 @import '@fontsource-variable/inter';
 @import '@fontsource-variable/jetbrains-mono';
+@import '@fontsource-variable/outfit';
+@import '@fontsource-variable/geist';
 
 @import './theme.css';
 @import './theme-presets.css';

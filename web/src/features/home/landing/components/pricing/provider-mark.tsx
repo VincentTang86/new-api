@@ -66,7 +66,7 @@ export function ProviderMark(props: ProviderMarkProps) {
   return (
     <span
       aria-hidden
-      className='flex size-7 shrink-0 items-center justify-center rounded bg-gray-200 text-[11px] font-semibold text-gray-600'
+      className='flex size-7 shrink-0 items-center justify-center rounded bg-(--pd-surface-muted) text-[11px] font-semibold text-(--pd-muted-2)'
     >
       {initial}
     </span>

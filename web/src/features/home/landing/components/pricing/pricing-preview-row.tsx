@@ -19,13 +19,11 @@ For commercial licensing, please contact support@quantumnous.com
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
-import { cn } from '@/lib/utils'
-
 import { LANDING_PRICE_PLACEHOLDER } from '../../lib/pricing'
 import type { PricingRow } from '../../types'
 import type { PricingListVariant } from './pricing-model-list'
 import { ProviderMark } from './provider-mark'
-import { SavingsText } from './savings-cell'
+import { SavingsBadge } from './savings-cell'
 
 interface PricingPreviewRowProps {
   row: PricingRow
@@ -44,60 +42,41 @@ export function PricingPreviewRow(props: PricingPreviewRowProps) {
   const frOutput = row.isPerRequest ? LANDING_PRICE_PLACEHOLDER : row.frOutput
 
   return (
-    <tr className='border-b border-gray-100 transition-colors last:border-b-0 hover:bg-gray-50'>
-      <th scope='row' className='px-4 py-3.5 text-left font-normal'>
+    <tr className='border-b border-(--pd-border) transition-colors last:border-b-0 odd:bg-(--pd-surface) even:bg-(--pd-surface-alt) hover:bg-(--pd-accent-bg-hover)'>
+      <th scope='row' className='px-4 py-4 text-left font-normal'>
         <div className='flex items-center gap-2.5'>
           <ProviderMark
             provider={row.provider}
             label={row.vendorLabel}
             variant={props.variant === 'preview' ? 'dot' : 'chip'}
           />
-          <div className='min-w-0'>
-            <div className='truncate font-medium text-gray-900'>{row.name}</div>
-            <div className='truncate font-mono text-xs text-gray-400'>
-              {row.modelId}
-            </div>
-          </div>
+          <span className='truncate font-mono text-sm font-bold text-(--pd-ink-strong)'>
+            {row.name}
+          </span>
         </div>
       </th>
-      <td className='px-4 py-3.5 text-right font-mono font-medium text-indigo-700'>
+      <td className='px-4 py-4 text-right font-mono text-sm font-bold text-(--pd-ink)'>
         {frInput}
       </td>
-      <td className='px-4 py-3.5 text-right font-mono font-medium text-indigo-700'>
+      <td className='px-4 py-4 text-right font-mono text-sm font-bold text-(--pd-ink)'>
         {frOutput}
       </td>
-      <td
-        className={cn(
-          'px-4 py-3.5 text-right font-mono text-gray-400',
-          row.officialInput !== LANDING_PRICE_PLACEHOLDER && 'line-through'
-        )}
-      >
+      <td className='px-4 py-4 text-right font-mono text-sm text-(--pd-muted)'>
         {row.officialInput}
       </td>
-      <td
-        className={cn(
-          'px-4 py-3.5 text-right font-mono text-gray-400',
-          row.officialOutput !== LANDING_PRICE_PLACEHOLDER && 'line-through'
-        )}
-      >
+      <td className='px-4 py-4 text-right font-mono text-sm text-(--pd-muted)'>
         {row.officialOutput}
       </td>
-      <td className='px-4 py-3.5 text-right font-mono'>
-        <SavingsText value={row.savingsInput} />
+      <td className='px-4 py-4 text-right'>
+        <SavingsBadge row={row} />
       </td>
-      <td className='px-4 py-3.5 text-right font-mono'>
-        <SavingsText value={row.savingsOutput} />
-      </td>
-      <td className='px-4 py-3.5 text-right font-mono text-gray-500'>
-        {row.context}
-      </td>
-      <td className='px-4 py-3.5 text-right'>
+      <td className='px-4 py-4 text-right'>
         <Link
           to='/pricing/$modelId'
           params={{ modelId: row.modelId }}
-          className='text-xs whitespace-nowrap text-indigo-600 transition-colors hover:text-indigo-800'
+          className='text-[13px] font-medium whitespace-nowrap text-(--pd-primary) transition-opacity hover:opacity-80'
         >
-          {t('Details →')}
+          {t('View →')}
         </Link>
       </td>
     </tr>

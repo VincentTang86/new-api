@@ -18,110 +18,106 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { useTranslation } from 'react-i18next'
 
-import type { PricingRow } from '../../types'
+import type { PricingBenchmark, PricingRow } from '../../types'
 import type { PricingListVariant } from './pricing-model-list'
 import { PricingPreviewRow } from './pricing-preview-row'
-
-/**
- * Column order and tone are part of the design contract: our prices first in
- * indigo, the vendor list prices next in muted grey, then the derived savings
- * in emerald. The catalogue page trades context-column width for the model
- * name, which carries a brand chip there.
- */
-const COLUMNS = [
-  {
-    key: 'model',
-    label: 'Model',
-    align: 'text-left',
-    tone: 'text-gray-500',
-    width: { preview: 'w-[22%]', catalogue: 'w-[24%]' },
-  },
-  {
-    key: 'input',
-    label: 'Input / 1M',
-    align: 'text-right',
-    tone: 'text-indigo-600',
-    width: { preview: 'w-[11%]', catalogue: 'w-[11%]' },
-  },
-  {
-    key: 'output',
-    label: 'Output / 1M',
-    align: 'text-right',
-    tone: 'text-indigo-600',
-    width: { preview: 'w-[11%]', catalogue: 'w-[11%]' },
-  },
-  {
-    key: 'official-input',
-    label: 'Official input / 1M',
-    align: 'text-right',
-    tone: 'text-gray-400',
-    width: { preview: 'w-[11%]', catalogue: 'w-[11%]' },
-  },
-  {
-    key: 'official-output',
-    label: 'Official output / 1M',
-    align: 'text-right',
-    tone: 'text-gray-400',
-    width: { preview: 'w-[11%]', catalogue: 'w-[11%]' },
-  },
-  {
-    key: 'input-savings',
-    label: 'Input savings',
-    align: 'text-right',
-    tone: 'text-emerald-600',
-    width: { preview: 'w-[9%]', catalogue: 'w-[9%]' },
-  },
-  {
-    key: 'output-savings',
-    label: 'Output savings',
-    align: 'text-right',
-    tone: 'text-emerald-600',
-    width: { preview: 'w-[9%]', catalogue: 'w-[9%]' },
-  },
-  {
-    key: 'context',
-    label: 'Context',
-    align: 'text-right',
-    tone: 'text-gray-500',
-    width: { preview: 'w-[8%]', catalogue: 'w-[7%]' },
-  },
-  {
-    key: 'detail',
-    label: '',
-    align: 'text-right',
-    tone: 'text-gray-500',
-    width: { preview: 'w-[8%]', catalogue: 'w-[7%]' },
-  },
-] as const
 
 interface PricingPreviewTableProps {
   rows: readonly PricingRow[]
   variant: PricingListVariant
+  benchmark: PricingBenchmark
 }
 
+/**
+ * Desktop pricing table from the design: a 16px-radius card opened by a 2px
+ * brand-gradient bar, FR prices bold, the benchmark columns muted, and the
+ * combined savings pill before the detail link. Column order is part of the
+ * design contract.
+ */
 export function PricingPreviewTable(props: PricingPreviewTableProps) {
   const { t } = useTranslation()
+
+  // Full header phrases are dedicated i18n keys — concatenating a prefix onto
+  // t('Input / 1M') breaks in locales whose existing translation already
+  // carries a brand prefix, and word order differs per language anyway.
+  const benchInputLabel =
+    props.benchmark === 'official'
+      ? t('Official Input / 1M')
+      : t('OpenRouter Input / 1M')
+  const benchOutputLabel =
+    props.benchmark === 'official'
+      ? t('Official Output / 1M')
+      : t('OpenRouter Output / 1M')
+
+  const columns = [
+    {
+      key: 'model',
+      label: t('Model'),
+      align: 'text-left',
+      width: 'w-[24%]',
+    },
+    {
+      key: 'fr-input',
+      label: t('FR Input / 1M'),
+      align: 'text-right',
+      width: 'w-[12%]',
+    },
+    {
+      key: 'fr-output',
+      label: t('FR Output / 1M'),
+      align: 'text-right',
+      width: 'w-[12%]',
+    },
+    {
+      key: 'bench-input',
+      label: benchInputLabel,
+      align: 'text-right',
+      width: 'w-[13%]',
+    },
+    {
+      key: 'bench-output',
+      label: benchOutputLabel,
+      align: 'text-right',
+      width: 'w-[13%]',
+    },
+    {
+      key: 'savings',
+      label: t('Savings'),
+      align: 'text-right',
+      width: 'w-[18%]',
+    },
+    {
+      key: 'detail',
+      label: '',
+      align: 'text-right',
+      width: 'w-[8%]',
+    },
+  ] as const
 
   return (
     <div
       data-slot='pricing-table'
-      className='hidden overflow-hidden rounded-md border border-gray-200 md:block'
+      className='hidden overflow-hidden rounded-2xl border border-(--pd-border) shadow-[0px_10px_24px_0px_rgba(0,0,0,0.04)] md:block'
     >
+      <div
+        aria-hidden='true'
+        className='h-0.5 w-full bg-linear-to-r from-(--pd-gradient-from) to-(--pd-gradient-to)'
+      />
       <table className='w-full table-fixed text-sm'>
         <colgroup>
-          {COLUMNS.map((column) => (
-            <col key={column.key} className={column.width[props.variant]} />
+          {columns.map((column) => (
+            <col key={column.key} className={column.width} />
           ))}
         </colgroup>
         <thead>
-          <tr className='border-b border-gray-200 bg-gray-50'>
-            {COLUMNS.map((column) => (
+          <tr className='border-b border-(--pd-border) bg-(--pd-table-head)'>
+            {columns.map((column) => (
               <th
                 key={column.key}
                 scope='col'
-                className={`px-4 py-3 text-xs font-medium tracking-wider uppercase ${column.align} ${column.tone}`}
+                className={`px-4 py-4 text-xs font-extrabold text-(--pd-muted) ${column.align}`}
               >
-                {column.label ? t(column.label) : null}
+                {column.label || null}
               </th>
             ))}
           </tr>

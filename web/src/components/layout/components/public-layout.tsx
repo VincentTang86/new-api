@@ -21,11 +21,8 @@ import type { TopNavLink } from '../types'
 import { Footer, type FooterProps } from './footer'
 import { PublicHeader, type PublicHeaderProps } from './public-header'
 
-/**
- * TODO(product): confirm the support address before launch — it is published
- * in the footer of every public page.
- */
-const PUBLIC_SUPPORT_EMAIL = 'support@fairrouter.com'
+/** Support address published in the footer of every public page. */
+const PUBLIC_SUPPORT_EMAIL = 'fairrouter@protonmail.com'
 
 type PublicLayoutProps = {
   children: React.ReactNode
@@ -50,7 +47,7 @@ export function PublicLayout(props: PublicLayoutProps) {
   return (
     // `public-design` scopes the design file's raw palette, font pair and
     // dark-mode repaint to the public shell — see styles/public-design.css.
-    <div className='public-design min-h-svh overflow-x-hidden bg-white'>
+    <div className='public-design min-h-svh overflow-x-hidden bg-(--pd-canvas)'>
       <PublicHeader
         navContent={props.navContent}
         navLinks={props.navLinks}

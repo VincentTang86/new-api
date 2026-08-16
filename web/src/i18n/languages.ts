@@ -16,14 +16,20 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
+/**
+ * Interface languages in display order: English leads (it is also the
+ * first-visit default), Chinese variants sit last — a product requirement
+ * shared by the public pages and the console. `short` is the compact badge
+ * the public header shows next to the globe icon.
+ */
 export const INTERFACE_LANGUAGE_OPTIONS = [
-  { code: 'zhCN', label: '简体中文' },
-  { code: 'en', label: 'English' },
-  { code: 'fr', label: 'Français' },
-  { code: 'ru', label: 'Русский' },
-  { code: 'ja', label: '日本語' },
-  { code: 'vi', label: 'Tiếng Việt' },
-  { code: 'zhTW', label: '繁體中文' },
+  { code: 'en', label: 'English', short: 'EN' },
+  { code: 'fr', label: 'Français', short: 'FR' },
+  { code: 'ru', label: 'Русский', short: 'RU' },
+  { code: 'ja', label: '日本語', short: 'JA' },
+  { code: 'vi', label: 'Tiếng Việt', short: 'VI' },
+  { code: 'zhCN', label: '简体中文', short: '简' },
+  { code: 'zhTW', label: '繁體中文', short: '繁' },
 ] as const
 
 export type InterfaceLanguageCode =

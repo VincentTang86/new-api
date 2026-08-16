@@ -28,42 +28,37 @@ export function LandingTrust() {
     t('Balance & spending history'),
     t('Token usage breakdown'),
     t('Actual model routing records'),
-    t('Service health status'),
-    // The design asked for "P50 / P95 latency data", but perf_metrics stores
-    // summed latency only (pkg/perf_metrics/types.go exposes AvgLatencyMs and
-    // success_rate, no percentiles). Claim what the dashboard can show.
-    t('Latency and success-rate metrics'),
-    t('Per-model billing'),
+    t('Latency and performance stats'),
+    t('Recent request details'),
+    t('Per model billing'),
   ]
 
   return (
-    <section className='border-t border-gray-100 bg-gray-50 py-20'>
-      <div className={LANDING_CONTAINER}>
-        <div className='max-w-[640px]'>
-          <h2 className='mb-3 text-3xl font-semibold tracking-tight text-gray-900 max-[640px]:text-2xl'>
-            {t('Every call, fully accountable')}
-          </h2>
-          <p className='mb-8 text-sm text-gray-500'>
-            {t(
-              'The dashboard gives you real usage data — not just a balance number.'
-            )}
-          </p>
-          <ul className='grid grid-cols-2 gap-3 max-[640px]:grid-cols-1'>
-            {capabilities.map((capability) => (
-              <li
-                key={capability}
-                className='flex items-center gap-2.5 text-sm text-gray-700'
-              >
-                <CheckCircle
-                  size={15}
-                  className='shrink-0 text-indigo-600'
-                  aria-hidden
-                />
-                {capability}
-              </li>
-            ))}
-          </ul>
-        </div>
+    <section className={`${LANDING_CONTAINER} py-16`}>
+      <div className='max-w-[720px]'>
+        <h2 className='pd-font-display mb-3 text-[40px] font-extrabold tracking-tight text-(--pd-ink-strong) max-[640px]:text-[28px]'>
+          {t('Every call, fully accountable')}
+        </h2>
+        <p className='mb-8 text-base text-(--pd-muted)'>
+          {t(
+            'The dashboard gives you real usage data — not just a balance number.'
+          )}
+        </p>
+        <ul className='grid grid-cols-2 gap-3 max-[640px]:grid-cols-1'>
+          {capabilities.map((capability) => (
+            <li
+              key={capability}
+              className='flex items-center gap-2.5 text-[15px] text-(--pd-ink)'
+            >
+              <CheckCircle
+                size={16}
+                className='shrink-0 text-(--pd-success)'
+                aria-hidden
+              />
+              {capability}
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   )

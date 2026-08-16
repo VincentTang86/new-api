@@ -62,7 +62,7 @@ function FooterLinkItem(props: { link: FooterLink }) {
         href={props.link.href}
         target='_blank'
         rel='noopener noreferrer'
-        className='text-xs text-gray-500 transition-colors hover:text-gray-900'
+        className='text-xs text-(--pd-muted-3) transition-colors hover:text-(--pd-ink)'
       >
         {label}
       </a>
@@ -72,7 +72,7 @@ function FooterLinkItem(props: { link: FooterLink }) {
   return (
     <Link
       to={props.link.href}
-      className='text-xs text-gray-500 transition-colors hover:text-gray-900'
+      className='text-xs text-(--pd-muted-3) transition-colors hover:text-(--pd-ink)'
     >
       {label}
     </Link>
@@ -250,33 +250,33 @@ export function Footer(props: FooterProps) {
   }
 
   return (
-    <footer
-      className={cn(
-        'relative z-10 border-t border-gray-200 bg-white',
-        props.className
-      )}
-    >
-      <div className='mx-auto w-full max-w-[1440px] px-8 py-10 max-[640px]:px-5'>
+    <footer className={cn('relative z-10 bg-(--pd-canvas)', props.className)}>
+      {/* The design closes the page with a brand gradient hairline. */}
+      <div
+        aria-hidden='true'
+        className='h-px w-full bg-linear-to-r from-(--pd-gradient-from) to-(--pd-gradient-to)'
+      />
+      <div className='mx-auto w-full max-w-[1440px] px-8 py-8 max-[640px]:px-5'>
         <div className='flex flex-col items-start justify-between gap-6 md:flex-row md:items-center'>
           {/* Brand column */}
           <div className='shrink-0'>
             <Link
               to='/'
-              className='mb-1 flex items-center gap-2.5 text-sm font-semibold text-gray-900'
+              className='pd-font-display mb-1 flex items-center gap-2.5 text-xl font-bold text-(--pd-ink-strong)'
             >
               <img
                 src={displayLogo}
                 alt={displayName}
-                className='size-[22px] rounded object-contain'
+                className='size-5 rounded object-contain'
               />
               {displayName}
             </Link>
             {props.supportEmail ? (
-              <p className='text-xs text-gray-400'>
+              <p className='text-[13px] text-(--pd-muted-3)'>
                 {t('Support')}:{' '}
                 <a
                   href={`mailto:${props.supportEmail}`}
-                  className='transition-colors hover:text-gray-600'
+                  className='transition-colors hover:text-(--pd-ink)'
                 >
                   {props.supportEmail}
                 </a>
@@ -302,8 +302,8 @@ export function Footer(props: FooterProps) {
 
         {/* Copyright + optional legal links inline on the left, project
             attribution on the right; wraps on narrow screens. */}
-        <div className='mt-8 flex flex-col items-center justify-between gap-x-3 gap-y-2 border-t border-gray-100 pt-6 sm:flex-row'>
-          <div className='flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs text-gray-400 sm:justify-start'>
+        <div className='mt-6 flex flex-col items-center justify-between gap-x-3 gap-y-2 border-t border-(--pd-border-soft) pt-5 sm:flex-row'>
+          <div className='flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[13px] text-(--pd-muted-3) sm:justify-start'>
             <span>
               &copy; {currentYear} {displayName}.{' '}
               {props.copyright ?? t('footer.defaultCopyright')}

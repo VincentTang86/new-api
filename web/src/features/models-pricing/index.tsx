@@ -20,40 +20,56 @@ import { useTranslation } from 'react-i18next'
 
 import { PublicLayout } from '@/components/layout'
 import { PricingModelList } from '@/features/home/landing/components/pricing/pricing-model-list'
+import { PricingTableControls } from '@/features/home/landing/components/pricing/pricing-table-controls'
 import { LANDING_CONTAINER } from '@/features/home/landing/constants'
 import { useLandingPricingRows } from '@/features/home/landing/lib/use-landing-pricing-rows'
+import { useSystemConfig } from '@/hooks/use-system-config'
 
 export function ModelsPricing() {
   const { t } = useTranslation()
-  const { rows, isLoading, isError, refetch } = useLandingPricingRows()
+  const { systemName } = useSystemConfig()
+  const table = useLandingPricingRows()
 
   return (
     <PublicLayout showMainContainer={false}>
-      {/* 56px is the sticky header, so a short catalogue still fills the fold. */}
-      <main id='main' className='min-h-[calc(100vh-56px)]'>
-        <div className='border-b border-gray-200 bg-white'>
-          <div className={`${LANDING_CONTAINER} py-12`}>
-            <h1 className='mb-4 text-[36px] font-semibold tracking-tight text-gray-900 max-[640px]:text-2xl'>
-              {t('Models & Pricing')}
-            </h1>
-            <p className='text-sm text-gray-500'>
-              {t('Our discounted prices vs. official rates, USD per 1M tokens')}
-            </p>
-          </div>
+      {/* 55px is the sticky header, so a short catalogue still fills the fold. */}
+      <main id='main' className='min-h-[calc(100vh-55px)]'>
+        <div className={`${LANDING_CONTAINER} pt-12 pb-6`}>
+          <h1 className='pd-font-display mb-4 text-[40px] font-extrabold tracking-tight text-(--pd-ink-strong) max-[640px]:text-[28px]'>
+            {t('Models & pricing, made clear')}
+          </h1>
+          <p className='text-base text-(--pd-muted)'>
+            {t(
+              'Compare {{name}} rates with the selected benchmark. Prices are shown in USD per million tokens.',
+              { name: systemName }
+            )}
+          </p>
         </div>
 
-        <div className={`${LANDING_CONTAINER} py-10`}>
-          <PricingModelList
-            rows={rows}
-            variant='catalogue'
-            isLoading={isLoading}
-            isError={isError}
-            onRetry={refetch}
+        <div className={`${LANDING_CONTAINER} pb-16`}>
+          <PricingTableControls
+            groups={table.groups}
+            selectedGroup={table.selectedGroup}
+            onGroupChange={table.setSelectedGroup}
+            benchmark={table.benchmark}
+            onBenchmarkChange={table.setBenchmark}
+            providers={table.providers}
+            providerFilter={table.providerFilter}
+            onProviderChange={table.setProviderFilter}
           />
 
-          <p className='mt-6 text-xs leading-relaxed text-gray-400'>
+          <PricingModelList
+            rows={table.rows}
+            variant='catalogue'
+            benchmark={table.benchmark}
+            isLoading={table.isLoading}
+            isError={table.isError}
+            onRetry={table.refetch}
+          />
+
+          <p className='mt-6 text-[13px] leading-relaxed text-(--pd-muted-3)'>
             {t(
-              'Discounted rates shown. Official prices are sourced from each provider’s public pricing page. Savings are calculated against those rates. Your invoice reflects actual usage.'
+              "Comparison rates come from the selected source's public model listings. Savings are calculated against that rate."
             )}
           </p>
         </div>

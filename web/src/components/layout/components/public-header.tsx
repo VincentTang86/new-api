@@ -22,27 +22,23 @@ import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Dialog } from '@/components/dialog'
-import { LanguageSwitcher } from '@/components/language-switcher'
 import { NotificationPopover } from '@/components/notification-popover'
-import { ProfileDropdown } from '@/components/profile-dropdown'
-import { ThemeSwitch } from '@/components/theme-switch'
+import { PublicLanguageSwitcher } from '@/components/public-language-switcher'
+import { PublicThemeToggle } from '@/components/public-theme-toggle'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useNotifications } from '@/hooks/use-notifications'
+import { usePublicNavLinks } from '@/hooks/use-public-nav-links'
 import { useSystemConfig } from '@/hooks/use-system-config'
-import { useTopNavLinks } from '@/hooks/use-top-nav-links'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/auth-store'
 
 import { defaultTopNavLinks } from '../config/top-nav.config'
 import type { TopNavLink } from '../types'
 import { HeaderLogo } from './header-logo'
+import { PublicProfileMenu } from './public-profile-menu'
 
 const AUTH_PROMPT_SECONDS = 5
-
-/** The design's icon-button chrome, shared by the language and theme triggers. */
-const ICON_TRIGGER_CLASS =
-  'size-8 rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-900 [&_svg]:size-[15px]'
 
 type AuthPromptTarget = {
   title: string
@@ -92,7 +88,7 @@ export function PublicHeader(props: PublicHeaderProps) {
     loading,
     logoLoaded,
   } = useSystemConfig()
-  const dynamicLinks = useTopNavLinks()
+  const dynamicLinks = usePublicNavLinks()
   const notifications = useNotifications()
   const routerState = useRouterState()
   const pathname = routerState.location.pathname
@@ -163,59 +159,96 @@ export function PublicHeader(props: PublicHeaderProps) {
     [t]
   )
 
+  /* Display-only items keep the resting link style on purpose (the design
+   * shows them as plain labels), so they get no hover accent and a default
+   * cursor instead of a dimmed state. */
   const desktopLinkClass = (link: TopNavLink) =>
     cn(
-      'rounded-md px-2.5 py-1.5 text-[13px] whitespace-nowrap transition-colors',
-      pathname === link.href
-        ? 'bg-indigo-50 font-medium text-indigo-600'
-        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900',
-      link.disabled && 'pointer-events-none opacity-50'
+      'text-sm whitespace-nowrap transition-colors',
+      pathname === link.href && !link.disabled
+        ? 'font-semibold text-(--pd-primary)'
+        : 'font-medium text-(--pd-ink)',
+      link.disabled ? 'cursor-default' : 'hover:text-(--pd-primary)'
     )
 
   const mobileLinkClass = (link: TopNavLink) =>
     cn(
-      'text-sm text-gray-700',
-      link.disabled && 'pointer-events-none opacity-50'
+      'text-sm',
+      pathname === link.href && !link.disabled
+        ? 'font-semibold text-(--pd-primary)'
+        : 'text-(--pd-ink)',
+      link.disabled && 'cursor-default text-(--pd-muted-2)'
     )
+
+  let brandMark: React.ReactNode
+  if (loading) {
+    brandMark = <Skeleton className='size-full rounded-md' />
+  } else if (customLogo) {
+    brandMark = customLogo
+  } else {
+    brandMark = (
+      <HeaderLogo
+        src={systemLogo}
+        loading={loading}
+        logoLoaded={logoLoaded}
+        className='size-full rounded-md object-contain'
+      />
+    )
+  }
+
+  let authControls: React.ReactNode = null
+  if (showAuthButtons) {
+    if (loading) {
+      authControls = <Skeleton className='h-8 w-24 rounded-full' />
+    } else if (isAuthenticated) {
+      authControls = <PublicProfileMenu />
+    } else {
+      authControls = (
+        <>
+          <Link
+            to='/sign-in'
+            className='text-sm font-medium whitespace-nowrap text-(--pd-ink) transition-colors hover:text-(--pd-primary)'
+          >
+            {t('Sign in')}
+          </Link>
+          <Link
+            to='/register'
+            className='flex h-[30px] items-center justify-center rounded-lg bg-linear-to-r from-(--pd-gradient-from) to-(--pd-gradient-to) px-4 text-sm font-semibold whitespace-nowrap text-white transition-opacity hover:opacity-90'
+          >
+            {t('Sign up')}
+          </Link>
+        </>
+      )
+    }
+  }
 
   return (
     <>
       <header
         className={cn(
-          'sticky top-0 z-50 border-b border-gray-200 bg-white',
+          'sticky top-0 z-50 border-b border-(--pd-border) bg-(--pd-canvas) drop-shadow-[0px_6px_9px_rgba(0,0,0,0.04)]',
           props.className
         )}
       >
-        <nav className='mx-auto flex h-14 w-full max-w-[1440px] items-center justify-between gap-4 px-8 max-[640px]:px-5'>
+        <nav className='mx-auto flex h-[55px] w-full max-w-[1440px] items-center justify-between gap-4 px-8 max-[640px]:px-5'>
           <Link
             to={homeUrl}
-            className='flex shrink-0 items-center gap-2.5'
+            className='flex shrink-0 items-center gap-3'
             aria-label={displaySiteName}
           >
-            <span className='flex size-7 shrink-0 items-center justify-center'>
-              {loading ? (
-                <Skeleton className='size-full rounded-lg' />
-              ) : customLogo ? (
-                customLogo
-              ) : (
-                <HeaderLogo
-                  src={systemLogo}
-                  loading={loading}
-                  logoLoaded={logoLoaded}
-                  className='size-full rounded-lg object-contain'
-                />
-              )}
+            <span className='flex size-6 shrink-0 items-center justify-center'>
+              {brandMark}
             </span>
-            <span className='text-[15px] font-semibold tracking-tight text-gray-900'>
-              {loading ? <Skeleton className='h-4 w-16' /> : displaySiteName}
+            <span className='pd-font-display text-[22px] font-bold whitespace-nowrap text-(--pd-ink)'>
+              {loading ? <Skeleton className='h-5 w-24' /> : displaySiteName}
             </span>
           </Link>
 
-          <div className='hidden items-center gap-0.5 md:flex'>
-            {links.map((link, i) =>
+          <div className='hidden min-w-0 flex-1 items-center justify-end gap-8 pr-8 md:flex'>
+            {links.map((link) =>
               link.external ? (
                 <a
-                  key={i}
+                  key={link.title}
                   href={link.href}
                   target='_blank'
                   rel='noopener noreferrer'
@@ -228,9 +261,10 @@ export function PublicHeader(props: PublicHeaderProps) {
                 </a>
               ) : (
                 <Link
-                  key={i}
+                  key={link.title}
                   to={link.href}
                   disabled={link.disabled}
+                  aria-disabled={link.disabled}
                   onClick={(event) => handleNavLinkClick(event, link)}
                   className={desktopLinkClass(link)}
                 >
@@ -238,16 +272,12 @@ export function PublicHeader(props: PublicHeaderProps) {
                 </Link>
               )
             )}
+          </div>
 
-            {(showLanguageSwitcher || showThemeSwitch || showNotifications) && (
-              <div className='mx-2 h-4 w-px shrink-0 bg-gray-200' />
-            )}
-
-            {showLanguageSwitcher && (
-              <LanguageSwitcher className={ICON_TRIGGER_CLASS} />
-            )}
-            {showThemeSwitch && <ThemeSwitch className={ICON_TRIGGER_CLASS} />}
-            {showNotifications && (
+          <div className='hidden shrink-0 items-center gap-4 md:flex'>
+            {showLanguageSwitcher && <PublicLanguageSwitcher />}
+            {showThemeSwitch && <PublicThemeToggle />}
+            {showNotifications && isAuthenticated && (
               <NotificationPopover
                 open={notifications.popoverOpen}
                 onOpenChange={notifications.setPopoverOpen}
@@ -260,31 +290,15 @@ export function PublicHeader(props: PublicHeaderProps) {
               />
             )}
 
-            {showAuthButtons &&
-              (loading ? (
-                <Skeleton className='ml-1.5 h-8 w-20 rounded-md' />
-              ) : isAuthenticated ? (
-                <span className='ml-1.5 flex items-center'>
-                  <ProfileDropdown />
-                </span>
-              ) : (
-                <Link
-                  to='/sign-in'
-                  className='ml-1.5 rounded-md border border-gray-300 px-3.5 py-1.5 text-[13px] font-medium whitespace-nowrap text-gray-700 transition-colors hover:border-indigo-400 hover:text-indigo-600'
-                >
-                  {t('Sign in')}
-                </Link>
-              ))}
+            {authControls}
           </div>
 
-          <div className='flex items-center gap-1 md:hidden'>
-            {showLanguageSwitcher && (
-              <LanguageSwitcher className={ICON_TRIGGER_CLASS} />
-            )}
-            {showThemeSwitch && <ThemeSwitch className={ICON_TRIGGER_CLASS} />}
+          <div className='flex items-center gap-4 md:hidden'>
+            {showLanguageSwitcher && <PublicLanguageSwitcher />}
+            {showThemeSwitch && <PublicThemeToggle />}
             <button
               type='button'
-              className='p-1.5 text-gray-600'
+              className='p-1.5 text-(--pd-muted-2)'
               onClick={() => setMobileOpen((open) => !open)}
               aria-expanded={mobileOpen}
               aria-label={t('Toggle navigation menu')}
@@ -295,12 +309,12 @@ export function PublicHeader(props: PublicHeaderProps) {
         </nav>
 
         {mobileOpen && (
-          <div className='border-t border-gray-200 bg-white md:hidden'>
+          <div className='border-t border-(--pd-border) bg-(--pd-canvas) md:hidden'>
             <div className='flex flex-col gap-3 px-5 py-4'>
-              {links.map((link, i) =>
+              {links.map((link) =>
                 link.external ? (
                   <a
-                    key={i}
+                    key={link.title}
                     href={link.href}
                     target='_blank'
                     rel='noopener noreferrer'
@@ -313,9 +327,10 @@ export function PublicHeader(props: PublicHeaderProps) {
                   </a>
                 ) : (
                   <Link
-                    key={i}
+                    key={link.title}
                     to={link.href}
                     disabled={link.disabled}
+                    aria-disabled={link.disabled}
                     onClick={(event) => handleNavLinkClick(event, link, true)}
                     className={mobileLinkClass(link)}
                   >
@@ -325,14 +340,33 @@ export function PublicHeader(props: PublicHeaderProps) {
               )}
 
               {showAuthButtons && !loading && (
-                <div className='border-t border-gray-200 pt-3'>
-                  <Link
-                    to={isAuthenticated ? '/dashboard' : '/sign-in'}
-                    onClick={() => setMobileOpen(false)}
-                    className='inline-block rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700'
-                  >
-                    {isAuthenticated ? t('Go to Dashboard') : t('Sign in')}
-                  </Link>
+                <div className='flex items-center gap-3 border-t border-(--pd-border) pt-3'>
+                  {isAuthenticated ? (
+                    <Link
+                      to='/dashboard'
+                      onClick={() => setMobileOpen(false)}
+                      className='inline-flex h-9 items-center rounded-lg border border-(--pd-border) px-4 text-sm font-medium text-(--pd-ink)'
+                    >
+                      {t('Go to Dashboard')}
+                    </Link>
+                  ) : (
+                    <>
+                      <Link
+                        to='/sign-in'
+                        onClick={() => setMobileOpen(false)}
+                        className='inline-flex h-9 items-center rounded-lg border border-(--pd-border) px-4 text-sm font-medium text-(--pd-ink)'
+                      >
+                        {t('Sign in')}
+                      </Link>
+                      <Link
+                        to='/register'
+                        onClick={() => setMobileOpen(false)}
+                        className='inline-flex h-9 items-center rounded-lg bg-linear-to-r from-(--pd-gradient-from) to-(--pd-gradient-to) px-4 text-sm font-semibold text-white'
+                      >
+                        {t('Sign up')}
+                      </Link>
+                    </>
+                  )}
                 </div>
               )}
             </div>

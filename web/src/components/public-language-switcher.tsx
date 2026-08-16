@@ -16,10 +16,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { Languages, Check } from 'lucide-react'
+import { Globe } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
-import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,39 +32,47 @@ import {
 } from '@/i18n/languages'
 import { cn } from '@/lib/utils'
 
-export function LanguageSwitcher(props: { className?: string }) {
+/**
+ * Public-header language menu from the marketing design: a globe icon plus the
+ * short language badge (EN / 简 / …) that opens the full language list. The
+ * console keeps its own icon-only `LanguageSwitcher`.
+ */
+export function PublicLanguageSwitcher(props: { className?: string }) {
   const { i18n, t } = useTranslation()
-  const currentLanguage = normalizeInterfaceLanguage(i18n.language)
   const handleChangeLanguage = useChangeLanguage()
+  const currentLanguage = normalizeInterfaceLanguage(i18n.language)
+  const current =
+    INTERFACE_LANGUAGE_OPTIONS.find((lang) => lang.code === currentLanguage) ??
+    INTERFACE_LANGUAGE_OPTIONS[0]
 
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger
         render={
-          <Button
-            variant='ghost'
-            size='icon'
-            className={cn('h-9 w-9', props.className)}
+          <button
+            type='button'
+            className={cn(
+              'flex cursor-pointer items-center gap-1.5 text-sm font-medium text-(--pd-ink) transition-colors hover:text-(--pd-primary)',
+              props.className
+            )}
+            aria-label={t('Change language')}
           />
         }
       >
-        <Languages className='size-[1.2rem]' />
-        <span className='sr-only'>{t('Change language')}</span>
+        <Globe className='size-4' aria-hidden='true' />
+        <span className='whitespace-nowrap'>{current.short}</span>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align='end'>
+      <DropdownMenuContent align='end' sideOffset={10} className='w-40'>
         {INTERFACE_LANGUAGE_OPTIONS.map((lang) => (
           <DropdownMenuItem
             key={lang.code}
             onClick={() => handleChangeLanguage(lang.code)}
+            className={cn(
+              lang.code === currentLanguage &&
+                'font-semibold text-(--pd-primary)'
+            )}
           >
             {lang.label}
-            <Check
-              size={14}
-              className={cn(
-                'ms-auto',
-                currentLanguage !== lang.code && 'hidden'
-              )}
-            />
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

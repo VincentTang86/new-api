@@ -22,18 +22,19 @@ import { useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { LANDING_PRICE_PLACEHOLDER } from '../../lib/pricing'
-import type { PricingRow } from '../../types'
+import type { PricingBenchmark, PricingRow } from '../../types'
 import type { PricingListVariant } from './pricing-model-list'
 import { ProviderMark } from './provider-mark'
-import { SavingsText } from './savings-cell'
+import { SavingsBadge } from './savings-cell'
 
 interface PricingPreviewAccordionProps {
   rows: readonly PricingRow[]
   variant: PricingListVariant
+  benchmark: PricingBenchmark
 }
 
 /**
- * Nine columns cannot fit a phone. Below `md` each model collapses to a row
+ * Seven columns cannot fit a phone. Below `md` each model collapses to a row
  * that expands into the same figures as a two-column grid.
  */
 export function PricingPreviewAccordion(props: PricingPreviewAccordionProps) {
@@ -41,10 +42,20 @@ export function PricingPreviewAccordion(props: PricingPreviewAccordionProps) {
   const panelIdPrefix = useId()
   const [openId, setOpenId] = useState<string | null>(null)
 
+  // Full header phrases are dedicated i18n keys; see the table's comment.
+  const benchInputLabel =
+    props.benchmark === 'official'
+      ? t('Official Input / 1M')
+      : t('OpenRouter Input / 1M')
+  const benchOutputLabel =
+    props.benchmark === 'official'
+      ? t('Official Output / 1M')
+      : t('OpenRouter Output / 1M')
+
   return (
     <div
       data-slot='pricing-accordion'
-      className='overflow-hidden rounded-md border border-gray-200 md:hidden'
+      className='overflow-hidden rounded-2xl border border-(--pd-border) md:hidden'
     >
       {props.rows.map((row) => {
         const isOpen = openId === row.modelId
@@ -59,7 +70,7 @@ export function PricingPreviewAccordion(props: PricingPreviewAccordionProps) {
         return (
           <div
             key={row.modelId}
-            className='border-b border-gray-100 last:border-b-0'
+            className='border-b border-(--pd-border-soft) last:border-b-0'
           >
             <button
               type='button'
@@ -68,102 +79,72 @@ export function PricingPreviewAccordion(props: PricingPreviewAccordionProps) {
               onClick={() => setOpenId(isOpen ? null : row.modelId)}
               className='flex w-full items-center justify-between px-4 py-3.5 text-left'
             >
-              <span className='flex items-center gap-2.5'>
+              <span className='flex min-w-0 items-center gap-2.5'>
                 <ProviderMark
                   provider={row.provider}
                   label={row.vendorLabel}
                   variant={props.variant === 'preview' ? 'dot' : 'chip'}
                 />
-                <span className='text-sm font-medium text-gray-900'>
+                <span className='truncate font-mono text-sm font-bold text-(--pd-ink-strong)'>
                   {row.name}
                 </span>
               </span>
-              <Chevron size={14} className='text-gray-400' aria-hidden />
+              <Chevron size={14} className='text-(--pd-faint)' aria-hidden />
             </button>
             {isOpen && (
-              <div id={panelId} className='bg-gray-50 px-4 pb-4 text-sm'>
-                <p className='mb-3 font-mono text-xs text-gray-400'>
-                  {row.modelId}
-                </p>
+              <div
+                id={panelId}
+                className='bg-(--pd-surface-alt) px-4 pb-4 text-sm'
+              >
                 <dl className='grid grid-cols-2 gap-3'>
                   <div>
-                    <dt className='mb-1 text-xs text-indigo-600'>
-                      {t('Input / 1M')}
+                    <dt className='mb-1 text-xs text-(--pd-muted-2)'>
+                      {t('FR Input / 1M')}
                     </dt>
-                    <dd className='font-mono font-medium text-indigo-700'>
+                    <dd className='font-mono font-bold text-(--pd-ink)'>
                       {frInput}
                     </dd>
                   </div>
                   <div>
-                    <dt className='mb-1 text-xs text-indigo-600'>
-                      {t('Output / 1M')}
+                    <dt className='mb-1 text-xs text-(--pd-muted-2)'>
+                      {t('FR Output / 1M')}
                     </dt>
-                    <dd className='font-mono font-medium text-indigo-700'>
+                    <dd className='font-mono font-bold text-(--pd-ink)'>
                       {frOutput}
                     </dd>
                   </div>
                   <div>
-                    <dt className='mb-1 text-xs text-gray-400'>
-                      {t('Official input / 1M')}
+                    <dt className='mb-1 text-xs text-(--pd-muted-2)'>
+                      {benchInputLabel}
                     </dt>
-                    <dd
-                      className={
-                        row.officialInput === LANDING_PRICE_PLACEHOLDER
-                          ? 'font-mono text-gray-400'
-                          : 'font-mono text-gray-400 line-through'
-                      }
-                    >
+                    <dd className='font-mono text-(--pd-muted)'>
                       {row.officialInput}
                     </dd>
                   </div>
                   <div>
-                    <dt className='mb-1 text-xs text-gray-400'>
-                      {t('Official output / 1M')}
+                    <dt className='mb-1 text-xs text-(--pd-muted-2)'>
+                      {benchOutputLabel}
                     </dt>
-                    <dd
-                      className={
-                        row.officialOutput === LANDING_PRICE_PLACEHOLDER
-                          ? 'font-mono text-gray-400'
-                          : 'font-mono text-gray-400 line-through'
-                      }
-                    >
+                    <dd className='font-mono text-(--pd-muted)'>
                       {row.officialOutput}
                     </dd>
                   </div>
-                  <div>
-                    <dt className='mb-1 text-xs text-emerald-600'>
-                      {t('Input savings')}
+                  <div className='col-span-2'>
+                    <dt className='mb-1 text-xs text-(--pd-muted-2)'>
+                      {t('Savings')}
                     </dt>
-                    <dd className='font-mono'>
-                      <SavingsText value={row.savingsInput} />
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className='mb-1 text-xs text-emerald-600'>
-                      {t('Output savings')}
-                    </dt>
-                    <dd className='font-mono'>
-                      <SavingsText value={row.savingsOutput} />
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className='mb-1 text-xs text-gray-500'>
-                      {t('Context')}
-                    </dt>
-                    <dd className='font-mono font-medium text-gray-900'>
-                      {row.context}
+                    <dd>
+                      <SavingsBadge row={row} />
                     </dd>
                   </div>
                 </dl>
-                {props.variant === 'catalogue' && (
-                  <Link
-                    to='/pricing/$modelId'
-                    params={{ modelId: row.modelId }}
-                    className='mt-3 inline-block text-xs text-indigo-600 hover:text-indigo-800'
-                  >
-                    {t('Details →')}
-                  </Link>
-                )}
+                <Link
+                  to='/pricing/$modelId'
+                  params={{ modelId: row.modelId }}
+                  className='mt-3 inline-block text-[13px] font-medium text-(--pd-primary) transition-opacity hover:opacity-80'
+                >
+                  {t('View →')}
+                </Link>
               </div>
             )}
           </div>

@@ -30,7 +30,7 @@ export function LandingFeatures() {
       Icon: Zap,
       title: t('Lower prices'),
       desc: t(
-        'Discounted rates on the same models. Pricing is transparent — see the source of every discount.'
+        'Discounted rates on the same models. Pricing is transparent — see the source of pricing comparisons.'
       ),
     },
     {
@@ -38,7 +38,7 @@ export function LandingFeatures() {
       Icon: ShieldCheck,
       title: t('No substitutions'),
       desc: t(
-        'The model ID you request is the model that runs. Routing records are available in your dashboard.'
+        'We never secretly replace models. The model ID you request is the model that runs.'
       ),
     },
     {
@@ -46,7 +46,7 @@ export function LandingFeatures() {
       Icon: Activity,
       title: t('Stable & fast'),
       desc: t(
-        'Health checks and route optimization reduce failures and latency across all supported models.'
+        'Model routes and route configuration reduce latency and deliver access across all supported providers.'
       ),
     },
     {
@@ -60,29 +60,27 @@ export function LandingFeatures() {
   ]
 
   return (
-    <section className='border-t border-gray-100 bg-gray-50'>
-      <div className={`${LANDING_CONTAINER} py-16`}>
-        {/* Hairline grid: the 1px gaps expose the container behind the cells,
-            so the four read as one block rather than as cards. */}
-        <div className='grid grid-cols-4 gap-px bg-gray-200 max-[900px]:grid-cols-2 max-[640px]:grid-cols-1'>
-          {features.map((feature) => (
-            <div key={feature.key} className='bg-gray-50 p-6'>
-              <div className='mb-3'>
+    <section className={`${LANDING_CONTAINER} py-16`}>
+      <div className='grid grid-cols-4 gap-5 max-[900px]:grid-cols-2 max-[640px]:grid-cols-1'>
+        {features.map((feature) => (
+          <div key={feature.key} className='flex flex-col gap-3'>
+            <div className='flex items-center gap-3'>
+              <span className='flex size-8 shrink-0 items-center justify-center rounded-lg bg-(--pd-accent-bg)'>
                 <feature.Icon
                   size={18}
-                  className='text-indigo-600'
+                  className='text-(--pd-primary)'
                   aria-hidden
                 />
-              </div>
-              <h3 className='mb-2 text-sm font-semibold text-gray-900'>
+              </span>
+              <h3 className='pd-font-display text-xl font-bold whitespace-nowrap text-(--pd-ink-strong)'>
                 {feature.title}
               </h3>
-              <p className='text-sm leading-relaxed text-gray-600'>
-                {feature.desc}
-              </p>
             </div>
-          ))}
-        </div>
+            <p className='text-base leading-[1.6] text-(--pd-muted)'>
+              {feature.desc}
+            </p>
+          </div>
+        ))}
       </div>
     </section>
   )

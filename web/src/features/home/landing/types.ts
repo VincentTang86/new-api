@@ -30,13 +30,21 @@ export type LandingProviderKey =
   | 'xai'
 
 /**
+ * External price source the table compares the group price against — the
+ * vendor's own list price or OpenRouter's. Both come from the hand-maintained
+ * `official-pricing.json` supplement.
+ */
+export type PricingBenchmark = 'official' | 'openrouter'
+
+/**
  * One display row of the pricing table, fully derived from the backend
- * `/api/pricing` model plus the hand-maintained MODEL_CATALOG supplement.
+ * `/api/pricing` model (priced at the selected group's ratio) plus the
+ * hand-maintained benchmark supplement for the selected "Compare with" source.
  *
  * The adapter (`lib/build-pricing-rows.ts`) pre-formats every value to a string
  * so the table/accordion stay presentational. Missing figures (unconfigured
- * official price, savings we cannot honestly claim, no context) arrive as the
- * placeholder dash, never as an empty cell.
+ * benchmark price, savings we cannot honestly claim) arrive as the placeholder
+ * dash, never as an empty cell.
  */
 export interface PricingRow {
   /** Backend model_name; also the /pricing/$modelId route param. */
@@ -49,17 +57,16 @@ export interface PricingRow {
   vendorLabel: string
   /** Per-request (按次) models price by call, not by token. */
   isPerRequest: boolean
-  /** Formatted FR (discounted) price. Per-request rows carry it in frInput. */
+  /** Formatted FR price at the selected group's ratio. Per-request rows carry
+   * it in frInput. */
   frInput: string
   frOutput: string
-  /** Vendor list price from the catalog, or the placeholder dash. */
+  /** Selected benchmark's list price, or the placeholder dash. */
   officialInput: string
   officialOutput: string
-  /** Savings vs the list price, or the placeholder dash. */
+  /** Savings vs the selected benchmark, or the placeholder dash. */
   savingsInput: string
   savingsOutput: string
-  /** Context window from the catalog, or the placeholder dash. */
-  context: string
 }
 
 export type LandingCodeLanguage = 'python' | 'javascript' | 'curl'

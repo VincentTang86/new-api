@@ -17,11 +17,11 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { QUOTA_TYPE_VALUES } from '@/features/pricing/constants'
-import { getDisplayGroupRatio } from '@/features/pricing/lib/model-helpers'
+import { getConfiguredGroupRatio } from '@/features/pricing/lib/model-helpers'
 import { tokenPriceUSD } from '@/features/pricing/lib/price'
 import type { PricingModel } from '@/features/pricing/types'
 
-import type { LandingProviderKey, PricingRow } from '../types'
+import type { LandingProviderKey, PricingBenchmark, PricingRow } from '../types'
 import type { OfficialPricingMap } from './official-pricing'
 import {
   LANDING_PRICE_PLACEHOLDER,
@@ -102,73 +102,104 @@ function formatSavings(
   return formatSavingsPercent(ratio, language)
 }
 
+/** Backend convention: a model whose enable_groups contains "all" is usable
+ * from every group (mirrors filterPricingByUsableGroups in the backend). */
+function isModelInGroup(model: PricingModel, group: string): boolean {
+  if (!group) return true
+  const enableGroups = Array.isArray(model.enable_groups)
+    ? model.enable_groups
+    : []
+  return enableGroups.includes('all') || enableGroups.includes(group)
+}
+
 interface BuildPricingRowsParams {
   models: readonly PricingModel[]
   language?: string
   /** Parsed `official-pricing.json`, keyed by the backend model_name. */
   catalog: OfficialPricingMap
+  /** Group tab the visitor selected; '' prices at ratio 1 with no filtering. */
+  selectedGroup: string
+  /** `group_ratio` map from /api/pricing. */
+  groupRatio: Record<string, number>
+  /** "Compare with" source the benchmark columns show. */
+  benchmark: PricingBenchmark
 }
 
 /**
- * Turn the backend `/api/pricing` models into fully-formatted display rows,
- * merging the hand-maintained official price supplement for the list price and
- * context window. Every price is USD per 1M tokens (per call for 按次 models):
- * this is a USD comparison table by design, independent of the console's
- * display currency. Everything the table renders is a string so the
- * presentational components carry no pricing logic.
+ * Turn the backend `/api/pricing` models into fully-formatted display rows.
+ * FR prices are the model's configured price multiplied by the selected
+ * group's ratio; the benchmark columns come from the hand-maintained
+ * supplement for the selected "Compare with" source, and savings are computed
+ * against that benchmark. Models not enabled for the selected group are
+ * dropped, matching what that group can actually call. Every price is USD per
+ * 1M tokens (per call for 按次 models): this is a USD comparison table by
+ * design, independent of the console's display currency. Everything the table
+ * renders is a string so the presentational components carry no pricing logic.
  *
  * Rows come out sorted A→Z by displayed name, so the catalogue reads
  * predictably and the home preview's first ten are the alphabetical head
  * rather than whatever order the backend happened to return.
  */
 export function buildPricingRows(params: BuildPricingRowsParams): PricingRow[] {
-  const { models, language, catalog: catalogMap } = params
+  const { models, language, catalog: catalogMap, benchmark } = params
+  const ratio = params.selectedGroup
+    ? getConfiguredGroupRatio(params.groupRatio, params.selectedGroup)
+    : 1
 
-  const rows = models.map((model) => {
-    const catalog = catalogMap[model.model_name] ?? {}
-    const isPerRequest = model.quota_type === QUOTA_TYPE_VALUES.REQUEST
-    const groupRatio = getDisplayGroupRatio(model)
-    const provider = resolveProviderKey(model.vendor_name, model.model_name)
+  const rows = models
+    .filter((model) => isModelInGroup(model, params.selectedGroup))
+    .map((model) => {
+      const catalog = catalogMap[model.model_name] ?? {}
+      const isPerRequest = model.quota_type === QUOTA_TYPE_VALUES.REQUEST
+      const provider = resolveProviderKey(model.vendor_name, model.model_name)
 
-    const base = {
-      modelId: model.model_name,
-      name: catalog.displayName ?? model.model_name,
-      provider,
-      vendorLabel: model.vendor_name || catalog.displayName || model.model_name,
-      context: catalog.context ?? LANDING_PRICE_PLACEHOLDER,
-    }
+      const base = {
+        modelId: model.model_name,
+        name: catalog.displayName ?? model.model_name,
+        provider,
+        vendorLabel:
+          model.vendor_name || catalog.displayName || model.model_name,
+      }
 
-    if (isPerRequest) {
-      const ourUSD = (model.model_price ?? 0) * groupRatio
+      if (isPerRequest) {
+        const benchmarkRequestPrice =
+          benchmark === 'official'
+            ? catalog.officialRequestPrice
+            : catalog.openrouterRequestPrice
+        const ourUSD = (model.model_price ?? 0) * ratio
+        return {
+          ...base,
+          isPerRequest: true,
+          frInput: formatInputPrice(ourUSD),
+          frOutput: '',
+          officialInput: officialInputDisplay(benchmarkRequestPrice),
+          officialOutput: LANDING_PRICE_PLACEHOLDER,
+          savingsInput: formatSavings(benchmarkRequestPrice, ourUSD, language),
+          savingsOutput: LANDING_PRICE_PLACEHOLDER,
+        }
+      }
+
+      const benchmarkInput =
+        benchmark === 'official'
+          ? catalog.officialInput
+          : catalog.openrouterInput
+      const benchmarkOutput =
+        benchmark === 'official'
+          ? catalog.officialOutput
+          : catalog.openrouterOutput
+      const inputUSD = tokenPriceUSD(model, 'input', ratio)
+      const outputUSD = tokenPriceUSD(model, 'output', ratio)
       return {
         ...base,
-        isPerRequest: true,
-        frInput: formatInputPrice(ourUSD),
-        frOutput: '',
-        officialInput: officialInputDisplay(catalog.officialRequestPrice),
-        officialOutput: LANDING_PRICE_PLACEHOLDER,
-        savingsInput: formatSavings(
-          catalog.officialRequestPrice,
-          ourUSD,
-          language
-        ),
-        savingsOutput: LANDING_PRICE_PLACEHOLDER,
+        isPerRequest: false,
+        frInput: formatInputPrice(inputUSD),
+        frOutput: formatOutputPrice(outputUSD),
+        officialInput: officialInputDisplay(benchmarkInput),
+        officialOutput: officialOutputDisplay(benchmarkOutput),
+        savingsInput: formatSavings(benchmarkInput, inputUSD, language),
+        savingsOutput: formatSavings(benchmarkOutput, outputUSD, language),
       }
-    }
-
-    const inputUSD = tokenPriceUSD(model, 'input', groupRatio)
-    const outputUSD = tokenPriceUSD(model, 'output', groupRatio)
-    return {
-      ...base,
-      isPerRequest: false,
-      frInput: formatInputPrice(inputUSD),
-      frOutput: formatOutputPrice(outputUSD),
-      officialInput: officialInputDisplay(catalog.officialInput),
-      officialOutput: officialOutputDisplay(catalog.officialOutput),
-      savingsInput: formatSavings(catalog.officialInput, inputUSD, language),
-      savingsOutput: formatSavings(catalog.officialOutput, outputUSD, language),
-    }
-  })
+    })
 
   // Case-insensitive and digit-aware, so `qwen3.6` precedes `qwen3.10` instead
   // of sorting by codepoint. Fixed to 'en' because this catalogue is English

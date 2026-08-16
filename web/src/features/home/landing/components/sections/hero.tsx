@@ -17,7 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { Link } from '@tanstack/react-router'
-import { ArrowRight } from 'lucide-react'
+import { Check } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { cn } from '@/lib/utils'
@@ -34,80 +34,92 @@ export function LandingHero(props: LandingHeroProps) {
   const { t } = useTranslation()
   const { count } = useLandingModelSummary()
 
-  const primaryLabel = props.isAuthenticated
-    ? t('Go to console')
-    : t('Create an API key')
   const primaryTarget = props.isAuthenticated ? '/keys' : '/register'
 
   // Until the catalog answers, the copy drops the number rather than showing a
   // guess that would then flip to a different one.
-  const eyebrow =
+  const badge =
     count === null
-      ? t('Curated models · One OpenAI-compatible API')
-      : t('{{modelCount}} curated models · One OpenAI-compatible API', {
+      ? t('Curated Models · One OpenAI-Compatible API')
+      : t('{{modelCount}} Curated Models · One OpenAI-Compatible API', {
           modelCount: count,
         })
   const subhead =
     count === null
-      ? t('Call our curated models with one API key, at a lower price.')
+      ? t(
+          'Access curated AI models with one API key at lower prices. The model you request is the model you get. No hidden substitutions or downgrades.'
+        )
       : t(
-          'Call {{modelCount}} curated models with one API key, at a lower price.',
-          {
-            modelCount: count,
-          }
+          'Access {{modelCount}} curated AI models with one API key at lower prices. The model you request is the model you get. No hidden substitutions or downgrades.',
+          { modelCount: count }
         )
 
+  const promises = [
+    t('Transparent pricing'),
+    t('No fees when adding credits'),
+    t('Low latency'),
+    t('Pay as you go'),
+  ]
+
   return (
-    <section
-      className={cn(
-        LANDING_CONTAINER,
-        'pt-20 pb-16 max-[640px]:pt-12 max-[640px]:pb-10'
-      )}
-    >
-      <div className='max-w-[720px]'>
-        <p className='mb-4 font-mono text-sm tracking-wide text-indigo-600'>
-          {eyebrow}
-        </p>
+    <section className='pd-hero-glow relative overflow-clip'>
+      <div
+        className={cn(
+          LANDING_CONTAINER,
+          'relative flex flex-col items-center gap-12 py-16 max-[640px]:gap-8 max-[640px]:py-10'
+        )}
+      >
+        <div className='flex w-full flex-col items-center gap-6 text-center'>
+          <div className='flex items-center gap-2 rounded-full border border-(--pd-primary) bg-(--pd-surface) px-4 py-1.5 drop-shadow-[0px_6px_8px_rgba(0,0,0,0.04)]'>
+            <span
+              aria-hidden='true'
+              className='size-2 shrink-0 rounded-full bg-(--pd-ink)'
+            />
+            <p className='text-[13px] font-semibold text-(--pd-ink)'>{badge}</p>
+          </div>
 
-        <h1 className='mb-4 text-[52px] leading-[1.12] font-semibold tracking-tight text-gray-900 max-[640px]:text-[36px]'>
-          {t('Fair prices. Real models.')}
-          <br />
-          {t('Reliable access.')}
-        </h1>
+          <h1 className='pd-font-display max-w-[1120px] bg-linear-to-r from-(--pd-gradient-from) to-(--pd-gradient-to) bg-clip-text pb-1 text-[52px] leading-[1.15] font-bold text-transparent max-[640px]:text-[34px]'>
+            {t('Fair Pricing. Real Models. Reliable Access.')}
+          </h1>
 
-        <p className='mb-2 text-[17px] leading-relaxed text-gray-700 max-[640px]:text-base'>
-          {subhead}
-        </p>
-        <p className='mb-8 text-[17px] leading-relaxed text-gray-500 max-[640px]:text-base'>
-          {t(
-            'The model ID you request is the model that runs — no swaps, no silent downgrades.'
-          )}
-        </p>
+          <p className='max-w-[720px] text-xl leading-[1.6] text-(--pd-muted) max-[640px]:text-base'>
+            {subhead}
+          </p>
+        </div>
 
-        <div className='mb-8 flex flex-wrap gap-3'>
+        <div className='flex flex-wrap items-center justify-center gap-4'>
           <Link
             to={primaryTarget}
-            className='inline-flex items-center gap-2 rounded-md bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-indigo-700'
+            className='flex items-center justify-center rounded-xl bg-(--pd-primary) px-7 py-3.5 text-sm font-semibold text-white drop-shadow-[0px_10px_12px_rgba(0,0,0,0.07)] transition-opacity hover:opacity-90'
           >
-            {primaryLabel}
-            <ArrowRight size={14} aria-hidden />
+            {t('Get Your API Key')}
           </Link>
           <Link
             to='/pricing'
-            className='inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:border-gray-400 hover:text-gray-900'
+            className='flex items-center justify-center rounded-xl border border-(--pd-border) bg-(--pd-surface) px-7 py-3.5 text-sm font-semibold text-(--pd-ink) drop-shadow-[0px_6px_8px_rgba(0,0,0,0.04)] transition-colors hover:border-(--pd-primary)'
           >
-            {t('View models & pricing')}
+            {t('View Models & Pricing')}
           </Link>
         </div>
 
-        <p className='font-mono text-xs text-gray-400'>
-          {t(
-            'Transparent pricing · No subscriptions · Real model routing · Low latency · Pay as you go'
-          )}
-        </p>
-      </div>
+        <ul className='flex flex-wrap items-center justify-center gap-x-6 gap-y-3'>
+          {promises.map((promise) => (
+            <li key={promise} className='flex items-center gap-2'>
+              <Check
+                size={16}
+                strokeWidth={2}
+                className='shrink-0 text-(--pd-ink)'
+                aria-hidden
+              />
+              <span className='text-sm font-medium whitespace-nowrap text-(--pd-ink)'>
+                {promise}
+              </span>
+            </li>
+          ))}
+        </ul>
 
-      <LandingProviderRow />
+        <LandingProviderRow />
+      </div>
     </section>
   )
 }

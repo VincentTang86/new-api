@@ -108,10 +108,10 @@ export function LandingFaq() {
       id={LANDING_SECTION_IDS.faq}
       className={cn(LANDING_CONTAINER, 'py-20')}
     >
-      <h2 className='mb-10 text-3xl font-semibold tracking-tight text-gray-900 max-[640px]:text-2xl'>
+      <h2 className='pd-font-display mb-10 text-[40px] font-extrabold tracking-tight text-(--pd-ink-strong) max-[640px]:text-[28px]'>
         {t('FAQ')}
       </h2>
-      <div className='max-w-[720px] overflow-hidden rounded-md border border-gray-200'>
+      <div className='max-w-[720px] overflow-hidden rounded-2xl border border-(--pd-border) bg-(--pd-surface)'>
         {items.map((item) => {
           const isOpen = openKey === item.key
           const panelId = `${panelIdPrefix}-${item.key}`
@@ -119,7 +119,7 @@ export function LandingFaq() {
           return (
             <div
               key={item.key}
-              className='border-b border-gray-100 last:border-b-0'
+              className='border-b border-(--pd-border-soft) last:border-b-0'
             >
               <button
                 type='button'
@@ -128,19 +128,19 @@ export function LandingFaq() {
                 onClick={() => setOpenKey(isOpen ? null : item.key)}
                 className='flex w-full items-start justify-between gap-4 px-5 py-4 text-left'
               >
-                <span className='text-sm font-medium text-gray-900'>
+                <span className='text-[15px] font-medium text-(--pd-ink)'>
                   {item.q}
                 </span>
                 <Chevron
                   size={16}
-                  className='mt-0.5 shrink-0 text-gray-400'
+                  className='mt-0.5 shrink-0 text-(--pd-faint)'
                   aria-hidden
                 />
               </button>
               {isOpen && (
                 <div
                   id={panelId}
-                  className='faq-answer bg-gray-50 px-5 pb-4 text-sm leading-relaxed text-gray-600'
+                  className='faq-answer bg-(--pd-surface-alt) px-5 pb-4 text-sm leading-[1.6] text-(--pd-muted)'
                 >
                   {item.a}
                 </div>
