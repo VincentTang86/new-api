@@ -37,7 +37,7 @@ interface CodeSampleTabsProps {
  */
 export function CodeSampleTabs(props: CodeSampleTabsProps) {
   const { t } = useTranslation()
-  const [language, setLanguage] = useState<LandingCodeLanguage>('python')
+  const [language, setLanguage] = useState<LandingCodeLanguage>('curl')
   const { copiedText, copyToClipboard } = useCopyToClipboard({ notify: false })
 
   const samples = useMemo(
@@ -68,7 +68,7 @@ export function CodeSampleTabs(props: CodeSampleTabsProps) {
                 aria-selected={isActive}
                 onClick={() => setLanguage(sample.language)}
                 className={cn(
-                  'px-4 py-2.5 font-mono text-xs transition-colors',
+                  'px-4 py-2.5 text-xs font-medium transition-colors',
                   isActive
                     ? 'border-b border-(--pd-primary) text-white'
                     : 'text-gray-500 hover:text-gray-300'

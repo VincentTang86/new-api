@@ -69,7 +69,11 @@ export interface PricingRow {
   savingsOutput: string
 }
 
-export type LandingCodeLanguage = 'python' | 'javascript' | 'curl'
+export type LandingCodeLanguage =
+  | 'curl'
+  | 'python'
+  | 'typescript'
+  | 'javascript'
 
 export interface LandingCodeSample {
   language: LandingCodeLanguage
