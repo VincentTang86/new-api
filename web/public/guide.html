@@ -128,7 +128,8 @@
         font: inherit;
         font-size: 0.875rem;
         cursor: pointer;
-        background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+        background-image:
+          linear-gradient(45deg, transparent 50%, currentColor 50%),
           linear-gradient(135deg, currentColor 50%, transparent 50%);
         background-position:
           calc(100% - 15px) 55%,
@@ -525,10 +526,7 @@
             id: 'account',
             t: 'Create your account',
             b: [
-              [
-                'p',
-                'Open [fairrouter.ai](/) and choose **Sign up**.',
-              ],
+              ['p', 'Open [fairrouter.ai](/) and choose **Sign up**.'],
               [
                 'ul',
                 [
@@ -547,19 +545,37 @@
             id: 'console',
             t: 'Around the console',
             b: [
-              ['p', 'Everything you need sits in the left sidebar of the console.'],
+              [
+                'p',
+                'Everything you need sits in the left sidebar of the console.',
+              ],
               [
                 'table',
                 [
                   ['Where', 'What you do there'],
-                  ['Playground', 'Try a model in the browser before writing any code.'],
-                  ['Chat', 'Hand a key straight to a connected chat application.'],
-                  ['Overview / Dashboard', 'Charts of requests, tokens and spend over time.'],
+                  [
+                    'Playground',
+                    'Try a model in the browser before writing any code.',
+                  ],
+                  [
+                    'Chat',
+                    'Hand a key straight to a connected chat application.',
+                  ],
+                  [
+                    'Overview / Dashboard',
+                    'Charts of requests, tokens and spend over time.',
+                  ],
                   ['API Keys', 'Create, edit, disable and delete keys.'],
                   ['Usage Logs', 'One row per request: model, tokens, cost.'],
-                  ['Task Logs', 'Requests submitted as long-running asynchronous jobs.'],
+                  [
+                    'Task Logs',
+                    'Requests submitted as long-running asynchronous jobs.',
+                  ],
                   ['Wallet', 'Balance, top-ups and order history.'],
-                  ['Profile', 'Email, password, two-factor authentication, sessions.'],
+                  [
+                    'Profile',
+                    'Email, password, two-factor authentication, sessions.',
+                  ],
                 ],
               ],
             ],
@@ -576,13 +592,31 @@
                 'table',
                 [
                   ['Field', 'What it means'],
-                  ['Name', 'How the key is labelled in your list. Name it after the app or machine that will use it.'],
-                  ['Group', 'The routing group the key uses, which also decides the price. Leave it on [[default]] unless support tells you otherwise.'],
-                  ['Expiration Time', 'Never, or a preset or custom expiry. An expired key stops working but stays in the list.'],
+                  [
+                    'Name',
+                    'How the key is labelled in your list. Name it after the app or machine that will use it.',
+                  ],
+                  [
+                    'Group',
+                    'The routing group the key uses, which also decides the price. Leave it on [[default]] unless support tells you otherwise.',
+                  ],
+                  [
+                    'Expiration Time',
+                    'Never, or a preset or custom expiry. An expired key stops working but stays in the list.',
+                  ],
                   ['Quantity', 'Create several keys in one go.'],
-                  ['Quota / Unlimited Quota', 'A spending cap for this key. Usage is always deducted from your account balance; the cap only limits how much this one key may spend.'],
-                  ['Model Limits', 'Restrict the key to selected model IDs. Leave it empty to allow every model in the catalog.'],
-                  ['IP Whitelist', 'Accept requests only from these addresses or CIDR ranges.'],
+                  [
+                    'Quota / Unlimited Quota',
+                    'A spending cap for this key. Usage is always deducted from your account balance; the cap only limits how much this one key may spend.',
+                  ],
+                  [
+                    'Model Limits',
+                    'Restrict the key to selected model IDs. Leave it empty to allow every model in the catalog.',
+                  ],
+                  [
+                    'IP Whitelist',
+                    'Accept requests only from these addresses or CIDR ranges.',
+                  ],
                 ],
               ],
               [
@@ -609,7 +643,10 @@
               ['h3', 'JavaScript / TypeScript'],
               ['code', 'node'],
               ['h3', 'Streaming'],
-              ['p', 'Set [[stream]] to true and read the response as it arrives.'],
+              [
+                'p',
+                'Set [[stream]] to true and read the response as it arrives.',
+              ],
               ['code', 'stream'],
               ['h3', 'Which model IDs can I use?'],
               [
@@ -631,14 +668,23 @@
                 'table',
                 [
                   ['Endpoint', 'What it is for'],
-                  ['POST /v1/chat/completions', 'Chat completions, streaming supported (OpenAI format).'],
+                  [
+                    'POST /v1/chat/completions',
+                    'Chat completions, streaming supported (OpenAI format).',
+                  ],
                   ['POST /v1/responses', 'OpenAI Responses API.'],
                   ['POST /v1/messages', 'Anthropic Messages format.'],
                   ['POST /v1beta/models/…', 'Gemini format.'],
                   ['GET /v1/models', 'The models your key is allowed to call.'],
                   ['POST /v1/embeddings', 'Text embeddings.'],
-                  ['POST /v1/images/generations', 'Image generation and editing.'],
-                  ['POST /v1/audio/speech', 'Text to speech, transcription and translation.'],
+                  [
+                    'POST /v1/images/generations',
+                    'Image generation and editing.',
+                  ],
+                  [
+                    'POST /v1/audio/speech',
+                    'Text to speech, transcription and translation.',
+                  ],
                   ['POST /v1/rerank', 'Reranking.'],
                 ],
               ],
@@ -660,7 +706,10 @@
                 'p',
                 'Text models are billed per token: input tokens × input price, plus output tokens × output price. Where a model supports prompt caching, cached input tokens are billed at the lower cached rate. The exact token counts and the exact charge for every request appear in **Usage Logs**.',
               ],
-              ['p', 'Your balance and every price on the site are shown in US dollars.'],
+              [
+                'p',
+                'Your balance and every price on the site are shown in US dollars.',
+              ],
               [
                 'note',
                 'The price applied to a request comes from the model plus the group of the key that made it. Unless support has moved you to a special group, everything runs on [[default]] and matches the public pricing page.',
@@ -671,7 +720,10 @@
             id: 'credit',
             t: 'Add credit',
             b: [
-              ['p', 'Fair Router is prepaid: you add credit, and each request draws from that balance.'],
+              [
+                'p',
+                'Fair Router is prepaid: you add credit, and each request draws from that balance.',
+              ],
               [
                 'steps',
                 [
@@ -774,12 +826,36 @@
                 'table',
                 [
                   ['Response', 'What it means', 'What to do'],
-                  ['401', 'The key is missing, mistyped or deleted.', 'Check the [[Authorization: Bearer sk-…]] header and copy the key again.'],
-                  ['403 insufficient quota', 'Your balance, or the key’s own quota, is exhausted.', 'Add credit in Wallet, or raise the quota on the key.'],
-                  ['403 other', 'The key is disabled or expired, the caller’s IP is outside the whitelist, or Model Limits excludes the model.', 'Edit the key in API Keys.'],
-                  ['404 model not found', 'The model ID does not exist, or is not available to the key’s group.', 'Copy the ID from Models & Pricing.'],
-                  ['429', 'You have exceeded the request rate limit.', 'Slow down and retry with backoff.'],
-                  ['5xx', 'The upstream provider failed or timed out.', 'Retry; if it persists, send us the time and model of the request.'],
+                  [
+                    '401',
+                    'The key is missing, mistyped or deleted.',
+                    'Check the [[Authorization: Bearer sk-…]] header and copy the key again.',
+                  ],
+                  [
+                    '403 insufficient quota',
+                    'Your balance, or the key’s own quota, is exhausted.',
+                    'Add credit in Wallet, or raise the quota on the key.',
+                  ],
+                  [
+                    '403 other',
+                    'The key is disabled or expired, the caller’s IP is outside the whitelist, or Model Limits excludes the model.',
+                    'Edit the key in API Keys.',
+                  ],
+                  [
+                    '404 model not found',
+                    'The model ID does not exist, or is not available to the key’s group.',
+                    'Copy the ID from Models & Pricing.',
+                  ],
+                  [
+                    '429',
+                    'You have exceeded the request rate limit.',
+                    'Slow down and retry with backoff.',
+                  ],
+                  [
+                    '5xx',
+                    'The upstream provider failed or timed out.',
+                    'Retry; if it persists, send us the time and model of the request.',
+                  ],
                 ],
               ],
               [
@@ -896,12 +972,27 @@
                 'table',
                 [
                   ['字段', '含义'],
-                  ['名称', '密钥在列表中的标识。建议按使用它的应用或机器命名。'],
-                  ['分组', '密钥使用的路由分组，同时决定价格。除非客服另有说明，保持 [[default]] 即可。'],
-                  ['过期时间', '永不过期，或选择预设 / 自定义时间。过期后密钥停止工作，但仍保留在列表中。'],
+                  [
+                    '名称',
+                    '密钥在列表中的标识。建议按使用它的应用或机器命名。',
+                  ],
+                  [
+                    '分组',
+                    '密钥使用的路由分组，同时决定价格。除非客服另有说明，保持 [[default]] 即可。',
+                  ],
+                  [
+                    '过期时间',
+                    '永不过期，或选择预设 / 自定义时间。过期后密钥停止工作，但仍保留在列表中。',
+                  ],
                   ['数量', '一次创建多个密钥。'],
-                  ['额度 / 无限配额', '该密钥的消费上限。费用始终从账户余额扣除，这个上限只限制这一个密钥能花多少。'],
-                  ['模型限制', '限制该密钥只能调用指定模型 ID。留空表示允许目录中的全部模型。'],
+                  [
+                    '额度 / 无限配额',
+                    '该密钥的消费上限。费用始终从账户余额扣除，这个上限只限制这一个密钥能花多少。',
+                  ],
+                  [
+                    '模型限制',
+                    '限制该密钥只能调用指定模型 ID。留空表示允许目录中的全部模型。',
+                  ],
                   ['IP 白名单', '只接受来自这些地址或 CIDR 网段的请求。'],
                 ],
               ],
@@ -951,7 +1042,10 @@
                 'table',
                 [
                   ['接口', '用途'],
-                  ['POST /v1/chat/completions', '对话补全，支持流式（OpenAI 格式）。'],
+                  [
+                    'POST /v1/chat/completions',
+                    '对话补全，支持流式（OpenAI 格式）。',
+                  ],
                   ['POST /v1/responses', 'OpenAI Responses 接口。'],
                   ['POST /v1/messages', 'Anthropic Messages 格式。'],
                   ['POST /v1beta/models/…', 'Gemini 格式。'],
@@ -991,7 +1085,10 @@
             id: 'credit',
             t: '充值',
             b: [
-              ['p', 'Fair Router 采用预付费：先充值，之后每个请求从余额中扣除。'],
+              [
+                'p',
+                'Fair Router 采用预付费：先充值，之后每个请求从余额中扣除。',
+              ],
               [
                 'steps',
                 [
@@ -1019,7 +1116,10 @@
                 'p',
                 '**使用日志**为每个请求记录一行，包含时间、模型、密钥、输入与输出 token 以及扣费金额。可以按时间范围、模型或密钥筛选定位某一次调用，也可以把筛选结果导出，在控制台之外使用。',
               ],
-              ['p', '**任务日志**记录以异步任务方式提交、而非在响应中直接返回结果的请求。'],
+              [
+                'p',
+                '**任务日志**记录以异步任务方式提交、而非在响应中直接返回结果的请求。',
+              ],
               [
                 'p',
                 '**概览**和**数据看板**把同一批数据做成图表——每日消费、各模型请求量——这是发现某个客户端调用量异常的最快方式。',
@@ -1091,12 +1191,36 @@
                 'table',
                 [
                   ['返回', '含义', '处理方式'],
-                  ['401', '密钥缺失、填错或已被删除。', '检查 [[Authorization: Bearer sk-…]] 请求头，并重新复制密钥。'],
-                  ['403 额度不足', '账户余额或该密钥自身的额度已用尽。', '在钱包中充值，或提高该密钥的额度。'],
-                  ['403 其他', '密钥被禁用或已过期、调用方 IP 不在白名单内，或模型限制排除了该模型。', '在 API 密钥页面编辑该密钥。'],
-                  ['404 模型不存在', '模型 ID 不存在，或该密钥所属分组不可用。', '从模型与价格页面复制正确的模型 ID。'],
-                  ['429', '超出请求频率限制。', '降低请求频率，并采用退避重试。'],
-                  ['5xx', '上游供应商失败或超时。', '重试；若持续出现，请把请求时间和模型发给我们。'],
+                  [
+                    '401',
+                    '密钥缺失、填错或已被删除。',
+                    '检查 [[Authorization: Bearer sk-…]] 请求头，并重新复制密钥。',
+                  ],
+                  [
+                    '403 额度不足',
+                    '账户余额或该密钥自身的额度已用尽。',
+                    '在钱包中充值，或提高该密钥的额度。',
+                  ],
+                  [
+                    '403 其他',
+                    '密钥被禁用或已过期、调用方 IP 不在白名单内，或模型限制排除了该模型。',
+                    '在 API 密钥页面编辑该密钥。',
+                  ],
+                  [
+                    '404 模型不存在',
+                    '模型 ID 不存在，或该密钥所属分组不可用。',
+                    '从模型与价格页面复制正确的模型 ID。',
+                  ],
+                  [
+                    '429',
+                    '超出请求频率限制。',
+                    '降低请求频率，并采用退避重试。',
+                  ],
+                  [
+                    '5xx',
+                    '上游供应商失败或超时。',
+                    '重试；若持续出现，请把请求时间和模型发给我们。',
+                  ],
                 ],
               ],
               [
@@ -1213,12 +1337,27 @@
                 'table',
                 [
                   ['欄位', '說明'],
-                  ['名稱', '金鑰在清單中的識別名稱，建議依使用它的應用或機器命名。'],
-                  ['分組', '金鑰使用的路由分組，同時決定價格。除非客服另有說明，維持 [[default]] 即可。'],
-                  ['過期時間', '永不過期，或選擇預設 / 自訂時間。過期後金鑰停止運作，但仍保留在清單中。'],
+                  [
+                    '名稱',
+                    '金鑰在清單中的識別名稱，建議依使用它的應用或機器命名。',
+                  ],
+                  [
+                    '分組',
+                    '金鑰使用的路由分組，同時決定價格。除非客服另有說明，維持 [[default]] 即可。',
+                  ],
+                  [
+                    '過期時間',
+                    '永不過期，或選擇預設 / 自訂時間。過期後金鑰停止運作，但仍保留在清單中。',
+                  ],
                   ['數量', '一次建立多組金鑰。'],
-                  ['額度 / 無限配額', '此金鑰的消費上限。費用一律從帳戶餘額扣除，這個上限只限制這一組金鑰能花多少。'],
-                  ['模型限制', '限制該金鑰只能呼叫指定的模型 ID。留空表示允許目錄中的全部模型。'],
+                  [
+                    '額度 / 無限配額',
+                    '此金鑰的消費上限。費用一律從帳戶餘額扣除，這個上限只限制這一組金鑰能花多少。',
+                  ],
+                  [
+                    '模型限制',
+                    '限制該金鑰只能呼叫指定的模型 ID。留空表示允許目錄中的全部模型。',
+                  ],
                   ['IP 白名單', '只接受來自這些位址或 CIDR 網段的請求。'],
                 ],
               ],
@@ -1249,7 +1388,10 @@
               ['p', '把 [[stream]] 設為 true，即可邊生成邊接收。'],
               ['code', 'stream'],
               ['h3', '可以使用哪些模型 ID？'],
-              ['p', '完整清單見[模型與價格](/pricing)頁面，也可以透過模型介面取得：'],
+              [
+                'p',
+                '完整清單見[模型與價格](/pricing)頁面，也可以透過模型介面取得：',
+              ],
               ['code', 'models'],
             ],
           },
@@ -1265,7 +1407,10 @@
                 'table',
                 [
                   ['介面', '用途'],
-                  ['POST /v1/chat/completions', '對話補全，支援串流（OpenAI 格式）。'],
+                  [
+                    'POST /v1/chat/completions',
+                    '對話補全，支援串流（OpenAI 格式）。',
+                  ],
                   ['POST /v1/responses', 'OpenAI Responses 介面。'],
                   ['POST /v1/messages', 'Anthropic Messages 格式。'],
                   ['POST /v1beta/models/…', 'Gemini 格式。'],
@@ -1333,7 +1478,10 @@
                 'p',
                 '**使用日誌**為每個請求記錄一列，包含時間、模型、金鑰、輸入與輸出 token 以及扣款金額。可依時間範圍、模型或金鑰篩選定位某次呼叫，也可將篩選結果匯出，在控制台之外使用。',
               ],
-              ['p', '**任務日誌**記錄以非同步任務方式送出、而非直接在回應中返回結果的請求。'],
+              [
+                'p',
+                '**任務日誌**記錄以非同步任務方式送出、而非直接在回應中返回結果的請求。',
+              ],
               [
                 'p',
                 '**概覽**與**數據看板**把同一批資料製成圖表——每日消費、各模型請求量——這是發現某個用戶端呼叫量異常的最快方式。',
@@ -1405,12 +1553,32 @@
                 'table',
                 [
                   ['回應', '含義', '處理方式'],
-                  ['401', '金鑰缺失、填錯或已被刪除。', '檢查 [[Authorization: Bearer sk-…]] 標頭，並重新複製金鑰。'],
-                  ['403 額度不足', '帳戶餘額或該金鑰本身的額度已用盡。', '在錢包中儲值，或提高該金鑰的額度。'],
-                  ['403 其他', '金鑰被停用或已過期、呼叫端 IP 不在白名單內，或模型限制排除了該模型。', '在 API 金鑰頁面編輯該金鑰。'],
-                  ['404 模型不存在', '模型 ID 不存在，或該金鑰所屬分組無法使用。', '從模型與價格頁面複製正確的模型 ID。'],
+                  [
+                    '401',
+                    '金鑰缺失、填錯或已被刪除。',
+                    '檢查 [[Authorization: Bearer sk-…]] 標頭，並重新複製金鑰。',
+                  ],
+                  [
+                    '403 額度不足',
+                    '帳戶餘額或該金鑰本身的額度已用盡。',
+                    '在錢包中儲值，或提高該金鑰的額度。',
+                  ],
+                  [
+                    '403 其他',
+                    '金鑰被停用或已過期、呼叫端 IP 不在白名單內，或模型限制排除了該模型。',
+                    '在 API 金鑰頁面編輯該金鑰。',
+                  ],
+                  [
+                    '404 模型不存在',
+                    '模型 ID 不存在，或該金鑰所屬分組無法使用。',
+                    '從模型與價格頁面複製正確的模型 ID。',
+                  ],
                   ['429', '超出請求頻率限制。', '降低請求頻率，並採退避重試。'],
-                  ['5xx', '上游供應商失敗或逾時。', '重試；若持續發生，請把請求時間與模型提供給我們。'],
+                  [
+                    '5xx',
+                    '上游供應商失敗或逾時。',
+                    '重試；若持續發生，請把請求時間與模型提供給我們。',
+                  ],
                 ],
               ],
               [
@@ -1498,19 +1666,46 @@
             id: 'console',
             t: 'Visite de la console',
             b: [
-              ['p', 'Tout se trouve dans la barre latérale gauche de la console.'],
+              [
+                'p',
+                'Tout se trouve dans la barre latérale gauche de la console.',
+              ],
               [
                 'table',
                 [
                   ['Où', 'Ce que vous y faites'],
-                  ['Aire de jeux', 'Essayer un modèle dans le navigateur avant d’écrire du code.'],
-                  ['Discuter', 'Transmettre une clé directement à une application de chat connectée.'],
-                  ['Vue d’ensemble / Tableau de bord', 'Graphiques des requêtes, des tokens et des dépenses dans le temps.'],
-                  ['Clés API', 'Créer, modifier, désactiver et supprimer des clés.'],
-                  ['Journaux d’utilisation', 'Une ligne par requête : modèle, tokens, coût.'],
-                  ['Journaux de tâches', 'Requêtes soumises sous forme de tâches asynchrones.'],
-                  ['Portefeuille', 'Solde, rechargements et historique des commandes.'],
-                  ['Profil', 'E-mail, mot de passe, double authentification, sessions.'],
+                  [
+                    'Aire de jeux',
+                    'Essayer un modèle dans le navigateur avant d’écrire du code.',
+                  ],
+                  [
+                    'Discuter',
+                    'Transmettre une clé directement à une application de chat connectée.',
+                  ],
+                  [
+                    'Vue d’ensemble / Tableau de bord',
+                    'Graphiques des requêtes, des tokens et des dépenses dans le temps.',
+                  ],
+                  [
+                    'Clés API',
+                    'Créer, modifier, désactiver et supprimer des clés.',
+                  ],
+                  [
+                    'Journaux d’utilisation',
+                    'Une ligne par requête : modèle, tokens, coût.',
+                  ],
+                  [
+                    'Journaux de tâches',
+                    'Requêtes soumises sous forme de tâches asynchrones.',
+                  ],
+                  [
+                    'Portefeuille',
+                    'Solde, rechargements et historique des commandes.',
+                  ],
+                  [
+                    'Profil',
+                    'E-mail, mot de passe, double authentification, sessions.',
+                  ],
                 ],
               ],
             ],
@@ -1527,13 +1722,31 @@
                 'table',
                 [
                   ['Champ', 'Signification'],
-                  ['Nom', 'Le libellé de la clé dans votre liste. Nommez-la d’après l’application ou la machine qui l’utilisera.'],
-                  ['Groupe', 'Le groupe de routage utilisé par la clé, qui détermine aussi le prix. Laissez [[default]] sauf indication contraire du support.'],
-                  ['Heure d’expiration', 'Jamais, ou une échéance prédéfinie ou personnalisée. Une clé expirée cesse de fonctionner mais reste dans la liste.'],
+                  [
+                    'Nom',
+                    'Le libellé de la clé dans votre liste. Nommez-la d’après l’application ou la machine qui l’utilisera.',
+                  ],
+                  [
+                    'Groupe',
+                    'Le groupe de routage utilisé par la clé, qui détermine aussi le prix. Laissez [[default]] sauf indication contraire du support.',
+                  ],
+                  [
+                    'Heure d’expiration',
+                    'Jamais, ou une échéance prédéfinie ou personnalisée. Une clé expirée cesse de fonctionner mais reste dans la liste.',
+                  ],
                   ['Quantité', 'Créer plusieurs clés en une fois.'],
-                  ['Quota / Quota illimité', 'Un plafond de dépense pour cette clé. La consommation est toujours déduite du solde du compte ; le plafond limite seulement ce que cette clé peut dépenser.'],
-                  ['Limites du modèle', 'Restreindre la clé à certains identifiants de modèles. Laissez vide pour autoriser tout le catalogue.'],
-                  ['Liste blanche d’IP', 'N’accepter que les requêtes provenant de ces adresses ou plages CIDR.'],
+                  [
+                    'Quota / Quota illimité',
+                    'Un plafond de dépense pour cette clé. La consommation est toujours déduite du solde du compte ; le plafond limite seulement ce que cette clé peut dépenser.',
+                  ],
+                  [
+                    'Limites du modèle',
+                    'Restreindre la clé à certains identifiants de modèles. Laissez vide pour autoriser tout le catalogue.',
+                  ],
+                  [
+                    'Liste blanche d’IP',
+                    'N’accepter que les requêtes provenant de ces adresses ou plages CIDR.',
+                  ],
                 ],
               ],
               [
@@ -1560,7 +1773,10 @@
               ['h3', 'JavaScript / TypeScript'],
               ['code', 'node'],
               ['h3', 'Streaming'],
-              ['p', 'Mettez [[stream]] à true et lisez la réponse au fil de son arrivée.'],
+              [
+                'p',
+                'Mettez [[stream]] à true et lisez la réponse au fil de son arrivée.',
+              ],
               ['code', 'stream'],
               ['h3', 'Quels identifiants de modèles utiliser ?'],
               [
@@ -1582,14 +1798,23 @@
                 'table',
                 [
                   ['Point de terminaison', 'Usage'],
-                  ['POST /v1/chat/completions', 'Complétions de chat, streaming pris en charge (format OpenAI).'],
+                  [
+                    'POST /v1/chat/completions',
+                    'Complétions de chat, streaming pris en charge (format OpenAI).',
+                  ],
                   ['POST /v1/responses', 'API Responses d’OpenAI.'],
                   ['POST /v1/messages', 'Format Anthropic Messages.'],
                   ['POST /v1beta/models/…', 'Format Gemini.'],
                   ['GET /v1/models', 'Les modèles que votre clé peut appeler.'],
                   ['POST /v1/embeddings', 'Plongements de texte.'],
-                  ['POST /v1/images/generations', 'Génération et édition d’images.'],
-                  ['POST /v1/audio/speech', 'Synthèse vocale, transcription et traduction.'],
+                  [
+                    'POST /v1/images/generations',
+                    'Génération et édition d’images.',
+                  ],
+                  [
+                    'POST /v1/audio/speech',
+                    'Synthèse vocale, transcription et traduction.',
+                  ],
                   ['POST /v1/rerank', 'Reclassement.'],
                 ],
               ],
@@ -1611,7 +1836,10 @@
                 'p',
                 'Les modèles de texte sont facturés au token : tokens d’entrée × prix d’entrée, plus tokens de sortie × prix de sortie. Lorsqu’un modèle prend en charge la mise en cache des prompts, les tokens d’entrée servis depuis le cache sont facturés au tarif de cache, plus bas. Le décompte exact et le montant exact de chaque requête apparaissent dans les **Journaux d’utilisation**.',
               ],
-              ['p', 'Votre solde et tous les prix du site sont affichés en dollars américains.'],
+              [
+                'p',
+                'Votre solde et tous les prix du site sont affichés en dollars américains.',
+              ],
               [
                 'note',
                 'Le prix appliqué à une requête dépend du modèle et du groupe de la clé qui l’a émise. Sauf si le support vous a placé dans un groupe particulier, tout passe par [[default]] et correspond à la page de tarifs publique.',
@@ -1707,7 +1935,10 @@
             id: 'security',
             t: 'Compte et sécurité',
             b: [
-              ['p', 'Le **Profil** regroupe tout ce qui concerne le compte lui-même.'],
+              [
+                'p',
+                'Le **Profil** regroupe tout ce qui concerne le compte lui-même.',
+              ],
               [
                 'ul',
                 [
@@ -1728,12 +1959,36 @@
                 'table',
                 [
                   ['Réponse', 'Signification', 'Que faire'],
-                  ['401', 'La clé est absente, mal saisie ou supprimée.', 'Vérifiez l’en-tête [[Authorization: Bearer sk-…]] et recopiez la clé.'],
-                  ['403 quota insuffisant', 'Votre solde, ou le quota propre à la clé, est épuisé.', 'Créditez le compte dans Portefeuille, ou augmentez le quota de la clé.'],
-                  ['403 autre', 'La clé est désactivée ou expirée, l’IP appelante est hors de la liste blanche, ou les limites du modèle excluent ce modèle.', 'Modifiez la clé dans Clés API.'],
-                  ['404 modèle introuvable', 'L’identifiant du modèle n’existe pas, ou n’est pas disponible pour le groupe de la clé.', 'Copiez l’identifiant depuis Modèles & Tarifs.'],
-                  ['429', 'Vous avez dépassé la limite de débit des requêtes.', 'Ralentissez et réessayez avec un délai progressif.'],
-                  ['5xx', 'Le fournisseur en amont a échoué ou expiré.', 'Réessayez ; si cela persiste, envoyez-nous l’heure et le modèle de la requête.'],
+                  [
+                    '401',
+                    'La clé est absente, mal saisie ou supprimée.',
+                    'Vérifiez l’en-tête [[Authorization: Bearer sk-…]] et recopiez la clé.',
+                  ],
+                  [
+                    '403 quota insuffisant',
+                    'Votre solde, ou le quota propre à la clé, est épuisé.',
+                    'Créditez le compte dans Portefeuille, ou augmentez le quota de la clé.',
+                  ],
+                  [
+                    '403 autre',
+                    'La clé est désactivée ou expirée, l’IP appelante est hors de la liste blanche, ou les limites du modèle excluent ce modèle.',
+                    'Modifiez la clé dans Clés API.',
+                  ],
+                  [
+                    '404 modèle introuvable',
+                    'L’identifiant du modèle n’existe pas, ou n’est pas disponible pour le groupe de la clé.',
+                    'Copiez l’identifiant depuis Modèles & Tarifs.',
+                  ],
+                  [
+                    '429',
+                    'Vous avez dépassé la limite de débit des requêtes.',
+                    'Ralentissez et réessayez avec un délai progressif.',
+                  ],
+                  [
+                    '5xx',
+                    'Le fournisseur en amont a échoué ou expiré.',
+                    'Réessayez ; si cela persiste, envoyez-nous l’heure et le modèle de la requête.',
+                  ],
                 ],
               ],
               [
@@ -1821,19 +2076,43 @@
             id: 'console',
             t: 'Обзор консоли',
             b: [
-              ['p', 'Всё необходимое находится в левой боковой панели консоли.'],
+              [
+                'p',
+                'Всё необходимое находится в левой боковой панели консоли.',
+              ],
               [
                 'table',
                 [
                   ['Раздел', 'Что там делают'],
-                  ['Песочница', 'Попробовать модель в браузере, ещё не написав код.'],
-                  ['Чат', 'Передать ключ сразу в подключённое приложение для чата.'],
-                  ['Обзор / Панель управления', 'Графики запросов, токенов и расходов во времени.'],
-                  ['Ключи API', 'Создание, изменение, отключение и удаление ключей.'],
-                  ['Журнал использования', 'По строке на каждый запрос: модель, токены, стоимость.'],
-                  ['Журнал задач', 'Запросы, отправленные как асинхронные задачи.'],
+                  [
+                    'Песочница',
+                    'Попробовать модель в браузере, ещё не написав код.',
+                  ],
+                  [
+                    'Чат',
+                    'Передать ключ сразу в подключённое приложение для чата.',
+                  ],
+                  [
+                    'Обзор / Панель управления',
+                    'Графики запросов, токенов и расходов во времени.',
+                  ],
+                  [
+                    'Ключи API',
+                    'Создание, изменение, отключение и удаление ключей.',
+                  ],
+                  [
+                    'Журнал использования',
+                    'По строке на каждый запрос: модель, токены, стоимость.',
+                  ],
+                  [
+                    'Журнал задач',
+                    'Запросы, отправленные как асинхронные задачи.',
+                  ],
                   ['Кошелек', 'Баланс, пополнения и история заказов.'],
-                  ['Профиль', 'Почта, пароль, двухфакторная аутентификация, сессии.'],
+                  [
+                    'Профиль',
+                    'Почта, пароль, двухфакторная аутентификация, сессии.',
+                  ],
                 ],
               ],
             ],
@@ -1850,13 +2129,31 @@
                 'table',
                 [
                   ['Поле', 'Что означает'],
-                  ['Название', 'Как ключ подписан в списке. Назовите его по приложению или машине, которая будет его использовать.'],
-                  ['Группа', 'Группа маршрутизации ключа, от неё же зависит цена. Оставьте [[default]], если поддержка не указала иное.'],
-                  ['Время истечения срока действия', 'Никогда либо готовый или произвольный срок. Истёкший ключ перестаёт работать, но остаётся в списке.'],
+                  [
+                    'Название',
+                    'Как ключ подписан в списке. Назовите его по приложению или машине, которая будет его использовать.',
+                  ],
+                  [
+                    'Группа',
+                    'Группа маршрутизации ключа, от неё же зависит цена. Оставьте [[default]], если поддержка не указала иное.',
+                  ],
+                  [
+                    'Время истечения срока действия',
+                    'Никогда либо готовый или произвольный срок. Истёкший ключ перестаёт работать, но остаётся в списке.',
+                  ],
                   ['Количество', 'Создать несколько ключей сразу.'],
-                  ['Квота / Неограниченная квота', 'Лимит расходов для этого ключа. Списание всегда идёт с баланса аккаунта; лимит ограничивает только траты одного ключа.'],
-                  ['Лимиты модели', 'Разрешить ключу только выбранные идентификаторы моделей. Пустое значение — доступен весь каталог.'],
-                  ['Белый список IP', 'Принимать запросы только с этих адресов или диапазонов CIDR.'],
+                  [
+                    'Квота / Неограниченная квота',
+                    'Лимит расходов для этого ключа. Списание всегда идёт с баланса аккаунта; лимит ограничивает только траты одного ключа.',
+                  ],
+                  [
+                    'Лимиты модели',
+                    'Разрешить ключу только выбранные идентификаторы моделей. Пустое значение — доступен весь каталог.',
+                  ],
+                  [
+                    'Белый список IP',
+                    'Принимать запросы только с этих адресов или диапазонов CIDR.',
+                  ],
                 ],
               ],
               [
@@ -1883,7 +2180,10 @@
               ['h3', 'JavaScript / TypeScript'],
               ['code', 'node'],
               ['h3', 'Потоковый вывод'],
-              ['p', 'Установите [[stream]] в true и читайте ответ по мере поступления.'],
+              [
+                'p',
+                'Установите [[stream]] в true и читайте ответ по мере поступления.',
+              ],
               ['code', 'stream'],
               ['h3', 'Какие идентификаторы моделей доступны?'],
               [
@@ -1905,14 +2205,23 @@
                 'table',
                 [
                   ['Эндпоинт', 'Назначение'],
-                  ['POST /v1/chat/completions', 'Чат-дополнения, поддерживается потоковая передача (формат OpenAI).'],
+                  [
+                    'POST /v1/chat/completions',
+                    'Чат-дополнения, поддерживается потоковая передача (формат OpenAI).',
+                  ],
                   ['POST /v1/responses', 'API Responses от OpenAI.'],
                   ['POST /v1/messages', 'Формат Anthropic Messages.'],
                   ['POST /v1beta/models/…', 'Формат Gemini.'],
                   ['GET /v1/models', 'Модели, доступные вашему ключу.'],
                   ['POST /v1/embeddings', 'Векторные представления текста.'],
-                  ['POST /v1/images/generations', 'Генерация и редактирование изображений.'],
-                  ['POST /v1/audio/speech', 'Синтез речи, расшифровка и перевод аудио.'],
+                  [
+                    'POST /v1/images/generations',
+                    'Генерация и редактирование изображений.',
+                  ],
+                  [
+                    'POST /v1/audio/speech',
+                    'Синтез речи, расшифровка и перевод аудио.',
+                  ],
                   ['POST /v1/rerank', 'Переранжирование.'],
                 ],
               ],
@@ -2030,7 +2339,10 @@
             id: 'security',
             t: 'Аккаунт и безопасность',
             b: [
-              ['p', 'В разделе **Профиль** собрано всё, что касается самого аккаунта.'],
+              [
+                'p',
+                'В разделе **Профиль** собрано всё, что касается самого аккаунта.',
+              ],
               [
                 'ul',
                 [
@@ -2051,12 +2363,36 @@
                 'table',
                 [
                   ['Ответ', 'Что означает', 'Что делать'],
-                  ['401', 'Ключ отсутствует, введён с ошибкой или удалён.', 'Проверьте заголовок [[Authorization: Bearer sk-…]] и скопируйте ключ заново.'],
-                  ['403, недостаточно квоты', 'Исчерпан баланс или собственная квота ключа.', 'Пополните баланс в Кошельке либо увеличьте квоту ключа.'],
-                  ['403, прочее', 'Ключ отключён или истёк, IP вызывающей стороны вне белого списка, либо модель исключена лимитами модели.', 'Отредактируйте ключ в разделе Ключи API.'],
-                  ['404, модель не найдена', 'Идентификатор модели не существует или недоступен группе ключа.', 'Скопируйте идентификатор со страницы Модели и цены.'],
-                  ['429', 'Превышен лимит частоты запросов.', 'Снизьте частоту и повторяйте с нарастающей паузой.'],
-                  ['5xx', 'Сбой или таймаут на стороне поставщика.', 'Повторите запрос; если повторяется, пришлите нам время запроса и модель.'],
+                  [
+                    '401',
+                    'Ключ отсутствует, введён с ошибкой или удалён.',
+                    'Проверьте заголовок [[Authorization: Bearer sk-…]] и скопируйте ключ заново.',
+                  ],
+                  [
+                    '403, недостаточно квоты',
+                    'Исчерпан баланс или собственная квота ключа.',
+                    'Пополните баланс в Кошельке либо увеличьте квоту ключа.',
+                  ],
+                  [
+                    '403, прочее',
+                    'Ключ отключён или истёк, IP вызывающей стороны вне белого списка, либо модель исключена лимитами модели.',
+                    'Отредактируйте ключ в разделе Ключи API.',
+                  ],
+                  [
+                    '404, модель не найдена',
+                    'Идентификатор модели не существует или недоступен группе ключа.',
+                    'Скопируйте идентификатор со страницы Модели и цены.',
+                  ],
+                  [
+                    '429',
+                    'Превышен лимит частоты запросов.',
+                    'Снизьте частоту и повторяйте с нарастающей паузой.',
+                  ],
+                  [
+                    '5xx',
+                    'Сбой или таймаут на стороне поставщика.',
+                    'Повторите запрос; если повторяется, пришлите нам время запроса и модель.',
+                  ],
                 ],
               ],
               [
@@ -2149,14 +2485,26 @@
                 'table',
                 [
                   ['場所', 'できること'],
-                  ['プレイグラウンド', 'コードを書く前にブラウザーでモデルを試す。'],
+                  [
+                    'プレイグラウンド',
+                    'コードを書く前にブラウザーでモデルを試す。',
+                  ],
                   ['チャット', 'キーを対応チャットアプリへそのまま渡す。'],
-                  ['概要 / ダッシュボード', 'リクエスト数・トークン数・利用金額の推移グラフ。'],
+                  [
+                    '概要 / ダッシュボード',
+                    'リクエスト数・トークン数・利用金額の推移グラフ。',
+                  ],
                   ['APIキー', 'キーの作成・編集・無効化・削除。'],
-                  ['利用履歴', 'リクエスト 1 件につき 1 行：モデル、トークン、料金。'],
+                  [
+                    '利用履歴',
+                    'リクエスト 1 件につき 1 行：モデル、トークン、料金。',
+                  ],
                   ['タスクログ', '非同期ジョブとして送信されたリクエスト。'],
                   ['ウォレット', '残高、チャージ、注文履歴。'],
-                  ['プロフィール', 'メール、パスワード、二段階認証、ログインセッション。'],
+                  [
+                    'プロフィール',
+                    'メール、パスワード、二段階認証、ログインセッション。',
+                  ],
                 ],
               ],
             ],
@@ -2173,13 +2521,31 @@
                 'table',
                 [
                   ['項目', '意味'],
-                  ['名称', '一覧に表示されるキーの名前。使用するアプリやマシンの名前を付けると分かりやすくなります。'],
-                  ['グループ', 'キーが使うルーティンググループで、料金もこれで決まります。サポートから指示がなければ [[default]] のままにしてください。'],
-                  ['有効期限', '無期限、またはプリセット／任意の期限。期限切れのキーは使えなくなりますが一覧には残ります。'],
+                  [
+                    '名称',
+                    '一覧に表示されるキーの名前。使用するアプリやマシンの名前を付けると分かりやすくなります。',
+                  ],
+                  [
+                    'グループ',
+                    'キーが使うルーティンググループで、料金もこれで決まります。サポートから指示がなければ [[default]] のままにしてください。',
+                  ],
+                  [
+                    '有効期限',
+                    '無期限、またはプリセット／任意の期限。期限切れのキーは使えなくなりますが一覧には残ります。',
+                  ],
                   ['数量', 'キーをまとめて複数作成します。'],
-                  ['クォータ / 無制限のクォータ', 'このキーの利用上限額です。料金は常にアカウント残高から差し引かれ、この上限はこのキーが使える金額だけを制限します。'],
-                  ['モデル制限', '指定したモデル ID だけに制限します。空欄ならカタログ内のすべてのモデルを利用できます。'],
-                  ['IP ホワイトリスト', 'ここに記載したアドレスまたは CIDR 範囲からのリクエストのみ受け付けます。'],
+                  [
+                    'クォータ / 無制限のクォータ',
+                    'このキーの利用上限額です。料金は常にアカウント残高から差し引かれ、この上限はこのキーが使える金額だけを制限します。',
+                  ],
+                  [
+                    'モデル制限',
+                    '指定したモデル ID だけに制限します。空欄ならカタログ内のすべてのモデルを利用できます。',
+                  ],
+                  [
+                    'IP ホワイトリスト',
+                    'ここに記載したアドレスまたは CIDR 範囲からのリクエストのみ受け付けます。',
+                  ],
                 ],
               ],
               [
@@ -2206,7 +2572,10 @@
               ['h3', 'JavaScript / TypeScript'],
               ['code', 'node'],
               ['h3', 'ストリーミング'],
-              ['p', '[[stream]] を true にすると、生成されたそばから応答を受け取れます。'],
+              [
+                'p',
+                '[[stream]] を true にすると、生成されたそばから応答を受け取れます。',
+              ],
               ['code', 'stream'],
               ['h3', '使えるモデル ID は？'],
               [
@@ -2228,7 +2597,10 @@
                 'table',
                 [
                   ['エンドポイント', '用途'],
-                  ['POST /v1/chat/completions', 'チャット補完。ストリーミング対応（OpenAI 形式）。'],
+                  [
+                    'POST /v1/chat/completions',
+                    'チャット補完。ストリーミング対応（OpenAI 形式）。',
+                  ],
                   ['POST /v1/responses', 'OpenAI Responses API。'],
                   ['POST /v1/messages', 'Anthropic Messages 形式。'],
                   ['POST /v1beta/models/…', 'Gemini 形式。'],
@@ -2268,7 +2640,10 @@
             id: 'credit',
             t: '残高をチャージする',
             b: [
-              ['p', 'Fair Router は前払い制です。チャージした残高から各リクエストの料金が引き落とされます。'],
+              [
+                'p',
+                'Fair Router は前払い制です。チャージした残高から各リクエストの料金が引き落とされます。',
+              ],
               [
                 'steps',
                 [
@@ -2296,7 +2671,10 @@
                 'p',
                 '**利用履歴**にはリクエストごとに 1 行が記録され、時刻、モデル、キー、入力・出力トークン数、請求額が並びます。期間・モデル・キーで絞り込めば特定の呼び出しを探せますし、絞り込んだ結果はエクスポートしてコンソールの外でも利用できます。',
               ],
-              ['p', '**タスクログ**は、応答内で結果を返さず非同期ジョブとして処理されたリクエストを記録します。'],
+              [
+                'p',
+                '**タスクログ**は、応答内で結果を返さず非同期ジョブとして処理されたリクエストを記録します。',
+              ],
               [
                 'p',
                 '**概要**と**ダッシュボード**は同じデータをグラフ化します。日別の利用金額やモデル別のリクエスト数を見れば、想定より多く呼び出しているクライアントをすばやく見つけられます。',
@@ -2347,7 +2725,10 @@
             id: 'security',
             t: 'アカウントとセキュリティ',
             b: [
-              ['p', 'アカウント自体の設定は**プロフィール**にまとまっています。'],
+              [
+                'p',
+                'アカウント自体の設定は**プロフィール**にまとまっています。',
+              ],
               [
                 'ul',
                 [
@@ -2368,12 +2749,36 @@
                 'table',
                 [
                   ['レスポンス', '意味', '対処'],
-                  ['401', 'キーが未設定、誤入力、または削除済み。', '[[Authorization: Bearer sk-…]] ヘッダーを確認し、キーをコピーし直します。'],
-                  ['403 クォータ不足', '残高またはキー自身のクォータを使い切っています。', 'ウォレットでチャージするか、キーのクォータを引き上げます。'],
-                  ['403 その他', 'キーが無効化・期限切れ、呼び出し元 IP がホワイトリスト外、またはモデル制限でそのモデルが除外されています。', 'APIキー画面でキーを編集します。'],
-                  ['404 モデルが見つからない', 'モデル ID が存在しないか、キーのグループでは利用できません。', 'モデルと料金ページから ID をコピーします。'],
-                  ['429', 'リクエストのレート制限を超えています。', '間隔を空け、バックオフしながら再試行します。'],
-                  ['5xx', '上流プロバイダーの障害またはタイムアウト。', '再試行してください。続く場合はリクエストの時刻とモデルをお知らせください。'],
+                  [
+                    '401',
+                    'キーが未設定、誤入力、または削除済み。',
+                    '[[Authorization: Bearer sk-…]] ヘッダーを確認し、キーをコピーし直します。',
+                  ],
+                  [
+                    '403 クォータ不足',
+                    '残高またはキー自身のクォータを使い切っています。',
+                    'ウォレットでチャージするか、キーのクォータを引き上げます。',
+                  ],
+                  [
+                    '403 その他',
+                    'キーが無効化・期限切れ、呼び出し元 IP がホワイトリスト外、またはモデル制限でそのモデルが除外されています。',
+                    'APIキー画面でキーを編集します。',
+                  ],
+                  [
+                    '404 モデルが見つからない',
+                    'モデル ID が存在しないか、キーのグループでは利用できません。',
+                    'モデルと料金ページから ID をコピーします。',
+                  ],
+                  [
+                    '429',
+                    'リクエストのレート制限を超えています。',
+                    '間隔を空け、バックオフしながら再試行します。',
+                  ],
+                  [
+                    '5xx',
+                    '上流プロバイダーの障害またはタイムアウト。',
+                    '再試行してください。続く場合はリクエストの時刻とモデルをお知らせください。',
+                  ],
                 ],
               ],
               [
@@ -2461,19 +2866,40 @@
             id: 'console',
             t: 'Tổng quan bảng điều khiển',
             b: [
-              ['p', 'Mọi thứ bạn cần đều nằm ở thanh bên trái của bảng điều khiển.'],
+              [
+                'p',
+                'Mọi thứ bạn cần đều nằm ở thanh bên trái của bảng điều khiển.',
+              ],
               [
                 'table',
                 [
                   ['Vị trí', 'Dùng để làm gì'],
-                  ['Sân chơi', 'Thử một mô hình ngay trên trình duyệt trước khi viết mã.'],
-                  ['Trò chuyện', 'Đưa khóa thẳng sang một ứng dụng chat đã hỗ trợ.'],
-                  ['Tổng quan / Bảng điều khiển', 'Biểu đồ số yêu cầu, số token và chi tiêu theo thời gian.'],
+                  [
+                    'Sân chơi',
+                    'Thử một mô hình ngay trên trình duyệt trước khi viết mã.',
+                  ],
+                  [
+                    'Trò chuyện',
+                    'Đưa khóa thẳng sang một ứng dụng chat đã hỗ trợ.',
+                  ],
+                  [
+                    'Tổng quan / Bảng điều khiển',
+                    'Biểu đồ số yêu cầu, số token và chi tiêu theo thời gian.',
+                  ],
                   ['Khóa API', 'Tạo, sửa, vô hiệu hóa và xóa khóa.'],
-                  ['Nhật ký sử dụng', 'Mỗi yêu cầu một dòng: mô hình, token, chi phí.'],
-                  ['Nhật ký tác vụ', 'Các yêu cầu gửi dưới dạng tác vụ bất đồng bộ.'],
+                  [
+                    'Nhật ký sử dụng',
+                    'Mỗi yêu cầu một dòng: mô hình, token, chi phí.',
+                  ],
+                  [
+                    'Nhật ký tác vụ',
+                    'Các yêu cầu gửi dưới dạng tác vụ bất đồng bộ.',
+                  ],
                   ['Ví', 'Số dư, các lần nạp tiền và lịch sử đơn hàng.'],
-                  ['Hồ sơ', 'Email, mật khẩu, xác thực hai yếu tố, phiên đăng nhập.'],
+                  [
+                    'Hồ sơ',
+                    'Email, mật khẩu, xác thực hai yếu tố, phiên đăng nhập.',
+                  ],
                 ],
               ],
             ],
@@ -2490,13 +2916,31 @@
                 'table',
                 [
                   ['Trường', 'Ý nghĩa'],
-                  ['Tên', 'Nhãn của khóa trong danh sách. Nên đặt theo ứng dụng hoặc máy sẽ dùng khóa đó.'],
-                  ['Nhóm', 'Nhóm định tuyến mà khóa sử dụng, đồng thời quyết định giá. Hãy để [[default]] trừ khi bộ phận hỗ trợ hướng dẫn khác.'],
-                  ['Thời gian hết hạn', 'Không hết hạn, hoặc chọn mốc có sẵn hay tùy chỉnh. Khóa hết hạn sẽ ngừng hoạt động nhưng vẫn nằm trong danh sách.'],
+                  [
+                    'Tên',
+                    'Nhãn của khóa trong danh sách. Nên đặt theo ứng dụng hoặc máy sẽ dùng khóa đó.',
+                  ],
+                  [
+                    'Nhóm',
+                    'Nhóm định tuyến mà khóa sử dụng, đồng thời quyết định giá. Hãy để [[default]] trừ khi bộ phận hỗ trợ hướng dẫn khác.',
+                  ],
+                  [
+                    'Thời gian hết hạn',
+                    'Không hết hạn, hoặc chọn mốc có sẵn hay tùy chỉnh. Khóa hết hạn sẽ ngừng hoạt động nhưng vẫn nằm trong danh sách.',
+                  ],
                   ['Số lượng', 'Tạo nhiều khóa cùng lúc.'],
-                  ['Hạn mức / Hạn mức không giới hạn', 'Trần chi tiêu của riêng khóa này. Chi phí luôn trừ vào số dư tài khoản; trần này chỉ giới hạn mức chi của một khóa.'],
-                  ['Giới hạn Mô hình', 'Chỉ cho phép khóa gọi những mã mô hình được chọn. Để trống nghĩa là dùng được toàn bộ danh mục.'],
-                  ['Danh sách IP cho phép', 'Chỉ nhận yêu cầu từ các địa chỉ hoặc dải CIDR này.'],
+                  [
+                    'Hạn mức / Hạn mức không giới hạn',
+                    'Trần chi tiêu của riêng khóa này. Chi phí luôn trừ vào số dư tài khoản; trần này chỉ giới hạn mức chi của một khóa.',
+                  ],
+                  [
+                    'Giới hạn Mô hình',
+                    'Chỉ cho phép khóa gọi những mã mô hình được chọn. Để trống nghĩa là dùng được toàn bộ danh mục.',
+                  ],
+                  [
+                    'Danh sách IP cho phép',
+                    'Chỉ nhận yêu cầu từ các địa chỉ hoặc dải CIDR này.',
+                  ],
                 ],
               ],
               [
@@ -2523,7 +2967,10 @@
               ['h3', 'JavaScript / TypeScript'],
               ['code', 'node'],
               ['h3', 'Truyền theo luồng'],
-              ['p', 'Đặt [[stream]] thành true để nhận phản hồi ngay khi nó được sinh ra.'],
+              [
+                'p',
+                'Đặt [[stream]] thành true để nhận phản hồi ngay khi nó được sinh ra.',
+              ],
               ['code', 'stream'],
               ['h3', 'Dùng được những mã mô hình nào?'],
               [
@@ -2545,14 +2992,23 @@
                 'table',
                 [
                   ['Endpoint', 'Dùng cho'],
-                  ['POST /v1/chat/completions', 'Hoàn thành hội thoại, hỗ trợ truyền theo luồng (định dạng OpenAI).'],
+                  [
+                    'POST /v1/chat/completions',
+                    'Hoàn thành hội thoại, hỗ trợ truyền theo luồng (định dạng OpenAI).',
+                  ],
                   ['POST /v1/responses', 'API Responses của OpenAI.'],
                   ['POST /v1/messages', 'Định dạng Anthropic Messages.'],
                   ['POST /v1beta/models/…', 'Định dạng Gemini.'],
-                  ['GET /v1/models', 'Các mô hình mà khóa của bạn được phép gọi.'],
+                  [
+                    'GET /v1/models',
+                    'Các mô hình mà khóa của bạn được phép gọi.',
+                  ],
                   ['POST /v1/embeddings', 'Vector hóa văn bản.'],
                   ['POST /v1/images/generations', 'Tạo và chỉnh sửa hình ảnh.'],
-                  ['POST /v1/audio/speech', 'Chuyển văn bản thành giọng nói, chuyển giọng nói thành văn bản và dịch.'],
+                  [
+                    'POST /v1/audio/speech',
+                    'Chuyển văn bản thành giọng nói, chuyển giọng nói thành văn bản và dịch.',
+                  ],
                   ['POST /v1/rerank', 'Xếp hạng lại.'],
                 ],
               ],
@@ -2574,7 +3030,10 @@
                 'p',
                 'Mô hình văn bản tính phí theo token: token đầu vào × giá đầu vào, cộng token đầu ra × giá đầu ra. Với mô hình hỗ trợ bộ nhớ đệm prompt, token đầu vào lấy từ bộ nhớ đệm được tính theo mức giá đệm thấp hơn. Số token và số tiền chính xác của từng yêu cầu đều hiển thị trong **Nhật ký sử dụng**.',
               ],
-              ['p', 'Số dư và mọi mức giá trên trang đều hiển thị bằng đô la Mỹ.'],
+              [
+                'p',
+                'Số dư và mọi mức giá trên trang đều hiển thị bằng đô la Mỹ.',
+              ],
               [
                 'note',
                 'Giá áp cho một yêu cầu phụ thuộc vào mô hình và nhóm của khóa đã gửi yêu cầu đó. Trừ khi bộ phận hỗ trợ chuyển bạn sang nhóm riêng, mọi thứ đều chạy trên [[default]] và khớp với trang giá công khai.',
@@ -2585,7 +3044,10 @@
             id: 'credit',
             t: 'Nạp tiền',
             b: [
-              ['p', 'Fair Router hoạt động theo hình thức trả trước: bạn nạp tiền, mỗi yêu cầu trừ dần vào số dư đó.'],
+              [
+                'p',
+                'Fair Router hoạt động theo hình thức trả trước: bạn nạp tiền, mỗi yêu cầu trừ dần vào số dư đó.',
+              ],
               [
                 'steps',
                 [
@@ -2667,7 +3129,10 @@
             id: 'security',
             t: 'Tài khoản và bảo mật',
             b: [
-              ['p', '**Hồ sơ** chứa mọi thiết lập liên quan tới chính tài khoản.'],
+              [
+                'p',
+                '**Hồ sơ** chứa mọi thiết lập liên quan tới chính tài khoản.',
+              ],
               [
                 'ul',
                 [
@@ -2688,12 +3153,36 @@
                 'table',
                 [
                   ['Phản hồi', 'Nghĩa là gì', 'Cần làm gì'],
-                  ['401', 'Thiếu khóa, gõ sai hoặc khóa đã bị xóa.', 'Kiểm tra header [[Authorization: Bearer sk-…]] và sao chép lại khóa.'],
-                  ['403 thiếu hạn mức', 'Số dư tài khoản, hoặc hạn mức riêng của khóa, đã cạn.', 'Nạp tiền trong Ví, hoặc nâng hạn mức của khóa.'],
-                  ['403 lý do khác', 'Khóa bị vô hiệu hóa hoặc hết hạn, IP gọi nằm ngoài danh sách cho phép, hoặc Giới hạn Mô hình loại trừ mô hình đó.', 'Sửa khóa trong mục Khóa API.'],
-                  ['404 không tìm thấy mô hình', 'Mã mô hình không tồn tại, hoặc không khả dụng với nhóm của khóa.', 'Sao chép mã từ trang Mô hình & Giá.'],
-                  ['429', 'Bạn đã vượt giới hạn tần suất yêu cầu.', 'Giảm nhịp gọi và thử lại có giãn cách tăng dần.'],
-                  ['5xx', 'Nhà cung cấp phía trên gặp lỗi hoặc quá thời gian.', 'Thử lại; nếu vẫn lặp lại, hãy gửi cho chúng tôi thời điểm và mô hình của yêu cầu.'],
+                  [
+                    '401',
+                    'Thiếu khóa, gõ sai hoặc khóa đã bị xóa.',
+                    'Kiểm tra header [[Authorization: Bearer sk-…]] và sao chép lại khóa.',
+                  ],
+                  [
+                    '403 thiếu hạn mức',
+                    'Số dư tài khoản, hoặc hạn mức riêng của khóa, đã cạn.',
+                    'Nạp tiền trong Ví, hoặc nâng hạn mức của khóa.',
+                  ],
+                  [
+                    '403 lý do khác',
+                    'Khóa bị vô hiệu hóa hoặc hết hạn, IP gọi nằm ngoài danh sách cho phép, hoặc Giới hạn Mô hình loại trừ mô hình đó.',
+                    'Sửa khóa trong mục Khóa API.',
+                  ],
+                  [
+                    '404 không tìm thấy mô hình',
+                    'Mã mô hình không tồn tại, hoặc không khả dụng với nhóm của khóa.',
+                    'Sao chép mã từ trang Mô hình & Giá.',
+                  ],
+                  [
+                    '429',
+                    'Bạn đã vượt giới hạn tần suất yêu cầu.',
+                    'Giảm nhịp gọi và thử lại có giãn cách tăng dần.',
+                  ],
+                  [
+                    '5xx',
+                    'Nhà cung cấp phía trên gặp lỗi hoặc quá thời gian.',
+                    'Thử lại; nếu vẫn lặp lại, hãy gửi cho chúng tôi thời điểm và mô hình của yêu cầu.',
+                  ],
                 ],
               ],
               [
@@ -2741,10 +3230,7 @@
         return escapeHtml(value)
           .replace(/\[\[([^\]]+)\]\]/g, '<code>$1</code>')
           .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-          .replace(
-            /\[([^\]]+)\]\(([^)]+)\)/g,
-            '<a href="$2">$1</a>'
-          )
+          .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
       }
 
       function renderBlock(block, strings) {
@@ -2753,7 +3239,8 @@
 
         if (kind === 'p') return '<p>' + inline(value) + '</p>'
         if (kind === 'h3') return '<h3>' + inline(value) + '</h3>'
-        if (kind === 'note') return '<div class="note">' + inline(value) + '</div>'
+        if (kind === 'note')
+          return '<div class="note">' + inline(value) + '</div>'
         if (kind === 'ul' || kind === 'steps') {
           var tag = kind === 'ul' ? 'ul' : 'ol'
           var items = value
@@ -2917,7 +3404,9 @@
         })
         var saved = null
         try {
-          saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('i18nextLng')
+          saved =
+            localStorage.getItem(STORAGE_KEY) ||
+            localStorage.getItem('i18nextLng')
         } catch (error) {
           saved = null
         }
