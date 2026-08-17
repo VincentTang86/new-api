@@ -26,13 +26,16 @@ import { LANDING_PROVIDER_ORDER } from '../constants'
 import type { LandingProviderKey, PricingBenchmark, PricingRow } from '../types'
 import { buildPricingRows } from './build-pricing-rows'
 import { fetchOfficialPricing } from './official-pricing'
+import { lookupPriceTier, UNKNOWN_PRICE_TIER_ORDER } from './price-tier-labels'
 import { LANDING_PROVIDERS } from './providers'
 
 /** One tab of the group (price tier) selector. */
 export interface PricingGroupOption {
   key: string
-  /** usable_group desc when configured, else the raw group name. */
+  /** Translated tier name for known tiers, else the raw group name. */
   label: string
+  /** Translated tier blurb; absent for tiers outside the design's catalogue. */
+  description?: string
   ratio: number
   /** Cheaper than the most expensive tier — carries the "Lower cost" badge. */
   lowerCost: boolean
@@ -78,7 +81,7 @@ const EXCLUDED_GROUP_KEYS = new Set(['', 'auto'])
  * painted with dashes that then flip to a price.
  */
 export function useLandingPricingRows(): UseLandingPricingRows {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { models, usableGroup, groupRatio, isLoading, error, refetch } =
     usePricingData()
   const [groupChoice, setGroupChoice] = useState<string | null>(null)
@@ -106,37 +109,47 @@ export function useLandingPricingRows(): UseLandingPricingRows {
       .filter(([key]) => !EXCLUDED_GROUP_KEYS.has(key))
       // A tier tab whose table would always be empty is noise, not a choice.
       .filter(([key]) => hasModels(key))
-      .map(([key]) => ({
-        key,
+      .map(([key]) => {
         // Product decision: the tier tab shows the group NAME, never the
-        // usable_group description.
-        label: key,
-        ratio:
-          typeof groupRatio[key] === 'number' &&
-          Number.isFinite(groupRatio[key])
-            ? groupRatio[key]
-            : 1,
-      }))
+        // usable_group description — translated here for the tiers the design
+        // names, raw for the ones it does not.
+        const known = lookupPriceTier(key)
+        return {
+          key,
+          label: known ? t(known.label) : key,
+          description: known ? t(known.description) : undefined,
+          order: known?.order ?? UNKNOWN_PRICE_TIER_ORDER,
+          ratio:
+            typeof groupRatio[key] === 'number' &&
+            Number.isFinite(groupRatio[key])
+              ? groupRatio[key]
+              : 1,
+        }
+      })
+      // Stable sort, so unknown tiers keep the backend's relative order.
+      .sort((a, b) => a.order - b.order)
     const maxRatio = options.reduce(
       (max, option) => Math.max(max, option.ratio),
       Number.NEGATIVE_INFINITY
     )
     return options.map((option) => ({
-      ...option,
+      key: option.key,
+      label: option.label,
+      description: option.description,
+      ratio: option.ratio,
       lowerCost: option.ratio < maxRatio,
     }))
-  }, [usableGroup, groupRatio, models])
+  }, [usableGroup, groupRatio, models, t])
 
-  // An explicit choice wins while it exists; otherwise prefer the backend's
-  // `default` group, then the first tier. Derived (not an effect) so the
-  // selection self-heals when the group list changes under it.
+  // An explicit choice wins while it exists; otherwise take the leading tab, so
+  // the tier the design puts first is also the one that opens selected.
+  // Derived (not an effect) so the selection self-heals when the group list
+  // changes under it.
   const selectedGroup = useMemo(() => {
     if (groupChoice && groups.some((group) => group.key === groupChoice)) {
       return groupChoice
     }
-    const fallback =
-      groups.find((group) => group.key === 'default') ?? groups[0]
-    return fallback?.key ?? ''
+    return groups[0]?.key ?? ''
   }, [groupChoice, groups])
 
   const allRows = useMemo(

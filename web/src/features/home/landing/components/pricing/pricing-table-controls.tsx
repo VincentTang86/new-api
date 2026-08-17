@@ -47,39 +47,52 @@ interface PricingTableControlsProps {
 export function PricingTableControls(props: PricingTableControlsProps) {
   const { t } = useTranslation()
 
+  const selectedDescription = props.groups.find(
+    (group) => group.key === props.selectedGroup
+  )?.description
+
   return (
-    <div className='mb-6 flex flex-col gap-4'>
+    <div className='pd-font-ui mb-6 flex flex-col gap-4'>
       {props.groups.length > 0 && (
-        <div
-          role='tablist'
-          aria-label={t('Price tier')}
-          className='no-scrollbar flex w-fit max-w-full items-start gap-0.5 overflow-x-auto rounded-lg border border-(--pd-border) bg-(--pd-surface-muted) p-[3px]'
-        >
-          {props.groups.map((group) => {
-            const isActive = group.key === props.selectedGroup
-            return (
-              <button
-                key={group.key}
-                type='button'
-                role='tab'
-                aria-selected={isActive}
-                onClick={() => props.onGroupChange(group.key)}
-                className={cn(
-                  'flex cursor-pointer items-center gap-2 rounded-md px-3.5 py-[7px] text-sm whitespace-nowrap transition-colors duration-150',
-                  isActive
-                    ? 'bg-(--pd-surface) font-semibold text-(--pd-primary) shadow-[0px_1px_2px_0px_rgba(0,0,0,0.06)]'
-                    : 'font-medium text-(--pd-muted-2) hover:bg-(--pd-surface)/80'
-                )}
-              >
-                {group.label}
-                {group.lowerCost && (
-                  <span className='rounded-full bg-(--pd-success-bg) px-2 py-0.5 text-[11px] font-medium whitespace-nowrap text-(--pd-success)'>
-                    {t('Lower cost')}
-                  </span>
-                )}
-              </button>
-            )
-          })}
+        // The tier strip and the selected tier's blurb sit on one line, as in
+        // the design; narrow viewports drop the blurb under the strip.
+        <div className='flex flex-wrap items-center gap-x-4 gap-y-2'>
+          <div
+            role='tablist'
+            aria-label={t('Price tier')}
+            className='no-scrollbar flex h-10 w-fit max-w-full items-stretch gap-0.5 overflow-x-auto rounded-lg border-[1.5px] border-(--pd-control-border) bg-(--pd-control-bg) p-[3px]'
+          >
+            {props.groups.map((group) => {
+              const isActive = group.key === props.selectedGroup
+              return (
+                <button
+                  key={group.key}
+                  type='button'
+                  role='tab'
+                  aria-selected={isActive}
+                  onClick={() => props.onGroupChange(group.key)}
+                  className={cn(
+                    'flex cursor-pointer items-center gap-2 rounded-md px-3.5 py-[7px] text-sm whitespace-nowrap transition-colors duration-150',
+                    isActive
+                      ? 'bg-(--pd-surface) font-semibold text-(--pd-primary) shadow-[0px_1px_2px_0px_rgba(0,0,0,0.06)]'
+                      : 'font-medium text-(--pd-muted-2) hover:bg-(--pd-surface)/80'
+                  )}
+                >
+                  {group.label}
+                  {group.lowerCost && (
+                    <span className='rounded-full bg-(--pd-success-bg) px-2 py-0.5 text-[11px] font-medium whitespace-nowrap text-(--pd-success)'>
+                      {t('Lower cost')}
+                    </span>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+          {selectedDescription && (
+            <p className='text-[13px] text-(--pd-muted-2)'>
+              {selectedDescription}
+            </p>
+          )}
         </div>
       )}
 
@@ -87,7 +100,7 @@ export function PricingTableControls(props: PricingTableControlsProps) {
         <div
           role='tablist'
           aria-label={t('Filter by vendor')}
-          className='no-scrollbar flex max-w-full items-start overflow-x-auto rounded-lg border border-(--pd-border)'
+          className='no-scrollbar flex max-w-full items-stretch overflow-x-auto rounded-lg border-[1.5px] border-(--pd-control-border) bg-(--pd-surface-muted)'
         >
           <button
             type='button'
