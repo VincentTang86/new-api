@@ -41,7 +41,7 @@ import {
 import useDialogState from '@/hooks/use-dialog'
 import { useIsSidebarModuleVisible } from '@/hooks/use-sidebar-config'
 import { useUserDisplay } from '@/hooks/use-user-display'
-import { formatQuota } from '@/lib/format'
+import { formatQuotaWithCurrency } from '@/lib/currency'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/auth-store'
 
@@ -204,7 +204,14 @@ export function PublicProfileMenu(props: { className?: string }) {
               <span className='flex-1'>{t('Credits')}</span>
               {typeof user?.quota === 'number' && (
                 <span className='text-[13px] font-medium text-(--pd-muted-2)'>
-                  {formatQuota(user.quota)} →
+                  {/* The design shows a balance at full cent width
+                      ("$2,344.40"), so trailing zeros are kept and sub-dollar
+                      balances stay at two decimals rather than four. */}
+                  {formatQuotaWithCurrency(user.quota, {
+                    digitsSmall: 2,
+                    padFractionDigits: true,
+                  })}{' '}
+                  →
                 </span>
               )}
             </DropdownMenuItem>

@@ -101,6 +101,14 @@ export interface CurrencyFormatOptions {
   compact?: boolean
   /** Whether to include the currency/custom symbol. Token displays are unchanged. */
   showSymbol?: boolean
+  /**
+   * Keep trailing zeros so the value always shows its full fraction width
+   * ("$2,344.40" rather than "$2,344.4"). Off by default because most readouts
+   * are denser without them; turn it on where the amount reads as money the
+   * user is meant to compare digit by digit. Currency and custom-symbol
+   * displays only — token counts are unaffected.
+   */
+  padFractionDigits?: boolean
   /** Locale used for number formatting (defaults to the runtime locale) */
   locale?: Intl.LocalesArgument | undefined
 }
@@ -137,6 +145,7 @@ const DEFAULT_FORMAT_OPTIONS: ResolvedCurrencyFormatOptions = {
   minimumNonZero: 0,
   compact: false,
   showSymbol: true,
+  padFractionDigits: false,
   locale: undefined,
 }
 
@@ -240,6 +249,8 @@ function mergeOptions(
       options.minimumNonZero ?? DEFAULT_FORMAT_OPTIONS.minimumNonZero,
     compact: options.compact ?? DEFAULT_FORMAT_OPTIONS.compact,
     showSymbol: options.showSymbol ?? DEFAULT_FORMAT_OPTIONS.showSymbol,
+    padFractionDigits:
+      options.padFractionDigits ?? DEFAULT_FORMAT_OPTIONS.padFractionDigits,
     locale: options.locale ?? DEFAULT_FORMAT_OPTIONS.locale,
   }
 }
@@ -323,13 +334,17 @@ function formatCurrencyValue(
     options.digitsSmall
   )
   const adjustedValue = adjustForMinimum(value, digits, options.minimumNonZero)
+  const maximumFractionDigits = options.compact ? 1 : digits
+  const minimumFractionDigits = options.padFractionDigits
+    ? maximumFractionDigits
+    : 0
 
   if (meta.kind === 'currency') {
     if (!options.showSymbol) {
       return new Intl.NumberFormat(options.locale, {
         notation: options.compact ? 'compact' : 'standard',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: options.compact ? 1 : digits,
+        minimumFractionDigits,
+        maximumFractionDigits,
       }).format(adjustedValue)
     }
 
@@ -338,16 +353,16 @@ function formatCurrencyValue(
       currency: meta.currencyCode,
       currencyDisplay: 'narrowSymbol',
       notation: options.compact ? 'compact' : 'standard',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: options.compact ? 1 : digits,
+      minimumFractionDigits,
+      maximumFractionDigits,
     }).format(adjustedValue)
     return formatted
   }
 
   const decimal = new Intl.NumberFormat(options.locale, {
     notation: options.compact ? 'compact' : 'standard',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: options.compact ? 1 : digits,
+    minimumFractionDigits,
+    maximumFractionDigits,
   }).format(adjustedValue)
 
   return options.showSymbol ? `${meta.symbol} ${decimal}` : decimal
