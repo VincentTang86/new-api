@@ -16,8 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import assert from 'node:assert/strict'
-import { describe, test } from 'node:test'
+import { describe, expect, test } from 'vitest'
 
 import type { PricingModel } from '@/features/pricing/types'
 
@@ -70,15 +69,15 @@ describe('buildPricingRows', () => {
       'demo-model': { officialInput: 2.5, officialOutput: 10 },
     })
 
-    assert.equal(row.isPerRequest, false)
+    expect(row.isPerRequest).toBe(false)
     // USD per 1M, fixed-point: input keeps two decimals from a dollar up,
     // output always two decimals.
-    assert.equal(row.frInput, '$1.25')
-    assert.equal(row.frOutput, '$5.00')
-    assert.equal(row.officialInput, '$2.50')
-    assert.equal(row.officialOutput, '$10.00')
-    assert.equal(row.savingsInput, '50%')
-    assert.equal(row.savingsOutput, '50%')
+    expect(row.frInput).toBe('$1.25')
+    expect(row.frOutput).toBe('$5.00')
+    expect(row.officialInput).toBe('$2.50')
+    expect(row.officialOutput).toBe('$10.00')
+    expect(row.savingsInput).toBe('50%')
+    expect(row.savingsOutput).toBe('50%')
   })
 
   test('prices FR by the selected group ratio, so a cheaper tier deepens the saving', () => {
@@ -88,8 +87,8 @@ describe('buildPricingRows', () => {
       { 'demo-model': { officialInput: 2.5 } },
       { selectedGroup: 'vip', groupRatio: { vip: 0.5 } }
     )
-    assert.equal(row.frInput, '$0.625')
-    assert.equal(row.savingsInput, '75%')
+    expect(row.frInput).toBe('$0.625')
+    expect(row.savingsInput).toBe('75%')
   })
 
   test('official benchmark stays fixed while the group ratio changes FR', () => {
@@ -110,10 +109,10 @@ describe('buildPricingRows', () => {
       { selectedGroup: 'b', groupRatio: { a: 1, b: 0.8 } }
     )
 
-    assert.equal(fullPrice.officialInput, '$2.50')
-    assert.equal(discounted.officialInput, '$2.50')
-    assert.notEqual(fullPrice.frInput, discounted.frInput)
-    assert.equal(discounted.frInput, '$1.00')
+    expect(fullPrice.officialInput).toBe('$2.50')
+    expect(discounted.officialInput).toBe('$2.50')
+    expect(fullPrice.frInput).not.toBe(discounted.frInput)
+    expect(discounted.frInput).toBe('$1.00')
   })
 
   test('the openrouter benchmark reads the openrouter columns of the catalog', () => {
@@ -127,10 +126,10 @@ describe('buildPricingRows', () => {
     }
     const row = build(tokenModel(), catalog, { benchmark: 'openrouter' })
 
-    assert.equal(row.officialInput, '$5.00')
-    assert.equal(row.officialOutput, '$20.00')
-    assert.equal(row.savingsInput, '75%')
-    assert.equal(row.savingsOutput, '75%')
+    expect(row.officialInput).toBe('$5.00')
+    expect(row.officialOutput).toBe('$20.00')
+    expect(row.savingsInput).toBe('75%')
+    expect(row.savingsOutput).toBe('75%')
   })
 
   test('a benchmark with no data shows dashes even when the other one is set', () => {
@@ -139,12 +138,12 @@ describe('buildPricingRows', () => {
       { 'demo-model': { officialInput: 2.5, officialOutput: 10 } },
       { benchmark: 'openrouter' }
     )
-    assert.equal(row.officialInput, LANDING_PRICE_PLACEHOLDER)
-    assert.equal(row.officialOutput, LANDING_PRICE_PLACEHOLDER)
-    assert.equal(row.savingsInput, LANDING_PRICE_PLACEHOLDER)
-    assert.equal(row.savingsOutput, LANDING_PRICE_PLACEHOLDER)
+    expect(row.officialInput).toBe(LANDING_PRICE_PLACEHOLDER)
+    expect(row.officialOutput).toBe(LANDING_PRICE_PLACEHOLDER)
+    expect(row.savingsInput).toBe(LANDING_PRICE_PLACEHOLDER)
+    expect(row.savingsOutput).toBe(LANDING_PRICE_PLACEHOLDER)
     // The model is still listed — the product decision is to show everything.
-    assert.equal(row.modelId, 'demo-model')
+    expect(row.modelId).toBe('demo-model')
   })
 
   test('drops models not enabled for the selected group, honoring the "all" convention', () => {
@@ -161,7 +160,7 @@ describe('buildPricingRows', () => {
       benchmark: 'official',
     })
 
-    assert.deepEqual(rows.map((row) => row.modelId).sort(), [
+    expect(rows.map((row) => row.modelId).sort()).toEqual([
       'always-on',
       'in-group',
     ])
@@ -176,15 +175,15 @@ describe('buildPricingRows', () => {
       groupRatio: { vip: 0.5 },
       benchmark: 'official',
     })
-    assert.equal(rows.length, 1)
-    assert.equal(rows[0].frInput, '$1.25')
+    expect(rows.length).toBe(1)
+    expect(rows[0].frInput).toBe('$1.25')
   })
 
   test('never claims a saving when the list price is not higher', () => {
     const row = build(tokenModel(), {
       'demo-model': { officialInput: 1.25 }, // equal to FR, not cheaper
     })
-    assert.equal(row.savingsInput, LANDING_PRICE_PLACEHOLDER)
+    expect(row.savingsInput).toBe(LANDING_PRICE_PLACEHOLDER)
   })
 
   test('treats per-request models as billed by call, per benchmark', () => {
@@ -201,32 +200,32 @@ describe('buildPricingRows', () => {
     }
     const official = build(model, catalog)
 
-    assert.equal(official.isPerRequest, true)
+    expect(official.isPerRequest).toBe(true)
     // Per-call price is USD too; three decimals below a dollar.
-    assert.equal(official.frInput, '$0.040')
-    assert.equal(official.frOutput, '')
-    assert.equal(official.savingsInput, '50%')
+    expect(official.frInput).toBe('$0.040')
+    expect(official.frOutput).toBe('')
+    expect(official.savingsInput).toBe('50%')
     // The output side has no meaning for a per-call price.
-    assert.equal(official.officialOutput, LANDING_PRICE_PLACEHOLDER)
-    assert.equal(official.savingsOutput, LANDING_PRICE_PLACEHOLDER)
+    expect(official.officialOutput).toBe(LANDING_PRICE_PLACEHOLDER)
+    expect(official.savingsOutput).toBe(LANDING_PRICE_PLACEHOLDER)
 
     const openrouter = build(model, catalog, { benchmark: 'openrouter' })
-    assert.equal(openrouter.savingsInput, '20%')
+    expect(openrouter.savingsInput).toBe('20%')
   })
 
   test('resolves the vendor chip from vendor name or model id, else null', () => {
     const named = build(tokenModel({ vendor_name: 'OpenAI' }), {})
-    assert.equal(named.provider, 'openai')
+    expect(named.provider).toBe('openai')
 
     const byModelId = build(tokenModel({ model_name: 'qwen2.5-72b' }), {})
-    assert.equal(byModelId.provider, 'alibaba')
+    expect(byModelId.provider).toBe('alibaba')
 
     const unknown = build(
       tokenModel({ model_name: 'mystery-model', vendor_name: 'ACME' }),
       {}
     )
-    assert.equal(unknown.provider, null)
-    assert.equal(unknown.vendorLabel, 'ACME')
+    expect(unknown.provider).toBe(null)
+    expect(unknown.vendorLabel).toBe('ACME')
   })
 
   test('orders rows A→Z by displayed name, digit-aware and case-insensitive', () => {
@@ -245,17 +244,19 @@ describe('buildPricingRows', () => {
       benchmark: 'official',
     })
 
-    assert.deepEqual(
-      rows.map((row) => row.modelId),
-      ['GLM-5.2', 'qwen3.6-plus', 'qwen3.10-plus', 'deepseek-v4-flash']
-    )
+    expect(rows.map((row) => row.modelId)).toEqual([
+      'GLM-5.2',
+      'qwen3.6-plus',
+      'qwen3.10-plus',
+      'deepseek-v4-flash',
+    ])
   })
 
   test('prefers the catalog display name over the raw model id', () => {
     const row = build(tokenModel(), {
       'demo-model': { displayName: 'Demo Model' },
     })
-    assert.equal(row.name, 'Demo Model')
-    assert.equal(row.modelId, 'demo-model')
+    expect(row.name).toBe('Demo Model')
+    expect(row.modelId).toBe('demo-model')
   })
 })

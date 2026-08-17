@@ -16,8 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import assert from 'node:assert/strict'
-import { describe, test } from 'node:test'
+import { describe, expect, test } from 'vitest'
 
 import {
   INTERFACE_LANGUAGE_OPTIONS,
@@ -29,24 +28,27 @@ describe('interface language options', () => {
     // Product requirement shared by the public pages and the console:
     // English first (it is also the first-visit default), 中文 last.
     const codes = INTERFACE_LANGUAGE_OPTIONS.map((option) => option.code)
-    assert.equal(codes[0], 'en')
-    assert.deepEqual(codes.slice(-2), ['zhCN', 'zhTW'])
+    expect(codes[0]).toBe('en')
+    expect(codes.slice(-2)).toEqual(['zhCN', 'zhTW'])
   })
 
   test('every option carries the compact badge the public header shows', () => {
     for (const option of INTERFACE_LANGUAGE_OPTIONS) {
-      assert.ok(option.short.length > 0, `${option.code} needs a short badge`)
+      expect(
+        option.short.length,
+        `${option.code} needs a short badge`
+      ).toBeGreaterThan(0)
     }
   })
 
   test('unknown and empty values normalize to the English default', () => {
-    assert.equal(normalizeInterfaceLanguage(undefined), 'en')
-    assert.equal(normalizeInterfaceLanguage(''), 'en')
-    assert.equal(normalizeInterfaceLanguage('klingon'), 'en')
+    expect(normalizeInterfaceLanguage(undefined)).toBe('en')
+    expect(normalizeInterfaceLanguage('')).toBe('en')
+    expect(normalizeInterfaceLanguage('klingon')).toBe('en')
   })
 
   test('legacy BCP-47 values stored by older builds still resolve', () => {
-    assert.equal(normalizeInterfaceLanguage('zh-CN'), 'zhCN')
-    assert.equal(normalizeInterfaceLanguage('zh-TW'), 'zhTW')
+    expect(normalizeInterfaceLanguage('zh-CN')).toBe('zhCN')
+    expect(normalizeInterfaceLanguage('zh-TW')).toBe('zhTW')
   })
 })

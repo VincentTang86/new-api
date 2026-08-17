@@ -16,75 +16,20 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import assert from 'node:assert/strict'
-import { after, describe, test } from 'node:test'
-
-import { Window } from 'happy-dom'
-
-import type { PricingRow } from '../../types'
-
-const domWindow = new Window()
-const domGlobals = [
-  'window',
-  'document',
-  'navigator',
-  'HTMLElement',
-  'SVGElement',
-  'Node',
-  'Element',
-  'Event',
-  'CustomEvent',
-  'MutationObserver',
-  'requestAnimationFrame',
-  'cancelAnimationFrame',
-  'getComputedStyle',
-  'customElements',
-  'CSSStyleSheet',
-  'HTMLStyleElement',
-  'ShadowRoot',
-  'DocumentFragment',
-] as const
-
-for (const key of domGlobals) {
-  Object.defineProperty(globalThis, key, {
-    configurable: true,
-    value: domWindow[key],
-  })
-}
-
-// Bare-global call sites: antd-style (pulled in by the provider icons) calls
-// matchMedia at import time, and the router calls scrollTo after navigation.
-const boundGlobals = ['matchMedia', 'scrollTo'] as const
-for (const key of boundGlobals) {
-  Object.defineProperty(globalThis, key, {
-    configurable: true,
-    value: (domWindow[key] as (...args: unknown[]) => unknown).bind(domWindow),
-  })
-}
-
-const { act } = await import('react')
-const { createRoot } = await import('react-dom/client')
-const { createInstance } = await import('i18next')
-const { I18nextProvider, initReactI18next } = await import('react-i18next')
-const {
+import {
   createMemoryHistory,
   createRootRoute,
   createRoute,
   createRouter,
   RouterProvider,
-} = await import('@tanstack/react-router')
+} from '@tanstack/react-router'
+import { act, render } from '@testing-library/react'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 
-const i18n = createInstance()
-await i18n.use(initReactI18next).init({ lng: 'en', resources: { en: {} } })
-
-const { PricingModelList } = await import('../pricing/pricing-model-list')
+import type { PricingRow } from '../../types'
+import { PricingModelList } from '../pricing/pricing-model-list'
 
 type PricingListVariant = 'preview' | 'catalogue'
-
-const reactTestGlobals = globalThis as typeof globalThis & {
-  IS_REACT_ACT_ENVIRONMENT?: boolean
-}
-reactTestGlobals.IS_REACT_ACT_ENVIRONMENT = true
 
 // The adapter has already formatted every value; the list only lays them out.
 const SAMPLE_ROWS: PricingRow[] = [
@@ -117,19 +62,10 @@ const SAMPLE_ROWS: PricingRow[] = [
   },
 ]
 
-type Rendered = {
-  container: HTMLDivElement
-  root: ReturnType<typeof createRoot>
-}
-
 async function renderList(
   rows: readonly PricingRow[],
   variant: PricingListVariant = 'preview'
-): Promise<Rendered> {
-  const container = document.createElement('div')
-  document.body.append(container)
-  const root = createRoot(container)
-
+): Promise<HTMLElement> {
   const rootRoute = createRootRoute()
   const indexRoute = createRoute({
     getParentRoute: () => rootRoute,
@@ -148,119 +84,96 @@ async function renderList(
     history: createMemoryHistory({ initialEntries: ['/'] }),
   })
 
+  let container!: HTMLElement
   await act(async () => {
-    root.render(
-      <I18nextProvider i18n={i18n}>
-        <RouterProvider router={router as never} />
-      </I18nextProvider>
-    )
+    container = render(<RouterProvider router={router as never} />).container
   })
 
-  return { container, root }
+  return container
 }
 
-async function unmountList(rendered: Rendered) {
-  await act(async () => rendered.root.unmount())
-  rendered.container.remove()
-}
-
-after(async () => {
-  await domWindow.happyDOM.close()
+// The router scrolls after navigation and jsdom's scrollTo only logs "not
+// implemented"; the pre-Vitest happy-dom bootstrap used to supply a real one.
+beforeEach(() => {
+  vi.spyOn(window, 'scrollTo').mockImplementation(() => {})
 })
 
 describe('PricingModelList', () => {
   test('renders the seven designed columns in order, each a column header', async () => {
-    const rendered = await renderList(SAMPLE_ROWS)
-    const headers = [...rendered.container.querySelectorAll('thead th')]
+    const container = await renderList(SAMPLE_ROWS)
+    const headers = [...container.querySelectorAll('thead th')]
 
-    assert.equal(headers.length, 7)
-    assert.deepEqual(
-      headers.map((th) => th.textContent),
-      [
-        'Model',
-        'FR Input / 1M',
-        'FR Output / 1M',
-        'Official Input / 1M',
-        'Official Output / 1M',
-        'Savings',
-        // The last column carries the per-row View link and is unlabelled by
-        // design.
-        '',
-      ]
-    )
+    expect(headers.length).toBe(7)
+    expect(headers.map((th) => th.textContent)).toEqual([
+      'Model',
+      'FR Input / 1M',
+      'FR Output / 1M',
+      'Official Input / 1M',
+      'Official Output / 1M',
+      'Savings',
+      // The last column carries the per-row View link and is unlabelled by
+      // design.
+      '',
+    ])
     for (const th of headers) {
-      assert.equal(th.getAttribute('scope'), 'col')
+      expect(th.getAttribute('scope')).toBe('col')
     }
-
-    await unmountList(rendered)
   })
 
   test('ships both responsive presentations, gated by the md breakpoint', async () => {
     // Seven columns cannot fit a phone. The contract is table-above-md /
     // accordion-below-md — not a horizontally scrolling table.
-    const rendered = await renderList(SAMPLE_ROWS)
+    const container = await renderList(SAMPLE_ROWS)
 
-    const tableWrapper = rendered.container.querySelector(
-      '[data-slot="pricing-table"]'
-    )
-    assert.ok(tableWrapper)
-    assert.match(tableWrapper?.className ?? '', /\bhidden\b/)
-    assert.match(tableWrapper?.className ?? '', /\bmd:block\b/)
+    const tableWrapper = container.querySelector('[data-slot="pricing-table"]')
+    expect(tableWrapper).not.toBeNull()
+    expect(tableWrapper?.className ?? '').toMatch(/\bhidden\b/)
+    expect(tableWrapper?.className ?? '').toMatch(/\bmd:block\b/)
 
-    const accordion = rendered.container.querySelector(
-      '[data-slot="pricing-accordion"]'
-    )
-    assert.ok(accordion, 'expected a mobile accordion alongside the table')
-    assert.match(accordion?.className ?? '', /\bmd:hidden\b/)
-
-    await unmountList(rendered)
+    const accordion = container.querySelector('[data-slot="pricing-accordion"]')
+    expect(
+      accordion,
+      'expected a mobile accordion alongside the table'
+    ).not.toBeNull()
+    expect(accordion?.className ?? '').toMatch(/\bmd:hidden\b/)
   })
 
   test('renders one body row per model, with the model name as its row header', async () => {
-    const rendered = await renderList(SAMPLE_ROWS)
-    const bodyRows = [...rendered.container.querySelectorAll('tbody tr')]
+    const container = await renderList(SAMPLE_ROWS)
+    const bodyRows = [...container.querySelectorAll('tbody tr')]
 
-    assert.equal(bodyRows.length, SAMPLE_ROWS.length)
+    expect(bodyRows.length).toBe(SAMPLE_ROWS.length)
     for (const [index, row] of bodyRows.entries()) {
       const rowHeader = row.querySelector('th')
-      assert.equal(rowHeader?.getAttribute('scope'), 'row')
-      assert.match(
-        rowHeader?.textContent ?? '',
+      expect(rowHeader?.getAttribute('scope')).toBe('row')
+      expect(rowHeader?.textContent ?? '').toMatch(
         new RegExp(SAMPLE_ROWS[index].name)
       )
     }
-
-    await unmountList(rendered)
   })
 
   test('collapses the savings pill to a dash when a row has no savings', async () => {
     // A row the adapter could not compute savings for arrives with dashes in
     // both savings fields; the combined pill must degrade to a single dash.
-    const rendered = await renderList(SAMPLE_ROWS)
-    const bodyRows = [...rendered.container.querySelectorAll('tbody tr')]
+    const container = await renderList(SAMPLE_ROWS)
+    const bodyRows = [...container.querySelectorAll('tbody tr')]
 
     const withSavings = [...bodyRows[0].querySelectorAll('td')]
-    assert.equal(withSavings[4].textContent, 'In 50% · Out 50%')
+    expect(withSavings[4].textContent).toBe('In 50% · Out 50%')
 
     const withoutSavings = [...bodyRows[1].querySelectorAll('td')]
-    assert.equal(withoutSavings[4].textContent, '—')
-
-    await unmountList(rendered)
+    expect(withoutSavings[4].textContent).toBe('—')
   })
 
   test('renders a fallback instead of an empty table shell', async () => {
-    const rendered = await renderList([])
+    const container = await renderList([])
 
-    assert.equal(rendered.container.querySelector('table'), null)
-    assert.equal(
-      rendered.container.querySelector('[data-slot="pricing-accordion"]'),
+    expect(container.querySelector('table')).toBe(null)
+    expect(container.querySelector('[data-slot="pricing-accordion"]')).toBe(
       null
     )
-    assert.match(
-      rendered.container.textContent ?? '',
+    expect(container.textContent ?? '').toMatch(
       /No models are available right now/
     )
-
-    await unmountList(rendered)
   })
 })
