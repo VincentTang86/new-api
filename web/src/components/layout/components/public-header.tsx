@@ -165,8 +165,10 @@ export function PublicHeader(props: PublicHeaderProps) {
   const desktopLinkClass = (link: TopNavLink) =>
     cn(
       'text-sm whitespace-nowrap transition-colors',
+      // The design switches face as well as weight on the current page: Inter
+      // semibold for the active link, Geist medium for the rest.
       pathname === link.href && !link.disabled
-        ? 'font-semibold text-(--pd-primary)'
+        ? 'pd-font-ui font-semibold text-(--pd-primary)'
         : 'font-medium text-(--pd-ink)',
       link.disabled ? 'cursor-default' : 'hover:text-(--pd-primary)'
     )
@@ -175,7 +177,7 @@ export function PublicHeader(props: PublicHeaderProps) {
     cn(
       'text-sm',
       pathname === link.href && !link.disabled
-        ? 'font-semibold text-(--pd-primary)'
+        ? 'pd-font-ui font-semibold text-(--pd-primary)'
         : 'text-(--pd-ink)',
       link.disabled && 'cursor-default text-(--pd-muted-2)'
     )

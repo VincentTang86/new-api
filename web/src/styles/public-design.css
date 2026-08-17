@@ -54,6 +54,11 @@ For commercial licensing, please contact support@quantumnous.com
   --pd-border: #e5e7eb;
   --pd-border-soft: #e2e8f0;
 
+  /* Segmented controls sit on a heavier grey than the page surfaces, with a
+   * heavier rule around them — without these the tier tabs wash out. */
+  --pd-control-bg: #ebecf0;
+  --pd-control-border: #d1d4db;
+
   /* Status */
   --pd-success: #059669;
   --pd-success-bg: #ecfdf5;
@@ -68,9 +73,12 @@ For commercial licensing, please contact support@quantumnous.com
   scrollbar-color: #d1d5db transparent;
 }
 
-/* Hero backdrop: the design's soft radial brand glow behind the headline.
- * (The mock also tiled its logo mark as a texture; that layer occluded the
- * vendor strip, so it is intentionally dropped.) */
+/* Hero backdrop, three layers deep as in the design: a soft radial brand glow,
+ * the brand mark tiled as a texture over it, and a canvas-coloured radial fade
+ * on top. The fade is what makes the texture usable — it stays opaque through
+ * the middle of the hero, so the headline and the vendor strip read against
+ * flat canvas, and only thins out towards the edges where the mark shows
+ * through. */
 .public-design .pd-hero-glow {
   background-image: radial-gradient(
     ellipse 60% 55% at 50% 20%,
@@ -79,11 +87,61 @@ For commercial licensing, please contact support@quantumnous.com
   );
 }
 
+/* The mark is inlined rather than fetched: at 13% opacity over a 35px tile it
+ * is pure texture, and a decorative background has no business costing a
+ * request. The brand red is literal because a data URI cannot read `--pd-*`;
+ * at this opacity the dark-mode primary would be indistinguishable anyway. */
+.public-design .pd-hero-watermark {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 596 596'%3E%3Cg fill='none' stroke='%23ff5a5f' stroke-width='74' stroke-linecap='round' stroke-linejoin='round' transform='translate(32 37)'%3E%3Cpath d='M115 163L333 202'/%3E%3Cpath d='M322 210L163 318'/%3E%3C/g%3E%3C/svg%3E");
+  background-position: top left;
+  background-size: 35.2px 35.2px;
+  opacity: 0.13;
+}
+
+.public-design .pd-hero-fade {
+  background-image: radial-gradient(
+    ellipse 46% 56% at 50% 50%,
+    var(--pd-canvas) 0%,
+    var(--pd-canvas) 35%,
+    color-mix(in srgb, var(--pd-canvas) 70%, transparent) 55%,
+    color-mix(in srgb, var(--pd-canvas) 20%, transparent) 75%,
+    transparent 90%
+  );
+}
+
+/* Dark mode inverts the fade, as the design does: the mark reads as texture in
+ * the middle of a dark hero and would only muddy the edges, so the canvas
+ * closes in from the outside instead of the centre. */
+.dark .public-design .pd-hero-glow {
+  background-image: radial-gradient(
+    ellipse 60% 55% at 50% 18%,
+    color-mix(in srgb, var(--pd-primary) 11%, transparent),
+    transparent 48%
+  );
+}
+
+.dark .public-design .pd-hero-fade {
+  background-image: radial-gradient(
+    ellipse 46% 56% at 50% 48%,
+    color-mix(in srgb, var(--pd-canvas) 10%, transparent) 0%,
+    color-mix(in srgb, var(--pd-canvas) 80%, transparent) 52%,
+    var(--pd-canvas) 90%
+  );
+}
+
 /* Display face (logo, headings) — the design's Outfit. */
 .public-design .pd-font-display {
   font-family:
     'Outfit Variable', 'Geist Variable', 'Inter Variable', ui-sans-serif,
     system-ui, sans-serif;
+}
+
+/* Control face (segmented tabs, pills, badges) — the design's Inter, which it
+ * uses for chrome even though body copy is Geist. */
+.public-design .pd-font-ui {
+  font-family:
+    'Inter Variable', 'Inter', 'Geist Variable', ui-sans-serif, system-ui,
+    sans-serif;
 }
 
 /* Dark mode: flip the token layer once. The design ships light-only, so the
@@ -114,6 +172,8 @@ For commercial licensing, please contact support@quantumnous.com
 
   --pd-border: #334155;
   --pd-border-soft: #1e293b;
+  --pd-control-bg: #1b2540;
+  --pd-control-border: #3a4868;
 
   --pd-success: #34d399;
   --pd-success-bg: rgb(5 150 105 / 0.15);
@@ -179,9 +239,4 @@ For commercial licensing, please contact support@quantumnous.com
  * here, where the design used a plain cell. */
 .dark .public-design tbody tr:hover :is(td, th) {
   background-color: #1e3a5f !important;
-}
-
-/* FAQ panel bg */
-.dark .public-design .faq-answer {
-  background-color: #0f172a !important;
 }

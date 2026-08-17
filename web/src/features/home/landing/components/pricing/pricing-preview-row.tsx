@@ -43,7 +43,7 @@ export function PricingPreviewRow(props: PricingPreviewRowProps) {
 
   return (
     <tr className='border-b border-(--pd-border) transition-colors last:border-b-0 odd:bg-(--pd-surface) even:bg-(--pd-surface-alt) hover:bg-(--pd-accent-bg-hover)'>
-      <th scope='row' className='px-4 py-4 text-left font-normal'>
+      <th scope='row' className='px-6 py-4 text-left font-normal'>
         <div className='flex items-center gap-2.5'>
           <ProviderMark
             provider={row.provider}
@@ -55,26 +55,26 @@ export function PricingPreviewRow(props: PricingPreviewRowProps) {
           </span>
         </div>
       </th>
-      <td className='px-4 py-4 text-right font-mono text-sm font-bold text-(--pd-ink)'>
+      <td className='px-6 py-4 text-right font-mono text-sm font-bold text-(--pd-ink)'>
         {frInput}
       </td>
-      <td className='px-4 py-4 text-right font-mono text-sm font-bold text-(--pd-ink)'>
+      <td className='px-6 py-4 text-right font-mono text-sm font-bold text-(--pd-ink)'>
         {frOutput}
       </td>
-      <td className='px-4 py-4 text-right font-mono text-sm text-(--pd-muted)'>
+      <td className='px-6 py-4 text-right font-mono text-sm text-(--pd-muted)'>
         {row.officialInput}
       </td>
-      <td className='px-4 py-4 text-right font-mono text-sm text-(--pd-muted)'>
+      <td className='px-6 py-4 text-right font-mono text-sm text-(--pd-muted)'>
         {row.officialOutput}
       </td>
-      <td className='px-4 py-4 text-right'>
+      <td className='px-6 py-4 text-right'>
         <SavingsBadge row={row} />
       </td>
-      <td className='px-4 py-4 text-right'>
+      <td className='px-6 py-4 text-right'>
         <Link
           to='/pricing/$modelId'
           params={{ modelId: row.modelId }}
-          className='text-[13px] font-medium whitespace-nowrap text-(--pd-primary) transition-opacity hover:opacity-80'
+          className='pd-font-ui text-[13px] font-medium whitespace-nowrap text-(--pd-primary) transition-opacity hover:opacity-80'
         >
           {t('View →')}
         </Link>

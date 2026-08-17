@@ -32,7 +32,7 @@ export function LandingProviderRow() {
 
   return (
     <div className='flex w-full flex-col items-center gap-5 pt-2'>
-      <p className='text-xs font-bold tracking-widest text-(--pd-muted-2) uppercase'>
+      <p className='text-xs font-bold text-(--pd-muted-2) uppercase'>
         {t('Models from')}
       </p>
       <ul className='flex flex-wrap items-center justify-center gap-x-4 gap-y-3'>
@@ -53,7 +53,7 @@ export function LandingProviderRow() {
                   aria-hidden
                 />
               </span>
-              <span className='text-[15px] font-medium whitespace-nowrap text-(--pd-ink)'>
+              <span className='pd-font-ui text-[15px] font-medium whitespace-nowrap text-(--pd-ink)'>
                 {provider.label}
               </span>
             </li>

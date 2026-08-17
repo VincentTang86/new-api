@@ -108,10 +108,12 @@ export function LandingFaq() {
       id={LANDING_SECTION_IDS.faq}
       className={cn(LANDING_CONTAINER, 'py-20')}
     >
-      <h2 className='pd-font-display mb-10 text-[40px] font-extrabold tracking-tight text-(--pd-ink-strong) max-[640px]:text-[28px]'>
+      <h2 className='pd-font-display mb-10 text-[40px] font-extrabold text-(--pd-ink-strong) max-[640px]:text-[28px]'>
         {t('FAQ')}
       </h2>
-      <div className='max-w-[720px] overflow-hidden rounded-2xl border border-(--pd-border) bg-(--pd-surface)'>
+      {/* Each entry is its own card in the design, not a row inside one
+       * bordered list. */}
+      <div className='flex max-w-[800px] flex-col gap-4'>
         {items.map((item) => {
           const isOpen = openKey === item.key
           const panelId = `${panelIdPrefix}-${item.key}`
@@ -119,28 +121,28 @@ export function LandingFaq() {
           return (
             <div
               key={item.key}
-              className='border-b border-(--pd-border-soft) last:border-b-0'
+              className='flex flex-col gap-3 rounded-xl border-b border-(--pd-border) bg-(--pd-surface-alt) p-6'
             >
               <button
                 type='button'
                 aria-expanded={isOpen}
                 aria-controls={panelId}
                 onClick={() => setOpenKey(isOpen ? null : item.key)}
-                className='flex w-full items-start justify-between gap-4 px-5 py-4 text-left'
+                className='flex w-full items-center justify-between gap-4 text-left'
               >
-                <span className='text-[15px] font-medium text-(--pd-ink)'>
+                <span className='pd-font-display text-lg font-semibold text-(--pd-ink-strong)'>
                   {item.q}
                 </span>
                 <Chevron
-                  size={16}
-                  className='mt-0.5 shrink-0 text-(--pd-faint)'
+                  size={20}
+                  className='shrink-0 text-(--pd-faint)'
                   aria-hidden
                 />
               </button>
               {isOpen && (
                 <div
                   id={panelId}
-                  className='faq-answer bg-(--pd-surface-alt) px-5 pb-4 text-sm leading-[1.6] text-(--pd-muted)'
+                  className='text-[15px] leading-[1.6] text-(--pd-muted)'
                 >
                   {item.a}
                 </div>

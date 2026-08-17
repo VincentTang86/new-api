@@ -46,7 +46,7 @@ export function LandingCodeSample() {
     <section id={LANDING_SECTION_IDS.code} className='py-16'>
       <div className={LANDING_CONTAINER}>
         <div className='max-w-[720px]'>
-          <h2 className='pd-font-display mb-3 text-[40px] font-extrabold tracking-tight text-(--pd-ink-strong) max-[640px]:text-[28px]'>
+          <h2 className='pd-font-display mb-3 text-[40px] font-extrabold text-(--pd-ink-strong) max-[640px]:text-[28px]'>
             {t('Change two lines, start calling')}
           </h2>
           <p className='mb-8 text-base text-(--pd-muted)'>
@@ -55,12 +55,12 @@ export function LandingCodeSample() {
             )}
           </p>
           <CodeSampleTabs baseUrl={baseUrl} />
-          <p className='mt-4 text-sm text-(--pd-muted-3)'>
+          <p className='mt-4 text-right'>
             <a
               href={docsUrl}
               target='_blank'
               rel='noopener noreferrer'
-              className='text-(--pd-primary) transition-colors hover:opacity-80'
+              className='pd-font-display text-base font-bold text-(--pd-primary) transition-colors hover:opacity-80'
             >
               {t('Read the quickstart guide')}
             </a>

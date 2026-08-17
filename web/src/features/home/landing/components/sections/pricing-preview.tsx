@@ -43,7 +43,7 @@ export function LandingPricingPreview() {
       className={cn(LANDING_CONTAINER, 'py-16')}
     >
       <div className='mb-6'>
-        <h2 className='pd-font-display mb-3 text-[40px] font-extrabold tracking-tight text-(--pd-ink-strong) max-[640px]:text-[28px]'>
+        <h2 className='pd-font-display mb-3 text-[40px] font-extrabold text-(--pd-ink-strong) max-[640px]:text-[28px]'>
           {t('Models & pricing, made clear')}
         </h2>
         <p className='text-base text-(--pd-muted)'>
@@ -82,7 +82,7 @@ export function LandingPricingPreview() {
         </p>
         <Link
           to='/pricing'
-          className='flex items-center gap-1 text-[13px] font-medium whitespace-nowrap text-(--pd-primary) transition-opacity hover:opacity-80'
+          className='pd-font-display flex items-center gap-1 text-base font-bold whitespace-nowrap text-(--pd-primary) underline transition-opacity hover:opacity-80'
         >
           {t('View all models')}
           <ArrowRight size={12} aria-hidden />

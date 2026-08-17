@@ -16,7 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { CheckCircle } from 'lucide-react'
+import { Check } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { LANDING_CONTAINER } from '../../constants'
@@ -36,7 +36,7 @@ export function LandingTrust() {
   return (
     <section className={`${LANDING_CONTAINER} py-16`}>
       <div className='max-w-[720px]'>
-        <h2 className='pd-font-display mb-3 text-[40px] font-extrabold tracking-tight text-(--pd-ink-strong) max-[640px]:text-[28px]'>
+        <h2 className='pd-font-display mb-3 text-[40px] font-extrabold text-(--pd-ink-strong) max-[640px]:text-[28px]'>
           {t('Every call, fully accountable')}
         </h2>
         <p className='mb-8 text-base text-(--pd-muted)'>
@@ -48,13 +48,16 @@ export function LandingTrust() {
           {capabilities.map((capability) => (
             <li
               key={capability}
-              className='flex items-center gap-2.5 text-[15px] text-(--pd-ink)'
+              className='pd-font-ui flex items-center gap-3 rounded-xl border border-(--pd-border) bg-(--pd-surface) p-4 text-[15px] font-semibold text-(--pd-ink) drop-shadow-[0px_6px_8px_rgba(0,0,0,0.04)]'
             >
-              <CheckCircle
-                size={16}
-                className='shrink-0 text-(--pd-success)'
-                aria-hidden
-              />
+              <span className='flex size-6 shrink-0 items-center justify-center rounded-xl bg-(--pd-accent-bg)'>
+                <Check
+                  size={14}
+                  strokeWidth={2.5}
+                  className='text-(--pd-primary)'
+                  aria-hidden
+                />
+              </span>
               {capability}
             </li>
           ))}

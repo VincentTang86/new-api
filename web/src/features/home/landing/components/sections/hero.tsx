@@ -64,6 +64,14 @@ export function LandingHero(props: LandingHeroProps) {
   return (
     <section className='pd-hero-glow relative overflow-clip'>
       <div
+        aria-hidden
+        className='pd-hero-watermark pointer-events-none absolute inset-0'
+      />
+      <div
+        aria-hidden
+        className='pd-hero-fade pointer-events-none absolute inset-0'
+      />
+      <div
         className={cn(
           LANDING_CONTAINER,
           'relative flex flex-col items-center gap-12 py-16 max-[640px]:gap-8 max-[640px]:py-10'

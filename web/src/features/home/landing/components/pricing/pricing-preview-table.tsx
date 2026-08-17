@@ -50,47 +50,51 @@ export function PricingPreviewTable(props: PricingPreviewTableProps) {
       : t('OpenRouter Output / 1M')
 
   const columns = [
+    // Column shares come from the design's fixed 1412px track (260 / 205×4 /
+    // 252 / 80). The four price columns are equal there, which is also what
+    // keeps the longest benchmark header — "OpenRouter Выход / 1M" — on one
+    // line.
     {
       key: 'model',
       label: t('Model'),
       align: 'text-left',
-      width: 'w-[24%]',
+      width: 'w-[18%]',
     },
     {
       key: 'fr-input',
       label: t('FR Input / 1M'),
       align: 'text-right',
-      width: 'w-[12%]',
+      width: 'w-[15%]',
     },
     {
       key: 'fr-output',
       label: t('FR Output / 1M'),
       align: 'text-right',
-      width: 'w-[12%]',
+      width: 'w-[15%]',
     },
     {
       key: 'bench-input',
       label: benchInputLabel,
       align: 'text-right',
-      width: 'w-[13%]',
+      width: 'w-[15%]',
     },
     {
       key: 'bench-output',
       label: benchOutputLabel,
       align: 'text-right',
-      width: 'w-[13%]',
+      width: 'w-[15%]',
     },
     {
       key: 'savings',
       label: t('Savings'),
       align: 'text-right',
-      width: 'w-[18%]',
+      width: 'w-[16%]',
     },
     {
       key: 'detail',
       label: '',
       align: 'text-right',
-      width: 'w-[8%]',
+      width: 'w-[6%]',
     },
   ] as const
 
@@ -103,35 +107,40 @@ export function PricingPreviewTable(props: PricingPreviewTableProps) {
         aria-hidden='true'
         className='h-0.5 w-full bg-linear-to-r from-(--pd-gradient-from) to-(--pd-gradient-to)'
       />
-      <table className='w-full table-fixed text-sm'>
-        <colgroup>
-          {columns.map((column) => (
-            <col key={column.key} className={column.width} />
-          ))}
-        </colgroup>
-        <thead>
-          <tr className='border-b border-(--pd-border) bg-(--pd-table-head)'>
+      {/* Headers never wrap; below the width where the longest locale's
+       * headers still fit on one line, the table scrolls sideways instead of
+       * breaking the row rhythm. */}
+      <div className='overflow-x-auto'>
+        <table className='w-full min-w-[960px] table-fixed text-sm'>
+          <colgroup>
             {columns.map((column) => (
-              <th
-                key={column.key}
-                scope='col'
-                className={`px-4 py-4 text-xs font-extrabold text-(--pd-muted) ${column.align}`}
-              >
-                {column.label || null}
-              </th>
+              <col key={column.key} className={column.width} />
             ))}
-          </tr>
-        </thead>
-        <tbody>
-          {props.rows.map((row) => (
-            <PricingPreviewRow
-              key={row.modelId}
-              row={row}
-              variant={props.variant}
-            />
-          ))}
-        </tbody>
-      </table>
+          </colgroup>
+          <thead>
+            <tr className='border-b border-(--pd-border) bg-(--pd-table-head)'>
+              {columns.map((column) => (
+                <th
+                  key={column.key}
+                  scope='col'
+                  className={`px-6 py-[18px] text-xs font-extrabold whitespace-nowrap text-(--pd-muted) ${column.align}`}
+                >
+                  {column.label || null}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {props.rows.map((row) => (
+              <PricingPreviewRow
+                key={row.modelId}
+                row={row}
+                variant={props.variant}
+              />
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }

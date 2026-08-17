@@ -53,7 +53,7 @@ export function LandingFinalCta(props: LandingFinalCtaProps) {
         <div className='flex flex-wrap items-center justify-center gap-4'>
           <Link
             to={primaryTarget}
-            className='flex items-center justify-center rounded-lg bg-white px-7 py-3.5 text-sm font-semibold whitespace-nowrap text-(--pd-primary) transition-opacity hover:opacity-90'
+            className='pd-font-ui flex items-center justify-center rounded-lg bg-white px-7 py-3.5 text-sm font-semibold whitespace-nowrap text-(--pd-primary) transition-opacity hover:opacity-90'
           >
             {t('Start Building')}
           </Link>
@@ -61,7 +61,7 @@ export function LandingFinalCta(props: LandingFinalCtaProps) {
             href={docsUrl}
             target='_blank'
             rel='noopener noreferrer'
-            className='flex items-center justify-center rounded-lg border-[1.5px] border-white/50 px-7 py-3.5 text-sm font-medium whitespace-nowrap text-white transition-colors hover:bg-white/10'
+            className='pd-font-ui flex items-center justify-center rounded-lg border-[1.5px] border-white/50 px-7 py-3.5 text-sm font-medium whitespace-nowrap text-white transition-colors hover:bg-white/10'
           >
             {t('View API Docs')}
           </a>

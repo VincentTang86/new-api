@@ -49,22 +49,25 @@ export function LandingSteps() {
 
   return (
     <section className={cn(LANDING_CONTAINER, 'py-16')}>
-      <h2 className='pd-font-display mb-12 text-[40px] font-extrabold tracking-tight text-(--pd-ink-strong) max-[640px]:text-[28px]'>
+      <h2 className='pd-font-display mb-12 text-[40px] font-extrabold text-(--pd-ink-strong) max-[640px]:text-[28px]'>
         {t('Get started in three steps')}
       </h2>
       <ol className='grid grid-cols-3 gap-8 max-[640px]:grid-cols-1'>
         {steps.map((step, index) => (
-          <li key={step.key} className='flex flex-col'>
+          <li
+            key={step.key}
+            className='flex flex-col gap-5 rounded-2xl border-t-2 border-(--pd-border) bg-(--pd-surface) p-10 drop-shadow-[0px_10px_12px_rgba(0,0,0,0.04)] max-[640px]:p-7'
+          >
             <span
               aria-hidden
-              className='mb-4 flex size-8 items-center justify-center rounded-lg bg-(--pd-accent-bg) font-mono text-sm font-bold text-(--pd-primary)'
+              className='pd-font-display bg-linear-to-r from-(--pd-gradient-from) to-(--pd-gradient-to) bg-clip-text text-[48px] leading-none font-extrabold text-transparent'
             >
-              {index + 1}
+              {String(index + 1).padStart(2, '0')}
             </span>
-            <h3 className='pd-font-display mb-2 text-xl font-bold text-(--pd-ink-strong)'>
+            <h3 className='pd-font-display text-xl font-extrabold text-(--pd-ink)'>
               {step.title}
             </h3>
-            <p className='text-base leading-[1.6] text-(--pd-muted)'>
+            <p className='text-[15px] leading-[1.6] text-(--pd-muted)'>
               {step.desc}
             </p>
           </li>

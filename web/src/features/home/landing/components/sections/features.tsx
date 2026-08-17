@@ -63,7 +63,10 @@ export function LandingFeatures() {
     <section className={`${LANDING_CONTAINER} py-16`}>
       <div className='grid grid-cols-4 gap-5 max-[900px]:grid-cols-2 max-[640px]:grid-cols-1'>
         {features.map((feature) => (
-          <div key={feature.key} className='flex flex-col gap-3'>
+          <div
+            key={feature.key}
+            className='flex flex-col gap-3 rounded-2xl bg-(--pd-surface) p-7 drop-shadow-[0px_2px_6px_rgba(0,0,0,0.06)]'
+          >
             <div className='flex items-center gap-3'>
               <span className='flex size-8 shrink-0 items-center justify-center rounded-lg bg-(--pd-accent-bg)'>
                 <feature.Icon

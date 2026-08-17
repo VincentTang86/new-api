@@ -34,8 +34,17 @@ export function ModelsPricing() {
     <PublicLayout showMainContainer={false}>
       {/* 55px is the sticky header, so a short catalogue still fills the fold. */}
       <main id='main' className='min-h-[calc(100vh-55px)]'>
-        <div className={`${LANDING_CONTAINER} pt-12 pb-6`}>
-          <h1 className='pd-font-display mb-4 text-[40px] font-extrabold tracking-tight text-(--pd-ink-strong) max-[640px]:text-[28px]'>
+        {/* The design opens this page on a short band of the hero texture
+         * instead of a hero — same tile, no headline over it. */}
+        <div
+          aria-hidden
+          className='h-[98px] w-full overflow-hidden border-b border-(--pd-border)'
+        >
+          <div className='pd-hero-watermark size-full' />
+        </div>
+
+        <div className={`${LANDING_CONTAINER} pt-9 pb-6`}>
+          <h1 className='pd-font-display mb-4 text-[40px] font-extrabold text-(--pd-ink-strong) max-[640px]:text-[28px]'>
             {t('Models & pricing, made clear')}
           </h1>
           <p className='text-base text-(--pd-muted)'>
