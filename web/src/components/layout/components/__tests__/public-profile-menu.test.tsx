@@ -16,81 +16,20 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import assert from 'node:assert/strict'
-import { after, describe, test } from 'node:test'
-
-import { Window } from 'happy-dom'
-
-const domWindow = new Window()
-const domGlobals = [
-  'window',
-  'document',
-  'navigator',
-  'HTMLElement',
-  'SVGElement',
-  'Node',
-  'Element',
-  'Event',
-  'CustomEvent',
-  'MutationObserver',
-  'ResizeObserver',
-  'requestAnimationFrame',
-  'cancelAnimationFrame',
-  'getComputedStyle',
-  'localStorage',
-  'customElements',
-  'CSSStyleSheet',
-  'HTMLStyleElement',
-  'ShadowRoot',
-  'DocumentFragment',
-  'KeyboardEvent',
-  'MouseEvent',
-  'PointerEvent',
-  'FocusEvent',
-] as const
-
-for (const key of domGlobals) {
-  Object.defineProperty(globalThis, key, {
-    configurable: true,
-    value: domWindow[key],
-  })
-}
-
-const boundGlobals = ['matchMedia', 'scrollTo', 'setTimeout', 'clearTimeout']
-for (const key of boundGlobals) {
-  const value = (domWindow as unknown as Record<string, unknown>)[key]
-  if (typeof value === 'function') {
-    Object.defineProperty(globalThis, key, {
-      configurable: true,
-      value: (value as (...args: unknown[]) => unknown).bind(domWindow),
-    })
-  }
-}
-
-const { act } = await import('react')
-const { createRoot } = await import('react-dom/client')
-const { QueryClient, QueryClientProvider } =
-  await import('@tanstack/react-query')
-const { createInstance } = await import('i18next')
-const { I18nextProvider, initReactI18next } = await import('react-i18next')
-const {
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import {
   createMemoryHistory,
   createRootRoute,
   createRoute,
   createRouter,
   RouterProvider,
-} = await import('@tanstack/react-router')
+} from '@tanstack/react-router'
+import { act, fireEvent, render } from '@testing-library/react'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 
-const i18n = createInstance()
-await i18n.use(initReactI18next).init({ lng: 'en', resources: { en: {} } })
+import { useAuthStore } from '@/stores/auth-store'
 
-const { useAuthStore } = await import('@/stores/auth-store')
-const { PublicProfileMenu } = await import('../public-profile-menu')
-
-const reactTestGlobals = globalThis as typeof globalThis & {
-  IS_REACT_ACT_ENVIRONMENT?: boolean
-}
-reactTestGlobals.IS_REACT_ACT_ENVIRONMENT = true
+import { PublicProfileMenu } from '../public-profile-menu'
 
 /** The console destinations the design wires the menu to. */
 const MENU_TARGETS = [
@@ -124,10 +63,6 @@ async function renderMenu() {
     defaultOptions: { queries: { retry: false, enabled: false } },
   })
 
-  const container = document.createElement('div')
-  document.body.append(container)
-  const root = createRoot(container)
-
   const rootRoute = createRootRoute()
   const routes = [
     createRoute({
@@ -148,14 +83,13 @@ async function renderMenu() {
     history: createMemoryHistory({ initialEntries: ['/'] }),
   })
 
+  let container!: HTMLElement
   await act(async () => {
-    root.render(
+    container = render(
       <QueryClientProvider client={queryClient}>
-        <I18nextProvider i18n={i18n}>
-          <RouterProvider router={router as never} />
-        </I18nextProvider>
+        <RouterProvider router={router as never} />
       </QueryClientProvider>
-    )
+    ).container
   })
 
   return {
@@ -163,31 +97,25 @@ async function renderMenu() {
     router,
     async open() {
       const trigger = container.querySelector('button')
-      assert.ok(trigger, 'expected the avatar pill trigger')
+      expect(trigger, 'expected the avatar pill trigger').not.toBeNull()
       await act(async () => {
-        trigger.dispatchEvent(
-          new domWindow.MouseEvent('mouseover', {
-            bubbles: true,
-          }) as unknown as globalThis.Event
-        )
+        fireEvent.mouseOver(trigger as HTMLButtonElement)
       })
-    },
-    async cleanup() {
-      await act(async () => root.unmount())
-      container.remove()
     },
   }
 }
 
-after(async () => {
-  await domWindow.happyDOM.close()
+// The router scrolls after navigation and jsdom's scrollTo only logs "not
+// implemented"; the pre-Vitest happy-dom bootstrap used to supply a real one.
+beforeEach(() => {
+  vi.spyOn(window, 'scrollTo').mockImplementation(() => {})
 })
 
 describe('PublicProfileMenu', () => {
   test('the pill shows the display name and opens on hover with the designed items', async () => {
     const rendered = await renderMenu()
 
-    assert.match(rendered.container.textContent ?? '', /John Doe/)
+    expect(rendered.container.textContent ?? '').toMatch(/John Doe/)
 
     await rendered.open()
     const menuText = document.body.textContent ?? ''
@@ -200,12 +128,10 @@ describe('PublicProfileMenu', () => {
       'Account Settings',
       'Sign out',
     ]) {
-      assert.match(menuText, new RegExp(label), `missing menu item: ${label}`)
+      expect(menuText, `missing menu item: ${label}`).toMatch(new RegExp(label))
     }
     // The user block carries name and email, per the design.
-    assert.match(menuText, /jdoe@example\.com/)
-
-    await rendered.cleanup()
+    expect(menuText).toMatch(/jdoe@example\.com/)
   })
 
   test('the console shortcut navigates to /dashboard', async () => {
@@ -216,13 +142,11 @@ describe('PublicProfileMenu', () => {
     const consoleItem = items.find((item) =>
       /Console/.test(item.textContent ?? '')
     ) as HTMLElement | undefined
-    assert.ok(consoleItem, 'expected a Console menu item')
+    expect(consoleItem, 'expected a Console menu item').toBeDefined()
 
     await act(async () => {
-      consoleItem.click()
+      fireEvent.click(consoleItem as HTMLElement)
     })
-    assert.equal(rendered.router.state.location.pathname, '/dashboard')
-
-    await rendered.cleanup()
+    expect(rendered.router.state.location.pathname).toBe('/dashboard')
   })
 })

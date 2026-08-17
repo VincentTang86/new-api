@@ -16,8 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import assert from 'node:assert/strict'
-import { describe, test } from 'node:test'
+import { describe, expect, test } from 'vitest'
 
 import type { PricingModel } from '@/features/pricing/types'
 
@@ -48,24 +47,24 @@ describe('summarizeLandingModels', () => {
       model('gpt-4o-mini', 'OpenAI', 3),
     ])
 
-    assert.equal(summary.count, 3)
+    expect(summary.count).toBe(3)
     // Deduplicated, and ordered by the hero logo row rather than by catalog
     // order, so the FAQ sentence matches the logos above it.
-    assert.deepEqual(summary.providers, ['OpenAI', 'Anthropic'])
+    expect(summary.providers).toEqual(['OpenAI', 'Anthropic'])
   })
 
   test('resolves the vendor from the model id when the backend has none', () => {
     const summary = summarizeLandingModels([model('qwen3.7-max')])
 
-    assert.equal(summary.count, 1)
-    assert.deepEqual(summary.providers, ['Alibaba'])
+    expect(summary.count).toBe(1)
+    expect(summary.providers).toEqual(['Alibaba'])
   })
 
   test('counts a model whose vendor cannot be resolved but names no brand', () => {
     const summary = summarizeLandingModels([model('house-model-v1')])
 
-    assert.equal(summary.count, 1)
-    assert.deepEqual(summary.providers, [])
+    expect(summary.count).toBe(1)
+    expect(summary.providers).toEqual([])
   })
 
   test('reports an unknown count for an empty catalog so the copy drops the number', () => {
@@ -73,7 +72,7 @@ describe('summarizeLandingModels', () => {
     // marketing copy must not turn that into "0 curated models".
     const summary = summarizeLandingModels([])
 
-    assert.equal(summary.count, null)
-    assert.deepEqual(summary.providers, [])
+    expect(summary.count).toBe(null)
+    expect(summary.providers).toEqual([])
   })
 })

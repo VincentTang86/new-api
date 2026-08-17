@@ -16,11 +16,11 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
-import { describe, test } from 'node:test'
 import { fileURLToPath } from 'node:url'
+
+import { describe, expect, test } from 'vitest'
 
 import { parseOfficialPricing } from '../official-pricing'
 
@@ -45,13 +45,13 @@ describe('parseOfficialPricing', () => {
       },
     })
 
-    assert.deepEqual(parsed['gpt-4o'], {
+    expect(parsed['gpt-4o']).toEqual({
       displayName: 'GPT-4o',
       context: '128K',
       officialInput: 2.5,
       officialOutput: 10,
     })
-    assert.deepEqual(parsed['flux-1.1-pro'], { officialRequestPrice: 0.08 })
+    expect(parsed['flux-1.1-pro']).toEqual({ officialRequestPrice: 0.08 })
   })
 
   test('drops unusable prices field by field, keeping the rest of the entry', () => {
@@ -69,7 +69,7 @@ describe('parseOfficialPricing', () => {
 
     // A negative / non-numeric / NaN list price would make the savings maths
     // dishonest, so those fields vanish and the columns fall back to a dash.
-    assert.deepEqual(parsed['a-model'], {
+    expect(parsed['a-model']).toEqual({
       displayName: 'A Model',
       context: '128K',
     })
@@ -79,21 +79,20 @@ describe('parseOfficialPricing', () => {
     const parsed = parseOfficialPricing({
       models: { 'a-model': { officialInput: 0, officialOutput: 10 } },
     })
-    assert.deepEqual(parsed['a-model'], { officialOutput: 10 })
+    expect(parsed['a-model']).toEqual({ officialOutput: 10 })
   })
 
   test('returns an empty map for a structurally broken file', () => {
-    assert.deepEqual(parseOfficialPricing(null), {})
-    assert.deepEqual(parseOfficialPricing('not json'), {})
-    assert.deepEqual(parseOfficialPricing({}), {})
-    assert.deepEqual(parseOfficialPricing({ models: [] }), {})
+    expect(parseOfficialPricing(null)).toEqual({})
+    expect(parseOfficialPricing('not json')).toEqual({})
+    expect(parseOfficialPricing({})).toEqual({})
+    expect(parseOfficialPricing({ models: [] })).toEqual({})
     // A non-object entry is skipped, the valid sibling survives.
-    assert.deepEqual(
+    expect(
       parseOfficialPricing({
         models: { bad: 'nope', good: { officialInput: 1 } },
-      }),
-      { good: { officialInput: 1 } }
-    )
+      })
+    ).toEqual({ good: { officialInput: 1 } })
   })
 
   test('the shipped official-pricing.json survives validation intact', () => {
@@ -102,17 +101,16 @@ describe('parseOfficialPricing', () => {
 
     // Guards against a hand-edit that silently empties the official / savings
     // columns in production.
-    assert.equal(
+    expect(
       Object.keys(parsed).length,
-      Object.keys(raw.models).length,
       'every model in official-pricing.json must parse'
-    )
+    ).toBe(Object.keys(raw.models).length)
     for (const [modelName, entry] of Object.entries(parsed)) {
-      assert.ok(
+      expect(
         entry.officialInput !== undefined ||
           entry.officialRequestPrice !== undefined,
         `${modelName} carries no usable official price`
-      )
+      ).toBe(true)
     }
   })
 })

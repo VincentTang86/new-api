@@ -16,8 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import assert from 'node:assert/strict'
-import { describe, test } from 'node:test'
+import { describe, expect, test } from 'vitest'
 
 import {
   LANDING_PRICE_PLACEHOLDER,
@@ -29,75 +28,75 @@ import {
 
 describe('calculateSavingsRatio', () => {
   test('returns the discount fraction when we are cheaper', () => {
-    assert.equal(calculateSavingsRatio(1.25, 2.5), 0.5)
-    assert.equal(calculateSavingsRatio(0.8, 1.6), 0.5)
+    expect(calculateSavingsRatio(1.25, 2.5)).toBe(0.5)
+    expect(calculateSavingsRatio(0.8, 1.6)).toBe(0.5)
   })
 
   test('returns null when the vendor list price is missing', () => {
     // A zero baseline would make the ratio Infinity and render "Infinity%".
-    assert.equal(calculateSavingsRatio(1.25, 0), null)
-    assert.equal(calculateSavingsRatio(0, 0), null)
-    assert.equal(calculateSavingsRatio(1.25, -1), null)
+    expect(calculateSavingsRatio(1.25, 0)).toBe(null)
+    expect(calculateSavingsRatio(0, 0)).toBe(null)
+    expect(calculateSavingsRatio(1.25, -1)).toBe(null)
   })
 
   test('returns null when we are not actually cheaper', () => {
     // Equal prices (DeepSeek R1 in the current table) must not claim "0% off",
     // and a higher price must never render as a negative saving.
-    assert.equal(calculateSavingsRatio(2.19, 2.19), null)
-    assert.equal(calculateSavingsRatio(3, 2.5), null)
+    expect(calculateSavingsRatio(2.19, 2.19)).toBe(null)
+    expect(calculateSavingsRatio(3, 2.5)).toBe(null)
   })
 
   test('returns null for non-finite input', () => {
-    assert.equal(calculateSavingsRatio(Number.NaN, 2.5), null)
-    assert.equal(calculateSavingsRatio(1.25, Number.POSITIVE_INFINITY), null)
+    expect(calculateSavingsRatio(Number.NaN, 2.5)).toBe(null)
+    expect(calculateSavingsRatio(1.25, Number.POSITIVE_INFINITY)).toBe(null)
   })
 })
 
 describe('formatInputPrice', () => {
   test('keeps three decimals below a dollar so sub-cent rates stay legible', () => {
-    assert.equal(formatInputPrice(0.075), '$0.075')
-    assert.equal(formatInputPrice(0.5), '$0.500')
+    expect(formatInputPrice(0.075)).toBe('$0.075')
+    expect(formatInputPrice(0.5)).toBe('$0.500')
   })
 
   test('drops to two decimals from a dollar up', () => {
-    assert.equal(formatInputPrice(1), '$1.00')
-    assert.equal(formatInputPrice(1.25), '$1.25')
-    assert.equal(formatInputPrice(10.5), '$10.50')
+    expect(formatInputPrice(1)).toBe('$1.00')
+    expect(formatInputPrice(1.25)).toBe('$1.25')
+    expect(formatInputPrice(10.5)).toBe('$10.50')
   })
 
   test('renders a placeholder for unusable values', () => {
-    assert.equal(formatInputPrice(-1), LANDING_PRICE_PLACEHOLDER)
-    assert.equal(formatInputPrice(Number.NaN), LANDING_PRICE_PLACEHOLDER)
+    expect(formatInputPrice(-1)).toBe(LANDING_PRICE_PLACEHOLDER)
+    expect(formatInputPrice(Number.NaN)).toBe(LANDING_PRICE_PLACEHOLDER)
   })
 })
 
 describe('formatOutputPrice', () => {
   test('always renders two decimals', () => {
-    assert.equal(formatOutputPrice(0.5), '$0.50')
-    assert.equal(formatOutputPrice(5), '$5.00')
-    assert.equal(formatOutputPrice(10), '$10.00')
+    expect(formatOutputPrice(0.5)).toBe('$0.50')
+    expect(formatOutputPrice(5)).toBe('$5.00')
+    expect(formatOutputPrice(10)).toBe('$10.00')
   })
 
   test('renders a placeholder for unusable values', () => {
-    assert.equal(formatOutputPrice(-1), LANDING_PRICE_PLACEHOLDER)
-    assert.equal(formatOutputPrice(Number.NaN), LANDING_PRICE_PLACEHOLDER)
+    expect(formatOutputPrice(-1)).toBe(LANDING_PRICE_PLACEHOLDER)
+    expect(formatOutputPrice(Number.NaN)).toBe(LANDING_PRICE_PLACEHOLDER)
   })
 })
 
 describe('formatSavingsPercent', () => {
   test('formats a ratio as a whole percentage', () => {
-    assert.equal(formatSavingsPercent(0.5, 'en'), '50%')
-    assert.equal(formatSavingsPercent(0.482, 'en'), '48%')
+    expect(formatSavingsPercent(0.5, 'en')).toBe('50%')
+    expect(formatSavingsPercent(0.482, 'en')).toBe('48%')
   })
 
   test('accepts the repo language codes that Intl rejects', () => {
     // new Intl.NumberFormat('zhCN') throws RangeError; toIntlLocale maps it.
-    assert.equal(formatSavingsPercent(0.5, 'zhCN'), '50%')
-    assert.equal(formatSavingsPercent(0.5, 'zhTW'), '50%')
+    expect(formatSavingsPercent(0.5, 'zhCN')).toBe('50%')
+    expect(formatSavingsPercent(0.5, 'zhTW')).toBe('50%')
   })
 
   test('renders a placeholder rather than a zero or negative saving', () => {
-    assert.equal(formatSavingsPercent(0, 'en'), LANDING_PRICE_PLACEHOLDER)
-    assert.equal(formatSavingsPercent(-0.2, 'en'), LANDING_PRICE_PLACEHOLDER)
+    expect(formatSavingsPercent(0, 'en')).toBe(LANDING_PRICE_PLACEHOLDER)
+    expect(formatSavingsPercent(-0.2, 'en')).toBe(LANDING_PRICE_PLACEHOLDER)
   })
 })
