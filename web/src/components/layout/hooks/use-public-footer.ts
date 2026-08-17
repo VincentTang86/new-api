@@ -28,9 +28,12 @@ const FALLBACK_DOCS_URL = 'https://docs.newapi.pro'
 /**
  * Footer links shared by every public page.
  *
- * Module gating matters here: an operator can switch pricing, rankings or about
- * off, and a footer link to a disabled page would bounce the visitor straight
- * back to the home page.
+ * Module gating matters here: an operator can switch pricing or about off, and
+ * a footer link to a disabled page would bounce the visitor straight back to
+ * the home page.
+ *
+ * Rankings is deliberately absent — the marketing design has no leaderboard
+ * entry, so the page stays routable but unlinked.
  */
 export function usePublicFooterColumns(): FooterColumnProps[] {
   const { status } = useStatus()
@@ -42,11 +45,9 @@ export function usePublicFooterColumns(): FooterColumnProps[] {
     if (modules.pricing.enabled) {
       product.push({ text: 'Models & Pricing', href: '/pricing' })
     }
-    if (modules.rankings.enabled) {
-      product.push({ text: 'Rankings', href: '/rankings' })
-    }
     if (modules.about) {
-      product.push({ text: 'About', href: '/about' })
+      // Same destination as the header's last nav item, and named the same way.
+      product.push({ text: 'Contact Us', href: '/about' })
     }
 
     return [

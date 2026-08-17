@@ -62,7 +62,7 @@ function FooterLinkItem(props: { link: FooterLink }) {
         href={props.link.href}
         target='_blank'
         rel='noopener noreferrer'
-        className='text-xs text-(--pd-muted-3) transition-colors hover:text-(--pd-ink)'
+        className='text-[13px] text-(--pd-muted) transition-colors hover:text-(--pd-ink)'
       >
         {label}
       </a>
@@ -72,7 +72,7 @@ function FooterLinkItem(props: { link: FooterLink }) {
   return (
     <Link
       to={props.link.href}
-      className='text-xs text-(--pd-muted-3) transition-colors hover:text-(--pd-ink)'
+      className='text-[13px] text-(--pd-muted) transition-colors hover:text-(--pd-ink)'
     >
       {label}
     </Link>
@@ -108,13 +108,13 @@ function LegalLinks(props: { leadingSeparator?: boolean }) {
       {items.map((item, index) => (
         <Fragment key={item.key}>
           {(props.leadingSeparator || index > 0) && (
-            <span aria-hidden='true' className='text-muted-foreground/30'>
+            <span aria-hidden='true' className='text-(--pd-border)'>
               ·
             </span>
           )}
           <Link
             to={item.href}
-            className='hover:text-foreground transition-colors duration-200'
+            className='text-(--pd-muted) transition-colors duration-200 hover:text-(--pd-ink)'
           >
             {item.label}
           </Link>
@@ -124,12 +124,12 @@ function LegalLinks(props: { leadingSeparator?: boolean }) {
   )
 }
 
-// inline=true returns just the inner span for composition in a parent flex
-// row. inline=false wraps in a centered/right-aligned div (default).
+// inline=true pushes the attribution to the end of the parent flex row.
+// inline=false wraps in a centered/right-aligned div (default).
 function ProjectAttribution(props: { currentYear: number; inline?: boolean }) {
   const { t } = useTranslation()
   const content = (
-    <span className='text-muted-foreground/45'>
+    <span className={props.inline ? 'ms-auto ps-4' : undefined}>
       &copy; {props.currentYear}{' '}
       <a
         href='https://github.com/QuantumNous/new-api'
@@ -256,61 +256,57 @@ export function Footer(props: FooterProps) {
         aria-hidden='true'
         className='h-px w-full bg-linear-to-r from-(--pd-gradient-from) to-(--pd-gradient-to)'
       />
-      <div className='mx-auto w-full max-w-[1440px] px-8 py-8 max-[640px]:px-5'>
-        <div className='flex flex-col items-start justify-between gap-6 md:flex-row md:items-center'>
-          {/* Brand column */}
-          <div className='shrink-0'>
-            <Link
-              to='/'
-              className='pd-font-display mb-1 flex items-center gap-2.5 text-xl font-bold text-(--pd-ink-strong)'
-            >
-              <img
-                src={displayLogo}
-                alt={displayName}
-                className='size-5 rounded object-contain'
-              />
-              {displayName}
-            </Link>
-            {props.supportEmail ? (
-              <p className='text-[13px] text-(--pd-muted-3)'>
-                {t('Support')}:{' '}
-                <a
-                  href={`mailto:${props.supportEmail}`}
-                  className='transition-colors hover:text-(--pd-ink)'
-                >
-                  {props.supportEmail}
-                </a>
-              </p>
-            ) : null}
-          </div>
+      <div className='mx-auto w-full max-w-[1440px] px-8 py-6 max-[640px]:px-5'>
+        {/* The design gives the wordmark a line of its own and drops everything
+            else — copyright, support address, links — into one row below it. */}
+        <Link
+          to='/'
+          className='pd-font-display flex w-fit items-center gap-2.5 text-xl font-bold text-(--pd-ink-strong)'
+        >
+          <img
+            src={displayLogo}
+            alt={displayName}
+            className='size-5 rounded object-contain'
+          />
+          {displayName}
+        </Link>
 
-          {/* Links. Demo sites get the built-in fallback set; other pages opt
-              in by passing their own. Flattened to a single wrapping row —
-              column headings would outweigh three or four links. */}
-          {(props.columns || isDemoSiteMode) && (
-            <ul className='flex flex-wrap gap-x-6 gap-y-2'>
-              {displayColumns.flatMap((column) =>
-                column.links.map((link) => (
-                  <li key={`${column.title}:${link.href}`}>
-                    <FooterLinkItem link={link} />
-                  </li>
-                ))
-              )}
-            </ul>
-          )}
-        </div>
+        <div className='mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-(--pd-border-soft) pt-6 text-[13px] text-(--pd-muted-3)'>
+          <span>
+            &copy; {currentYear} {displayName}.{' '}
+            {props.copyright ?? t('footer.defaultCopyright')}
+          </span>
 
-        {/* Copyright + optional legal links inline on the left, project
-            attribution on the right; wraps on narrow screens. */}
-        <div className='mt-6 flex flex-col items-center justify-between gap-x-3 gap-y-2 border-t border-(--pd-border-soft) pt-5 sm:flex-row'>
-          <div className='flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[13px] text-(--pd-muted-3) sm:justify-start'>
+          {props.supportEmail ? (
             <span>
-              &copy; {currentYear} {displayName}.{' '}
-              {props.copyright ?? t('footer.defaultCopyright')}
+              {t('Support')}:{' '}
+              <a
+                href={`mailto:${props.supportEmail}`}
+                className='transition-colors hover:text-(--pd-ink)'
+              >
+                {props.supportEmail}
+              </a>
             </span>
-            <LegalLinks leadingSeparator />
-          </div>
-          <ProjectAttribution currentYear={currentYear} />
+          ) : null}
+
+          {/* Demo sites get the built-in fallback set; other pages opt in by
+              passing their own. Column headings would outweigh four links, so
+              the columns are flattened into this row. */}
+          {(props.columns || isDemoSiteMode) &&
+            displayColumns.flatMap((column) =>
+              column.links.map((link) => (
+                <Fragment key={`${column.title}:${link.href}`}>
+                  <span aria-hidden='true' className='text-(--pd-border)'>
+                    ·
+                  </span>
+                  <FooterLinkItem link={link} />
+                </Fragment>
+              ))
+            )}
+
+          <LegalLinks leadingSeparator />
+
+          <ProjectAttribution currentYear={currentYear} inline />
         </div>
       </div>
     </footer>
