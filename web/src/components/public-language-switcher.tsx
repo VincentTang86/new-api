@@ -62,14 +62,24 @@ export function PublicLanguageSwitcher(props: { className?: string }) {
         <Globe className='size-4' aria-hidden='true' />
         <span className='whitespace-nowrap'>{current.short}</span>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align='end' sideOffset={10} className='w-40'>
+      {/* The menu renders in a portal, outside the `.public-design` shell, so
+       * it has to re-open that scope or every `--pd-*` token resolves to
+       * nothing and the design's palette silently falls back to the console's.
+       */}
+      <DropdownMenuContent
+        align='end'
+        sideOffset={10}
+        className='public-design w-40 rounded-[10px] border border-(--pd-border) bg-(--pd-surface) p-0 py-1.5 shadow-[0px_10px_24px_rgba(0,0,0,0.12)] ring-0'
+      >
         {INTERFACE_LANGUAGE_OPTIONS.map((lang) => (
           <DropdownMenuItem
             key={lang.code}
             onClick={() => handleChangeLanguage(lang.code)}
             className={cn(
-              lang.code === currentLanguage &&
-                'font-semibold text-(--pd-primary)'
+              'cursor-pointer rounded-none px-4 py-2 focus:bg-(--pd-surface-muted)',
+              lang.code === currentLanguage
+                ? 'font-semibold text-(--pd-primary) focus:text-(--pd-primary)'
+                : 'text-(--pd-ink) focus:text-(--pd-ink)'
             )}
           >
             {lang.label}

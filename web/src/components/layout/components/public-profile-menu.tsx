@@ -48,6 +48,15 @@ import { useAuthStore } from '@/stores/auth-store'
 const HOVER_CLOSE_DELAY_MS = 150
 
 /**
+ * Row rhythm from the design, shared by every navigational menu entry. The
+ * `focus:**:` rule is not redundant: the menu-item primitive repaints every
+ * descendant with the console's accent foreground on focus, which would drag
+ * the icons out of the public palette.
+ */
+const MENU_ITEM_CLASS =
+  'cursor-pointer gap-3 px-3 py-2.5 text-[13px] font-medium text-(--pd-ink) focus:bg-(--pd-surface-muted) focus:text-(--pd-ink) focus:**:text-(--pd-ink)'
+
+/**
  * Signed-in account control for the public header, from the marketing design:
  * a white pill (gradient initials avatar + display name + chevron) that opens
  * a 240px menu on hover — console shortcuts on top, credits and account
@@ -110,16 +119,18 @@ export function PublicProfileMenu(props: { className?: string }) {
               onMouseEnter={openNow}
               onMouseLeave={scheduleClose}
               className={cn(
-                'flex cursor-pointer items-center gap-2 rounded-full border border-(--pd-border) bg-(--pd-surface) py-1 pr-2.5 pl-2 drop-shadow-[0px_2px_4px_rgba(0,0,0,0.04)]',
+                'flex cursor-pointer items-center gap-2 rounded-full border border-(--pd-border) bg-(--pd-surface) px-2.5 py-1.5 drop-shadow-[0px_2px_4px_rgba(0,0,0,0.04)]',
                 props.className
               )}
               aria-label={t('Account menu')}
             />
           }
         >
+          {/* Squircle, not a circle — the pill's avatar is rounded-[12px] at
+           * 24px in the design, while the one inside the menu is fully round. */}
           <span
             aria-hidden='true'
-            className='flex size-6 shrink-0 items-center justify-center rounded-full bg-linear-to-r from-(--pd-gradient-from) to-(--pd-gradient-to) text-[11px] font-semibold text-white'
+            className='flex size-6 shrink-0 items-center justify-center rounded-xl bg-linear-to-r from-(--pd-gradient-from) to-(--pd-gradient-to) text-[11px] font-semibold text-white'
           >
             {initials}
           </span>
@@ -134,14 +145,23 @@ export function PublicProfileMenu(props: { className?: string }) {
             )}
           />
         </DropdownMenuTrigger>
+        {/* The menu renders in a portal, outside the `.public-design` shell, so
+         * it has to re-open that scope or every `--pd-*` token resolves to
+         * nothing and the design's palette silently falls back to the
+         * console's. */}
         <DropdownMenuContent
           align='end'
           sideOffset={10}
-          className='w-60'
+          className='public-design w-60 overflow-visible rounded-xl border border-(--pd-border) bg-(--pd-surface) p-1 shadow-[0px_8px_24px_-4px_rgba(0,0,0,0.08)] ring-0'
           onMouseEnter={openNow}
           onMouseLeave={scheduleClose}
         >
-          <div className='flex items-center gap-3 px-3 py-2.5'>
+          <span
+            aria-hidden='true'
+            className='absolute -top-2 right-6 size-3.5 rotate-45 border-t border-l border-(--pd-border) bg-(--pd-surface)'
+          />
+
+          <div className='flex items-center gap-3 px-5 py-4'>
             <span
               aria-hidden='true'
               className='flex size-10 shrink-0 items-center justify-center rounded-full bg-linear-to-r from-(--pd-gradient-from) to-(--pd-gradient-to) text-sm font-semibold text-white'
@@ -149,51 +169,61 @@ export function PublicProfileMenu(props: { className?: string }) {
               {initials}
             </span>
             <div className='min-w-0'>
-              <p className='truncate text-[15px] font-semibold'>
+              <p className='truncate text-[15px] font-semibold text-(--pd-ink)'>
                 {displayName}
               </p>
               {secondaryText && (
-                <p className='text-muted-foreground truncate text-[13px]'>
+                <p className='truncate text-[13px] text-(--pd-muted-2)'>
                   {secondaryText}
                 </p>
               )}
             </div>
           </div>
 
-          <DropdownMenuSeparator />
+          <DropdownMenuSeparator className='bg-(--pd-border)' />
 
           {consoleItems.map((item) => (
-            <DropdownMenuItem key={item.to} onClick={() => goTo(item.to)}>
-              <item.Icon className='size-4' />
+            <DropdownMenuItem
+              key={item.to}
+              onClick={() => goTo(item.to)}
+              className={MENU_ITEM_CLASS}
+            >
+              <item.Icon className='size-4 text-(--pd-muted-2)' />
               {item.label}
             </DropdownMenuItem>
           ))}
 
-          <DropdownMenuSeparator />
+          <DropdownMenuSeparator className='bg-(--pd-border)' />
 
           {isWalletVisible && (
-            <DropdownMenuItem onClick={() => goTo('/wallet')}>
-              <Wallet className='size-4' />
+            <DropdownMenuItem
+              onClick={() => goTo('/wallet')}
+              className={MENU_ITEM_CLASS}
+            >
+              <Wallet className='size-4 text-(--pd-muted-2)' />
               <span className='flex-1'>{t('Credits')}</span>
               {typeof user?.quota === 'number' && (
-                <span className='text-muted-foreground text-[13px] font-medium'>
+                <span className='text-[13px] font-medium text-(--pd-muted-2)'>
                   {formatQuota(user.quota)} →
                 </span>
               )}
             </DropdownMenuItem>
           )}
-          <DropdownMenuItem onClick={() => goTo('/profile')}>
-            <Settings className='size-4' />
+          <DropdownMenuItem
+            onClick={() => goTo('/profile')}
+            className={MENU_ITEM_CLASS}
+          >
+            <Settings className='size-4 text-(--pd-muted-2)' />
             {t('Account Settings')}
           </DropdownMenuItem>
 
-          <DropdownMenuSeparator />
+          <DropdownMenuSeparator className='bg-(--pd-border)' />
 
           <DropdownMenuItem
-            variant='destructive'
             onClick={() => setSignOutOpen(true)}
+            className='cursor-pointer gap-3 p-4 text-[13px] font-semibold text-(--pd-primary) focus:bg-(--pd-accent-bg) focus:text-(--pd-primary) focus:**:text-(--pd-primary)'
           >
-            <LogOut className='size-4' />
+            <LogOut className='size-4 text-(--pd-primary)' />
             {t('Sign out')}
           </DropdownMenuItem>
         </DropdownMenuContent>

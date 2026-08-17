@@ -47,7 +47,11 @@ export function PublicLayout(props: PublicLayoutProps) {
   return (
     // `public-design` scopes the design file's raw palette, font pair and
     // dark-mode repaint to the public shell — see styles/public-design.css.
-    <div className='public-design min-h-svh overflow-x-hidden bg-(--pd-canvas)'>
+    //
+    // Sideways overflow is clipped, not hidden: `overflow-x: hidden` turns this
+    // element into a scroll container, which the sticky header would then stick
+    // to instead of the viewport — i.e. it would scroll away with the page.
+    <div className='public-design min-h-svh overflow-x-clip bg-(--pd-canvas)'>
       <PublicHeader
         navContent={props.navContent}
         navLinks={props.navLinks}
