@@ -304,8 +304,6 @@ export function Footer(props: FooterProps) {
               ))
             )}
 
-          <LegalLinks leadingSeparator />
-
           <ProjectAttribution currentYear={currentYear} inline />
         </div>
       </div>

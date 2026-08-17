@@ -16,40 +16,33 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { useMemo } from 'react'
-
-import { useStatus } from '@/hooks/use-status'
-import { parseHeaderNavModulesFromStatus } from '@/lib/nav-modules'
-
 import type { FooterColumnProps } from '../components/footer'
 
 /**
- * Footer links shared by every public page.
+ * Footer links shared by every public page — exactly the three the design
+ * lists, and unconditional like the design's are.
  *
- * The design lists exactly three: Contact Us, User Agreement, Privacy Policy.
- * Only the first comes from here — the two legal links are rendered by the
- * footer's own `LegalLinks`, which gates them on whether those pages are
- * enabled at all. Rankings, Models & Pricing and API Docs are deliberately
- * absent; those pages stay routable, just unlinked from the footer.
+ * They are deliberately not module-gated. The header's Contact Us item is
+ * ungated too, and gating the legal pair on `user_agreement_enabled` /
+ * `privacy_policy_enabled` empties the footer row on any deployment that has
+ * not filled those documents in, which is how the row went blank once. All
+ * three routes exist regardless.
  *
- * Module gating still matters for the one link that is left: an operator can
- * switch the about page off, and a footer link to a disabled page would bounce
- * the visitor straight back to the home page.
+ * Rankings, Models & Pricing and API Docs are absent because the design has no
+ * footer entry for them; those pages stay reachable from the header.
  */
-export function usePublicFooterColumns(): FooterColumnProps[] {
-  const { status } = useStatus()
+const PUBLIC_FOOTER_COLUMNS: FooterColumnProps[] = [
+  {
+    title: 'Product',
+    links: [
+      // Same destination as the header's last nav item, and named the same way.
+      { text: 'Contact Us', href: '/about' },
+      { text: 'User Agreement', href: '/user-agreement' },
+      { text: 'Privacy Policy', href: '/privacy-policy' },
+    ],
+  },
+]
 
-  return useMemo(() => {
-    const modules = parseHeaderNavModulesFromStatus(status)
-    if (!modules.about) {
-      return []
-    }
-    return [
-      {
-        title: 'Product',
-        // Same destination as the header's last nav item, and named the same way.
-        links: [{ text: 'Contact Us', href: '/about' }],
-      },
-    ]
-  }, [status])
+export function usePublicFooterColumns(): FooterColumnProps[] {
+  return PUBLIC_FOOTER_COLUMNS
 }
