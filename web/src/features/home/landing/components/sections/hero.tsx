@@ -78,7 +78,7 @@ export function LandingHero(props: LandingHeroProps) {
         )}
       >
         <div className='flex w-full flex-col items-center gap-6 text-center'>
-          <div className='flex items-center gap-2 rounded-full border border-(--pd-primary) bg-(--pd-surface) px-4 py-1.5 drop-shadow-[0px_6px_8px_rgba(0,0,0,0.04)]'>
+          <div className='flex items-center gap-2 rounded-full border border-(--pd-primary) bg-(--pd-hero-badge-bg) px-4 py-1.5 drop-shadow-[0px_6px_8px_rgba(0,0,0,0.04)]'>
             <span
               aria-hidden='true'
               className='size-2 shrink-0 rounded-full bg-(--pd-ink)'
@@ -86,11 +86,11 @@ export function LandingHero(props: LandingHeroProps) {
             <p className='text-[13px] font-semibold text-(--pd-ink)'>{badge}</p>
           </div>
 
-          <h1 className='pd-font-display max-w-[1120px] bg-linear-to-r from-(--pd-gradient-from) to-(--pd-gradient-to) bg-clip-text pb-1 text-[52px] leading-[1.15] font-bold text-transparent max-[640px]:text-[34px]'>
+          <h1 className='pd-font-display max-w-[1120px] bg-linear-to-r from-(--pd-gradient-from) to-(--pd-gradient-to) bg-clip-text pb-[5px] text-[52px] leading-[1.15] font-bold text-transparent max-[640px]:text-[34px]'>
             {t('Fair Pricing. Real Models. Reliable Access.')}
           </h1>
 
-          <p className='max-w-[720px] text-xl leading-[1.6] text-(--pd-muted) max-[640px]:text-base'>
+          <p className='max-w-[720px] text-xl leading-[1.6] text-(--pd-hero-muted) max-[640px]:text-base'>
             {subhead}
           </p>
         </div>

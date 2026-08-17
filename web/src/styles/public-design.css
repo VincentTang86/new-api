@@ -41,11 +41,14 @@ For commercial licensing, please contact support@quantumnous.com
   --pd-table-head: #f1f3f5;
   --pd-accent-bg: #fff1f0;
   --pd-accent-bg-hover: #fff8f7;
+  --pd-hero-badge-bg: #f9fafb;
 
   /* Ink */
   --pd-ink-strong: #0f172a;
   --pd-ink: #111827;
   --pd-muted: #475569;
+  /* The hero subhead alone sits one step lighter in the design. */
+  --pd-hero-muted: #596275;
   --pd-muted-2: #6b7280;
   --pd-muted-3: #64748b;
   --pd-faint: #9ca3af;
@@ -53,6 +56,8 @@ For commercial licensing, please contact support@quantumnous.com
   /* Lines */
   --pd-border: #e5e7eb;
   --pd-border-soft: #e2e8f0;
+  /* Trust cards carry the design's faintest rule. */
+  --pd-border-faint: #f0f0f2;
 
   /* Segmented controls sit on a heavier grey than the page surfaces, with a
    * heavier rule around them — without these the tier tabs wash out. */
@@ -162,16 +167,19 @@ For commercial licensing, please contact support@quantumnous.com
   --pd-table-head: #1e293b;
   --pd-accent-bg: rgb(255 90 95 / 0.12);
   --pd-accent-bg-hover: rgb(255 90 95 / 0.08);
+  --pd-hero-badge-bg: #111827;
 
   --pd-ink-strong: #f8fafc;
   --pd-ink: #f1f5f9;
   --pd-muted: #cbd5e1;
+  --pd-hero-muted: #cbd5e1;
   --pd-muted-2: #94a3b8;
   --pd-muted-3: #94a3b8;
   --pd-faint: #64748b;
 
   --pd-border: #334155;
   --pd-border-soft: #1e293b;
+  --pd-border-faint: #1e293b;
   --pd-control-bg: #1b2540;
   --pd-control-border: #3a4868;
 

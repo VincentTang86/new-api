@@ -49,13 +49,13 @@ export function CodeSampleTabs(props: CodeSampleTabsProps) {
 
   return (
     <div
-      className='overflow-hidden rounded-xl border border-(--pd-border)'
+      className='overflow-hidden rounded-2xl border border-[#1e2648]'
       style={{ background: LANDING_CODE_SURFACE }}
     >
       <div
         role='tablist'
         aria-label={t('Code sample language')}
-        className='flex items-center justify-between border-b border-gray-800 px-1'
+        className='flex items-center justify-between border-b border-[#1e2648] bg-[#11162d] px-1'
       >
         <div className='flex'>
           {samples.map((sample) => {
@@ -68,10 +68,12 @@ export function CodeSampleTabs(props: CodeSampleTabsProps) {
                 aria-selected={isActive}
                 onClick={() => setLanguage(sample.language)}
                 className={cn(
-                  'px-4 py-2.5 text-xs font-medium transition-colors',
+                  // The active tab reads as part of the code surface, in the
+                  // design's editor mono; inactive tabs stay in the body face.
+                  'px-4 py-2.5 text-[13px] transition-colors',
                   isActive
-                    ? 'border-b border-(--pd-primary) text-white'
-                    : 'text-gray-500 hover:text-gray-300'
+                    ? 'rounded-t-lg bg-[#0d1122] font-mono font-bold text-[#f8fafc]'
+                    : 'font-normal text-gray-500 hover:text-gray-300'
                 )}
               >
                 {sample.label}
@@ -101,7 +103,7 @@ export function CodeSampleTabs(props: CodeSampleTabsProps) {
         ) : null}
       </div>
 
-      <pre className='overflow-x-auto p-5 font-mono text-sm leading-relaxed text-gray-300'>
+      <pre className='overflow-x-auto p-8 font-mono text-sm leading-[1.6] text-gray-300'>
         <code>{active?.snippet}</code>
       </pre>
     </div>

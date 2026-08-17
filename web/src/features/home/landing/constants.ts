@@ -60,4 +60,4 @@ export const LANDING_FALLBACK_DOCS_URL = 'https://docs.newapi.pro'
  * Editor-dark surface for the code sample. Intentionally identical in light and
  * dark: the snippet reads as a terminal, not as page chrome.
  */
-export const LANDING_CODE_SURFACE = '#0D1117'
+export const LANDING_CODE_SURFACE = '#0d1122'

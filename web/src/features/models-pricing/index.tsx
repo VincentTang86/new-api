@@ -76,7 +76,9 @@ export function ModelsPricing() {
             onRetry={table.refetch}
           />
 
-          <p className='mt-6 text-[13px] leading-relaxed text-(--pd-muted-3)'>
+          {/* This page's design sets the note one size smaller than the home
+           * preview's 13px. */}
+          <p className='mt-6 text-xs leading-relaxed text-(--pd-muted-3)'>
             {t(
               "Comparison rates come from the selected source's public model listings. Savings are calculated against that rate."
             )}

@@ -48,7 +48,7 @@ export function LandingTrust() {
           {capabilities.map((capability) => (
             <li
               key={capability}
-              className='pd-font-ui flex items-center gap-3 rounded-xl border border-(--pd-border) bg-(--pd-surface) p-4 text-[15px] font-semibold text-(--pd-ink) drop-shadow-[0px_6px_8px_rgba(0,0,0,0.04)]'
+              className='pd-font-ui flex items-center gap-3 rounded-xl border border-(--pd-border-faint) bg-(--pd-surface) p-4 text-[15px] font-semibold text-(--pd-ink) drop-shadow-[0px_6px_8px_rgba(0,0,0,0.04)]'
             >
               <span className='flex size-6 shrink-0 items-center justify-center rounded-xl bg-(--pd-accent-bg)'>
                 <Check
