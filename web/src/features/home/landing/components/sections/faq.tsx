@@ -35,12 +35,14 @@ export function LandingFaq() {
   const [openKey, setOpenKey] = useState<string | null>(null)
 
   // Locale-aware "A, B, and C" — the conjunction and separator differ per
-  // language, so the list is never assembled by hand.
+  // language, so the list is never assembled by hand. Vendor names pass
+  // through t(): the design writes 阿里巴巴/智谱 in Chinese while the filter
+  // tabs keep the Latin marks.
   const providerList =
     providers.length > 0
       ? new Intl.ListFormat(toIntlLocale(i18n.language), {
           type: 'conjunction',
-        }).format(providers)
+        }).format(providers.map((provider) => t(provider)))
       : t('leading providers')
 
   const items = [

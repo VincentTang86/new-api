@@ -46,6 +46,11 @@ export const STATIC_I18N_KEYS = [
   'Status',
   'Details →',
 
+  // Landing FAQ vendor list (provider labels are constants; the design names
+  // Alibaba/Zhipu in Chinese there while the filter tabs keep the Latin marks)
+  'Alibaba',
+  'Zhipu',
+
   // Landing page footer columns (titles and link labels are data, translated
   // by the shared Footer component)
   'Product',

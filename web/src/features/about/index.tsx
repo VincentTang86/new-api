@@ -82,7 +82,7 @@ function EmptyAboutState() {
               rel='noopener noreferrer'
               className='text-primary hover:underline'
             >
-              {t('One API')}
+              One API
             </a>{' '}
             © 2023{' '}
             <a

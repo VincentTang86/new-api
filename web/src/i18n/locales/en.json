@@ -4236,7 +4236,7 @@
     "Sidebar collapsed by default for new users": "Sidebar collapsed by default for new users",
     "Sidebar modules": "Sidebar modules",
     "Sidebar Personal Settings": "Sidebar Personal Settings",
-    "Sign in": "Sign in",
+    "Sign in": "Sign In",
     "Sign In": "Sign In",
     "Sign in now": "Sign in now",
     "Sign in required": "Sign in required",
@@ -4246,7 +4246,7 @@
     "Sign out other sessions?": "Sign out other sessions?",
     "Sign out others": "Sign out others",
     "Sign out this device?": "Sign out this device?",
-    "Sign up": "Sign up",
+    "Sign up": "Sign Up",
     "Signed in": "Signed in",
     "Signed in successfully!": "Signed in successfully!",
     "Signed in via WeChat": "Signed in via WeChat",
@@ -5397,6 +5397,7 @@
     "Official Input / 1M": "Official Input / 1M",
     "Official Output / 1M": "Official Output / 1M",
     "OpenRouter Input / 1M": "OpenRouter Input / 1M",
-    "OpenRouter Output / 1M": "OpenRouter Output / 1M"
+    "OpenRouter Output / 1M": "OpenRouter Output / 1M",
+    "Alibaba": "Alibaba"
   }
 }
