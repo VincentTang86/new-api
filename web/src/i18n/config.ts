@@ -18,32 +18,46 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import i18n from 'i18next'
 import LanguageDetector from 'i18next-browser-languagedetector'
+import resourcesToBackend from 'i18next-resources-to-backend'
 import { initReactI18next } from 'react-i18next'
 
 import { convertDetectedLanguage } from './languages'
-import en from './locales/en.json'
-import fr from './locales/fr.json'
-import ja from './locales/ja.json'
-import ru from './locales/ru.json'
-import vi from './locales/vi.json'
-import zhTW from './locales/zh-TW.json'
-import zhCN from './locales/zh.json'
 
-export const resources = {
-  en,
-  zhCN,
-  fr,
-  ru,
-  ja,
-  vi,
-  zhTW,
-} as const
+/**
+ * One dynamic import per locale so each dictionary becomes its own lazy chunk.
+ * The seven dictionaries together are ~3 MB — statically importing them put
+ * all of that into the entry bundle; now a visitor downloads only the active
+ * language (plus the English fallback when they differ).
+ */
+const localeLoaders: Record<
+  string,
+  () => Promise<{ default: { translation: Record<string, string> } }>
+> = {
+  en: () => import('./locales/en.json'),
+  zhCN: () => import('./locales/zh.json'),
+  fr: () => import('./locales/fr.json'),
+  ru: () => import('./locales/ru.json'),
+  ja: () => import('./locales/ja.json'),
+  vi: () => import('./locales/vi.json'),
+  zhTW: () => import('./locales/zh-TW.json'),
+}
 
 i18n
   .use(LanguageDetector)
+  .use(
+    resourcesToBackend(async (language: string) => {
+      const load = localeLoaders[language]
+      if (!load) throw new Error(`Unsupported locale: ${language}`)
+      const dictionary = (await load()).default.translation
+      // The plugin unwraps `data.default || data` for ESM interop, and our
+      // dictionaries contain a literal "default" key that the unwrap would
+      // mistake for a module default export. Hand it a real default-export
+      // shape so the unwrap lands on the dictionary itself.
+      return { default: dictionary }
+    })
+  )
   .use(initReactI18next)
   .init({
-    resources,
     fallbackLng: 'en',
     supportedLngs: ['en', 'zhCN', 'fr', 'ru', 'ja', 'vi', 'zhTW'],
     load: 'currentOnly',
@@ -51,6 +65,13 @@ i18n
     debug: import.meta.env.DEV,
     interpolation: {
       escapeValue: false, // not needed for react as it escapes by default
+    },
+    react: {
+      // Keys are the English source strings, so rendering before the
+      // dictionary chunk arrives already shows correct English copy; a
+      // Suspense boundary would only trade that for a blank frame. Components
+      // re-render when the load completes.
+      useSuspense: false,
     },
     detection: {
       // First visits land on English regardless of the browser locale (product
