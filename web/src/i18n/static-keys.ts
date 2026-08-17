@@ -49,13 +49,7 @@ export const STATIC_I18N_KEYS = [
   // Landing page footer columns (titles and link labels are data, translated
   // by the shared Footer component)
   'Product',
-  'Developers',
-  'Legal',
-  'Models & Pricing',
   'Contact Us',
-  'API Docs',
-  'Terms of Service',
-  'Privacy Policy',
 
   // Sidebar views (drill-in workspaces)
   'System Settings',

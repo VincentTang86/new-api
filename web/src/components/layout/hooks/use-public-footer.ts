@@ -23,43 +23,33 @@ import { parseHeaderNavModulesFromStatus } from '@/lib/nav-modules'
 
 import type { FooterColumnProps } from '../components/footer'
 
-const FALLBACK_DOCS_URL = 'https://docs.newapi.pro'
-
 /**
  * Footer links shared by every public page.
  *
- * Module gating matters here: an operator can switch pricing or about off, and
- * a footer link to a disabled page would bounce the visitor straight back to
- * the home page.
+ * The design lists exactly three: Contact Us, User Agreement, Privacy Policy.
+ * Only the first comes from here — the two legal links are rendered by the
+ * footer's own `LegalLinks`, which gates them on whether those pages are
+ * enabled at all. Rankings, Models & Pricing and API Docs are deliberately
+ * absent; those pages stay routable, just unlinked from the footer.
  *
- * Rankings is deliberately absent — the marketing design has no leaderboard
- * entry, so the page stays routable but unlinked.
+ * Module gating still matters for the one link that is left: an operator can
+ * switch the about page off, and a footer link to a disabled page would bounce
+ * the visitor straight back to the home page.
  */
 export function usePublicFooterColumns(): FooterColumnProps[] {
   const { status } = useStatus()
-  const docsUrl = (status?.docs_link as string | undefined) || FALLBACK_DOCS_URL
 
   return useMemo(() => {
     const modules = parseHeaderNavModulesFromStatus(status)
-    const product: FooterColumnProps['links'] = []
-    if (modules.pricing.enabled) {
-      product.push({ text: 'Models & Pricing', href: '/pricing' })
+    if (!modules.about) {
+      return []
     }
-    if (modules.about) {
-      // Same destination as the header's last nav item, and named the same way.
-      product.push({ text: 'Contact Us', href: '/about' })
-    }
-
     return [
-      { title: 'Product', links: product },
-      { title: 'Developers', links: [{ text: 'API Docs', href: docsUrl }] },
       {
-        title: 'Legal',
-        links: [
-          { text: 'Terms of Service', href: '/user-agreement' },
-          { text: 'Privacy Policy', href: '/privacy-policy' },
-        ],
+        title: 'Product',
+        // Same destination as the header's last nav item, and named the same way.
+        links: [{ text: 'Contact Us', href: '/about' }],
       },
-    ].filter((column) => column.links.length > 0)
-  }, [docsUrl, status])
+    ]
+  }, [status])
 }
