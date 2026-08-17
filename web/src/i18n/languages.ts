@@ -73,6 +73,9 @@ export function convertDetectedLanguage(value: string): string {
     lower === 'zh-tw' ||
     lower === 'zh-hk' ||
     lower === 'zh-mo' ||
+    // Our own cached code: the detector writes `zhTW` back to localStorage,
+    // and without this case a reload would fold it into `zhCN`.
+    lower === 'zhtw' ||
     lower.startsWith('zh-hant')
   ) {
     return 'zhTW'
