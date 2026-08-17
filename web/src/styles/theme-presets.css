@@ -658,8 +658,11 @@ For commercial licensing, please contact support@quantumnous.com
 
 /* Heading tuning — applies to <h*> tags and the shadcn title slots so
  * card/sheet/dialog titles read with the same authoritative voice as
- * page headers. */
-[data-theme-font='serif'] :is(h1, h2, h3, h4, h5, h6),
+ * page headers. Public marketing surfaces (`.public-design`) are excluded:
+ * they render the Figma design's own display weights (bold/extrabold
+ * Outfit), and this unlayered rule would otherwise override their
+ * Tailwind font-weight utilities. */
+[data-theme-font='serif'] :is(h1, h2, h3, h4, h5, h6):not(.public-design *),
 [data-theme-font='serif'] [data-slot='sheet-title'],
 [data-theme-font='serif'] [data-slot='dialog-title'],
 [data-theme-font='serif'] [data-slot='alert-dialog-title'],
@@ -671,10 +674,10 @@ For commercial licensing, please contact support@quantumnous.com
 
 /* Larger displays earn tighter tracking, matching Copernicus/Tiempos
  * editorial display setting (~ -0.02em at 30px+). */
-[data-theme-font='serif'] h1,
-[data-theme-font='serif'] .text-3xl,
-[data-theme-font='serif'] .text-4xl,
-[data-theme-font='serif'] .text-5xl {
+[data-theme-font='serif'] h1:not(.public-design *),
+[data-theme-font='serif'] .text-3xl:not(.public-design *),
+[data-theme-font='serif'] .text-4xl:not(.public-design *),
+[data-theme-font='serif'] .text-5xl:not(.public-design *) {
   letter-spacing: -0.02em;
 }
 
