@@ -21,6 +21,7 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 import { Main } from '@/components/layout'
 import { Playground } from '@/features/playground'
 import { isSidebarModuleEnabled } from '@/lib/nav-modules'
+import { useAuthStore } from '@/stores/auth-store'
 
 export const Route = createFileRoute('/_authenticated/playground/')({
   beforeLoad: () => {
@@ -32,9 +33,17 @@ export const Route = createFileRoute('/_authenticated/playground/')({
 })
 
 function PlaygroundPage() {
+  const userId = useAuthStore((s) => s.auth.user?.id)
+
+  // The authenticated guard keeps signed-out visitors out; this only covers the
+  // frame between a session being cleared in place and that redirect landing.
+  if (userId === undefined) return null
+
   return (
     <Main className='p-0'>
-      <Playground />
+      {/* Remount per account: the conversation, config and any pending save
+          all belong to a single user. */}
+      <Playground key={userId} userId={userId} />
     </Main>
   )
 }

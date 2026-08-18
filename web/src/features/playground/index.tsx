@@ -25,7 +25,12 @@ import {
   usePlaygroundState,
 } from './hooks'
 
-export function Playground() {
+type PlaygroundProps = {
+  /** Owner of the persisted conversation, config and parameter toggles. */
+  userId: number
+}
+
+export function Playground({ userId }: PlaygroundProps) {
   const {
     config,
     parameterEnabled,
@@ -39,7 +44,7 @@ export function Playground() {
     updateConfig,
     updateParameterEnabled,
     clearMessages,
-  } = usePlaygroundState()
+  } = usePlaygroundState(userId)
 
   const { sendChat, stopGeneration, isGenerating } = useChatHandler({
     config,

@@ -65,8 +65,10 @@ export const DEFAULT_PARAMETER_ENABLED: ParameterEnabled = {
   seed: false,
 }
 
-// Storage keys
-export const STORAGE_KEYS = {
+// Storage key prefixes. The effective key is `<prefix>:<userId>` — playground
+// state belongs to one account, so signing in as somebody else never inherits
+// the previous account's conversation.
+export const STORAGE_KEY_PREFIXES = {
   CONFIG: 'playground_config',
   MESSAGES: 'playground_messages',
   PARAMETER_ENABLED: 'playground_parameter_enabled',

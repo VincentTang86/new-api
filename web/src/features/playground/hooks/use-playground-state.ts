@@ -27,6 +27,7 @@ import {
   getInitialParameterEnabled,
   getInitialPlaygroundConfig,
   loadMessages,
+  removeLegacyPlaygroundStorage,
   type MessageStateUpdater,
 } from '../lib'
 import type {
@@ -40,16 +41,21 @@ import type {
 const MESSAGE_SAVE_DEBOUNCE_MS = 500
 
 /**
- * Main state management hook for playground
+ * Main state management hook for playground.
+ *
+ * All persisted state is scoped to `userId`. The Playground component is
+ * remounted per account (`key={userId}` at the route), so this hook never sees
+ * the id change under it — which also keeps the pending debounced save from
+ * flushing one account's messages into another's bucket.
  */
-export function usePlaygroundState() {
+export function usePlaygroundState(userId: number) {
   // Load initial state from localStorage
-  const [config, setConfig] = useState<PlaygroundConfig>(
-    getInitialPlaygroundConfig
+  const [config, setConfig] = useState<PlaygroundConfig>(() =>
+    getInitialPlaygroundConfig(userId)
   )
 
   const [parameterEnabled, setParameterEnabled] = useState<ParameterEnabled>(
-    getInitialParameterEnabled
+    () => getInitialParameterEnabled(userId)
   )
 
   const [messages, setMessages] = useState<Message[]>([])
@@ -61,28 +67,35 @@ export function usePlaygroundState() {
   const [models, setModels] = useState<ModelOption[]>([])
   const [groups, setGroups] = useState<GroupOption[]>([])
 
-  const persistMessages = useCallback((messagesToSave: Message[]) => {
-    latestMessagesRef.current = messagesToSave
+  const persistMessages = useCallback(
+    (messagesToSave: Message[]) => {
+      latestMessagesRef.current = messagesToSave
 
-    if (!hasLoadedMessagesRef.current) {
-      return
-    }
+      if (!hasLoadedMessagesRef.current) {
+        return
+      }
 
-    if (messagesSaveTimerRef.current !== null) {
-      window.clearTimeout(messagesSaveTimerRef.current)
-    }
+      if (messagesSaveTimerRef.current !== null) {
+        window.clearTimeout(messagesSaveTimerRef.current)
+      }
 
-    messagesSaveTimerRef.current = window.setTimeout(() => {
-      messagesSaveTimerRef.current = null
-      saveMessages(latestMessagesRef.current)
-    }, MESSAGE_SAVE_DEBOUNCE_MS)
-  }, [])
+      messagesSaveTimerRef.current = window.setTimeout(() => {
+        messagesSaveTimerRef.current = null
+        saveMessages(userId, latestMessagesRef.current)
+      }, MESSAGE_SAVE_DEBOUNCE_MS)
+    },
+    [userId]
+  )
 
   useEffect(() => {
     let cancelled = false
 
     window.setTimeout(() => {
-      const loadedMessages = loadMessages() ?? []
+      // Playground state used to live under account-agnostic keys, which is
+      // how one account's conversation surfaced for the next one to sign in.
+      removeLegacyPlaygroundStorage()
+
+      const loadedMessages = loadMessages(userId) ?? []
       if (cancelled) {
         return
       }
@@ -96,16 +109,16 @@ export function usePlaygroundState() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [userId])
 
   useEffect(
     () => () => {
       if (messagesSaveTimerRef.current !== null) {
         window.clearTimeout(messagesSaveTimerRef.current)
-        saveMessages(latestMessagesRef.current)
+        saveMessages(userId, latestMessagesRef.current)
       }
     },
-    []
+    [userId]
   )
 
   // Update config with automatic save
@@ -113,11 +126,11 @@ export function usePlaygroundState() {
     <K extends keyof PlaygroundConfig>(key: K, value: PlaygroundConfig[K]) => {
       setConfig((prev) => {
         const updated = { ...prev, [key]: value }
-        saveConfig(updated)
+        saveConfig(userId, updated)
         return updated
       })
     },
-    []
+    [userId]
   )
 
   // Update parameter enabled with automatic save
@@ -125,11 +138,11 @@ export function usePlaygroundState() {
     (key: keyof ParameterEnabled, value: boolean) => {
       setParameterEnabled((prev) => {
         const updated = { ...prev, [key]: value }
-        saveParameterEnabled(updated)
+        saveParameterEnabled(userId, updated)
         return updated
       })
     },
-    []
+    [userId]
   )
 
   // Update messages with automatic save
@@ -153,9 +166,9 @@ export function usePlaygroundState() {
   const resetConfig = useCallback(() => {
     setConfig(DEFAULT_CONFIG)
     setParameterEnabled(DEFAULT_PARAMETER_ENABLED)
-    saveConfig(DEFAULT_CONFIG)
-    saveParameterEnabled(DEFAULT_PARAMETER_ENABLED)
-  }, [])
+    saveConfig(userId, DEFAULT_CONFIG)
+    saveParameterEnabled(userId, DEFAULT_PARAMETER_ENABLED)
+  }, [userId])
 
   return {
     // State
