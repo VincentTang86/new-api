@@ -21,12 +21,15 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { usePricingData } from '@/features/pricing/hooks/use-pricing-data'
+import {
+  lookupServiceTier,
+  UNKNOWN_SERVICE_TIER_ORDER,
+} from '@/lib/service-tier'
 
 import { LANDING_PROVIDER_ORDER } from '../constants'
 import type { LandingProviderKey, PricingBenchmark, PricingRow } from '../types'
 import { buildPricingRows } from './build-pricing-rows'
 import { fetchOfficialPricing } from './official-pricing'
-import { lookupPriceTier, UNKNOWN_PRICE_TIER_ORDER } from './price-tier-labels'
 import { LANDING_PROVIDERS } from './providers'
 
 /** One tab of the group (price tier) selector. */
@@ -113,12 +116,12 @@ export function useLandingPricingRows(): UseLandingPricingRows {
         // Product decision: the tier tab shows the group NAME, never the
         // usable_group description — translated here for the tiers the design
         // names, raw for the ones it does not.
-        const known = lookupPriceTier(key)
+        const known = lookupServiceTier(key)
         return {
           key,
           label: known ? t(known.label) : key,
-          description: known ? t(known.description) : undefined,
-          order: known?.order ?? UNKNOWN_PRICE_TIER_ORDER,
+          description: known ? t(known.pricingBlurb) : undefined,
+          order: known?.order ?? UNKNOWN_SERVICE_TIER_ORDER,
           ratio:
             typeof groupRatio[key] === 'number' &&
             Number.isFinite(groupRatio[key])

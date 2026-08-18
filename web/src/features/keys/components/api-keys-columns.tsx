@@ -192,7 +192,7 @@ export function useApiKeysColumns(now: number): ColumnDef<ApiKey>[] {
     },
     {
       accessorKey: 'group',
-      header: t('Group'),
+      header: t('Service Tier'),
       cell: ({ row }) => {
         const apiKey = row.original
         const group = row.getValue('group') as string

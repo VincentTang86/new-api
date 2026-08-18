@@ -5438,6 +5438,13 @@
     "Start date": "Date de début",
     "End date": "Date de fin",
     "Start time": "Heure de début",
-    "End time": "Heure de fin"
+    "End time": "Heure de fin",
+    "Service Tier": "Niveau de service",
+    "Service Tier *": "Niveau de service *",
+    "Please select a service tier": "Veuillez sélectionner un niveau de service",
+    "Regular pricing": "Tarif standard",
+    "Discounted pricing": "Tarif réduit",
+    "Higher-reliability endpoints for production workloads.": "Des endpoints à fiabilité renforcée pour les charges de production.",
+    "Lower-cost endpoints for development, testing, and non-critical workloads.": "Des endpoints plus économiques pour le développement, les tests et les charges non critiques."
   }
 }

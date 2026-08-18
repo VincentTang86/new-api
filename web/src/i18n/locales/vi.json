@@ -5438,6 +5438,13 @@
     "Start date": "Ngày bắt đầu",
     "End date": "Ngày kết thúc",
     "Start time": "Giờ bắt đầu",
-    "End time": "Giờ kết thúc"
+    "End time": "Giờ kết thúc",
+    "Service Tier": "Cấp dịch vụ",
+    "Service Tier *": "Cấp dịch vụ *",
+    "Please select a service tier": "Vui lòng chọn cấp dịch vụ",
+    "Regular pricing": "Giá tiêu chuẩn",
+    "Discounted pricing": "Giá ưu đãi",
+    "Higher-reliability endpoints for production workloads.": "Endpoint có độ tin cậy cao hơn cho tải vận hành chính thức.",
+    "Lower-cost endpoints for development, testing, and non-critical workloads.": "Endpoint chi phí thấp cho phát triển, kiểm thử và các tải không quan trọng."
   }
 }

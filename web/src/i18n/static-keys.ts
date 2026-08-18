@@ -26,12 +26,16 @@ export const STATIC_I18N_KEYS = [
   'Docs',
   'About',
 
-  // Landing page price tiers (names and blurbs live in the tier catalogue and
-  // are translated at render time)
+  // Service tiers (names, blurbs and pricing badges live in the tier catalogue
+  // and are translated at render time)
   'Production',
   'Best Effort',
   'Reliable endpoints suitable for production workloads.',
   'Lower-cost endpoints with best-effort availability, suited for development and testing.',
+  'Higher-reliability endpoints for production workloads.',
+  'Lower-cost endpoints for development, testing, and non-critical workloads.',
+  'Regular pricing',
+  'Discounted pricing',
 
   // Landing page pricing table (column labels and status values are declared
   // as constants and translated at render time)

@@ -5438,6 +5438,13 @@
     "Start date": "Дата начала",
     "End date": "Дата окончания",
     "Start time": "Время начала",
-    "End time": "Время окончания"
+    "End time": "Время окончания",
+    "Service Tier": "Уровень сервиса",
+    "Service Tier *": "Уровень сервиса *",
+    "Please select a service tier": "Пожалуйста, выберите уровень сервиса",
+    "Regular pricing": "Стандартная цена",
+    "Discounted pricing": "Сниженная цена",
+    "Higher-reliability endpoints for production workloads.": "Более надёжные эндпоинты для рабочих нагрузок.",
+    "Lower-cost endpoints for development, testing, and non-critical workloads.": "Более экономичные эндпоинты для разработки, тестирования и некритичных нагрузок."
   }
 }

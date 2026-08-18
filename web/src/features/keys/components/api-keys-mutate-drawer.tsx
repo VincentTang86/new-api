@@ -77,17 +77,17 @@ import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../constants'
 import {
   getApiKeyFormSchema,
   type ApiKeyFormValues,
+  buildServiceTierOptions,
   getApiKeyFormDefaultValues,
+  pickDefaultServiceTier,
   transformFormDataToPayload,
   transformApiKeyToFormDefaults,
 } from '../lib'
 import type { ApiKey } from '../types'
-import {
-  ApiKeyGroupCombobox,
-  type ApiKeyGroupOption,
-} from './api-key-group-combobox'
+import type { ApiKeyGroupOption } from './api-key-group-combobox'
 import { useApiKeys } from './api-keys-provider'
 import { AutoGroupOrderEditor } from './auto-group-order-editor'
+import { ServiceTierCards } from './service-tier-cards'
 
 type ApiKeyMutateDrawerProps = {
   open: boolean
@@ -165,6 +165,10 @@ export function ApiKeysMutateDrawer({
       })),
     [groupsData]
   )
+  const serviceTiers = useMemo(
+    () => buildServiceTierOptions(groupsData?.data, t),
+    [groupsData, t]
+  )
   const backendHasAuto = groups.some((g) => g.value === 'auto')
   const availableAutoGroupNames = useMemo(
     () => groups.filter((group) => group.value !== 'auto').map((g) => g.value),
@@ -219,19 +223,25 @@ export function ApiKeysMutateDrawer({
     if (initializedTarget === target) return
     if (isUpdate && currentRow) {
       if (apiKeyData?.success && apiKeyData.data) {
-        form.reset(
-          transformApiKeyToFormDefaults(
-            apiKeyData.data,
-            availableAutoGroupNames,
-            maxAutoGroups
-          )
+        const storedValues = transformApiKeyToFormDefaults(
+          apiKeyData.data,
+          availableAutoGroupNames,
+          maxAutoGroups
         )
+        form.reset({
+          ...storedValues,
+          // Keys created before the tier became required carry no group.
+          group:
+            storedValues.group || pickDefaultServiceTier(serviceTiers, false),
+        })
         setInitializedTarget(target)
       }
     } else {
-      form.reset(
-        getApiKeyFormDefaultValues(defaultUseAutoGroup && backendHasAuto)
-      )
+      const preferAuto = defaultUseAutoGroup && backendHasAuto
+      form.reset({
+        ...getApiKeyFormDefaultValues(preferAuto),
+        group: pickDefaultServiceTier(serviceTiers, preferAuto),
+      })
       setInitializedTarget(target)
     }
   }, [
@@ -252,6 +262,7 @@ export function ApiKeysMutateDrawer({
     availableAutoGroupNames,
     maxAutoGroups,
     initializedTarget,
+    serviceTiers,
   ])
 
   const formTarget =
@@ -259,23 +270,19 @@ export function ApiKeysMutateDrawer({
   const isFormInitialized = initializedTarget === formTarget
   const selectedGroup = form.watch('group')
 
-  // Correct group after groups load: if the form value is not in available groups, fall back
+  // Correct the tier after groups load: if the form value is not in available groups, fall back
   useEffect(() => {
     if (groups.length === 0) return
     const currentGroup = selectedGroup
     if (currentGroup && !groups.some((g) => g.value === currentGroup)) {
-      const fallback =
-        groups.find((g) => g.value === 'default')?.value ??
-        groups[0]?.value ??
-        ''
-      form.setValue('group', fallback)
+      form.setValue('group', pickDefaultServiceTier(serviceTiers, false))
       if (currentGroup === 'auto') {
         form.setValue('auto_groups', [])
         form.setValue('auto_groups_mode', 'inherit')
         form.setValue('cross_group_retry', false)
       }
     }
-  }, [groups, form, selectedGroup])
+  }, [groups, form, selectedGroup, serviceTiers])
 
   const onSubmit = async (data: ApiKeyFormValues) => {
     setIsSubmitting(true)
@@ -417,24 +424,17 @@ export function ApiKeysMutateDrawer({
                 name='group'
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('Group')}</FormLabel>
+                    <FormLabel>{t('Service Tier *')}</FormLabel>
                     <FormControl>
-                      <ApiKeyGroupCombobox
-                        options={groups}
+                      <ServiceTierCards
+                        options={serviceTiers}
                         value={field.value}
                         onValueChange={(group) => {
                           field.onChange(group)
-                          if (group === 'auto') {
-                            form.setValue('cross_group_retry', true, {
-                              shouldDirty: true,
-                            })
-                            return
-                          }
-                          form.setValue('cross_group_retry', false, {
+                          form.setValue('cross_group_retry', group === 'auto', {
                             shouldDirty: true,
                           })
                         }}
-                        placeholder={t('Select a group')}
                       />
                     </FormControl>
                     <FormMessage />

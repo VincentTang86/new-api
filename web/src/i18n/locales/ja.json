@@ -5438,6 +5438,13 @@
     "Start date": "開始日",
     "End date": "終了日",
     "Start time": "開始時刻",
-    "End time": "終了時刻"
+    "End time": "終了時刻",
+    "Service Tier": "サービスティア",
+    "Service Tier *": "サービスティア *",
+    "Please select a service tier": "サービスティアを選択してください",
+    "Regular pricing": "通常料金",
+    "Discounted pricing": "割引料金",
+    "Higher-reliability endpoints for production workloads.": "本番ワークロード向けの、より信頼性の高いエンドポイント。",
+    "Lower-cost endpoints for development, testing, and non-critical workloads.": "開発・テストや重要度の低いワークロード向けの低コストなエンドポイント。"
   }
 }

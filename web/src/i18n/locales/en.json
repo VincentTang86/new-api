@@ -5438,6 +5438,13 @@
     "Start date": "Start date",
     "End date": "End date",
     "Start time": "Start time",
-    "End time": "End time"
+    "End time": "End time",
+    "Service Tier": "Service Tier",
+    "Service Tier *": "Service Tier *",
+    "Please select a service tier": "Please select a service tier",
+    "Regular pricing": "Regular pricing",
+    "Discounted pricing": "Discounted pricing",
+    "Higher-reliability endpoints for production workloads.": "Higher-reliability endpoints for production workloads.",
+    "Lower-cost endpoints for development, testing, and non-critical workloads.": "Lower-cost endpoints for development, testing, and non-critical workloads."
   }
 }

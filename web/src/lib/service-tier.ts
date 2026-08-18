@@ -17,47 +17,58 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 
-/** A service tier the marketing design names, translates and orders itself. */
-interface KnownPriceTier {
-  /** Position in the tab strip; the design leads with the reliable tier. */
+/** A service tier the product names, translates and orders itself. */
+interface KnownServiceTier {
+  /** Position wherever tiers are listed; the design leads with the reliable tier. */
   order: number
-  /** i18n key for the tab label. */
+  /** i18n key for the tier name. */
   label: string
-  /** i18n key for the sentence shown beside the tab strip. */
-  description: string
+  /** i18n key for the sentence shown beside the public pricing tier strip. */
+  pricingBlurb: string
+  /** i18n key for the sentence shown on the API key tier card. */
+  workloadBlurb: string
+  /** i18n key for the badge naming how the tier is priced. */
+  pricingBadge: string
 }
 
 /**
- * The price tiers the public pages know by name.
+ * The service tiers the product knows by name.
  *
  * Backend `usable_group` keys are operator-configured free text, so only the
  * tiers the design actually covers can be translated or ordered. Anything else
- * keeps its raw key as the label, carries no description, and sorts after the
- * known tiers in whatever order the backend returned it — an unrecognised
- * group is still a usable tab, just an untranslated one.
+ * keeps its raw key as the label, carries no blurb, and sorts after the known
+ * tiers in whatever order the backend returned it — an unrecognised group is
+ * still a usable tier, just an untranslated one.
  */
-const KNOWN_PRICE_TIERS: Record<string, KnownPriceTier> = {
+const KNOWN_SERVICE_TIERS: Record<string, KnownServiceTier> = {
   production: {
     order: 0,
     label: 'Production',
-    description: 'Reliable endpoints suitable for production workloads.',
+    pricingBlurb: 'Reliable endpoints suitable for production workloads.',
+    workloadBlurb: 'Higher-reliability endpoints for production workloads.',
+    pricingBadge: 'Regular pricing',
   },
   besteffort: {
     order: 1,
     label: 'Best Effort',
-    description:
+    pricingBlurb:
       'Lower-cost endpoints with best-effort availability, suited for development and testing.',
+    workloadBlurb:
+      'Lower-cost endpoints for development, testing, and non-critical workloads.',
+    pricingBadge: 'Discounted pricing',
   },
 }
 
 /** Sorts after every known tier while keeping the backend's relative order. */
-export const UNKNOWN_PRICE_TIER_ORDER = Number.MAX_SAFE_INTEGER
+export const UNKNOWN_SERVICE_TIER_ORDER = Number.MAX_SAFE_INTEGER
 
 /**
  * Matches a backend group key against the catalogue, ignoring case and the
  * separators operators write tier names with (`Best Effort`, `best-effort`,
  * `best_effort` are the same tier).
  */
-export function lookupPriceTier(groupKey: string): KnownPriceTier | undefined {
-  return KNOWN_PRICE_TIERS[groupKey.toLowerCase().replaceAll(/[\s_-]/g, '')]
+export function lookupServiceTier(
+  groupKey: string
+): KnownServiceTier | undefined {
+  return KNOWN_SERVICE_TIERS[groupKey.toLowerCase().replaceAll(/[\s_-]/g, '')]
 }

@@ -5438,6 +5438,13 @@
     "Start date": "開始日期",
     "End date": "結束日期",
     "Start time": "開始時間",
-    "End time": "結束時間"
+    "End time": "結束時間",
+    "Service Tier": "服務等級",
+    "Service Tier *": "服務等級 *",
+    "Please select a service tier": "請選擇服務等級",
+    "Regular pricing": "標準價格",
+    "Discounted pricing": "優惠價格",
+    "Higher-reliability endpoints for production workloads.": "更高可靠性的端點，適用於正式業務負載。",
+    "Lower-cost endpoints for development, testing, and non-critical workloads.": "成本更低的端點，適合開發、測試與非關鍵負載。"
   }
 }

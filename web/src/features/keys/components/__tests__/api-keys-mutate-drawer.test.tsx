@@ -152,7 +152,6 @@ function findButton(text: string, required = true): HTMLButtonElement | null {
 }
 
 function getControlByLabel(labelText: 'Name' | 'Quantity'): HTMLInputElement
-function getControlByLabel(labelText: 'Group'): HTMLButtonElement
 function getControlByLabel(labelText: 'Auto group order'): HTMLElement
 function getControlByLabel(labelText: string): HTMLElement {
   const label = [...document.querySelectorAll<HTMLLabelElement>('label')].find(
@@ -177,6 +176,20 @@ function getControlByLabel(labelText: string): HTMLElement {
 
 function changeInput(input: HTMLInputElement, value: string): void {
   fireEvent.input(input, { target: { value } })
+}
+
+function getServiceTierRadio(tier: string): HTMLElement {
+  const radio = document.querySelector<HTMLElement>(
+    `[data-service-tier-card="${tier}"] [data-slot="radio-group-item"]`
+  )
+  if (!radio) {
+    throw new Error(`Expected a service tier card for "${tier}"`)
+  }
+  return radio
+}
+
+function selectServiceTier(tier: string): void {
+  fireEvent.click(getServiceTierRadio(tier))
 }
 
 function selectComboboxOption(
@@ -209,8 +222,9 @@ describe('API keys mutate drawer Auto group integration', () => {
     installApiFixtures(createdPayloads)
     await renderCreateDrawer()
 
-    const groupTrigger = getControlByLabel('Group')
-    expect(groupTrigger.textContent?.includes('auto')).toBe(true)
+    expect(getServiceTierRadio('auto').getAttribute('aria-checked')).toBe(
+      'true'
+    )
     expect(
       document.body.textContent?.includes(
         'Using the complete global Auto order (2 groups)'
@@ -259,10 +273,9 @@ describe('API keys mutate drawer Auto group integration', () => {
     )
     expect(findButton('Restore global Auto', true).disabled).toBe(false)
 
-    const groupTrigger = getControlByLabel('Group')
-    selectComboboxOption(groupTrigger, 'Standard access')
+    selectServiceTier('default')
     expect(document.querySelector('button[aria-label="Remove vip"]')).toBe(null)
-    selectComboboxOption(groupTrigger, 'Automatic routing')
+    selectServiceTier('auto')
 
     expect(
       document.querySelector('button[aria-label="Remove vip"]')
