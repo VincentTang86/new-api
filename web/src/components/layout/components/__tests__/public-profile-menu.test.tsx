@@ -27,6 +27,7 @@ import {
 import { act, fireEvent, render } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
+import { ROLE } from '@/lib/roles'
 import { useAuthStore } from '@/stores/auth-store'
 
 import { PublicProfileMenu } from '../public-profile-menu'
@@ -39,9 +40,10 @@ const MENU_TARGETS = [
   '/usage-logs/task',
   '/wallet',
   '/profile',
+  '/system-settings/site/$section',
 ]
 
-function seedUser() {
+function seedUser(role: number) {
   useAuthStore.setState((state) => ({
     auth: {
       ...state.auth,
@@ -50,15 +52,15 @@ function seedUser() {
         username: 'jdoe',
         display_name: 'John Doe',
         email: 'jdoe@example.com',
-        role: 1,
+        role,
         quota: 500000,
       } as never,
     },
   }))
 }
 
-async function renderMenu() {
-  seedUser()
+async function renderMenu(role: number = ROLE.USER) {
+  seedUser(role)
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, enabled: false } },
   })
@@ -132,6 +134,32 @@ describe('PublicProfileMenu', () => {
     }
     // The user block carries name and email, per the design.
     expect(menuText).toMatch(/jdoe@example\.com/)
+  })
+
+  test('hides the system settings row from a non-admin', async () => {
+    const rendered = await renderMenu()
+    await rendered.open()
+
+    expect(document.body.textContent ?? '').not.toMatch(/System Settings/)
+  })
+
+  test('offers a super admin the system settings row', async () => {
+    const rendered = await renderMenu(ROLE.SUPER_ADMIN)
+    await rendered.open()
+
+    const settingsItem = [
+      ...document.querySelectorAll('[role="menuitem"]'),
+    ].find((item) => /System Settings/.test(item.textContent ?? '')) as
+      | HTMLElement
+      | undefined
+    expect(settingsItem, 'expected a System Settings menu item').toBeDefined()
+
+    await act(async () => {
+      fireEvent.click(settingsItem as HTMLElement)
+    })
+    expect(rendered.router.state.location.pathname).toBe(
+      '/system-settings/site/system-info'
+    )
   })
 
   test('the console shortcut navigates to /dashboard', async () => {

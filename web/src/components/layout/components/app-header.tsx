@@ -17,7 +17,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { NotificationPopover } from '@/components/notification-popover'
-import { ProfileDropdown } from '@/components/profile-dropdown'
 import { PublicLanguageSwitcher } from '@/components/public-language-switcher'
 import { PublicThemeToggle } from '@/components/public-theme-toggle'
 import { Search } from '@/components/search'
@@ -27,6 +26,7 @@ import { useTopNavLinks } from '@/hooks/use-top-nav-links'
 import { defaultTopNavLinks } from '../config/top-nav.config'
 import { type TopNavLink } from '../types'
 import { Header } from './header'
+import { PublicProfileMenu } from './public-profile-menu'
 import { SystemBrand } from './system-brand'
 import { TopNav } from './top-nav'
 
@@ -135,7 +135,7 @@ export function AppHeader({
                 loading={notifications.loading}
               />
             )}
-            {showProfileDropdown && <ProfileDropdown />}
+            {showProfileDropdown && <PublicProfileMenu />}
           </div>
         )}
       </Header>

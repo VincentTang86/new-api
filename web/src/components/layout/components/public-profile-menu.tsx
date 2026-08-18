@@ -25,6 +25,7 @@ import {
   LogOut,
   ScrollText,
   Settings,
+  SlidersHorizontal,
   Wallet,
 } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -42,6 +43,7 @@ import useDialogState from '@/hooks/use-dialog'
 import { useIsSidebarModuleVisible } from '@/hooks/use-sidebar-config'
 import { useUserDisplay } from '@/hooks/use-user-display'
 import { formatQuotaWithCurrency } from '@/lib/currency'
+import { ROLE } from '@/lib/roles'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/auth-store'
 
@@ -62,7 +64,9 @@ const MENU_ITEM_CLASS =
  * a 240px menu on hover — console shortcuts on top, credits and account
  * settings below, sign-out last. Hover is progressive enhancement: the
  * underlying menu primitive keeps click and keyboard behavior for touch and
- * assistive tech. The console's shared `ProfileDropdown` is untouched.
+ * assistive tech. The console header renders the same menu, so the account
+ * control never changes shape between the two shells; system settings is the
+ * one row the design does not model, added for super admins only.
  */
 export function PublicProfileMenu(props: { className?: string }) {
   const { t } = useTranslation()
@@ -73,6 +77,7 @@ export function PublicProfileMenu(props: { className?: string }) {
   const user = useAuthStore((state) => state.auth.user)
   const { displayName, secondaryText, initials } = useUserDisplay(user)
   const isWalletVisible = useIsSidebarModuleVisible('/wallet')
+  const isSuperAdmin = user?.role === ROLE.SUPER_ADMIN
 
   const cancelScheduledClose = useCallback(() => {
     if (closeTimer.current !== null) {
@@ -223,6 +228,21 @@ export function PublicProfileMenu(props: { className?: string }) {
             <Settings className='size-4 text-(--pd-muted-2)' />
             {t('Account Settings')}
           </DropdownMenuItem>
+
+          {isSuperAdmin && (
+            <DropdownMenuItem
+              onClick={() =>
+                navigate({
+                  to: '/system-settings/site/$section',
+                  params: { section: 'system-info' },
+                })
+              }
+              className={MENU_ITEM_CLASS}
+            >
+              <SlidersHorizontal className='size-4 text-(--pd-muted-2)' />
+              {t('System Settings')}
+            </DropdownMenuItem>
+          )}
 
           <DropdownMenuSeparator className='bg-(--pd-border)' />
 
