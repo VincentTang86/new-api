@@ -112,7 +112,7 @@ export function AppHeader({
 
   return (
     <>
-      <Header>
+      <Header className='console-app-header'>
         <SystemBrand variant='inline' />
 
         {leftContent ? (

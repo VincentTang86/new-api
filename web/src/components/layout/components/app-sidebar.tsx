@@ -44,12 +44,14 @@ import { SidebarViewHeader } from './sidebar-view-header'
  * in the registry; this component requires no changes.
  */
 export function AppSidebar() {
-  const { collapsible, variant } = useLayout()
+  const { collapsible } = useLayout()
   const { key, view, navGroups } = useSidebarView()
   const shouldReduce = useReducedMotion()
 
+  // The variant is pinned to the design's flush sidebar; the floating
+  // "inset" card look is not part of the FairRouter console design.
   return (
-    <Sidebar collapsible={collapsible} variant={variant}>
+    <Sidebar collapsible={collapsible} variant='sidebar'>
       {view && <SidebarViewHeader view={view} />}
 
       <SidebarContent className='py-2'>

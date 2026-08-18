@@ -168,7 +168,7 @@ export function Dashboard() {
       <SectionPageLayout.Content>
         <div className='space-y-6 sm:space-y-7'>
           <FadeIn>
-            <p className='dark:text-muted-foreground -mt-2 text-[13px] text-[#6b7280]'>
+            <p className='dark:text-muted-foreground text-[13px] text-[#6b7280]'>
               {t('Track your real-time LLM API routing and costs.')}
             </p>
           </FadeIn>

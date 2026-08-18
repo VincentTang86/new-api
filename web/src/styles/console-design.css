@@ -1,0 +1,158 @@
+/*
+Copyright (C) 2023-2026 QuantumNous
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as
+published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+For commercial licensing, please contact support@quantumnous.com
+*/
+/*
+ * The authenticated console renders the FairRouter Figma Make design, the
+ * same way the marketing pages do via `.public-design`. The class is set on
+ * <body> while a console route is mounted (see AuthenticatedLayout), so the
+ * design palette also reaches portaled surfaces (dropdowns, popovers,
+ * tooltips) that render outside the layout tree.
+ *
+ * Overriding the semantic tokens here intentionally pins the console to the
+ * design palette regardless of the user's theme preset: the design is the
+ * single source of truth for console visuals. `body.console-design` outranks
+ * the preset selectors (`[data-theme-preset='…']`) on the same element.
+ */
+
+body.console-design {
+  /* Surfaces */
+  --background: #ffffff;
+  --foreground: #111827;
+  --card: #ffffff;
+  --card-foreground: #111827;
+  --popover: #ffffff;
+  --popover-foreground: #111827;
+
+  /* Brand */
+  --primary: #ff5a5f;
+  --primary-foreground: #ffffff;
+
+  /* Greys */
+  --secondary: #f5f5f7;
+  --secondary-foreground: #111827;
+  --muted: #f3f4f6;
+  --muted-foreground: #6b7280;
+  --accent: #f3f4f6;
+  --accent-foreground: #111827;
+  --border: #e5e7eb;
+  --input: #e5e7eb;
+  --ring: oklch(0.708 0 0);
+  --radius: 0.625rem;
+
+  /* Sidebar */
+  --sidebar: #f9fafb;
+  --sidebar-foreground: #111827;
+  --sidebar-border: #e5e7eb;
+  --sidebar-accent: #fff0f0;
+  --sidebar-accent-foreground: #ff5a5f;
+  --sidebar-primary: #ff5a5f;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-ring: oklch(0.708 0 0);
+
+  /* Chrome */
+  --app-header-height: 55px;
+  --console-header-bg: #fcfbfa;
+  --console-faint: #9ca3af;
+
+  --font-body: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-body);
+}
+
+.dark body.console-design {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.185 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.185 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: #ff5a5f;
+  --primary-foreground: #ffffff;
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --border: oklch(0.269 0 0);
+  --input: oklch(0.269 0 0);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(0.269 0 0);
+  --sidebar-accent: rgba(255, 90, 95, 0.15);
+  --sidebar-accent-foreground: #ff5a5f;
+  --console-header-bg: oklch(0.205 0 0);
+  --console-faint: oklch(0.62 0 0);
+}
+
+/* Top app bar: the design's 55px canvas-tinted bar with a hairline and a
+ * soft downward shadow. */
+body.console-design .console-app-header {
+  background: var(--console-header-bg);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 6px 9px rgba(0, 0, 0, 0.04);
+}
+
+/* The brand wordmark is Outfit in the design while console body copy is
+ * Inter. */
+body.console-design .console-brand-name {
+  font-family: 'Outfit Variable', 'Outfit', var(--font-body);
+}
+
+/* Sidebar geometry from the design: 24px top inset, 24px between groups,
+ * 11px uppercase group labels, 14px items on a 6px radius with a red
+ * active state (colors come from the sidebar tokens above). */
+body.console-design [data-sidebar='content'] {
+  padding-top: 12px;
+  padding-bottom: 16px;
+}
+
+body.console-design [data-sidebar='group'] {
+  padding: 12px 12px 12px 20px;
+}
+
+body.console-design [data-sidebar='group-label'] {
+  height: auto;
+  padding: 0 2px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  color: var(--console-faint);
+}
+
+body.console-design [data-sidebar='menu-button'] {
+  height: auto;
+  gap: 10px;
+  border-radius: 6px;
+  padding: 9px 10px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+body.console-design [data-sidebar='menu-button'] svg {
+  width: 16px;
+  height: 16px;
+  color: var(--muted-foreground);
+}
+
+body.console-design [data-sidebar='menu-button'][data-active] {
+  font-weight: 600;
+}
+
+body.console-design [data-sidebar='menu-button'][data-active] svg {
+  color: var(--sidebar-accent-foreground);
+}

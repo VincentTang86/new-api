@@ -168,7 +168,15 @@ export function UsageOverviewChart({
         {
           orient: 'bottom' as const,
           sampling: true,
-          label: { style: { fontSize: 11 } },
+          label: {
+            style: { fontSize: 11 },
+            // Hour buckets are keyed "MM-DD HH:00" for cross-day rollup;
+            // the axis shows only the clock part, as in the design.
+            formatMethod: (value: string | number) =>
+              granularity === 'hour'
+                ? String(value).slice(-5)
+                : String(value),
+          },
         },
       ],
       tooltip: {
@@ -193,7 +201,7 @@ export function UsageOverviewChart({
       theme: resolvedTheme === 'dark' ? 'dark' : 'light',
       background: 'transparent',
     }),
-    [chartValues, formatValue, modelOrder, resolvedTheme, t]
+    [chartValues, formatValue, granularity, modelOrder, resolvedTheme, t]
   )
 
   const chartKey = [

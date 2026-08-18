@@ -16,6 +16,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
+import { useEffect } from 'react'
+
 import { AnimatedOutlet } from '@/components/page-transition'
 import { SkipToMain } from '@/components/skip-to-main'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
@@ -33,6 +35,14 @@ type AuthenticatedLayoutProps = {
 
 export function AuthenticatedLayout(props: AuthenticatedLayoutProps) {
   const defaultOpen = getCookie('sidebar_state') !== 'false'
+
+  // The console renders the FairRouter design. The scope class lives on
+  // <body> so portaled surfaces (dropdowns, popovers, tooltips) pick up the
+  // design tokens too; see styles/console-design.css.
+  useEffect(() => {
+    document.body.classList.add('console-design')
+    return () => document.body.classList.remove('console-design')
+  }, [])
 
   return (
     <LayoutProvider>
