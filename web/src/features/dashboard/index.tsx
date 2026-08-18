@@ -23,7 +23,6 @@ import { useTranslation } from 'react-i18next'
 
 import { SectionPageLayout } from '@/components/layout'
 import { FadeIn } from '@/components/page-transition'
-import { getUserGroups } from '@/lib/api'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/auth-store'
 
@@ -91,11 +90,6 @@ export function Dashboard() {
     queryFn: getAllApiKeys,
     staleTime: QUERY_STALE_TIME,
   })
-  const groupsQuery = useQuery({
-    queryKey: ['dashboard', 'groups'],
-    queryFn: getUserGroups,
-    staleTime: 5 * 60 * 1000,
-  })
 
   const quotaData = useMemo(
     () => (quotaQuery.data?.success ? (quotaQuery.data.data ?? []) : []),
@@ -109,15 +103,6 @@ export function Dashboard() {
   const metrics = metricsQuery.data?.success
     ? metricsQuery.data.data
     : undefined
-  const groupNames = useMemo(() => {
-    const groups = groupsQuery.data?.data
-    if (!groups) return undefined
-    const names: Record<string, string> = {}
-    for (const [key, value] of Object.entries(groups)) {
-      names[key] = value?.desc || key
-    }
-    return names
-  }, [groupsQuery.data])
 
   const refreshing =
     quotaQuery.isFetching ||
@@ -210,7 +195,6 @@ export function Dashboard() {
               flowData={flowData}
               loading={flowQuery.isLoading}
               apiKeys={apiKeysQuery.data}
-              groupNames={groupNames}
             />
           </FadeIn>
         </div>

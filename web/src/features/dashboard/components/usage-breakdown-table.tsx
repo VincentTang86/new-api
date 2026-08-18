@@ -43,7 +43,6 @@ interface UsageBreakdownTableProps {
   flowData: FlowQuotaDataItem[]
   loading?: boolean
   apiKeys: ApiKey[] | undefined
-  groupNames: Record<string, string> | undefined
 }
 
 interface UsageTotals {
@@ -149,7 +148,6 @@ export function UsageBreakdownTable({
   flowData,
   loading,
   apiKeys,
-  groupNames,
 }: UsageBreakdownTableProps) {
   const { t } = useTranslation()
   const [tab, setTab] = useState<BreakdownTab>('model')
@@ -226,10 +224,9 @@ export function UsageBreakdownTable({
     })
   }
 
-  const groupLabel = (group: string) => {
-    if (!group) return t('Unknown')
-    return groupNames?.[group] ?? group
-  }
+  // Tier rows show the raw group name; group descriptions are display
+  // copy managed elsewhere and can drift from the name.
+  const groupLabel = (group: string) => group || t('Unknown')
 
   const formatLastUsed = (accessedTime?: number) => {
     if (!accessedTime || accessedTime <= 0) return PLACEHOLDER
