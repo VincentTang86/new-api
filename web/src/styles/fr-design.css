@@ -17,19 +17,19 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 /*
- * The authenticated console renders the FairRouter Figma Make design, the
- * same way the marketing pages do via `.public-design`. The class is set on
- * <body> while a console route is mounted (see AuthenticatedLayout), so the
- * design palette also reaches portaled surfaces (dropdowns, popovers,
- * tooltips) that render outside the layout tree.
+ * The whole app renders the FairRouter Figma Make design: these semantic
+ * token overrides pin every surface — console, pricing, auth, and portaled
+ * layers — to the design palette and Inter, regardless of the user's theme
+ * preset. Marketing pages keep layering their `--pd-*` tokens (and the
+ * Geist-first font) on top via `.public-design`.
  *
- * Overriding the semantic tokens here intentionally pins the console to the
- * design palette regardless of the user's theme preset: the design is the
- * single source of truth for console visuals. `body.console-design` outranks
- * the preset selectors (`[data-theme-preset='…']`) on the same element.
+ * The class is set statically on <body> in index.html so the first paint is
+ * already on-palette. The selector triples the class on purpose: the theme
+ * preset "semantic surface bridge" in theme-presets.css matches at (0,3,0),
+ * so anything weaker would lose to non-default presets.
  */
 
-body.console-design {
+body.fr-design.fr-design.fr-design {
   /* Surfaces */
   --background: #ffffff;
   --foreground: #111827;
@@ -73,7 +73,7 @@ body.console-design {
   font-family: var(--font-body);
 }
 
-.dark body.console-design {
+.dark body.fr-design.fr-design.fr-design {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.185 0 0);
@@ -101,7 +101,7 @@ body.console-design {
 
 /* Top app bar: the design's 55px canvas-tinted bar with a hairline and a
  * soft downward shadow. */
-body.console-design .console-app-header {
+body.fr-design .console-app-header {
   background: var(--console-header-bg);
   border-bottom: 1px solid var(--border);
   box-shadow: 0 6px 9px rgba(0, 0, 0, 0.04);
@@ -109,23 +109,23 @@ body.console-design .console-app-header {
 
 /* The brand wordmark is Outfit in the design while console body copy is
  * Inter. */
-body.console-design .console-brand-name {
+body.fr-design .console-brand-name {
   font-family: 'Outfit Variable', 'Outfit', var(--font-body);
 }
 
 /* Sidebar geometry from the design: 24px top inset, 24px between groups,
  * 11px uppercase group labels, 14px items on a 6px radius with a red
  * active state (colors come from the sidebar tokens above). */
-body.console-design [data-sidebar='content'] {
+body.fr-design [data-sidebar='content'] {
   padding-top: 12px;
   padding-bottom: 16px;
 }
 
-body.console-design [data-sidebar='group'] {
+body.fr-design [data-sidebar='group'] {
   padding: 12px 12px 12px 20px;
 }
 
-body.console-design [data-sidebar='group-label'] {
+body.fr-design [data-sidebar='group-label'] {
   height: auto;
   padding: 0 2px 6px;
   font-size: 11px;
@@ -134,7 +134,7 @@ body.console-design [data-sidebar='group-label'] {
   color: var(--console-faint);
 }
 
-body.console-design [data-sidebar='menu-button'] {
+body.fr-design [data-sidebar='menu-button'] {
   height: auto;
   gap: 10px;
   border-radius: 6px;
@@ -143,16 +143,16 @@ body.console-design [data-sidebar='menu-button'] {
   font-weight: 500;
 }
 
-body.console-design [data-sidebar='menu-button'] svg {
+body.fr-design [data-sidebar='menu-button'] svg {
   width: 16px;
   height: 16px;
   color: var(--muted-foreground);
 }
 
-body.console-design [data-sidebar='menu-button'][data-active] {
+body.fr-design [data-sidebar='menu-button'][data-active] {
   font-weight: 600;
 }
 
-body.console-design [data-sidebar='menu-button'][data-active] svg {
+body.fr-design [data-sidebar='menu-button'][data-active] svg {
   color: var(--sidebar-accent-foreground);
 }
