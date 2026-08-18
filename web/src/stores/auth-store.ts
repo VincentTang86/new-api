@@ -21,6 +21,11 @@ import { create } from 'zustand'
 import type { AdminCapabilities } from '@/lib/admin-permissions'
 
 export type UserPermissions = {
+  /**
+   * Still returned by /api/user/self, no longer consumed: the per-user sidebar
+   * overlay was retired along with its profile card, so the console filters the
+   * sidebar on the site-wide config alone (see hooks/use-sidebar-config.ts).
+   */
   sidebar_settings?: boolean
   sidebar_modules?: Record<string, unknown>
   admin_permissions?: AdminCapabilities
@@ -51,6 +56,7 @@ export interface AuthUser {
   language?: string
   setting?: Record<string, unknown> | string
   stripe_customer?: string
+  /** Stored server-side but no longer read — see UserPermissions.sidebar_settings. */
   sidebar_modules?: string
   permissions?: UserPermissions
 }
