@@ -23,6 +23,7 @@ import {
   formatQuotaWithCurrency,
   getCurrencyDisplay,
   getCurrencyFractionDigits,
+  interfaceLocale,
 } from './currency'
 
 // ============================================================================
@@ -34,9 +35,9 @@ export function formatNumber(
   locales?: Intl.LocalesArgument
 ): string {
   if (value == null || Number.isNaN(value as number)) return '-'
-  return Intl.NumberFormat(locales, { maximumFractionDigits: 2 }).format(
-    value as number
-  )
+  return Intl.NumberFormat(locales ?? interfaceLocale(), {
+    maximumFractionDigits: 2,
+  }).format(value as number)
 }
 
 export function formatCompactNumber(
@@ -44,7 +45,7 @@ export function formatCompactNumber(
   locales?: Intl.LocalesArgument
 ): string {
   if (value == null || Number.isNaN(value as number)) return '-'
-  return Intl.NumberFormat(locales, {
+  return Intl.NumberFormat(locales ?? interfaceLocale(), {
     notation: 'compact',
     maximumFractionDigits: 1,
   }).format(value as number)
@@ -52,7 +53,7 @@ export function formatCompactNumber(
 
 export function formatPercent(value: number | null | undefined): string {
   if (value == null || Number.isNaN(value as number)) return '-'
-  return Intl.NumberFormat(undefined, {
+  return Intl.NumberFormat(interfaceLocale(), {
     style: 'percent',
     maximumFractionDigits: 2,
   }).format((value as number) / 100)

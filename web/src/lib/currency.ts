@@ -78,12 +78,27 @@ For commercial licensing, please contact support@quantumnous.com
  * 4. **Billing displays**: Use formatBillingCurrencyFromUSD() to avoid token display
  * 5. **Effective exchange rate**: When quotaDisplayType is 'USD', use rate of 1 regardless of config
  */
+import i18n from 'i18next'
+
 import {
   useSystemConfigStore,
   DEFAULT_CURRENCY_CONFIG,
   type CurrencyConfig,
   type CurrencyDisplayType,
 } from '@/stores/system-config-store'
+
+/**
+ * Numbers follow the interface language, not the browser locale — otherwise
+ * an English UI in a Chinese browser renders compact numbers as `11.5万`.
+ * i18next uses the non-standard `zhCN`/`zhTW` codes, which Intl would reject,
+ * so they are mapped back to BCP-47 here.
+ */
+export function interfaceLocale(): string | undefined {
+  const language = i18n.language
+  if (language === 'zhCN') return 'zh-CN'
+  if (language === 'zhTW') return 'zh-TW'
+  return language || undefined
+}
 
 export interface CurrencyFormatOptions {
   /** Fraction digits to use when |value| >= 1 */
@@ -240,7 +255,7 @@ function getBillingDisplayMeta(config: CurrencyConfig): DisplayMeta {
 function mergeOptions(
   options?: CurrencyFormatOptions
 ): ResolvedCurrencyFormatOptions {
-  if (!options) return DEFAULT_FORMAT_OPTIONS
+  if (!options) return { ...DEFAULT_FORMAT_OPTIONS, locale: interfaceLocale() }
   return {
     digitsLarge: options.digitsLarge ?? DEFAULT_FORMAT_OPTIONS.digitsLarge,
     digitsSmall: options.digitsSmall ?? DEFAULT_FORMAT_OPTIONS.digitsSmall,
@@ -251,7 +266,7 @@ function mergeOptions(
     showSymbol: options.showSymbol ?? DEFAULT_FORMAT_OPTIONS.showSymbol,
     padFractionDigits:
       options.padFractionDigits ?? DEFAULT_FORMAT_OPTIONS.padFractionDigits,
-    locale: options.locale ?? DEFAULT_FORMAT_OPTIONS.locale,
+    locale: options.locale ?? interfaceLocale(),
   }
 }
 
