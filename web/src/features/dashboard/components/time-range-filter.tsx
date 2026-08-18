@@ -21,7 +21,6 @@ import { useState } from 'react'
 import type { DateRange } from 'react-day-picker'
 import { useTranslation } from 'react-i18next'
 
-import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import {
   Popover,
@@ -29,10 +28,17 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import dayjs from '@/lib/dayjs'
+import { cn } from '@/lib/utils'
 
 import { RANGE_PRESETS } from '../constants'
 import { MAX_RANGE_DAYS, resolveCustomRange, resolvePresetRange } from '../lib'
 import type { DashboardRange } from '../types'
+
+const FILTER_BUTTON_BASE =
+  'cursor-pointer rounded-[6px] px-3.5 py-[7px] text-[13px] transition-colors'
+const FILTER_BUTTON_ACTIVE = 'bg-[#ff5a5f] font-semibold text-white'
+const FILTER_BUTTON_IDLE =
+  'border border-[#e5e7eb] bg-white font-medium text-[#6b7280] hover:bg-[#f9fafb] dark:border-border dark:bg-card dark:text-muted-foreground dark:hover:bg-muted'
 
 interface TimeRangeFilterProps {
   range: DashboardRange
@@ -84,26 +90,32 @@ export function TimeRangeFilter({
   }
 
   return (
-    <div className='flex flex-wrap items-center gap-1.5 sm:gap-2'>
+    <div className='flex flex-wrap items-center gap-2'>
       {RANGE_PRESETS.map((preset) => (
-        <Button
+        <button
           key={preset.key}
           type='button'
-          size='sm'
-          variant={range.key === preset.key ? 'default' : 'outline'}
+          className={cn(
+            FILTER_BUTTON_BASE,
+            range.key === preset.key ? FILTER_BUTTON_ACTIVE : FILTER_BUTTON_IDLE
+          )}
           onClick={() => onRangeChange(resolvePresetRange(preset.key))}
         >
           {t(preset.labelKey)}
-        </Button>
+        </button>
       ))}
       <Popover open={pickerOpen} onOpenChange={handleOpenChange}>
         <PopoverTrigger
           render={
-            <Button
+            <button
               type='button'
-              size='sm'
-              variant={range.key === 'custom' ? 'default' : 'outline'}
-              className='gap-1.5'
+              className={cn(
+                FILTER_BUTTON_BASE,
+                'flex items-center gap-[7px]',
+                range.key === 'custom'
+                  ? FILTER_BUTTON_ACTIVE
+                  : FILTER_BUTTON_IDLE
+              )}
             />
           }
         >
@@ -127,22 +139,21 @@ export function TimeRangeFilter({
                 {t('Up to {{count}} days', { count: MAX_RANGE_DAYS })}
               </span>
               <div className='flex gap-2'>
-                <Button
+                <button
                   type='button'
-                  size='sm'
-                  variant='outline'
+                  className='dark:border-border dark:bg-card dark:text-muted-foreground cursor-pointer rounded-[6px] border border-[#e5e7eb] bg-white px-3.5 py-[6px] text-[13px] font-medium text-[#6b7280] transition-colors hover:bg-[#f9fafb]'
                   onClick={() => setPickerOpen(false)}
                 >
                   {t('Cancel')}
-                </Button>
-                <Button
+                </button>
+                <button
                   type='button'
-                  size='sm'
+                  className='cursor-pointer rounded-[6px] bg-[#ff5a5f] px-3.5 py-[6px] text-[13px] font-semibold text-white transition-colors hover:bg-[#e14b50] disabled:cursor-not-allowed disabled:opacity-50'
                   disabled={!draft?.from}
                   onClick={applyDraft}
                 >
                   {t('Apply')}
-                </Button>
+                </button>
               </div>
             </div>
           </div>

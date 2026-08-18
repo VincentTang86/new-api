@@ -16,27 +16,12 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import {
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  TableProperties,
-} from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Fragment, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { Button } from '@/components/ui/button'
-import { IconBadge } from '@/components/ui/icon-badge'
 import { NativeSelect } from '@/components/ui/native-select'
 import { Skeleton } from '@/components/ui/skeleton'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 import type { ApiKey } from '@/features/keys/types'
 import dayjs from '@/lib/dayjs'
 import { formatCompactNumber, formatNumber, formatQuota } from '@/lib/format'
@@ -46,6 +31,13 @@ import { BREAKDOWN_PAGE_SIZES } from '../constants'
 import type { BreakdownTab, FlowQuotaDataItem } from '../types'
 
 const PLACEHOLDER = '-'
+
+const TH_CLASS =
+  'px-3.5 py-[11px] text-xs font-semibold text-[#6b7280] dark:text-muted-foreground'
+const NUM_CELL = 'px-3.5 py-[13px] text-right text-[13px] tabular-nums'
+const MUTED_NUM = cn(NUM_CELL, 'text-[#6b7280] dark:text-muted-foreground')
+const GREEN_NUM = cn(NUM_CELL, 'font-semibold text-[#10b981]')
+const DASH_NUM = cn(NUM_CELL, 'text-[#9ca3af] dark:text-muted-foreground/60')
 
 interface UsageBreakdownTableProps {
   flowData: FlowQuotaDataItem[]
@@ -110,8 +102,8 @@ function PaginationFooter(props: {
 }) {
   const { t } = useTranslation()
   return (
-    <div className='flex items-center justify-between gap-2 border-t px-3 py-2 sm:px-5'>
-      <div className='text-muted-foreground flex items-center gap-2 text-xs'>
+    <div className='dark:border-border flex items-center justify-between gap-2 border-t border-[#e5e7eb] px-3.5 py-2'>
+      <div className='dark:text-muted-foreground flex items-center gap-2 text-xs text-[#6b7280]'>
         <span>{t('Rows per page')}</span>
         <NativeSelect
           className='h-7 w-16 text-xs'
@@ -126,32 +118,28 @@ function PaginationFooter(props: {
         </NativeSelect>
       </div>
       <div className='flex items-center gap-1.5'>
-        <span className='text-muted-foreground text-xs'>
+        <span className='dark:text-muted-foreground text-xs text-[#6b7280]'>
           {t('{{page}} of {{totalPages}}', {
             page: props.page,
             totalPages: props.totalPages,
           })}
         </span>
-        <Button
+        <button
           type='button'
-          variant='outline'
-          size='icon'
-          className='size-7'
+          className='dark:border-border dark:bg-card flex size-7 cursor-pointer items-center justify-center rounded-[6px] border border-[#e5e7eb] bg-white text-[#6b7280] transition-colors hover:bg-[#f9fafb] disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-white/10'
           disabled={props.page <= 1}
           onClick={() => props.onPage(props.page - 1)}
         >
           <ChevronLeft className='size-4' />
-        </Button>
-        <Button
+        </button>
+        <button
           type='button'
-          variant='outline'
-          size='icon'
-          className='size-7'
+          className='dark:border-border dark:bg-card flex size-7 cursor-pointer items-center justify-center rounded-[6px] border border-[#e5e7eb] bg-white text-[#6b7280] transition-colors hover:bg-[#f9fafb] disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-white/10'
           disabled={props.page >= props.totalPages}
           onClick={() => props.onPage(props.page + 1)}
         >
           <ChevronRight className='size-4' />
-        </Button>
+        </button>
       </div>
     </div>
   )
@@ -248,36 +236,36 @@ export function UsageBreakdownTable({
     return dayjs.unix(accessedTime).fromNow()
   }
 
-  const numericCell = 'text-right font-mono text-xs tabular-nums sm:text-sm'
-
   return (
-    <div className='overflow-hidden rounded-lg border'>
-      <div className='flex w-full items-center justify-between gap-2 border-b px-3 py-2 sm:px-5 sm:py-3'>
-        <div className='flex items-center gap-2'>
-          <IconBadge tone='success' size='sm'>
-            <TableProperties />
-          </IconBadge>
-          <span className='text-sm font-semibold'>{t('Usage Breakdown')}</span>
-        </div>
-        <div className='bg-muted/60 inline-flex h-7 rounded-lg border p-0.5 sm:h-8'>
+    <div className='dark:bg-card dark:border-border flex flex-col overflow-hidden rounded-xl border border-[#e5e7eb] bg-white'>
+      <div className='flex items-center justify-between gap-2 px-[22px] py-[18px]'>
+        <span className='dark:text-foreground text-[15px] font-semibold text-[#111827]'>
+          {t('Usage Breakdown')}
+        </span>
+        <div className='dark:bg-muted flex items-center rounded-[8px] bg-[#f5f5f7] p-0.5'>
           {(
             [
               { value: 'model', labelKey: 'By Model' },
               { value: 'apikey', labelKey: 'By API Key' },
             ] as const
-          ).map((option) => (
-            <button
-              key={option.value}
-              type='button'
-              onClick={() => setTab(option.value)}
-              className={`inline-flex shrink-0 items-center rounded-md px-3 text-xs font-medium transition-colors ${
-                tab === option.value
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {t(option.labelKey)}
-            </button>
+          ).map((option, index) => (
+            <div key={option.value} className='flex items-center'>
+              {index > 0 && (
+                <div className='dark:bg-border h-3.5 w-px bg-[#d1d6db]' />
+              )}
+              <button
+                type='button'
+                onClick={() => setTab(option.value)}
+                className={cn(
+                  'cursor-pointer rounded-[6px] px-3 py-[5px] text-xs font-medium transition-colors',
+                  tab === option.value
+                    ? 'bg-[#ff5a5f] font-semibold text-white'
+                    : 'dark:text-muted-foreground text-[#666b78] hover:bg-[#e8e8eb] dark:hover:bg-white/10'
+                )}
+              >
+                {t(option.labelKey)}
+              </button>
+            </div>
           ))}
         </div>
       </div>
@@ -292,94 +280,89 @@ export function UsageBreakdownTable({
       {!loading && tab === 'model' && (
         <>
           <div className='overflow-x-auto'>
-            <Table className='min-w-[720px]'>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t('Model')}</TableHead>
-                  <TableHead className='text-right'>{t('Requests')}</TableHead>
-                  <TableHead className='text-right'>{t('Tokens')}</TableHead>
-                  <TableHead className='text-right'>
+            <table className='w-full min-w-[760px] border-collapse'>
+              <thead>
+                <tr className='dark:bg-muted/50 bg-[#f9fafb]'>
+                  <th className={cn(TH_CLASS, 'text-left')}>{t('Model')}</th>
+                  <th className={cn(TH_CLASS, 'text-right')}>
+                    {t('Requests')}
+                  </th>
+                  <th className={cn(TH_CLASS, 'text-right')}>{t('Tokens')}</th>
+                  <th className={cn(TH_CLASS, 'text-right')}>
                     {t('Avg Tok/Req')}
-                  </TableHead>
-                  <TableHead className='text-right'>
+                  </th>
+                  <th className={cn(TH_CLASS, 'text-right')}>
                     {t('Actual Cost')}
-                  </TableHead>
-                  <TableHead className='text-right'>
+                  </th>
+                  <th className={cn(TH_CLASS, 'text-right')}>
                     {t('Standard Cost')}
-                  </TableHead>
-                  <TableHead className='text-right'>{t('Savings')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+                  </th>
+                  <th className={cn(TH_CLASS, 'text-right')}>{t('Savings')}</th>
+                </tr>
+              </thead>
+              <tbody>
                 {modelPagination.pageRows.length === 0 && (
-                  <TableRow>
-                    <TableCell
+                  <tr>
+                    <td
                       colSpan={7}
-                      className='text-muted-foreground h-24 text-center text-sm'
+                      className='dark:text-muted-foreground h-24 text-center text-sm text-[#6b7280]'
                     >
                       {t('No data available')}
-                    </TableCell>
-                  </TableRow>
+                    </td>
+                  </tr>
                 )}
                 {modelPagination.pageRows.map((row) => (
-                  <>
-                    <TableRow
-                      key={row.model}
-                      className='cursor-pointer'
+                  <Fragment key={row.model}>
+                    <tr
+                      className='dark:border-border cursor-pointer border-b border-[#e5e7eb] transition-colors hover:bg-[#fafafa] dark:hover:bg-white/5'
                       onClick={() => toggleModel(row.model)}
                     >
-                      <TableCell className='font-medium'>
+                      <td className='px-3.5 py-[13px]'>
                         <span className='flex items-center gap-1.5'>
                           <ChevronDown
                             className={cn(
-                              'text-muted-foreground size-3.5 transition-transform',
+                              'size-3.5 text-[#99a1ab] transition-transform',
                               !expandedModels.has(row.model) && '-rotate-90'
                             )}
                           />
-                          {row.model}
+                          <span className='dark:text-foreground text-[13px] font-semibold text-[#111827]'>
+                            {row.model}
+                          </span>
                         </span>
-                      </TableCell>
-                      <TableCell className={numericCell}>
+                      </td>
+                      <td className={MUTED_NUM}>
                         {formatNumber(row.requests)}
-                      </TableCell>
-                      <TableCell className={numericCell}>
+                      </td>
+                      <td className={MUTED_NUM}>
                         {formatCompactNumber(row.tokens)}
-                      </TableCell>
-                      <TableCell className={numericCell}>
+                      </td>
+                      <td className={MUTED_NUM}>
                         {row.requests > 0
                           ? formatNumber(Math.round(row.tokens / row.requests))
                           : PLACEHOLDER}
-                      </TableCell>
-                      <TableCell className={cn(numericCell, 'text-success')}>
-                        {formatQuota(row.quota)}
-                      </TableCell>
-                      <TableCell
-                        className={cn(numericCell, 'text-muted-foreground')}
-                      >
-                        {PLACEHOLDER}
-                      </TableCell>
-                      <TableCell
-                        className={cn(numericCell, 'text-muted-foreground')}
-                      >
-                        {PLACEHOLDER}
-                      </TableCell>
-                    </TableRow>
+                      </td>
+                      <td className={GREEN_NUM}>{formatQuota(row.quota)}</td>
+                      <td className={DASH_NUM}>{PLACEHOLDER}</td>
+                      <td className={DASH_NUM}>{PLACEHOLDER}</td>
+                    </tr>
                     {expandedModels.has(row.model) &&
                       row.groups.map((groupRow) => (
-                        <TableRow
+                        <tr
                           key={`${row.model}-${groupRow.group}`}
-                          className='bg-muted/30'
+                          className='dark:border-border border-b border-[#e5e7eb] bg-[#fbfcfd] dark:bg-white/2'
                         >
-                          <TableCell className='text-muted-foreground pl-10 text-xs'>
-                            {groupLabel(groupRow.group)}
-                          </TableCell>
-                          <TableCell className={numericCell}>
+                          <td className='px-3.5 py-[9px] pl-9'>
+                            <span className='dark:text-muted-foreground text-xs text-[#9ca3af]'>
+                              {groupLabel(groupRow.group)}
+                            </span>
+                          </td>
+                          <td className={cn(MUTED_NUM, 'py-[9px] text-xs')}>
                             {formatNumber(groupRow.requests)}
-                          </TableCell>
-                          <TableCell className={numericCell}>
+                          </td>
+                          <td className={cn(MUTED_NUM, 'py-[9px] text-xs')}>
                             {formatCompactNumber(groupRow.tokens)}
-                          </TableCell>
-                          <TableCell className={numericCell}>
+                          </td>
+                          <td className={cn(MUTED_NUM, 'py-[9px] text-xs')}>
                             {groupRow.requests > 0
                               ? formatNumber(
                                   Math.round(
@@ -387,28 +370,22 @@ export function UsageBreakdownTable({
                                   )
                                 )
                               : PLACEHOLDER}
-                          </TableCell>
-                          <TableCell
-                            className={cn(numericCell, 'text-success')}
-                          >
+                          </td>
+                          <td className={cn(GREEN_NUM, 'py-[9px] text-xs')}>
                             {formatQuota(groupRow.quota)}
-                          </TableCell>
-                          <TableCell
-                            className={cn(numericCell, 'text-muted-foreground')}
-                          >
+                          </td>
+                          <td className={cn(DASH_NUM, 'py-[9px] text-xs')}>
                             {PLACEHOLDER}
-                          </TableCell>
-                          <TableCell
-                            className={cn(numericCell, 'text-muted-foreground')}
-                          >
+                          </td>
+                          <td className={cn(DASH_NUM, 'py-[9px] text-xs')}>
                             {PLACEHOLDER}
-                          </TableCell>
-                        </TableRow>
+                          </td>
+                        </tr>
                       ))}
-                  </>
+                  </Fragment>
                 ))}
-              </TableBody>
-            </Table>
+              </tbody>
+            </table>
           </div>
           <PaginationFooter
             page={modelPagination.page}
@@ -423,48 +400,51 @@ export function UsageBreakdownTable({
       {!loading && tab === 'apikey' && (
         <>
           <div className='overflow-x-auto'>
-            <Table className='min-w-[560px]'>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t('API Keys')}</TableHead>
-                  <TableHead className='text-right'>{t('Requests')}</TableHead>
-                  <TableHead className='text-right'>{t('Tokens')}</TableHead>
-                  <TableHead className='text-right'>{t('Cost')}</TableHead>
-                  <TableHead className='text-right'>{t('Last Used')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <table className='w-full min-w-[560px] border-collapse'>
+              <thead>
+                <tr className='dark:bg-muted/50 bg-[#f9fafb]'>
+                  <th className={cn(TH_CLASS, 'text-left')}>{t('API Keys')}</th>
+                  <th className={cn(TH_CLASS, 'text-right')}>
+                    {t('Requests')}
+                  </th>
+                  <th className={cn(TH_CLASS, 'text-right')}>{t('Tokens')}</th>
+                  <th className={cn(TH_CLASS, 'text-right')}>{t('Cost')}</th>
+                  <th className={cn(TH_CLASS, 'text-right')}>
+                    {t('Last Used')}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
                 {apiKeyPagination.pageRows.length === 0 && (
-                  <TableRow>
-                    <TableCell
+                  <tr>
+                    <td
                       colSpan={5}
-                      className='text-muted-foreground h-24 text-center text-sm'
+                      className='dark:text-muted-foreground h-24 text-center text-sm text-[#6b7280]'
                     >
                       {t('No data available')}
-                    </TableCell>
-                  </TableRow>
+                    </td>
+                  </tr>
                 )}
                 {apiKeyPagination.pageRows.map((row) => (
-                  <TableRow key={row.tokenId}>
-                    <TableCell className='font-medium'>{row.name}</TableCell>
-                    <TableCell className={numericCell}>
-                      {formatNumber(row.requests)}
-                    </TableCell>
-                    <TableCell className={numericCell}>
+                  <tr
+                    key={row.tokenId}
+                    className='dark:border-border border-b border-[#e5e7eb] transition-colors hover:bg-[#fafafa] dark:hover:bg-white/5'
+                  >
+                    <td className='dark:text-foreground px-3.5 py-[13px] text-[13px] font-semibold text-[#111827]'>
+                      {row.name}
+                    </td>
+                    <td className={MUTED_NUM}>{formatNumber(row.requests)}</td>
+                    <td className={MUTED_NUM}>
                       {formatCompactNumber(row.tokens)}
-                    </TableCell>
-                    <TableCell className={cn(numericCell, 'text-success')}>
-                      {formatQuota(row.quota)}
-                    </TableCell>
-                    <TableCell
-                      className={cn(numericCell, 'text-muted-foreground')}
-                    >
+                    </td>
+                    <td className={GREEN_NUM}>{formatQuota(row.quota)}</td>
+                    <td className={MUTED_NUM}>
                       {formatLastUsed(row.accessedTime)}
-                    </TableCell>
-                  </TableRow>
+                    </td>
+                  </tr>
                 ))}
-              </TableBody>
-            </Table>
+              </tbody>
+            </table>
           </div>
           <PaginationFooter
             page={apiKeyPagination.page}

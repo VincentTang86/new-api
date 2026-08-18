@@ -17,14 +17,13 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { VChart } from '@visactor/react-vchart'
-import { BarChart3 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { IconBadge } from '@/components/ui/icon-badge'
 import { useTheme } from '@/context/theme-provider'
 import { formatCompactNumber, formatQuota } from '@/lib/format'
 import { formatChartTime } from '@/lib/time'
+import { cn } from '@/lib/utils'
 import { VCHART_OPTION } from '@/lib/vchart'
 
 import { USAGE_METRIC_OPTIONS } from '../constants'
@@ -33,6 +32,21 @@ import type { QuotaDataItem, UsageGranularity, UsageMetric } from '../types'
 let themeManagerPromise: Promise<
   (typeof import('@visactor/vchart'))['ThemeManager']
 > | null = null
+
+// Design palette (muted tones). Models are ranked by total usage and
+// colored in order; the list cycles when there are more models.
+const MODEL_COLORS = [
+  '#6B798B',
+  '#ADBCCC',
+  '#E7DDD3',
+  '#CFD8E4',
+  '#E0E7DD',
+  '#B7C4D1',
+  '#D9CFC4',
+  '#94A3B2',
+  '#C9D6CB',
+  '#E5D8E0',
+]
 
 interface UsageOverviewChartProps {
   data: QuotaDataItem[]
@@ -87,10 +101,11 @@ export function UsageOverviewChart({
     return (value: number) => formatCompactNumber(value)
   }, [metric])
 
-  const chartValues = useMemo(() => {
+  const { chartValues, modelOrder } = useMemo(() => {
     // Aggregate hourly buckets into (time bucket × model) cells for the
     // selected metric; day granularity collapses 24 buckets into one key.
     const byTime = new Map<string, Map<string, number>>()
+    const modelTotals = new Map<string, number>()
     const timeOrder: string[] = []
     const sorted = [...data].sort(
       (a, b) => Number(a.created_at) - Number(b.created_at)
@@ -98,24 +113,26 @@ export function UsageOverviewChart({
     for (const item of sorted) {
       const timeKey = formatChartTime(Number(item.created_at), granularity)
       const model = item.model_name || t('Unknown')
+      const value = metricValue(item, metric)
       let modelMap = byTime.get(timeKey)
       if (!modelMap) {
         modelMap = new Map()
         byTime.set(timeKey, modelMap)
         timeOrder.push(timeKey)
       }
-      modelMap.set(
-        model,
-        (modelMap.get(model) ?? 0) + metricValue(item, metric)
-      )
+      modelMap.set(model, (modelMap.get(model) ?? 0) + value)
+      modelTotals.set(model, (modelTotals.get(model) ?? 0) + value)
     }
+    const order = [...modelTotals.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([model]) => model)
     const values: { Time: string; Model: string; value: number }[] = []
     for (const timeKey of timeOrder) {
       for (const [model, value] of byTime.get(timeKey) ?? []) {
         values.push({ Time: timeKey, Model: model, value })
       }
     }
-    return values
+    return { chartValues: values, modelOrder: order }
   }, [data, granularity, metric, t])
 
   const spec = useMemo(
@@ -126,17 +143,33 @@ export function UsageOverviewChart({
       yField: 'value',
       seriesField: 'Model',
       stack: true,
-      legends: { visible: true, orient: 'bottom' as const },
-      bar: { state: { hover: { stroke: '#000', lineWidth: 1 } } },
+      color: {
+        type: 'ordinal' as const,
+        domain: modelOrder,
+        range: MODEL_COLORS,
+      },
+      legends: {
+        visible: true,
+        orient: 'bottom' as const,
+        item: {
+          shape: { style: { symbolType: 'circle' as const, size: 8 } },
+          label: { style: { fontSize: 12 } },
+        },
+      },
       axes: [
         {
           orient: 'left' as const,
           label: {
+            style: { fontSize: 11 },
             formatMethod: (value: string | number) =>
               formatValue(Number(value) || 0),
           },
         },
-        { orient: 'bottom' as const, sampling: true },
+        {
+          orient: 'bottom' as const,
+          sampling: true,
+          label: { style: { fontSize: 11 } },
+        },
       ],
       tooltip: {
         dimension: {
@@ -160,7 +193,7 @@ export function UsageOverviewChart({
       theme: resolvedTheme === 'dark' ? 'dark' : 'light',
       background: 'transparent',
     }),
-    [chartValues, formatValue, resolvedTheme, t]
+    [chartValues, formatValue, modelOrder, resolvedTheme, t]
   )
 
   const chartKey = [
@@ -172,42 +205,46 @@ export function UsageOverviewChart({
   ].join('-')
 
   return (
-    <div className='overflow-hidden rounded-lg border'>
-      <div className='flex w-full flex-col gap-1.5 border-b px-3 py-2 sm:gap-3 sm:px-5 sm:py-3 lg:flex-row lg:items-center lg:justify-between'>
-        <div className='flex items-center gap-2'>
-          <IconBadge tone='info' size='sm'>
-            <BarChart3 />
-          </IconBadge>
-          <span className='text-sm font-semibold'>{t('Usage Overview')}</span>
-        </div>
-        <div className='flex flex-wrap items-center gap-2 sm:gap-3'>
-          <div className='bg-muted/60 inline-flex h-7 overflow-x-auto rounded-lg border p-0.5 sm:h-8'>
-            {USAGE_METRIC_OPTIONS.map((option) => (
-              <button
-                key={option.value}
-                type='button'
-                onClick={() => setMetric(option.value)}
-                className={`inline-flex shrink-0 items-center rounded-md px-3 text-xs font-medium transition-colors ${
-                  metric === option.value
-                    ? 'bg-background text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {t(option.labelKey)}
-              </button>
+    <div className='dark:bg-card dark:border-border flex flex-col gap-[18px] rounded-xl border border-[#e5e7eb] bg-white p-[22px]'>
+      <div className='flex flex-wrap items-center justify-between gap-2.5'>
+        <span className='dark:text-foreground text-[15px] font-semibold text-[#111827]'>
+          {t('Usage Overview')}
+        </span>
+        <div className='flex flex-wrap items-center gap-3.5'>
+          <div className='dark:bg-muted flex items-center rounded-[8px] bg-[#f5f5f7] p-0.5'>
+            {USAGE_METRIC_OPTIONS.map((option, index) => (
+              <div key={option.value} className='flex items-center'>
+                {index > 0 && (
+                  <div className='dark:bg-border h-3.5 w-px bg-[#d1d6db]' />
+                )}
+                <button
+                  type='button'
+                  onClick={() => setMetric(option.value)}
+                  className={cn(
+                    'cursor-pointer rounded-[6px] px-3 py-[5px] text-xs transition-colors',
+                    metric === option.value
+                      ? 'bg-[#ff5a5f] font-semibold text-white'
+                      : 'dark:text-muted-foreground font-medium text-[#666b78] hover:bg-[#e8e8eb] dark:hover:bg-white/10'
+                  )}
+                >
+                  {t(option.labelKey)}
+                </button>
+              </div>
             ))}
           </div>
-          <div className='flex items-center gap-2'>
+          <div className='dark:bg-border h-[18px] w-px bg-[#d9dee3]' />
+          <div className='flex items-center gap-2.5'>
             {GRANULARITY_OPTIONS.map((option) => (
               <button
                 key={option.value}
                 type='button'
                 onClick={() => onGranularityChange(option.value)}
-                className={`text-xs font-medium transition-colors ${
+                className={cn(
+                  'cursor-pointer text-xs font-medium transition-colors',
                   granularity === option.value
-                    ? 'text-foreground'
-                    : 'text-muted-foreground/60 hover:text-muted-foreground'
-                }`}
+                    ? 'dark:text-foreground text-[#111827]'
+                    : 'dark:text-muted-foreground/60 text-[#999ea8] hover:text-[#6b7280]'
+                )}
               >
                 {t(option.labelKey)}
               </button>
@@ -215,7 +252,7 @@ export function UsageOverviewChart({
           </div>
         </div>
       </div>
-      <div className='h-[260px] p-1.5 sm:h-80 sm:p-2'>
+      <div className='h-[240px]'>
         {themeReady && !loading && (
           <VChart key={chartKey} spec={spec} option={VCHART_OPTION} />
         )}

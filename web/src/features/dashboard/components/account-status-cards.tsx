@@ -19,8 +19,6 @@ For commercial licensing, please contact support@quantumnous.com
 import { useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { ApiKey } from '@/features/keys/types'
 import { formatQuota } from '@/lib/format'
@@ -47,46 +45,41 @@ export function AccountStatusCards({
   const inactiveCount = (apiKeys?.length ?? 0) - activeCount
 
   return (
-    <div className='grid gap-3 sm:grid-cols-2 sm:gap-4'>
-      <div className='bg-card flex flex-col gap-2 rounded-lg border px-4 py-3.5 sm:px-5 sm:py-4'>
+    <div className='flex flex-col gap-3.5 sm:flex-row'>
+      <div className='dark:bg-card dark:border-border flex min-w-0 flex-1 flex-col gap-2 rounded-xl border border-[#e5e7eb] bg-white px-5 py-4'>
         <div className='flex items-center gap-2'>
-          <span className='text-muted-foreground text-sm font-medium'>
+          <span className='dark:text-muted-foreground text-[13px] font-medium text-[#6b7280]'>
             {t('Credit Balance')}
           </span>
           {quota > 0 && (
-            <Badge
-              variant='outline'
-              className='border-success/30 text-success text-[11px]'
-            >
+            <span className='rounded-[4px] bg-[#ecfdf5] px-2 py-0.5 text-[11px] font-semibold text-[#10b981] dark:bg-[#10b981]/15'>
               {t('Available')}
-            </Badge>
+            </span>
           )}
         </div>
         <div className='flex items-center gap-3'>
-          <span className='text-2xl font-bold tracking-tight'>
+          <span className='dark:text-foreground text-[26px] font-bold tracking-tight text-[#111827]'>
             {formatQuota(quota)}
           </span>
-          <Button
+          <button
             type='button'
-            size='sm'
-            variant='secondary'
-            className='h-6 rounded-full px-3 text-xs'
+            className='cursor-pointer rounded-full bg-[#fff0f0] px-3 py-1 text-xs font-semibold text-[#ff5a5f] transition-colors hover:bg-[#ffe4e4] dark:bg-[#ff5a5f]/15 dark:hover:bg-[#ff5a5f]/25'
             onClick={() => void navigate({ to: '/wallet' })}
           >
             {t('Add Credits')}
-          </Button>
+          </button>
         </div>
       </div>
 
-      <div className='bg-card flex flex-col gap-2 rounded-lg border px-4 py-3.5 sm:px-5 sm:py-4'>
+      <div className='dark:bg-card dark:border-border flex min-w-0 flex-1 flex-col gap-2 rounded-xl border border-[#e5e7eb] bg-white px-5 py-4'>
         <div className='flex items-center gap-2'>
-          <span className='text-muted-foreground text-sm font-medium'>
+          <span className='dark:text-muted-foreground text-[13px] font-medium text-[#6b7280]'>
             {t('API Keys')}
           </span>
           {apiKeysLoading ? (
             <Skeleton className='h-4 w-24' />
           ) : (
-            <span className='text-muted-foreground/70 text-xs'>
+            <span className='text-xs text-[#99a1ab]'>
               {t('{{active}} Active / {{inactive}} Inactive', {
                 active: activeCount,
                 inactive: inactiveCount,
@@ -98,19 +91,17 @@ export function AccountStatusCards({
           {apiKeysLoading ? (
             <Skeleton className='h-8 w-10' />
           ) : (
-            <span className='text-2xl font-bold tracking-tight'>
+            <span className='dark:text-foreground text-[26px] font-bold tracking-tight text-[#111827]'>
               {apiKeys?.length ?? 0}
             </span>
           )}
-          <Button
+          <button
             type='button'
-            size='sm'
-            variant='link'
-            className='h-6 px-0 text-xs'
+            className='cursor-pointer text-xs font-semibold text-[#ff5a5f] hover:underline'
             onClick={() => void navigate({ to: '/keys' })}
           >
             {t('Manage Keys')}
-          </Button>
+          </button>
         </div>
       </div>
     </div>

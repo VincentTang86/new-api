@@ -16,18 +16,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import {
-  Coins,
-  Gauge,
-  Hash,
-  HelpCircle,
-  Layers,
-  ShieldCheck,
-  type LucideIcon,
-} from 'lucide-react'
+import { HelpCircle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
-import { IconBadge, type IconBadgeTone } from '@/components/ui/icon-badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   Tooltip,
@@ -35,7 +26,6 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { formatCompactNumber, formatNumber, formatQuota } from '@/lib/format'
-import { cn } from '@/lib/utils'
 
 import { safeDivide } from '../lib'
 import type { UserLogMetrics } from '../types'
@@ -53,8 +43,6 @@ interface KpiCardItem {
   key: string
   title: string
   tip: string
-  icon: LucideIcon
-  iconTone: IconBadgeTone
   value: string
   description: string
 }
@@ -95,8 +83,6 @@ export function KpiCards({
       key: 'requests',
       title: t('Requests'),
       tip: t('Total API requests completed in the selected period.'),
-      icon: Hash,
-      iconTone: 'info',
       value: formatNumber(totalCount),
       description: `${t('Avg RPM')}: ${formatNumber(avgRpm)} · ${formatCompactNumber(tokensPerRequest)} ${t('tok/req')}`,
     },
@@ -104,8 +90,6 @@ export function KpiCards({
       key: 'cost',
       title: t('Cost'),
       tip: t('Total spend based on tokens consumed at your rates.'),
-      icon: Coins,
-      iconTone: 'success',
       value: formatQuota(totalQuota),
       description: `${t('Avg')}: ${avgCostPerRequest}/${t('req')}`,
     },
@@ -113,8 +97,6 @@ export function KpiCards({
       key: 'tokens',
       title: t('Tokens'),
       tip: t('Total tokens processed, including both input and output.'),
-      icon: Layers,
-      iconTone: 'chart-4',
       value: formatCompactNumber(totalTokens),
       description: `${inOutLine} · ${formatCompactNumber(avgTpm)} TPM`,
     },
@@ -122,8 +104,6 @@ export function KpiCards({
       key: 'success-rate',
       title: t('Success Rate'),
       tip: t('Share of requests completed without error.'),
-      icon: ShieldCheck,
-      iconTone: 'chart-2',
       value: successRate,
       description: errorsLine,
     },
@@ -131,65 +111,50 @@ export function KpiCards({
       key: 'avg-response',
       title: t('Avg Response'),
       tip: t('Average end-to-end request latency.'),
-      icon: Gauge,
-      iconTone: 'warning',
       value: avgResponse,
       description: `P95: ${PLACEHOLDER}`,
     },
   ]
 
   return (
-    <div className='overflow-hidden rounded-lg border'>
-      <div className='divide-border/60 grid min-w-0 grid-cols-2 divide-x sm:grid-cols-3 lg:grid-cols-5'>
-        {cards.map((card, index) => {
-          const Icon = card.icon
-          return (
-            <div
-              key={card.key}
-              className={cn(
-                'min-w-0 px-2.5 py-1.5 sm:px-5 sm:py-4',
-                index === cards.length - 1 && 'col-span-2 sm:col-span-1'
-              )}
-            >
-              <div className='flex items-center gap-1.5 sm:gap-2'>
-                <IconBadge tone={card.iconTone} size='sm'>
-                  <Icon />
-                </IconBadge>
-                <span className='text-muted-foreground truncate text-xs font-medium sm:text-sm'>
-                  {card.title}
-                </span>
-                <Tooltip>
-                  <TooltipTrigger
-                    render={
-                      <span className='text-muted-foreground/50 hover:text-muted-foreground hidden shrink-0 cursor-help sm:inline-flex' />
-                    }
-                  >
-                    <HelpCircle className='size-3.5' />
-                  </TooltipTrigger>
-                  <TooltipContent className='max-w-56'>
-                    {card.tip}
-                  </TooltipContent>
-                </Tooltip>
+    <div className='flex flex-wrap gap-3'>
+      {cards.map((card) => (
+        <div
+          key={card.key}
+          className='dark:bg-card dark:border-border flex min-w-[150px] flex-1 flex-col gap-2.5 rounded-xl border border-[#e5e7eb] bg-white p-[18px]'
+        >
+          <div className='flex items-center gap-1.5'>
+            <span className='dark:text-muted-foreground text-xs font-semibold whitespace-nowrap text-[#6b7280]'>
+              {card.title}
+            </span>
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <span className='hover:text-muted-foreground shrink-0 cursor-help text-[#9ca3af]' />
+                }
+              >
+                <HelpCircle className='size-3.5' />
+              </TooltipTrigger>
+              <TooltipContent className='max-w-56'>{card.tip}</TooltipContent>
+            </Tooltip>
+          </div>
+          {totalsLoading ? (
+            <>
+              <Skeleton className='h-8 w-20' />
+              <Skeleton className='h-3.5 w-28' />
+            </>
+          ) : (
+            <>
+              <div className='dark:text-foreground text-[26px] leading-tight font-bold tracking-tight text-[#111827] tabular-nums'>
+                {card.value}
               </div>
-              {totalsLoading ? (
-                <>
-                  <Skeleton className='mt-1 h-5 w-16 sm:mt-2 sm:h-7 sm:w-20' />
-                  <Skeleton className='mt-1 hidden h-3.5 w-28 md:block' />
-                </>
-              ) : (
-                <>
-                  <div className='mt-1 truncate font-mono text-base font-semibold tracking-tight tabular-nums sm:mt-2 sm:text-2xl'>
-                    {card.value}
-                  </div>
-                  <div className='text-muted-foreground/60 mt-1 hidden truncate text-xs md:block'>
-                    {card.description}
-                  </div>
-                </>
-              )}
-            </div>
-          )
-        })}
-      </div>
+              <div className='dark:text-muted-foreground text-[11px] leading-relaxed text-[#6b7280]'>
+                {card.description}
+              </div>
+            </>
+          )}
+        </div>
+      ))}
     </div>
   )
 }

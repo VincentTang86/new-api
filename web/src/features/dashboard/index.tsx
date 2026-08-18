@@ -23,7 +23,6 @@ import { useTranslation } from 'react-i18next'
 
 import { SectionPageLayout } from '@/components/layout'
 import { FadeIn } from '@/components/page-transition'
-import { Button } from '@/components/ui/button'
 import { getUserGroups } from '@/lib/api'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/auth-store'
@@ -133,32 +132,45 @@ export function Dashboard() {
 
   return (
     <SectionPageLayout>
-      <SectionPageLayout.Title>{t('Dashboard')}</SectionPageLayout.Title>
+      <SectionPageLayout.Title>
+        {displayName
+          ? t('Welcome back, {{name}}', { name: displayName })
+          : t('Welcome back')}
+      </SectionPageLayout.Title>
       <SectionPageLayout.Actions>
-        <Button
+        <button
           type='button'
-          variant='outline'
-          size='sm'
           onClick={handleRefresh}
           disabled={refreshing}
+          className='dark:border-border dark:bg-card flex cursor-pointer items-center gap-[7px] rounded-[6px] border border-[#e5e7eb] bg-white px-3.5 py-[8px] transition-colors hover:bg-[#f9fafb] disabled:cursor-default dark:hover:bg-white/10'
         >
-          <RefreshCw className={cn('size-3.5', refreshing && 'animate-spin')} />
-          {refreshing ? t('Refreshing…') : t('Refresh')}
-        </Button>
+          <RefreshCw
+            className={cn(
+              'size-3.5',
+              refreshing
+                ? 'animate-spin text-[#ff5a5f]'
+                : 'dark:text-muted-foreground text-[#6b7280]'
+            )}
+            style={refreshing ? { animationDuration: '0.7s' } : undefined}
+          />
+          <span
+            className={cn(
+              'text-[13px] font-semibold',
+              refreshing
+                ? 'text-[#ff5a5f]'
+                : 'dark:text-foreground text-[#111827]'
+            )}
+          >
+            {refreshing ? t('Refreshing…') : t('Refresh')}
+          </span>
+        </button>
       </SectionPageLayout.Actions>
       <SectionPageLayout.Content>
-        <div className='space-y-3 sm:space-y-4'>
+        <div className='space-y-6 sm:space-y-7'>
           <FadeIn>
-            <div className='flex flex-col gap-0.5'>
-              <p className='text-lg font-semibold'>
-                {displayName
-                  ? t('Welcome back, {{name}}', { name: displayName })
-                  : t('Welcome back')}
-              </p>
-              <p className='text-muted-foreground text-sm'>
-                {t('Track your real-time LLM API routing and costs.')}
-              </p>
-            </div>
+            <p className='dark:text-muted-foreground -mt-2 text-[13px] text-[#6b7280]'>
+              {t('Track your real-time LLM API routing and costs.')}
+            </p>
           </FadeIn>
           <FadeIn>
             <AccountStatusCards
@@ -167,8 +179,8 @@ export function Dashboard() {
             />
           </FadeIn>
           <FadeIn delay={0.05}>
-            <div className='flex flex-col gap-2'>
-              <span className='text-muted-foreground text-xs font-semibold tracking-wide uppercase'>
+            <div className='flex flex-col gap-2.5'>
+              <span className='text-xs font-semibold tracking-[0.5px] text-[#9ca3af] uppercase'>
                 {t('Usage Analytics')}
               </span>
               <TimeRangeFilter
