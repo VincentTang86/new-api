@@ -692,6 +692,44 @@ func SumUsedToken(logType int, startTimestamp int64, endTimestamp int64, modelNa
 	return token
 }
 
+// UserLogMetrics aggregates one user's consume/error logs within a time range
+// for the console dashboard KPI cards (success rate, avg latency, in/out tokens).
+type UserLogMetrics struct {
+	PromptTokens     int64   `json:"prompt_tokens"`
+	CompletionTokens int64   `json:"completion_tokens"`
+	ConsumeCount     int64   `json:"consume_count"`
+	ErrorCount       int64   `json:"error_count"`
+	AvgUseTime       float64 `json:"avg_use_time"` // seconds, consume logs only
+}
+
+func GetUserLogMetrics(userId int, startTimestamp int64, endTimestamp int64) (metrics UserLogMetrics, err error) {
+	consumeQuery := LOG_DB.Table("logs").
+		Select("count(*) consume_count, COALESCE(sum(prompt_tokens), 0) prompt_tokens, COALESCE(sum(completion_tokens), 0) completion_tokens, COALESCE(avg(use_time), 0) avg_use_time").
+		Where("user_id = ?", userId).
+		Where("type = ?", LogTypeConsume)
+	errorQuery := LOG_DB.Table("logs").
+		Select("count(*) error_count").
+		Where("user_id = ?", userId).
+		Where("type = ?", LogTypeError)
+	if startTimestamp != 0 {
+		consumeQuery = consumeQuery.Where("created_at >= ?", startTimestamp)
+		errorQuery = errorQuery.Where("created_at >= ?", startTimestamp)
+	}
+	if endTimestamp != 0 {
+		consumeQuery = consumeQuery.Where("created_at <= ?", endTimestamp)
+		errorQuery = errorQuery.Where("created_at <= ?", endTimestamp)
+	}
+	if err := consumeQuery.Scan(&metrics).Error; err != nil {
+		common.SysError("failed to query user log metrics: " + err.Error())
+		return metrics, errors.New("查询统计数据失败")
+	}
+	if err := errorQuery.Scan(&metrics).Error; err != nil {
+		common.SysError("failed to query user error log metrics: " + err.Error())
+		return metrics, errors.New("查询统计数据失败")
+	}
+	return metrics, nil
+}
+
 func CountOldLog(ctx context.Context, targetTimestamp int64) (int64, error) {
 	var total int64
 	if err := LOG_DB.WithContext(ctx).Model(&Log{}).Where("created_at < ?", targetTimestamp).Count(&total).Error; err != nil {

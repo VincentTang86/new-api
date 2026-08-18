@@ -122,6 +122,30 @@ func GetLogsStat(c *gin.Context) {
 	return
 }
 
+func GetLogsSelfMetrics(c *gin.Context) {
+	userId := c.GetInt("id")
+	startTimestamp, _ := strconv.ParseInt(c.Query("start_timestamp"), 10, 64)
+	endTimestamp, _ := strconv.ParseInt(c.Query("end_timestamp"), 10, 64)
+	// 与 /api/data/self 保持一致的时间跨度限制
+	if endTimestamp-startTimestamp > 2592000 {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "时间跨度不能超过 1 个月",
+		})
+		return
+	}
+	metrics, err := model.GetUserLogMetrics(userId, startTimestamp, endTimestamp)
+	if err != nil {
+		common.ApiError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "",
+		"data":    metrics,
+	})
+}
+
 func GetLogsSelfStat(c *gin.Context) {
 	username := c.GetString("username")
 	logType, _ := strconv.Atoi(c.Query("type"))
