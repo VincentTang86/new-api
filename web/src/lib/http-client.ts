@@ -49,6 +49,10 @@ export const api = axios.create({
   },
 })
 
+// Concurrent 401s share one refresh, but each rejection lands in its own
+// interceptor run. A stable id collapses them into a single toast.
+const SESSION_EXPIRED_TOAST_ID = 'auth-session-expired'
+
 const inFlightGet = new Map<string, Promise<unknown>>()
 const originalGet = api.get.bind(api)
 
@@ -103,6 +107,13 @@ api.interceptors.response.use(
     const status = error?.response?.status
 
     if (status === 401) {
+      // Signing out clears the store before React unmounts the authenticated
+      // tree, so its queries refetch once without a token. Those 401s are the
+      // expected outcome of a sign-out the user just asked for: the session is
+      // already gone and the sign-out flow owns the navigation, so stay quiet.
+      const hadSession = Boolean(useAuthStore.getState().auth.user)
+      const notifyExpired = hadSession && !skipErrorHandler
+
       if (config && !config.skipAuthRefresh && !config.authRetry) {
         config.authRetry = true
         const outcome = await refreshAuthentication()
@@ -118,15 +129,19 @@ api.interceptors.response.use(
         }
 
         if (outcome.kind === 'anonymous' || outcome.kind === 'out_of_sync') {
-          if (!skipErrorHandler) toast.error(t('Session expired!'))
-          redirectToSignIn()
+          if (notifyExpired) {
+            toast.error(t('Session expired!'), { id: SESSION_EXPIRED_TOAST_ID })
+          }
+          if (hadSession) redirectToSignIn()
         }
       } else if (config?.authRetry) {
         clearAuthentication(false)
-        if (!skipErrorHandler) toast.error(t('Session expired!'))
-        redirectToSignIn()
-      } else if (!skipErrorHandler) {
-        toast.error(t('Session expired!'))
+        if (notifyExpired) {
+          toast.error(t('Session expired!'), { id: SESSION_EXPIRED_TOAST_ID })
+        }
+        if (hadSession) redirectToSignIn()
+      } else if (notifyExpired) {
+        toast.error(t('Session expired!'), { id: SESSION_EXPIRED_TOAST_ID })
       }
     } else if (!skipErrorHandler) {
       const messageKey = getServerErrorMessageKey(error)
