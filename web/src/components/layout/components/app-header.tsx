@@ -16,10 +16,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { ConfigDrawer } from '@/components/config-drawer'
-import { LanguageSwitcher } from '@/components/language-switcher'
 import { NotificationPopover } from '@/components/notification-popover'
 import { ProfileDropdown } from '@/components/profile-dropdown'
+import { PublicLanguageSwitcher } from '@/components/public-language-switcher'
+import { PublicThemeToggle } from '@/components/public-theme-toggle'
 import { Search } from '@/components/search'
 import { useNotifications } from '@/hooks/use-notifications'
 import { useTopNavLinks } from '@/hooks/use-top-nav-links'
@@ -82,11 +82,6 @@ type AppHeaderProps = {
    */
   showNotifications?: boolean
   /**
-   * Whether to show config drawer
-   * @default true
-   */
-  showConfigDrawer?: boolean
-  /**
    * Whether to show profile dropdown
    * @default true
    */
@@ -100,7 +95,6 @@ export function AppHeader({
   showSearch = true,
   rightContent,
   showNotifications = true,
-  showConfigDrawer = true,
   showProfileDropdown = true,
 }: AppHeaderProps) {
   // Prioritize dynamically generated links from backend
@@ -120,13 +114,15 @@ export function AppHeader({
         ) : null}
 
         {rightContent ?? (
-          <div className='ms-auto flex items-center gap-1 sm:gap-2'>
+          <div className='ms-auto flex items-center gap-3 sm:gap-4'>
             {showTopNav && (
               <div className='me-1 hidden lg:block'>
                 <TopNav links={links} />
               </div>
             )}
             {showSearch && <Search />}
+            <PublicLanguageSwitcher />
+            <PublicThemeToggle />
             {showNotifications && (
               <NotificationPopover
                 open={notifications.popoverOpen}
@@ -139,8 +135,6 @@ export function AppHeader({
                 loading={notifications.loading}
               />
             )}
-            <LanguageSwitcher />
-            {showConfigDrawer && <ConfigDrawer />}
             {showProfileDropdown && <ProfileDropdown />}
           </div>
         )}

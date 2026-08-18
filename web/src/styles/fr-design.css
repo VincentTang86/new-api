@@ -69,6 +69,19 @@ body.fr-design.fr-design.fr-design {
   --console-header-bg: #fcfbfa;
   --console-faint: #9ca3af;
 
+  /* Public-design components (language switcher, theme toggle, profile
+   * pill) also render inside the console header; alias the pd tokens they
+   * consume so they resolve outside the `.public-design` shell, which
+   * re-defines them for the marketing pages. */
+  --pd-primary: var(--primary);
+  --pd-ink: var(--foreground);
+  --pd-muted-2: var(--muted-foreground);
+  --pd-border: var(--border);
+  --pd-surface: var(--card);
+  --pd-surface-muted: var(--muted);
+  --pd-gradient-from: #ff5a5f;
+  --pd-gradient-to: #c2185b;
+
   --font-body: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, sans-serif;
   font-family: var(--font-body);
 }
