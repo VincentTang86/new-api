@@ -17,32 +17,27 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import {
-  Box,
+  ChartLine,
+  ClockArrowUp,
   CreditCard,
-  FileText,
-  FlaskConical,
-  Key,
-  LayoutDashboard,
-  ListTodo,
-  MessageSquare,
-  Radio,
-  ServerCog,
+  List,
+  LockKeyhole,
+  MessageSquareText,
   Settings,
-  Ticket,
-  User,
-  Users,
-  Wallet,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { type SidebarData } from '@/components/layout/types'
-import { ROLE } from '@/lib/roles'
 
 /**
  * Root navigation groups for the application sidebar.
  *
  * These are shown when the URL does not match any nested sidebar view
  * registered in `layout/lib/sidebar-view-registry.ts`.
+ *
+ * The three groups mirror the FairRouter console design. Administration lives
+ * on the legacy console instead, so the admin routes stay reachable by URL (and
+ * keep their own role guards) but have no entry here.
  */
 export function useSidebarData(): SidebarData {
   const { t } = useTranslation()
@@ -56,98 +51,50 @@ export function useSidebarData(): SidebarData {
           {
             title: t('Playground'),
             url: '/playground',
-            icon: FlaskConical,
-          },
-          {
-            title: t('Chat'),
-            icon: MessageSquare,
-            type: 'chat-presets',
+            icon: MessageSquareText,
           },
         ],
       },
       {
         id: 'general',
-        title: t('General'),
+        title: t('API'),
         items: [
           {
             title: t('Dashboard'),
             url: '/dashboard',
-            icon: LayoutDashboard,
+            icon: ChartLine,
           },
           {
             title: t('API Keys'),
             url: '/keys',
-            icon: Key,
+            icon: LockKeyhole,
           },
           {
-            title: t('Usage Logs'),
+            title: t('Request Logs'),
             url: '/usage-logs/common',
-            icon: FileText,
+            icon: List,
           },
           {
-            title: t('Task Logs'),
+            title: t('Async Tasks'),
             url: '/usage-logs/task',
             activeUrls: ['/usage-logs/drawing'],
             configUrls: ['/usage-logs/drawing', '/usage-logs/task'],
-            icon: ListTodo,
+            icon: ClockArrowUp,
           },
         ],
       },
       {
         id: 'personal',
-        title: t('Personal'),
+        title: t('Account'),
         items: [
           {
             title: t('Credits'),
             url: '/wallet',
-            icon: Wallet,
-          },
-          {
-            title: t('Profile'),
-            url: '/profile',
-            icon: User,
-          },
-        ],
-      },
-      {
-        id: 'admin',
-        title: t('Admin'),
-        items: [
-          {
-            title: t('Channels'),
-            url: '/channels',
-            icon: Radio,
-          },
-          {
-            title: t('Models'),
-            url: '/models/metadata',
-            icon: Box,
-          },
-          {
-            title: t('Users'),
-            url: '/users',
-            icon: Users,
-          },
-          {
-            title: t('Redemption Codes'),
-            url: '/redemption-codes',
-            icon: Ticket,
-          },
-          {
-            title: t('Subscriptions'),
-            url: '/subscriptions',
             icon: CreditCard,
           },
           {
-            title: t('System Info'),
-            url: '/system-info',
-            icon: ServerCog,
-            requiredRole: ROLE.SUPER_ADMIN,
-          },
-          {
-            title: t('System Settings'),
-            url: '/system-settings/site',
-            activeUrls: ['/system-settings'],
+            title: t('Account Settings'),
+            url: '/profile',
             icon: Settings,
           },
         ],

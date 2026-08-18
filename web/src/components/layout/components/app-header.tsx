@@ -21,7 +21,7 @@ import { PublicLanguageSwitcher } from '@/components/public-language-switcher'
 import { PublicThemeToggle } from '@/components/public-theme-toggle'
 import { Search } from '@/components/search'
 import { useNotifications } from '@/hooks/use-notifications'
-import { useTopNavLinks } from '@/hooks/use-top-nav-links'
+import { usePublicNavLinks } from '@/hooks/use-public-nav-links'
 
 import { defaultTopNavLinks } from '../config/top-nav.config'
 import { type TopNavLink } from '../types'
@@ -97,8 +97,9 @@ export function AppHeader({
   showNotifications = true,
   showProfileDropdown = true,
 }: AppHeaderProps) {
-  // Prioritize dynamically generated links from backend
-  const dynamicLinks = useTopNavLinks()
+  // Same five entries as the public header, so the design's navigation does
+  // not change shape when a visitor crosses into the console.
+  const dynamicLinks = usePublicNavLinks()
   const links = dynamicLinks.length > 0 ? dynamicLinks : navLinks
 
   // Notifications hook

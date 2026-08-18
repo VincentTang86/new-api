@@ -19,15 +19,16 @@ For commercial licensing, please contact support@quantumnous.com
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import type { TopNavLink } from '@/components/layout/types'
 import { LANDING_FALLBACK_DOCS_URL } from '@/features/home/landing/constants'
 import { useStatus } from '@/hooks/use-status'
-import type { TopNavLink } from '@/hooks/use-top-nav-links'
 import { parseHeaderNavModulesFromStatus } from '@/lib/nav-modules'
 import { useAuthStore } from '@/stores/auth-store'
 
 /**
- * Public-header navigation from the marketing design: Home, Models & Pricing,
- * Playground, Docs, Contact Us.
+ * Header navigation from the FairRouter design: Home, Models & Pricing,
+ * Playground, Docs, Contact Us. Shared by the public header and the console
+ * header so both render the same five entries.
  *
  * - Playground navigates to /playground — the route sits under the
  *   authenticated tree, so its guard sends signed-out visitors to /sign-in
@@ -38,8 +39,8 @@ import { useAuthStore } from '@/stores/auth-store'
  * - Contact Us routes to the existing About page.
  *
  * Home and pricing keep honoring the backend `HeaderNavModules` switches, so
- * admins can still hide them. The console's `useTopNavLinks` (full
- * module-driven list) is untouched.
+ * admins can still hide them. The design has no Console, Rankings or About
+ * entry, so those switches no longer have anything to drive.
  */
 export function usePublicNavLinks(): TopNavLink[] {
   const { t } = useTranslation()
@@ -63,7 +64,11 @@ export function usePublicNavLinks(): TopNavLink[] {
   const pricing = modules?.pricing
   if (pricing && typeof pricing === 'object' && pricing.enabled) {
     const requiresAuth = pricing.requireAuth && !isAuthed
-    links.push({ title: t('Models & Pricing'), href: '/pricing', requiresAuth })
+    links.push({
+      title: t('Models & Pricing'),
+      href: '/pricing',
+      requiresAuth,
+    })
   }
 
   const docsUrl =

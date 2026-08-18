@@ -5355,6 +5355,7 @@
     "Request Logs": "Журнал запросов",
     "Async Tasks": "Асинхронные задачи",
     "Credits": "Баланс",
+    "Account": "Аккаунт",
     "Account Settings": "Настройки аккаунта",
     "Account menu": "Меню аккаунта",
     "{{modelCount}} Curated Models · One OpenAI-Compatible API": "{{modelCount}} отобранных моделей · Один API, совместимый с OpenAI",
