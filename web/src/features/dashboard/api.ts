@@ -16,78 +16,59 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
+import { getApiKeys } from '@/features/keys/api'
+import type { ApiKey } from '@/features/keys/types'
 import { api } from '@/lib/api'
 
-import type {
-  FlowQuotaDataItem,
-  QuotaDataItem,
-  UptimeGroupResult,
-} from './types'
+import type { FlowQuotaDataItem, QuotaDataItem, UserLogMetrics } from './types'
 
-// ============================================================================
-// Dashboard APIs
-// ============================================================================
-
-// ----------------------------------------------------------------------------
-// Quota & Usage Data
-// ----------------------------------------------------------------------------
-
-// Get user quota data within a time range
-// Admin users get all users' data by default.
-export async function getUserQuotaDates(
-  params: {
-    start_timestamp: number
-    end_timestamp: number
-    default_time?: string
-    username?: string
-  },
-  isAdmin = false
-) {
-  const endpoint = isAdmin ? '/api/data' : '/api/data/self'
-  const res = await api.get<{ success: boolean; data: QuotaDataItem[] }>(
-    endpoint,
-    { params }
-  )
-  return res.data
-}
-
-// ----------------------------------------------------------------------------
-// System Monitoring
-// ----------------------------------------------------------------------------
-
-export async function getUserQuotaDataByUsers(params: {
+interface RangeParams {
   start_timestamp: number
   end_timestamp: number
-}) {
-  const res = await api.get<{ success: boolean; data: QuotaDataItem[] }>(
-    '/api/data/users',
-    { params }
-  )
+}
+
+// Hourly usage buckets for the signed-in user (feeds KPI cards + trend chart)
+export async function getSelfQuotaDates(params: RangeParams) {
+  const res = await api.get<{
+    success: boolean
+    data?: QuotaDataItem[]
+    message?: string
+  }>('/api/data/self', { params })
   return res.data
 }
 
-export async function getFlowQuotaDates(
-  params: {
-    start_timestamp: number
-    end_timestamp: number
-    default_time?: string
-    username?: string
-  },
-  isAdmin = false
-) {
-  const endpoint = isAdmin ? '/api/data/flow' : '/api/data/flow/self'
+// token × group × model aggregation for the signed-in user (feeds breakdown table)
+export async function getSelfFlowQuotaDates(params: RangeParams) {
   const res = await api.get<{
     success: boolean
     data?: FlowQuotaDataItem[]
     message?: string
-  }>(endpoint, { params })
+  }>('/api/data/flow/self', { params })
   return res.data
 }
 
-// Get uptime monitoring status for all services
-export async function getUptimeStatus() {
-  const res = await api.get<{ success: boolean; data: UptimeGroupResult[] }>(
-    '/api/uptime/status'
-  )
+// Consume/error log aggregation (success rate, avg latency, in/out tokens)
+export async function getSelfLogMetrics(params: RangeParams) {
+  const res = await api.get<{
+    success: boolean
+    data?: UserLogMetrics
+    message?: string
+  }>('/api/log/self/metrics', { params })
   return res.data
+}
+
+const TOKEN_PAGE_SIZE = 100
+const TOKEN_MAX_PAGES = 50
+
+// Fetch the full API-key list (key count / status split / accessed_time join)
+export async function getAllApiKeys(): Promise<ApiKey[]> {
+  const keys: ApiKey[] = []
+  for (let page = 1; page <= TOKEN_MAX_PAGES; page++) {
+    const res = await getApiKeys({ p: page, size: TOKEN_PAGE_SIZE })
+    const data = res?.data
+    if (!res?.success || !data?.items?.length) break
+    keys.push(...data.items)
+    if (keys.length >= data.total) break
+  }
+  return keys
 }
