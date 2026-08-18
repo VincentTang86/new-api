@@ -26,7 +26,7 @@ import { IconBadge, type IconBadgeTone } from '@/components/ui/icon-badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { getUserAvatarFallback, getUserAvatarStyle } from '@/lib/avatar'
 import { formatCompactNumber, formatQuota } from '@/lib/format'
-import { getRoleLabel } from '@/lib/roles'
+import { ROLE, getRoleLabel } from '@/lib/roles'
 
 import { getDisplayName } from '../lib'
 import type { UserProfile } from '../types'
@@ -83,7 +83,9 @@ export function ProfileHeader({ profile, loading }: ProfileHeaderProps) {
   const avatarName = profile.username || displayName
   const avatarFallback = getUserAvatarFallback(avatarName)
   const avatarFallbackStyle = getUserAvatarStyle(avatarName)
-  const roleLabel = getRoleLabel(profile.role)
+  // Account tier and user group are operational details: only staff accounts
+  // see them on their own profile.
+  const isStaffAccount = profile.role >= ROLE.ADMIN
   const stats: {
     label: string
     value: string
@@ -132,11 +134,13 @@ export function ProfileHeader({ profile, loading }: ProfileHeaderProps) {
               <h1 className='truncate text-xl font-semibold tracking-tight sm:text-2xl'>
                 {displayName}
               </h1>
-              <StatusBadge
-                label={roleLabel}
-                variant='neutral'
-                copyable={false}
-              />
+              {isStaffAccount && (
+                <StatusBadge
+                  label={getRoleLabel(profile.role)}
+                  variant='neutral'
+                  copyable={false}
+                />
+              )}
               <StatusBadge
                 label={`${t('User ID')} ${profile.id}`}
                 variant='info'
@@ -152,7 +156,7 @@ export function ProfileHeader({ profile, loading }: ProfileHeaderProps) {
                   <span className='truncate'>{profile.email}</span>
                 </>
               )}
-              {profile.group && (
+              {isStaffAccount && profile.group && (
                 <>
                   <span>•</span>
                   <span className='truncate'>{profile.group}</span>
