@@ -5434,6 +5434,10 @@
     "Avg Tok/Req": "Ср. токенов/запрос",
     "Actual Cost": "Фактические расходы",
     "Standard Cost": "Стандартный тариф",
-    "{{page}} of {{totalPages}}": "{{page}} из {{totalPages}}"
+    "{{page}} of {{totalPages}}": "{{page}} из {{totalPages}}",
+    "Start date": "Дата начала",
+    "End date": "Дата окончания",
+    "Start time": "Время начала",
+    "End time": "Время окончания"
   }
 }

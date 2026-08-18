@@ -63,14 +63,38 @@ export function resolvePresetRange(key: DashboardRangeKey): DashboardRange {
   }
 }
 
+export interface DayTime {
+  hours: number
+  minutes: number
+}
+
+export const DAY_START: DayTime = { hours: 0, minutes: 0 }
+export const DAY_END: DayTime = { hours: 23, minutes: 59 }
+
+/**
+ * Times filter exactly. Note that `quota_data` is pre-aggregated into hour
+ * buckets keyed by bucket start, so for quota-driven views a partial hour
+ * only shows from the next full bucket; the log-metrics endpoint filters to
+ * the minute.
+ */
 export function resolveCustomRange(
   startDay: Date,
-  endDay: Date
+  endDay: Date,
+  startTime: DayTime = DAY_START,
+  endTime: DayTime = DAY_END
 ): DashboardRange {
-  const start = dayjs(startDay).startOf('day')
-  let end = dayjs(endDay).endOf('day')
+  const start = dayjs(startDay)
+    .startOf('day')
+    .add(startTime.hours, 'hour')
+    .add(startTime.minutes, 'minute')
+  let end = dayjs(endDay)
+    .startOf('day')
+    .add(endTime.hours, 'hour')
+    .add(endTime.minutes, 'minute')
+    .endOf('minute')
   const now = dayjs()
   if (end.isAfter(now)) end = now
+  if (end.isBefore(start)) end = start
   return { key: 'custom', start: start.unix(), end: end.unix() }
 }
 

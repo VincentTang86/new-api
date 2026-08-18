@@ -40,6 +40,71 @@ const FILTER_BUTTON_ACTIVE = 'bg-[#ff5a5f] font-semibold text-white'
 const FILTER_BUTTON_IDLE =
   'border border-[#e5e7eb] bg-white font-medium text-[#6b7280] hover:bg-[#f9fafb] dark:border-border dark:bg-card dark:text-muted-foreground dark:hover:bg-muted'
 
+const DATE_CHIP_CLASS =
+  'dark:bg-muted dark:text-foreground min-w-24 rounded-[6px] bg-[#f5f5f7] px-2.5 py-1.5 text-center text-xs text-[#3d4047]'
+const TIME_INPUT_CLASS =
+  'dark:text-foreground w-5 cursor-text bg-transparent text-center text-xs text-[#3d4047] outline-none'
+
+function sanitizeTimePart(raw: string, max: number): string {
+  const digits = raw.replaceAll(/\D/g, '').slice(0, 2)
+  if (digits === '') return ''
+  return Number(digits) > max ? String(max) : digits
+}
+
+function toTimePart(value: string, fallback: number): number {
+  return value === '' ? fallback : Number(value)
+}
+
+interface TimeFieldProps {
+  hours: string
+  minutes: string
+  onHoursChange: (value: string) => void
+  onMinutesChange: (value: string) => void
+  hoursLabel: string
+  minutesLabel: string
+}
+
+function TimeField({
+  hours,
+  minutes,
+  onHoursChange,
+  onMinutesChange,
+  hoursLabel,
+  minutesLabel,
+}: TimeFieldProps) {
+  return (
+    <div className='dark:bg-muted flex items-center gap-px rounded-[6px] bg-[#f5f5f7] px-2 py-1.5'>
+      <input
+        type='text'
+        inputMode='numeric'
+        maxLength={2}
+        placeholder='00'
+        aria-label={hoursLabel}
+        value={hours}
+        onChange={(e) => onHoursChange(sanitizeTimePart(e.target.value, 23))}
+        onBlur={() =>
+          onHoursChange(hours === '' ? '00' : hours.padStart(2, '0'))
+        }
+        className={TIME_INPUT_CLASS}
+      />
+      <span className='dark:text-foreground text-xs text-[#3d4047]'>:</span>
+      <input
+        type='text'
+        inputMode='numeric'
+        maxLength={2}
+        placeholder='00'
+        aria-label={minutesLabel}
+        value={minutes}
+        onChange={(e) => onMinutesChange(sanitizeTimePart(e.target.value, 59))}
+        onBlur={() =>
+          onMinutesChange(minutes === '' ? '00' : minutes.padStart(2, '0'))
+        }
+        className={TIME_INPUT_CLASS}
+      />
+    </div>
+  )
+}
+
 interface TimeRangeFilterProps {
   range: DashboardRange
   onRangeChange: (range: DashboardRange) => void
@@ -52,6 +117,10 @@ export function TimeRangeFilter({
   const { t } = useTranslation()
   const [pickerOpen, setPickerOpen] = useState(false)
   const [draft, setDraft] = useState<DateRange | undefined>()
+  const [startHH, setStartHH] = useState('00')
+  const [startMM, setStartMM] = useState('00')
+  const [endHH, setEndHH] = useState('23')
+  const [endMM, setEndMM] = useState('59')
 
   const customLabel =
     range.key === 'custom'
@@ -62,19 +131,35 @@ export function TimeRangeFilter({
 
   const handleOpenChange = (open: boolean) => {
     if (open && range.key === 'custom') {
-      setDraft({
-        from: dayjs.unix(range.start).toDate(),
-        to: dayjs.unix(range.end).toDate(),
-      })
+      const start = dayjs.unix(range.start)
+      const end = dayjs.unix(range.end)
+      setDraft({ from: start.toDate(), to: end.toDate() })
+      setStartHH(start.format('HH'))
+      setStartMM(start.format('mm'))
+      setEndHH(end.format('HH'))
+      setEndMM(end.format('mm'))
     } else if (open) {
       setDraft(undefined)
+      setStartHH('00')
+      setStartMM('00')
+      setEndHH('23')
+      setEndMM('59')
     }
     setPickerOpen(open)
   }
 
+  const draftRange = draft?.from
+    ? resolveCustomRange(
+        draft.from,
+        draft.to ?? draft.from,
+        { hours: toTimePart(startHH, 0), minutes: toTimePart(startMM, 0) },
+        { hours: toTimePart(endHH, 23), minutes: toTimePart(endMM, 59) }
+      )
+    : null
+
   const applyDraft = () => {
-    if (!draft?.from) return
-    onRangeChange(resolveCustomRange(draft.from, draft.to ?? draft.from))
+    if (!draftRange) return
+    onRangeChange(draftRange)
     setPickerOpen(false)
   }
 
@@ -134,10 +219,35 @@ export function TimeRangeFilter({
                 draft?.from ?? dayjs().subtract(1, 'month').toDate()
               }
             />
-            <div className='flex items-center justify-between'>
-              <span className='text-muted-foreground text-xs'>
-                {t('Up to {{count}} days', { count: MAX_RANGE_DAYS })}
-              </span>
+            <div className='dark:border-border flex flex-wrap items-center gap-2 border-t border-[#e6e8eb] pt-3'>
+              <div className={DATE_CHIP_CLASS}>
+                {draft?.from
+                  ? dayjs(draft.from).format('MMM D, YYYY')
+                  : t('Start date')}
+              </div>
+              <TimeField
+                hours={startHH}
+                minutes={startMM}
+                onHoursChange={setStartHH}
+                onMinutesChange={setStartMM}
+                hoursLabel={t('Start time')}
+                minutesLabel={t('Start time')}
+              />
+              <span className='text-xs text-[#9ea3b0]'>→</span>
+              <div className={DATE_CHIP_CLASS}>
+                {draft?.to
+                  ? dayjs(draft.to).format('MMM D, YYYY')
+                  : t('End date')}
+              </div>
+              <TimeField
+                hours={endHH}
+                minutes={endMM}
+                onHoursChange={setEndHH}
+                onMinutesChange={setEndMM}
+                hoursLabel={t('End time')}
+                minutesLabel={t('End time')}
+              />
+              <div className='flex-1' />
               <div className='flex gap-2'>
                 <button
                   type='button'
@@ -149,7 +259,7 @@ export function TimeRangeFilter({
                 <button
                   type='button'
                   className='cursor-pointer rounded-[6px] bg-[#ff5a5f] px-3.5 py-[6px] text-[13px] font-semibold text-white transition-colors hover:bg-[#e14b50] disabled:cursor-not-allowed disabled:opacity-50'
-                  disabled={!draft?.from}
+                  disabled={!draftRange || draftRange.end <= draftRange.start}
                   onClick={applyDraft}
                 >
                   {t('Apply')}

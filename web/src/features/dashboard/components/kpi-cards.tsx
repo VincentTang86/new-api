@@ -57,6 +57,11 @@ export function KpiCards({
 
   const { totalQuota, totalCount, totalTokens } = totals
   const avgRpm = safeDivide(totalCount, rangeMinutes, 2)
+  // Averaged over the whole range (same rule as the legacy dashboard), a
+  // long window with light traffic rounds to 0.00 — show a floor instead
+  // of a misleading zero.
+  const avgRpmDisplay =
+    totalCount > 0 && avgRpm < 0.01 ? '<0.01' : formatNumber(avgRpm)
   const avgTpm = safeDivide(totalTokens, rangeMinutes, 2)
   const tokensPerRequest = totalCount > 0 ? totalTokens / totalCount : 0
   const avgCostPerRequest =
@@ -84,7 +89,7 @@ export function KpiCards({
       title: t('Requests'),
       tip: t('Total API requests completed in the selected period.'),
       value: formatNumber(totalCount),
-      description: `${t('Avg RPM')}: ${formatNumber(avgRpm)} · ${formatCompactNumber(tokensPerRequest)} ${t('tok/req')}`,
+      description: `${t('Avg RPM')}: ${avgRpmDisplay} · ${formatCompactNumber(tokensPerRequest)} ${t('tok/req')}`,
     },
     {
       key: 'cost',

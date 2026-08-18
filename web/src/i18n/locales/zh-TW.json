@@ -5434,6 +5434,10 @@
     "Avg Tok/Req": "平均 Token/次",
     "Actual Cost": "實際費用",
     "Standard Cost": "標準價格",
-    "{{page}} of {{totalPages}}": "第 {{page}} / {{totalPages}} 頁"
+    "{{page}} of {{totalPages}}": "第 {{page}} / {{totalPages}} 頁",
+    "Start date": "開始日期",
+    "End date": "結束日期",
+    "Start time": "開始時間",
+    "End time": "結束時間"
   }
 }

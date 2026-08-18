@@ -5434,6 +5434,10 @@
     "Avg Tok/Req": "平均トークン/回",
     "Actual Cost": "実際のコスト",
     "Standard Cost": "標準料金",
-    "{{page}} of {{totalPages}}": "{{page}} / {{totalPages}}"
+    "{{page}} of {{totalPages}}": "{{page}} / {{totalPages}}",
+    "Start date": "開始日",
+    "End date": "終了日",
+    "Start time": "開始時刻",
+    "End time": "終了時刻"
   }
 }

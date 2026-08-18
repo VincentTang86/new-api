@@ -5434,6 +5434,10 @@
     "Avg Tok/Req": "Moy. tok./req.",
     "Actual Cost": "Coût réel",
     "Standard Cost": "Tarif standard",
-    "{{page}} of {{totalPages}}": "{{page}} sur {{totalPages}}"
+    "{{page}} of {{totalPages}}": "{{page}} sur {{totalPages}}",
+    "Start date": "Date de début",
+    "End date": "Date de fin",
+    "Start time": "Heure de début",
+    "End time": "Heure de fin"
   }
 }
