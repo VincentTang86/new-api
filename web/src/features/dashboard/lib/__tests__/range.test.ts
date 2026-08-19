@@ -21,11 +21,12 @@ import { afterEach, describe, expect, test, vi } from 'vitest'
 import {
   DAY_END,
   DAY_START,
-  MAX_RANGE_SECONDS,
   isRangeWithinLimit,
   resolveCustomRange,
   resolvePresetRange,
-} from '../range'
+} from '@/lib/time-range'
+
+import { MAX_RANGE_DAYS, MAX_RANGE_SECONDS } from '../../constants'
 
 // The self data endpoints reject spans over 2592000s outright, so every range
 // this module hands to the queries has to stay inside that budget.
@@ -40,11 +41,10 @@ describe('dashboard range limit', () => {
     ['well inside', 86_400, true],
   ])('isRangeWithinLimit: %s', (_label, span, expected) => {
     expect(
-      isRangeWithinLimit({
-        key: 'custom',
-        start: 1_000_000,
-        end: 1_000_000 + span,
-      })
+      isRangeWithinLimit(
+        { key: 'custom', start: 1_000_000, end: 1_000_000 + span },
+        MAX_RANGE_DAYS
+      )
     ).toBe(expected)
   })
 
@@ -56,12 +56,13 @@ describe('dashboard range limit', () => {
       new Date(2026, 6, 1),
       new Date(2026, 6, 31),
       DAY_START,
-      DAY_END
+      DAY_END,
+      MAX_RANGE_DAYS
     )
 
     // 30 days 23:59 unclamped; the clamp is what keeps it requestable.
     expect(range.end - range.start).toBe(MAX_RANGE_SECONDS)
-    expect(isRangeWithinLimit(range)).toBe(true)
+    expect(isRangeWithinLimit(range, MAX_RANGE_DAYS)).toBe(true)
   })
 
   test('leaves an in-budget custom range untouched', () => {
@@ -72,7 +73,8 @@ describe('dashboard range limit', () => {
       new Date(2026, 6, 1),
       new Date(2026, 6, 10),
       DAY_START,
-      DAY_END
+      DAY_END,
+      MAX_RANGE_DAYS
     )
 
     expect(range.end - range.start).toBeLessThan(MAX_RANGE_SECONDS)
@@ -87,9 +89,9 @@ describe('dashboard range limit', () => {
     // equality below pins down.
     vi.setSystemTime(new Date('2026-11-15T12:00:00'))
 
-    const range = resolvePresetRange('30days')
+    const range = resolvePresetRange('30days', MAX_RANGE_DAYS)
 
-    expect(isRangeWithinLimit(range)).toBe(true)
+    expect(isRangeWithinLimit(range, MAX_RANGE_DAYS)).toBe(true)
     expect(range.end - range.start).toBe(MAX_RANGE_SECONDS)
   })
 })

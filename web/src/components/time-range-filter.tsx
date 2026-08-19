@@ -29,19 +29,24 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import dayjs from '@/lib/dayjs'
-import { cn } from '@/lib/utils'
-
-import { RANGE_PRESETS } from '../constants'
 import {
-  MAX_RANGE_DAYS,
   isRangeWithinLimit,
   resolveCustomRange,
   resolvePresetRange,
-} from '../lib'
-import type { DashboardRange } from '../types'
+  type TimeRange,
+  type TimeRangeKey,
+} from '@/lib/time-range'
+import { cn } from '@/lib/utils'
 
 // A stable id keeps repeated attempts collapsed into a single notice.
-const RANGE_LIMIT_TOAST_ID = 'dashboard-range-limit'
+const RANGE_LIMIT_TOAST_ID = 'time-range-limit'
+
+const RANGE_PRESETS: { key: TimeRangeKey; labelKey: string }[] = [
+  { key: 'today', labelKey: 'Today' },
+  { key: 'yesterday', labelKey: 'Yesterday' },
+  { key: '7days', labelKey: 'Last 7 Days' },
+  { key: '30days', labelKey: 'Last 30 Days' },
+]
 
 const FILTER_BUTTON_BASE =
   'cursor-pointer rounded-[6px] px-3.5 py-[7px] text-[13px] transition-colors'
@@ -115,14 +120,13 @@ function TimeField({
 }
 
 interface TimeRangeFilterProps {
-  range: DashboardRange
-  onRangeChange: (range: DashboardRange) => void
+  range: TimeRange
+  onRangeChange: (range: TimeRange) => void
+  /** Widest selectable span, in days. Pass the cap of the endpoint you query. */
+  maxRangeDays: number
 }
 
-export function TimeRangeFilter({
-  range,
-  onRangeChange,
-}: TimeRangeFilterProps) {
+export function TimeRangeFilter(props: TimeRangeFilterProps) {
   const { t } = useTranslation()
   const [pickerOpen, setPickerOpen] = useState(false)
   const [draft, setDraft] = useState<DateRange | undefined>()
@@ -132,16 +136,16 @@ export function TimeRangeFilter({
   const [endMM, setEndMM] = useState('59')
 
   const customLabel =
-    range.key === 'custom'
-      ? `${dayjs.unix(range.start).format('MMM D')} – ${dayjs
-          .unix(range.end)
+    props.range.key === 'custom'
+      ? `${dayjs.unix(props.range.start).format('MMM D')} – ${dayjs
+          .unix(props.range.end)
           .format('MMM D')}`
       : t('Custom Range')
 
   const handleOpenChange = (open: boolean) => {
-    if (open && range.key === 'custom') {
-      const start = dayjs.unix(range.start)
-      const end = dayjs.unix(range.end)
+    if (open && props.range.key === 'custom') {
+      const start = dayjs.unix(props.range.start)
+      const end = dayjs.unix(props.range.end)
       setDraft({ from: start.toDate(), to: end.toDate() })
       setStartHH(start.format('HH'))
       setStartMM(start.format('mm'))
@@ -162,34 +166,36 @@ export function TimeRangeFilter({
         draft.from,
         draft.to ?? draft.from,
         { hours: toTimePart(startHH, 0), minutes: toTimePart(startMM, 0) },
-        { hours: toTimePart(endHH, 23), minutes: toTimePart(endMM, 59) }
+        { hours: toTimePart(endHH, 23), minutes: toTimePart(endMM, 59) },
+        props.maxRangeDays
       )
     : null
 
-  const draftTooLong = draftRange !== null && !isRangeWithinLimit(draftRange)
+  const draftTooLong =
+    draftRange !== null && !isRangeWithinLimit(draftRange, props.maxRangeDays)
 
   const applyDraft = () => {
     if (!draftRange) return
-    if (!isRangeWithinLimit(draftRange)) {
+    if (!isRangeWithinLimit(draftRange, props.maxRangeDays)) {
       toast.error(
         t('The time range cannot exceed {{count}} days', {
-          count: MAX_RANGE_DAYS,
+          count: props.maxRangeDays,
         }),
         { id: RANGE_LIMIT_TOAST_ID }
       )
       return
     }
-    onRangeChange(draftRange)
+    props.onRangeChange(draftRange)
     setPickerOpen(false)
   }
 
-  // The self data endpoints reject spans over 30 days, so keep the
-  // calendar selection inside that window around the draft start.
+  // Grey out what the caller's endpoint would reject, so the limit is visible
+  // before the click. `max` on the Calendar is what actually enforces it.
   const isDateDisabled = (date: Date) => {
     if (dayjs(date).isAfter(dayjs(), 'day')) return true
     if (draft?.from && !draft.to) {
       const span = Math.abs(dayjs(date).diff(dayjs(draft.from), 'day'))
-      return span >= MAX_RANGE_DAYS
+      return span >= props.maxRangeDays
     }
     return false
   }
@@ -202,9 +208,15 @@ export function TimeRangeFilter({
           type='button'
           className={cn(
             FILTER_BUTTON_BASE,
-            range.key === preset.key ? FILTER_BUTTON_ACTIVE : FILTER_BUTTON_IDLE
+            props.range.key === preset.key
+              ? FILTER_BUTTON_ACTIVE
+              : FILTER_BUTTON_IDLE
           )}
-          onClick={() => onRangeChange(resolvePresetRange(preset.key))}
+          onClick={() =>
+            props.onRangeChange(
+              resolvePresetRange(preset.key, props.maxRangeDays)
+            )
+          }
         >
           {t(preset.labelKey)}
         </button>
@@ -217,7 +229,7 @@ export function TimeRangeFilter({
               className={cn(
                 FILTER_BUTTON_BASE,
                 'flex items-center gap-[7px]',
-                range.key === 'custom'
+                props.range.key === 'custom'
                   ? FILTER_BUTTON_ACTIVE
                   : FILTER_BUTTON_IDLE
               )}
@@ -235,7 +247,7 @@ export function TimeRangeFilter({
               // `max` counts whole days between the endpoints, so a 30-day
               // inclusive window is 29. Unlike `disabled` it also guards the
               // "extend an already complete range" path.
-              max={MAX_RANGE_DAYS - 1}
+              max={props.maxRangeDays - 1}
               disableOutsideDays
               selected={draft}
               onSelect={setDraft}
@@ -273,7 +285,7 @@ export function TimeRangeFilter({
                 minutesLabel={t('End time')}
               />
               <span className='dark:text-muted-foreground text-[11px] text-[#9ea3b0]'>
-                {t('Up to {{count}} days', { count: MAX_RANGE_DAYS })}
+                {t('Up to {{count}} days', { count: props.maxRangeDays })}
               </span>
               <div className='flex-1' />
               <div className='flex gap-2'>

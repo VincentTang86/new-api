@@ -57,20 +57,6 @@ export interface UserLogMetrics {
   avg_use_time: number // seconds, consume logs only
 }
 
-export type DashboardRangeKey =
-  | 'today'
-  | 'yesterday'
-  | '7days'
-  | '30days'
-  | 'custom'
-
-// Resolved time range in unix seconds
-export interface DashboardRange {
-  key: DashboardRangeKey
-  start: number
-  end: number
-}
-
 export type UsageMetric = 'tokens' | 'cost' | 'requests'
 
 export type UsageGranularity = 'hour' | 'day'

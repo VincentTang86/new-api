@@ -16,14 +16,12 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import type { DashboardRangeKey, UsageMetric } from './types'
+import type { UsageMetric } from './types'
 
-export const RANGE_PRESETS: { key: DashboardRangeKey; labelKey: string }[] = [
-  { key: 'today', labelKey: 'Today' },
-  { key: 'yesterday', labelKey: 'Yesterday' },
-  { key: '7days', labelKey: 'Last 7 Days' },
-  { key: '30days', labelKey: 'Last 30 Days' },
-]
+// The self data endpoints reject spans longer than 30 days (2592000s):
+// see GetUserQuotaDates / GetUserFlowQuotaDates / GetLogsSelfMetrics.
+export const MAX_RANGE_DAYS = 30
+export const MAX_RANGE_SECONDS = MAX_RANGE_DAYS * 86_400
 
 export const USAGE_METRIC_OPTIONS: { value: UsageMetric; labelKey: string }[] =
   [

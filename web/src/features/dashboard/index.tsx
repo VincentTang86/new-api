@@ -23,6 +23,12 @@ import { useTranslation } from 'react-i18next'
 
 import { SectionPageLayout } from '@/components/layout'
 import { FadeIn } from '@/components/page-transition'
+import { TimeRangeFilter } from '@/components/time-range-filter'
+import {
+  rangeSpanMinutes,
+  resolvePresetRange,
+  type TimeRange,
+} from '@/lib/time-range'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/auth-store'
 
@@ -34,15 +40,11 @@ import {
 } from './api'
 import { AccountStatusCards } from './components/account-status-cards'
 import { KpiCards } from './components/kpi-cards'
-import { TimeRangeFilter } from './components/time-range-filter'
 import { UsageBreakdownTable } from './components/usage-breakdown-table'
 import { UsageOverviewChart } from './components/usage-overview-chart'
-import {
-  defaultGranularityForRange,
-  rangeSpanMinutes,
-  resolvePresetRange,
-} from './lib'
-import type { DashboardRange, UsageGranularity } from './types'
+import { MAX_RANGE_DAYS } from './constants'
+import { defaultGranularityForRange } from './lib'
+import type { UsageGranularity } from './types'
 
 const QUERY_STALE_TIME = 60 * 1000
 
@@ -51,14 +53,14 @@ export function Dashboard() {
   const queryClient = useQueryClient()
   const user = useAuthStore((state) => state.auth.user)
 
-  const [range, setRange] = useState<DashboardRange>(() =>
-    resolvePresetRange('today')
+  const [range, setRange] = useState<TimeRange>(() =>
+    resolvePresetRange('today', MAX_RANGE_DAYS)
   )
   const [granularity, setGranularity] = useState<UsageGranularity>(() =>
-    defaultGranularityForRange(resolvePresetRange('today'))
+    defaultGranularityForRange(resolvePresetRange('today', MAX_RANGE_DAYS))
   )
 
-  const handleRangeChange = useCallback((next: DashboardRange) => {
+  const handleRangeChange = useCallback((next: TimeRange) => {
     setRange(next)
     setGranularity(defaultGranularityForRange(next))
   }, [])
@@ -184,6 +186,7 @@ export function Dashboard() {
               <TimeRangeFilter
                 range={range}
                 onRangeChange={handleRangeChange}
+                maxRangeDays={MAX_RANGE_DAYS}
               />
             </div>
           </FadeIn>

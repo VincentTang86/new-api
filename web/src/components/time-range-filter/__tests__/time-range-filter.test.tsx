@@ -22,13 +22,25 @@ import i18next from 'i18next'
 import { useState } from 'react'
 import type { DateRange } from 'react-day-picker'
 import { toast } from 'sonner'
-import { beforeAll, describe, expect, test, vi } from 'vitest'
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  test,
+  vi,
+} from 'vitest'
 
 import { Calendar } from '@/components/ui/calendar'
+import type { TimeRange } from '@/lib/time-range'
 
-import { MAX_RANGE_DAYS } from '../../lib'
-import type { DashboardRange } from '../../types'
-import { TimeRangeFilter } from '../time-range-filter'
+import { TimeRangeFilter } from '../../time-range-filter'
+
+// The dashboard's self endpoints cap at 30 days; the admin usage-analytics
+// page passes a wider one. Both values are exercised here.
+const SELF_MAX_DAYS = 30
+const ADMIN_MAX_DAYS = 90
 
 vi.mock('sonner', () => ({ toast: { error: vi.fn() } }))
 
@@ -36,14 +48,15 @@ vi.mock('sonner', () => ({ toast: { error: vi.fn() } }))
 // out-of-budget or ambiguous selection from ever being made. Driving the
 // primitive directly keeps the assertions on the behaviour the picker buys,
 // without standing up the popover.
-function RangeCalendar() {
+function RangeCalendar(props: { maxDays?: number }) {
   const [selected, setSelected] = useState<DateRange | undefined>()
+  const maxDays = props.maxDays ?? SELF_MAX_DAYS
   return (
     <>
       <Calendar
         mode='range'
         numberOfMonths={2}
-        max={MAX_RANGE_DAYS - 1}
+        max={maxDays - 1}
         disableOutsideDays
         selected={selected}
         onSelect={setSelected}
@@ -75,7 +88,7 @@ function dayButton(label: string): HTMLElement {
   return owned[0]
 }
 
-describe('dashboard range calendar', () => {
+describe('time range calendar', () => {
   test('a 31-day span restarts the range instead of selecting it', async () => {
     const user = userEvent.setup()
     render(<RangeCalendar />)
@@ -138,31 +151,52 @@ describe('dashboard range calendar', () => {
   })
 })
 
-describe('dashboard time range filter', () => {
-  beforeAll(() => {
-    i18next.addResourceBundle('en', 'translation', {
-      'Custom Range': 'Custom Range',
-      Apply: 'Apply',
-      'Up to {{count}} days': 'Up to {{count}} days',
-      'The time range cannot exceed {{count}} days':
-        'The time range cannot exceed {{count}} days',
-      'Start date': 'Start date',
-      'End date': 'End date',
-    })
+// The picker opens on `today - 1 month`, so which months are on screen — and
+// which days are disabled as future — depend on the clock. Pin it so the
+// hardcoded July/August dates below mean the same thing on any run date.
+beforeEach(() => {
+  vi.useFakeTimers({ shouldAdvanceTime: true })
+  vi.setSystemTime(new Date('2026-08-19T12:00:00'))
+})
+
+afterEach(() => {
+  vi.useRealTimers()
+})
+
+beforeAll(() => {
+  i18next.addResourceBundle('en', 'translation', {
+    'Custom Range': 'Custom Range',
+    Apply: 'Apply',
+    'Up to {{count}} days': 'Up to {{count}} days',
+    'The time range cannot exceed {{count}} days':
+      'The time range cannot exceed {{count}} days',
+    'Start date': 'Start date',
+    'End date': 'End date',
   })
+})
 
-  async function openPicker(onRangeChange = vi.fn()) {
-    const user = userEvent.setup()
-    const range: DashboardRange = {
-      key: 'today',
-      start: Math.floor(new Date(2026, 6, 20).getTime() / 1000),
-      end: Math.floor(new Date(2026, 6, 20, 23, 59).getTime() / 1000),
-    }
-    render(<TimeRangeFilter range={range} onRangeChange={onRangeChange} />)
-    await user.click(screen.getByRole('button', { name: 'Custom Range' }))
-    return { user, onRangeChange }
+async function openPicker(
+  onRangeChange = vi.fn(),
+  maxRangeDays = SELF_MAX_DAYS
+) {
+  const user = userEvent.setup()
+  const range: TimeRange = {
+    key: 'today',
+    start: Math.floor(new Date(2026, 6, 20).getTime() / 1000),
+    end: Math.floor(new Date(2026, 6, 20, 23, 59).getTime() / 1000),
   }
+  render(
+    <TimeRangeFilter
+      range={range}
+      onRangeChange={onRangeChange}
+      maxRangeDays={maxRangeDays}
+    />
+  )
+  await user.click(screen.getByRole('button', { name: 'Custom Range' }))
+  return { user, onRangeChange }
+}
 
+describe('time range filter', () => {
   test('advertises the limit next to the apply action', async () => {
     await openPicker()
     expect(screen.getByText('Up to 30 days')).toBeInTheDocument()
@@ -186,7 +220,7 @@ describe('dashboard time range filter', () => {
     // which is what produced three untranslated toasts.
     for (const [applied] of onRangeChange.mock.calls) {
       expect(applied.end - applied.start).toBeLessThanOrEqual(
-        MAX_RANGE_DAYS * 86_400
+        SELF_MAX_DAYS * 86_400
       )
     }
     expect(vi.mocked(toast.error).mock.calls.length).toBeLessThanOrEqual(1)
@@ -203,7 +237,33 @@ describe('dashboard time range filter', () => {
     const [applied] = onRangeChange.mock.calls[0]
     expect(applied.key).toBe('custom')
     expect(applied.end - applied.start).toBeLessThanOrEqual(
-      MAX_RANGE_DAYS * 86_400
+      SELF_MAX_DAYS * 86_400
+    )
+    expect(toast.error).not.toHaveBeenCalled()
+  })
+})
+
+describe('time range filter honours a wider cap', () => {
+  test('the hint reports the cap it was given, not a hardcoded 30', async () => {
+    await openPicker(vi.fn(), ADMIN_MAX_DAYS)
+
+    expect(screen.getByText('Up to 90 days')).toBeInTheDocument()
+    expect(screen.queryByText('Up to 30 days')).not.toBeInTheDocument()
+  })
+
+  test('a 48-day range applies intact under a 90-day cap', async () => {
+    const { user, onRangeChange } = await openPicker(vi.fn(), ADMIN_MAX_DAYS)
+
+    await user.click(dayButton('July 1st, 2026'))
+    await user.click(dayButton('August 18th, 2026'))
+    await user.click(screen.getByRole('button', { name: 'Apply' }))
+
+    expect(onRangeChange).toHaveBeenCalledTimes(1)
+    const [applied] = onRangeChange.mock.calls[0]
+    // The dashboard's cap would have clamped this to 30 days.
+    expect(applied.end - applied.start).toBeGreaterThan(SELF_MAX_DAYS * 86_400)
+    expect(applied.end - applied.start).toBeLessThanOrEqual(
+      ADMIN_MAX_DAYS * 86_400
     )
     expect(toast.error).not.toHaveBeenCalled()
   })
