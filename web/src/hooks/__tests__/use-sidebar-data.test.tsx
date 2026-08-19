@@ -19,24 +19,32 @@ For commercial licensing, please contact support@quantumnous.com
 import { renderHook } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
 
+import type { NavItem } from '@/components/layout/types'
+import { ROLE } from '@/lib/roles'
+
 import { useSidebarData } from '../use-sidebar-data'
 
 function navGroups() {
   return renderHook(() => useSidebarData()).result.current.navGroups
 }
 
+function itemsOf(groupId: string): NavItem[] {
+  return navGroups().find((group) => group.id === groupId)?.items ?? []
+}
+
 describe('useSidebarData', () => {
-  test('exposes the three designed groups in order', () => {
+  test('exposes the member groups from the design, then administration', () => {
     expect(navGroups().map((group) => group.id)).toEqual([
       'chat',
       'general',
       'personal',
+      'admin',
     ])
   })
 
-  test('routes match the designed console entries', () => {
-    const urls = navGroups().flatMap((group) =>
-      group.items.map((item) => ('url' in item ? item.url : null))
+  test('member routes match the designed console entries', () => {
+    const urls = ['chat', 'general', 'personal'].flatMap((groupId) =>
+      itemsOf(groupId).map((item) => ('url' in item ? item.url : null))
     )
 
     expect(urls).toEqual([
@@ -50,19 +58,6 @@ describe('useSidebarData', () => {
     ])
   })
 
-  test('carries no administration entries', () => {
-    // Administration lives on the legacy console; the routes stay reachable by
-    // URL behind their own role guards, but nothing links to them from here.
-    const groups = navGroups()
-
-    expect(groups.some((group) => group.id === 'admin')).toBe(false)
-    expect(
-      groups
-        .flatMap((group) => group.items)
-        .some((item) => 'url' in item && String(item.url).startsWith('/system'))
-    ).toBe(false)
-  })
-
   test('drops the chat presets entry the design does not have', () => {
     const items = navGroups().flatMap((group) => group.items)
 
@@ -72,14 +67,34 @@ describe('useSidebarData', () => {
   test('async tasks still covers the drawing logs route', () => {
     // Both log surfaces share one entry, so the site-wide config has to see
     // either of them as a reason to keep it visible.
-    const asyncTasks = navGroups()
-      .flatMap((group) => group.items)
-      .find((item) => 'url' in item && item.url === '/usage-logs/task')
+    const asyncTasks = itemsOf('general').find(
+      (item) => 'url' in item && item.url === '/usage-logs/task'
+    )
 
     expect(asyncTasks?.configUrls).toEqual([
       '/usage-logs/drawing',
       '/usage-logs/task',
     ])
     expect(asyncTasks?.activeUrls).toEqual(['/usage-logs/drawing'])
+  })
+
+  test('administration entries declare what the account must have', () => {
+    // useSidebarView applies these; here we only pin the declarations, since
+    // getting one wrong silently exposes or hides an entry.
+    const gates = itemsOf('admin').map((item) => [
+      'url' in item ? item.url : null,
+      item.requiredRole,
+      item.requiredCapability,
+    ])
+
+    expect(gates).toEqual([
+      ['/channels', undefined, { resource: 'channel', action: 'read' }],
+      ['/models/metadata', undefined, undefined],
+      ['/users', undefined, undefined],
+      ['/redemption-codes', undefined, undefined],
+      ['/subscriptions', undefined, undefined],
+      ['/system-info', ROLE.SUPER_ADMIN, undefined],
+      ['/system-settings/site', ROLE.SUPER_ADMIN, undefined],
+    ])
   })
 })

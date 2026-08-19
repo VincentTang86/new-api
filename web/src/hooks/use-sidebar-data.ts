@@ -17,17 +17,27 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import {
+  Box,
   ChartLine,
   ClockArrowUp,
   CreditCard,
   List,
   LockKeyhole,
   MessageSquareText,
+  Radio,
+  ServerCog,
   Settings,
+  Ticket,
+  Users,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { type SidebarData } from '@/components/layout/types'
+import {
+  ADMIN_PERMISSION_ACTIONS,
+  ADMIN_PERMISSION_RESOURCES,
+} from '@/lib/admin-permissions'
+import { ROLE } from '@/lib/roles'
 
 /**
  * Root navigation groups for the application sidebar.
@@ -35,9 +45,11 @@ import { type SidebarData } from '@/components/layout/types'
  * These are shown when the URL does not match any nested sidebar view
  * registered in `layout/lib/sidebar-view-registry.ts`.
  *
- * The three groups mirror the FairRouter console design. Administration lives
- * on the legacy console instead, so the admin routes stay reachable by URL (and
- * keep their own role guards) but have no entry here.
+ * The first three groups mirror the FairRouter console design, which only
+ * covers a member's own surfaces. Administration is outside that design but
+ * keeps its group, declared with what each entry demands of the account:
+ * `useSidebarView` drops the group below admin and drops individual entries by
+ * their `requiredRole` / `requiredCapability`.
  */
 export function useSidebarData(): SidebarData {
   const { t } = useTranslation()
@@ -96,6 +108,57 @@ export function useSidebarData(): SidebarData {
             title: t('Account Settings'),
             url: '/profile',
             icon: Settings,
+          },
+        ],
+      },
+      {
+        id: 'admin',
+        title: t('Admin'),
+        items: [
+          {
+            title: t('Channels'),
+            url: '/channels',
+            icon: Radio,
+            requiredCapability: {
+              resource: ADMIN_PERMISSION_RESOURCES.CHANNEL,
+              action: ADMIN_PERMISSION_ACTIONS.READ,
+            },
+          },
+          {
+            title: t('Models'),
+            url: '/models/metadata',
+            icon: Box,
+          },
+          {
+            title: t('Users'),
+            url: '/users',
+            icon: Users,
+          },
+          {
+            title: t('Redemption Codes'),
+            url: '/redemption-codes',
+            icon: Ticket,
+          },
+          {
+            title: t('Subscriptions'),
+            url: '/subscriptions',
+            icon: CreditCard,
+          },
+          {
+            title: t('System Info'),
+            url: '/system-info',
+            icon: ServerCog,
+            requiredRole: ROLE.SUPER_ADMIN,
+          },
+          {
+            // Super admin only, matching the route guard and the backend's
+            // `admin.setting: false` for plain admins. Without this an admin
+            // saw the entry and got a 403 on click.
+            title: t('System Settings'),
+            url: '/system-settings/site',
+            activeUrls: ['/system-settings'],
+            icon: Settings,
+            requiredRole: ROLE.SUPER_ADMIN,
           },
         ],
       },

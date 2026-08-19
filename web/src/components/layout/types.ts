@@ -28,6 +28,19 @@ type BaseNavItem = {
   icon?: React.ElementType
   activeUrls?: (LinkProps['to'] | (string & {}))[]
   configUrls?: (LinkProps['to'] | (string & {}))[]
+  /**
+   * Minimum role required to see this item (see `useSidebarView`). Route-level
+   * guards still enforce access independently — this only decides whether the
+   * entry is worth showing.
+   */
+  requiredRole?: number
+  /**
+   * Authz grant required to see this item, checked against the capabilities the
+   * backend ships in `permissions.admin_permissions`; super admins bypass it.
+   * Like `requiredRole`, this hides an entry the user cannot act on and is not
+   * itself an access control.
+   */
+  requiredCapability?: { resource: string; action: string }
 }
 
 /**
