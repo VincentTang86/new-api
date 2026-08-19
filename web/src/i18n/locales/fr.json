@@ -1233,6 +1233,7 @@
     "Custom Zoom": "Zoom personnalisé",
     "Customize sidebar display content": "Personnaliser le contenu affiché dans la barre latérale",
     "Daily": "Quotidien",
+    "Daily (time granularity)": "Par jour",
     "Daily Check-in": "Connexion quotidienne",
     "Daily token usage by model across the past few weeks": "Utilisation quotidienne de tokens par modèle sur les dernières semaines",
     "Daily token usage by model across the past month": "Utilisation quotidienne des tokens par modèle au cours du dernier mois",

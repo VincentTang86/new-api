@@ -57,7 +57,9 @@ interface UsageOverviewChartProps {
 
 const GRANULARITY_OPTIONS: { value: UsageGranularity; labelKey: string }[] = [
   { value: 'hour', labelKey: 'Hourly' },
-  { value: 'day', labelKey: 'Daily' },
+  // Not the plain 'Daily' key: that one is shared with the subscription
+  // billing period, where the Chinese wording has to stay 「每天」.
+  { value: 'day', labelKey: 'Daily (time granularity)' },
 ]
 
 function metricValue(item: QuotaDataItem, metric: UsageMetric): number {

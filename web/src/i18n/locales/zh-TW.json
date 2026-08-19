@@ -1233,6 +1233,7 @@
     "Custom Zoom": "自訂縮放",
     "Customize sidebar display content": "個人化設定左側邊欄的顯示內容",
     "Daily": "每天",
+    "Daily (time granularity)": "按天",
     "Daily Check-in": "每日簽到",
     "Daily token usage by model across the past few weeks": "過去幾週內按模型分佈的每日 Token 使用量",
     "Daily token usage by model across the past month": "過去一個月內各模型的每日 Token 用量",

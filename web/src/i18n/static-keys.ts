@@ -505,6 +505,10 @@ export const STATIC_I18N_KEYS = [
   'Task Logs',
   'Saved successfully',
 
+  // Console dashboard usage-overview time granularity
+  'Hourly',
+  'Daily (time granularity)',
+
   // Available models
   'Available Models',
   'View all currently available models',
