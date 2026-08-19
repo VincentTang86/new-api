@@ -5436,6 +5436,7 @@
     "Avg Tok/Req": "TB Token/yêu cầu",
     "Actual Cost": "Chi phí thực tế",
     "Standard Cost": "Giá tiêu chuẩn",
+    "{{start}}–{{end}} of {{total}}": "{{start}}–{{end}} trên {{total}}",
     "{{page}} of {{totalPages}}": "{{page}} / {{totalPages}}",
     "Start date": "Ngày bắt đầu",
     "End date": "Ngày kết thúc",

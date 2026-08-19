@@ -5436,6 +5436,7 @@
     "Avg Tok/Req": "Moy. tok./req.",
     "Actual Cost": "Coût réel",
     "Standard Cost": "Tarif standard",
+    "{{start}}–{{end}} of {{total}}": "{{start}}–{{end}} sur {{total}}",
     "{{page}} of {{totalPages}}": "{{page}} sur {{totalPages}}",
     "Start date": "Date de début",
     "End date": "Date de fin",

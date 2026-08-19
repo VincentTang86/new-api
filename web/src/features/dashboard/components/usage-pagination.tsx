@@ -131,7 +131,11 @@ export function UsagePagination({
           </PopoverContent>
         </Popover>
         <span className='tabular-nums'>
-          {rangeStart}–{rangeEnd} / {total}
+          {t('{{start}}–{{end}} of {{total}}', {
+            start: rangeStart,
+            end: rangeEnd,
+            total,
+          })}
         </span>
       </div>
       <div className='flex items-center gap-1'>

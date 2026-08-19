@@ -5436,6 +5436,7 @@
     "Avg Tok/Req": "Avg Tok/Req",
     "Actual Cost": "Actual Cost",
     "Standard Cost": "Standard Cost",
+    "{{start}}–{{end}} of {{total}}": "{{start}}–{{end}} of {{total}}",
     "{{page}} of {{totalPages}}": "{{page}} of {{totalPages}}",
     "Start date": "Start date",
     "End date": "End date",
