@@ -24,6 +24,8 @@ export interface OfficialCostUsage {
   completionTokens: number
   cacheTokens: number
   cacheCreationTokens: number
+  /** Total tokens (`token_used`) of the same row, split or not. */
+  totalTokens: number
 }
 
 const TOKENS_PER_MILLION = 1_000_000
@@ -41,9 +43,15 @@ function usablePrice(value: number | null | undefined): number | undefined {
  * in USD, or null when no honest estimate exists:
  *
  * - the model has no admin-configured official prices, or
- * - the row predates the token split columns (prompt + completion both 0
- *   while tokens were consumed), or
+ * - the splits do not cover the row's full token total — rows written before
+ *   the split columns existed carry zeros, and aggregated rows can mix such
+ *   legacy traffic with split traffic; estimating from a partial split would
+ *   price only a fraction of the row while the actual-cost column covers all
+ *   of it, or
  * - a lane with usage has no price to bill it at.
+ *
+ * Split rows satisfy `prompt + completion === token_used` by construction
+ * (see model.LogQuotaData), so full coverage is a plain sum comparison.
  *
  * Cached prompt tokens are billed at the explicit cache-hit price, falling
  * back to the cached-input price, then the plain input price; cache-creation
@@ -55,6 +63,9 @@ export function estimateOfficialCostUSD(
 ): number | null {
   if (!prices) return null
   if (usage.promptTokens <= 0 && usage.completionTokens <= 0) return null
+  if (usage.promptTokens + usage.completionTokens < usage.totalTokens) {
+    return null
+  }
 
   const input = usablePrice(prices.input)
   const output = usablePrice(prices.output)

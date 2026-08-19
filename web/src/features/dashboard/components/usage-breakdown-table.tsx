@@ -230,6 +230,7 @@ export function UsageBreakdownTable({
         completionTokens: totals.completionTokens,
         cacheTokens: totals.cacheTokens,
         cacheCreationTokens: totals.cacheCreationTokens,
+        totalTokens: totals.tokens,
       },
       officialPrices?.[model]
     )

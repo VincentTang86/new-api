@@ -24,12 +24,19 @@ import {
 } from '../official-cost'
 
 function usage(overrides: Partial<OfficialCostUsage> = {}): OfficialCostUsage {
-  return {
+  const base = {
     promptTokens: 0,
     completionTokens: 0,
     cacheTokens: 0,
     cacheCreationTokens: 0,
     ...overrides,
+  }
+  return {
+    ...base,
+    // Split rows satisfy prompt + completion === token_used by construction;
+    // tests override totalTokens only to model partial (legacy-mixed) rows.
+    totalTokens:
+      overrides.totalTokens ?? base.promptTokens + base.completionTokens,
   }
 }
 
@@ -73,7 +80,18 @@ describe('estimateOfficialCostUSD', () => {
     ).toBeNull()
     // Historical rows: tokens were used but the split columns are all zero.
     expect(
-      estimateOfficialCostUSD(usage(), { input: 2, output: 10 })
+      estimateOfficialCostUSD(usage({ totalTokens: 500 }), {
+        input: 2,
+        output: 10,
+      })
+    ).toBeNull()
+    // Aggregates mixing legacy (unsplit) and split traffic: the splits cover
+    // only part of the token total, so no honest whole-row estimate exists.
+    expect(
+      estimateOfficialCostUSD(
+        usage({ promptTokens: 100, completionTokens: 50, totalTokens: 400 }),
+        { input: 2, output: 10 }
+      )
     ).toBeNull()
     // A lane with usage but no price to bill it at.
     expect(
