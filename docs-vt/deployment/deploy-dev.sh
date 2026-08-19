@@ -26,14 +26,16 @@
 #   - Redis    各 compose 内独立容器（缓存不互通，改库配置后两栈都要重启才生效）
 #   - 对外     宿主 nginx 反代 + Let's Encrypt（vhost fairrouter-dev 同管两域名）
 #
-# 本机为开发环境独占（4 vCPU），构建不限流，冷构建约 2.5 分钟。
+# 本机为开发环境独占（4 vCPU / 15G），构建不限流，冷构建约 2.5 分钟。
+# 2026-08-19 起机器为 43.161.203.160（由原 43.163.204.72 做镜像迁移而来，
+# 目录/容器/nginx/PG 布局完全一致，SSH 私钥换成 ~/.ssh/JHK.pem）。
 # 本脚本在本地机执行（不是在服务器上）。
 # ------------------------------------------------------------------
 set -euo pipefail
 
 # ---------- 配置（一般不用改）----------
-HOST="${DEV_HOST:-ubuntu@43.163.204.72}"             # 开发机 SSH 目标
-KEY="${DEV_KEY:-$HOME/.ssh/tencent_jp.pem}"          # SSH 私钥
+HOST="${DEV_HOST:-ubuntu@43.161.203.160}"            # 开发机 SSH 目标
+KEY="${DEV_KEY:-$HOME/.ssh/JHK.pem}"                 # SSH 私钥
 REMOTE_DIR="${DEV_DIR:-/opt/www/fair-router-dev2}"   # 服务器上的部署目录
 BRANCH="${DEV_BRANCH:-dev}"                          # 拉取的分支
 DOMAIN="${DEV_DOMAIN:-https://dev.fairrouter.ai}"    # 本站，部署后应 success:true
