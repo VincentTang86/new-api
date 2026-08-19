@@ -37,6 +37,8 @@ export interface FlowQuotaDataItem {
   use_group?: string
   token_id?: number
   token_name?: string
+  is_playground?: boolean
+  last_used_time?: number
   channel_id?: number
   channel_name?: string
   model_name?: string

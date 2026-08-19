@@ -16,11 +16,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
 import { Fragment, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { NativeSelect } from '@/components/ui/native-select'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { ApiKey } from '@/features/keys/types'
 import dayjs from '@/lib/dayjs'
@@ -29,8 +28,13 @@ import { cn } from '@/lib/utils'
 
 import { BREAKDOWN_PAGE_SIZES } from '../constants'
 import type { BreakdownTab, FlowQuotaDataItem } from '../types'
+import { UsagePagination } from './usage-pagination'
 
 const PLACEHOLDER = '-'
+
+// Verbatim label agreed with product for usage that came from the playground
+// rather than a real API key, so it is not translated.
+const PLAYGROUND_KEY_LABEL = 'None(Playground)'
 
 const TH_CLASS =
   'px-3.5 py-[11px] text-xs font-semibold text-[#6b7280] dark:text-muted-foreground'
@@ -43,6 +47,8 @@ interface UsageBreakdownTableProps {
   flowData: FlowQuotaDataItem[]
   loading?: boolean
   apiKeys: ApiKey[] | undefined
+  /** Measured height of the usage overview card, in px. */
+  minHeight?: number
 }
 
 interface UsageTotals {
@@ -60,12 +66,6 @@ interface ApiKeyRow extends UsageTotals {
   tokenId: number
   name: string
   accessedTime?: number
-}
-
-function addTotals(target: UsageTotals, item: FlowQuotaDataItem) {
-  target.requests += Number(item.count) || 0
-  target.tokens += Number(item.token_used) || 0
-  target.quota += Number(item.quota) || 0
 }
 
 function usePagination<T>(rows: T[]) {
@@ -91,63 +91,17 @@ function usePagination<T>(rows: T[]) {
   }
 }
 
-function PaginationFooter(props: {
-  page: number
-  totalPages: number
-  total: number
-  pageSize: number
-  onPage: (page: number) => void
-  onPageSize: (size: number) => void
-}) {
-  const { t } = useTranslation()
-  return (
-    <div className='dark:border-border flex items-center justify-between gap-2 border-t border-[#e5e7eb] px-3.5 py-2'>
-      <div className='dark:text-muted-foreground flex items-center gap-2 text-xs text-[#6b7280]'>
-        <span>{t('Rows per page')}</span>
-        <NativeSelect
-          className='h-7 w-16 text-xs'
-          value={String(props.pageSize)}
-          onChange={(event) => props.onPageSize(Number(event.target.value))}
-        >
-          {BREAKDOWN_PAGE_SIZES.map((size) => (
-            <option key={size} value={size}>
-              {size}
-            </option>
-          ))}
-        </NativeSelect>
-      </div>
-      <div className='flex items-center gap-1.5'>
-        <span className='dark:text-muted-foreground text-xs text-[#6b7280]'>
-          {t('{{page}} of {{totalPages}}', {
-            page: props.page,
-            totalPages: props.totalPages,
-          })}
-        </span>
-        <button
-          type='button'
-          className='dark:border-border dark:bg-card flex size-7 cursor-pointer items-center justify-center rounded-[6px] border border-[#e5e7eb] bg-white text-[#6b7280] transition-colors hover:bg-[#f9fafb] disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-white/10'
-          disabled={props.page <= 1}
-          onClick={() => props.onPage(props.page - 1)}
-        >
-          <ChevronLeft className='size-4' />
-        </button>
-        <button
-          type='button'
-          className='dark:border-border dark:bg-card flex size-7 cursor-pointer items-center justify-center rounded-[6px] border border-[#e5e7eb] bg-white text-[#6b7280] transition-colors hover:bg-[#f9fafb] disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-white/10'
-          disabled={props.page >= props.totalPages}
-          onClick={() => props.onPage(props.page + 1)}
-        >
-          <ChevronRight className='size-4' />
-        </button>
-      </div>
-    </div>
-  )
+function addTotals(target: UsageTotals, item: FlowQuotaDataItem) {
+  target.requests += Number(item.count) || 0
+  target.tokens += Number(item.token_used) || 0
+  target.quota += Number(item.quota) || 0
 }
 
 export function UsageBreakdownTable({
   flowData,
   loading,
   apiKeys,
+  minHeight,
 }: UsageBreakdownTableProps) {
   const { t } = useTranslation()
   const [tab, setTab] = useState<BreakdownTab>('model')
@@ -188,7 +142,9 @@ export function UsageBreakdownTable({
       let row = byToken.get(tokenId)
       if (!row) {
         let name: string
-        if (item.token_name) {
+        if (item.is_playground) {
+          name = PLAYGROUND_KEY_LABEL
+        } else if (item.token_name) {
           name = item.token_name
         } else if (tokenId > 0) {
           // Deleted tokens come back with an empty name on purpose; the
@@ -203,7 +159,10 @@ export function UsageBreakdownTable({
           requests: 0,
           tokens: 0,
           quota: 0,
-          accessedTime: keyById.get(tokenId)?.accessed_time,
+          // Playground runs on a token that is never persisted, so it has no
+          // `accessed_time`; the backend derives its last use from the logs.
+          accessedTime:
+            keyById.get(tokenId)?.accessed_time ?? item.last_used_time,
         }
         byToken.set(tokenId, row)
       }
@@ -234,7 +193,10 @@ export function UsageBreakdownTable({
   }
 
   return (
-    <div className='dark:bg-card dark:border-border flex flex-col overflow-hidden rounded-xl border border-[#e5e7eb] bg-white'>
+    <div
+      className='dark:bg-card dark:border-border flex flex-col overflow-hidden rounded-xl border border-[#e5e7eb] bg-white'
+      style={minHeight ? { minHeight } : undefined}
+    >
       <div className='flex items-center justify-between gap-2 px-[22px] py-[18px]'>
         <span className='dark:text-foreground text-[15px] font-semibold text-[#111827]'>
           {t('Usage Breakdown')}
@@ -268,7 +230,7 @@ export function UsageBreakdownTable({
       </div>
 
       {loading && (
-        <div className='space-y-2 p-4'>
+        <div className='flex-1 space-y-2 p-4'>
           <Skeleton className='h-8 w-full' />
           <Skeleton className='h-8 w-full' />
           <Skeleton className='h-8 w-full' />
@@ -276,7 +238,7 @@ export function UsageBreakdownTable({
       )}
       {!loading && tab === 'model' && (
         <>
-          <div className='overflow-x-auto'>
+          <div className='flex-1 overflow-x-auto'>
             <table className='w-full min-w-[760px] border-collapse'>
               <thead>
                 <tr className='dark:bg-muted/50 bg-[#f9fafb]'>
@@ -384,7 +346,7 @@ export function UsageBreakdownTable({
               </tbody>
             </table>
           </div>
-          <PaginationFooter
+          <UsagePagination
             page={modelPagination.page}
             totalPages={modelPagination.totalPages}
             total={modelPagination.total}
@@ -396,7 +358,7 @@ export function UsageBreakdownTable({
       )}
       {!loading && tab === 'apikey' && (
         <>
-          <div className='overflow-x-auto'>
+          <div className='flex-1 overflow-x-auto'>
             <table className='w-full min-w-[560px] border-collapse'>
               <thead>
                 <tr className='dark:bg-muted/50 bg-[#f9fafb]'>
@@ -443,7 +405,7 @@ export function UsageBreakdownTable({
               </tbody>
             </table>
           </div>
-          <PaginationFooter
+          <UsagePagination
             page={apiKeyPagination.page}
             totalPages={apiKeyPagination.totalPages}
             total={apiKeyPagination.total}

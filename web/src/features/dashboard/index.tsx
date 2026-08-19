@@ -18,7 +18,7 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { RefreshCw } from 'lucide-react'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { SectionPageLayout } from '@/components/layout'
@@ -115,6 +115,21 @@ export function Dashboard() {
 
   const displayName = user?.display_name || user?.username || ''
 
+  // The breakdown card has to stand at least as tall as the overview chart
+  // card, empty state included. That height is not a constant: the chart
+  // header wraps on narrow viewports, so measure it instead of hardcoding.
+  const overviewRef = useRef<HTMLDivElement>(null)
+  const [overviewHeight, setOverviewHeight] = useState(0)
+  useEffect(() => {
+    const node = overviewRef.current
+    if (!node) return
+    const observer = new ResizeObserver(([entry]) => {
+      setOverviewHeight(entry.contentRect.height)
+    })
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [])
+
   return (
     <SectionPageLayout>
       <SectionPageLayout.Title>
@@ -183,18 +198,21 @@ export function Dashboard() {
             />
           </FadeIn>
           <FadeIn delay={0.15}>
-            <UsageOverviewChart
-              data={quotaData}
-              loading={quotaQuery.isLoading}
-              granularity={granularity}
-              onGranularityChange={setGranularity}
-            />
+            <div ref={overviewRef}>
+              <UsageOverviewChart
+                data={quotaData}
+                loading={quotaQuery.isLoading}
+                granularity={granularity}
+                onGranularityChange={setGranularity}
+              />
+            </div>
           </FadeIn>
           <FadeIn delay={0.2}>
             <UsageBreakdownTable
               flowData={flowData}
               loading={flowQuery.isLoading}
               apiKeys={apiKeysQuery.data}
+              minHeight={overviewHeight}
             />
           </FadeIn>
         </div>
