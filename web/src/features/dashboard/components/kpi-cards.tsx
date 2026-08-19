@@ -33,9 +33,8 @@ import type { UserLogMetrics } from '../types'
 const PLACEHOLDER = '-'
 
 interface KpiCardsProps {
-  totals: { totalQuota: number; totalCount: number; totalTokens: number }
-  totalsLoading: boolean
   metrics: UserLogMetrics | undefined
+  metricsLoading: boolean
   rangeMinutes: number
 }
 
@@ -48,35 +47,44 @@ interface KpiCardItem {
 }
 
 export function KpiCards({
-  totals,
-  totalsLoading,
   metrics,
+  metricsLoading,
   rangeMinutes,
 }: KpiCardsProps) {
   const { t } = useTranslation()
 
-  const { totalQuota, totalCount, totalTokens } = totals
-  const avgRpm = safeDivide(totalCount, rangeMinutes, 2)
+  // Every card reads the same consume/error log aggregate. Mixing in the
+  // pre-aggregated quota_data here is what used to make the request count
+  // disagree with the success-rate denominator, and the token headline
+  // disagree with its own in/out breakdown.
+  const totalQuota = metrics?.quota ?? 0
+  const succeeded = metrics?.consume_count ?? 0
+  const failed = metrics?.error_count ?? 0
+  const attempted = succeeded + failed
+  const totalTokens = metrics
+    ? metrics.prompt_tokens + metrics.completion_tokens
+    : 0
+
+  const avgRpm = safeDivide(attempted, rangeMinutes, 2)
   // Averaged over the whole range (same rule as the legacy dashboard), a
   // long window with light traffic rounds to 0.00 — show a floor instead
   // of a misleading zero.
   const avgRpmDisplay =
-    totalCount > 0 && avgRpm < 0.01 ? '<0.01' : formatNumber(avgRpm)
+    attempted > 0 && avgRpm < 0.01 ? '<0.01' : formatNumber(avgRpm)
   const avgTpm = safeDivide(totalTokens, rangeMinutes, 2)
-  const tokensPerRequest = totalCount > 0 ? totalTokens / totalCount : 0
+  const tokensPerRequest = attempted > 0 ? totalTokens / attempted : 0
   const avgCostPerRequest =
-    totalCount > 0 ? formatQuota(totalQuota / totalCount) : PLACEHOLDER
+    succeeded > 0 ? formatQuota(totalQuota / succeeded) : PLACEHOLDER
 
-  const attempted = metrics ? metrics.consume_count + metrics.error_count : 0
   const successRate =
     metrics && attempted > 0
-      ? `${((metrics.consume_count / attempted) * 100).toFixed(1)}%`
+      ? `${((succeeded / attempted) * 100).toFixed(1)}%`
       : PLACEHOLDER
   const errorsLine = metrics
-    ? `${t('Errors')}: ${formatNumber(metrics.error_count)} / ${formatNumber(attempted)}`
+    ? `${t('Errors')}: ${formatNumber(failed)} / ${formatNumber(attempted)}`
     : `${t('Errors')}: ${PLACEHOLDER}`
   const avgResponse =
-    metrics && metrics.consume_count > 0
+    metrics && succeeded > 0
       ? `${metrics.avg_use_time.toFixed(1)}s`
       : PLACEHOLDER
   const inOutLine = metrics
@@ -87,22 +95,24 @@ export function KpiCards({
     {
       key: 'requests',
       title: t('Requests'),
-      tip: t('Total API requests completed in the selected period.'),
-      value: formatNumber(totalCount),
+      // Attempts, not completions: this is the same denominator the success
+      // rate reports, so the two cards can never drift apart.
+      tip: t('Total API requests attempted in the selected period.'),
+      value: metrics ? formatNumber(attempted) : PLACEHOLDER,
       description: `${t('Avg RPM')}: ${avgRpmDisplay} · ${formatCompactNumber(tokensPerRequest)} ${t('tok/req')}`,
     },
     {
       key: 'cost',
       title: t('Cost'),
       tip: t('Total spend based on tokens consumed at your rates.'),
-      value: formatQuota(totalQuota),
+      value: metrics ? formatQuota(totalQuota) : PLACEHOLDER,
       description: `${t('Avg')}: ${avgCostPerRequest}/${t('req')}`,
     },
     {
       key: 'tokens',
       title: t('Tokens'),
       tip: t('Total tokens processed, including both input and output.'),
-      value: formatCompactNumber(totalTokens),
+      value: metrics ? formatCompactNumber(totalTokens) : PLACEHOLDER,
       description: `${inOutLine} · ${formatCompactNumber(avgTpm)} TPM`,
     },
     {
@@ -143,7 +153,7 @@ export function KpiCards({
               <TooltipContent className='max-w-56'>{card.tip}</TooltipContent>
             </Tooltip>
           </div>
-          {totalsLoading ? (
+          {metricsLoading ? (
             <>
               <Skeleton className='h-8 w-20' />
               <Skeleton className='h-3.5 w-28' />

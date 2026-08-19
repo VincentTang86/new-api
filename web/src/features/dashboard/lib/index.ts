@@ -16,7 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-export { safeDivide, calculateDashboardStats } from './stats'
+export { safeDivide } from './stats'
 export {
   MAX_RANGE_DAYS,
   DAY_START,

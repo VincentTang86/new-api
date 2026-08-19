@@ -5424,6 +5424,7 @@
     "Out": "输出",
     "Errors": "错误",
     "Total API requests completed in the selected period.": "所选时间段内完成的 API 请求总数。",
+    "Total API requests attempted in the selected period.": "所选时间范围内发起的 API 请求总数，含失败请求。",
     "Total spend based on tokens consumed at your rates.": "基于消耗 Token 按你的费率计算的总费用。",
     "Total tokens processed, including both input and output.": "已处理的 Token 总量，含输入与输出。",
     "Share of requests completed without error.": "成功完成（无错误）的请求占比。",

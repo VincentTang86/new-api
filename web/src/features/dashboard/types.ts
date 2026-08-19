@@ -51,6 +51,7 @@ export interface FlowQuotaDataItem {
 export interface UserLogMetrics {
   prompt_tokens: number
   completion_tokens: number
+  quota: number // consume logs only
   consume_count: number
   error_count: number
   avg_use_time: number // seconds, consume logs only

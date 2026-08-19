@@ -5424,6 +5424,7 @@
     "Out": "出力",
     "Errors": "エラー",
     "Total API requests completed in the selected period.": "選択期間に完了した API リクエストの合計数。",
+    "Total API requests attempted in the selected period.": "選択した期間に試行された API リクエストの総数（失敗を含む）。",
     "Total spend based on tokens consumed at your rates.": "消費トークンとあなたのレートに基づく総費用。",
     "Total tokens processed, including both input and output.": "入力・出力を含む処理済みトークンの合計。",
     "Share of requests completed without error.": "エラーなく完了したリクエストの割合。",

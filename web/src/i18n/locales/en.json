@@ -5424,6 +5424,7 @@
     "Out": "Out",
     "Errors": "Errors",
     "Total API requests completed in the selected period.": "Total API requests completed in the selected period.",
+    "Total API requests attempted in the selected period.": "Total API requests attempted in the selected period.",
     "Total spend based on tokens consumed at your rates.": "Total spend based on tokens consumed at your rates.",
     "Total tokens processed, including both input and output.": "Total tokens processed, including both input and output.",
     "Share of requests completed without error.": "Share of requests completed without error.",

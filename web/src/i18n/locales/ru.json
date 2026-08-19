@@ -5424,6 +5424,7 @@
     "Out": "Выход",
     "Errors": "Ошибки",
     "Total API requests completed in the selected period.": "Суммарное количество API-запросов за выбранный период.",
+    "Total API requests attempted in the selected period.": "Общее число выполненных попыток API-запросов за выбранный период, включая ошибки.",
     "Total spend based on tokens consumed at your rates.": "Совокупные расходы на основе потреблённых токенов по вашим тарифам.",
     "Total tokens processed, including both input and output.": "Общее количество обработанных токенов, включая ввод и вывод.",
     "Share of requests completed without error.": "Доля запросов, выполненных без ошибки.",

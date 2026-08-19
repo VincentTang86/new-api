@@ -38,7 +38,6 @@ import { TimeRangeFilter } from './components/time-range-filter'
 import { UsageBreakdownTable } from './components/usage-breakdown-table'
 import { UsageOverviewChart } from './components/usage-overview-chart'
 import {
-  calculateDashboardStats,
   defaultGranularityForRange,
   rangeSpanMinutes,
   resolvePresetRange,
@@ -99,7 +98,6 @@ export function Dashboard() {
     () => (flowQuery.data?.success ? (flowQuery.data.data ?? []) : []),
     [flowQuery.data]
   )
-  const totals = useMemo(() => calculateDashboardStats(quotaData), [quotaData])
   const metrics = metricsQuery.data?.success
     ? metricsQuery.data.data
     : undefined
@@ -131,7 +129,7 @@ export function Dashboard() {
   }, [])
 
   return (
-    <SectionPageLayout>
+    <SectionPageLayout stickyHeader={false}>
       <SectionPageLayout.Title>
         {displayName
           ? t('Welcome back, {{name}}', { name: displayName })
@@ -191,9 +189,8 @@ export function Dashboard() {
           </FadeIn>
           <FadeIn delay={0.1}>
             <KpiCards
-              totals={totals}
-              totalsLoading={quotaQuery.isLoading}
               metrics={metrics}
+              metricsLoading={metricsQuery.isLoading}
               rangeMinutes={rangeSpanMinutes(range)}
             />
           </FadeIn>

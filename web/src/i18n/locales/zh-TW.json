@@ -5424,6 +5424,7 @@
     "Out": "輸出",
     "Errors": "錯誤",
     "Total API requests completed in the selected period.": "所選時間段內完成的 API 請求總數。",
+    "Total API requests attempted in the selected period.": "所選時間範圍內發起的 API 請求總數，含失敗請求。",
     "Total spend based on tokens consumed at your rates.": "基於消耗 Token 按你的費率計算的總費用。",
     "Total tokens processed, including both input and output.": "已處理的 Token 總量，含輸入與輸出。",
     "Share of requests completed without error.": "成功完成（無錯誤）的請求占比。",

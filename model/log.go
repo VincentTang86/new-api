@@ -692,11 +692,16 @@ func SumUsedToken(logType int, startTimestamp int64, endTimestamp int64, modelNa
 	return token
 }
 
-// UserLogMetrics aggregates one user's consume/error logs within a time range
-// for the console dashboard KPI cards (success rate, avg latency, in/out tokens).
+// UserLogMetrics aggregates one user's consume/error logs within a time range.
+// It backs every console dashboard KPI card: the cards deliberately share this
+// one source so the request count always matches the success-rate denominator,
+// and the token headline always matches its own in/out breakdown. The chart and
+// the usage breakdown still read the pre-aggregated quota_data, which lags by up
+// to DataExportInterval.
 type UserLogMetrics struct {
 	PromptTokens     int64   `json:"prompt_tokens"`
 	CompletionTokens int64   `json:"completion_tokens"`
+	Quota            int64   `json:"quota"` // consume logs only
 	ConsumeCount     int64   `json:"consume_count"`
 	ErrorCount       int64   `json:"error_count"`
 	AvgUseTime       float64 `json:"avg_use_time"` // seconds, consume logs only
@@ -704,7 +709,7 @@ type UserLogMetrics struct {
 
 func GetUserLogMetrics(userId int, startTimestamp int64, endTimestamp int64) (metrics UserLogMetrics, err error) {
 	consumeQuery := LOG_DB.Table("logs").
-		Select("count(*) consume_count, COALESCE(sum(prompt_tokens), 0) prompt_tokens, COALESCE(sum(completion_tokens), 0) completion_tokens, COALESCE(avg(use_time), 0) avg_use_time").
+		Select("count(*) consume_count, COALESCE(sum(prompt_tokens), 0) prompt_tokens, COALESCE(sum(completion_tokens), 0) completion_tokens, COALESCE(sum(quota), 0) quota, COALESCE(avg(use_time), 0) avg_use_time").
 		Where("user_id = ?", userId).
 		Where("type = ?", LogTypeConsume)
 	errorQuery := LOG_DB.Table("logs").
