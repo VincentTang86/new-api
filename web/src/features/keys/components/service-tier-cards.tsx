@@ -87,12 +87,16 @@ export function ServiceTierCards({
             )}
             {/* Named by the tier alone: the wrapping label would otherwise
                 read the whole card, blurb and badge included, as the name. */}
+            {/* `absolute` on top of `sr-only`: the primitive's own base classes
+                carry `relative size-4 border`, which win over what `sr-only`
+                sets, so a bare `sr-only` would still reserve a 16px flex slot
+                and push the title down. */}
             <RadioGroupItem
               id={cardId}
               value={option.value}
               aria-labelledby={titleId}
               aria-describedby={descriptionId}
-              className='sr-only'
+              className='sr-only absolute size-px border-0'
             />
             <div className='flex items-start justify-between gap-2'>
               <span id={titleId} className='text-sm leading-none font-semibold'>

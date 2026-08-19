@@ -136,7 +136,7 @@ function getTierRadio(tier: string): HTMLElement {
 
 function typeName(value: string): void {
   const label = [...document.querySelectorAll<HTMLLabelElement>('label')].find(
-    (candidate) => candidate.textContent?.trim() === 'Name'
+    (candidate) => candidate.textContent?.trim() === 'Name *'
   )
   const input = label?.control as HTMLInputElement | null
   if (!input) {
