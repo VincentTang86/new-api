@@ -26,6 +26,11 @@ import type {
 
 // The self data endpoints reject spans longer than 30 days (2592000s).
 export const MAX_RANGE_DAYS = 30
+export const MAX_RANGE_SECONDS = MAX_RANGE_DAYS * 86_400
+
+export function isRangeWithinLimit(range: DashboardRange): boolean {
+  return range.end - range.start <= MAX_RANGE_SECONDS
+}
 
 // Spans longer than this default to daily buckets in the trend chart.
 const DAILY_GRANULARITY_THRESHOLD_DAYS = 2
@@ -54,12 +59,20 @@ export function resolvePresetRange(key: DashboardRangeKey): DashboardRange {
         end: now.unix(),
       }
     case '30days':
-    default:
+    default: {
+      const end = now.unix()
+      // dayjs day arithmetic is calendar-based, so crossing a DST fall-back
+      // gains an hour and pushes this already-at-the-limit preset over the
+      // server's 2592000s cap.
       return {
         key: '30days',
-        start: now.subtract(MAX_RANGE_DAYS, 'day').unix(),
-        end: now.unix(),
+        start: Math.max(
+          now.subtract(MAX_RANGE_DAYS, 'day').unix(),
+          end - MAX_RANGE_SECONDS
+        ),
+        end,
       }
+    }
   }
 }
 
@@ -95,7 +108,13 @@ export function resolveCustomRange(
   const now = dayjs()
   if (end.isAfter(now)) end = now
   if (end.isBefore(start)) end = start
-  return { key: 'custom', start: start.unix(), end: end.unix() }
+  const startUnix = start.unix()
+  return {
+    key: 'custom',
+    start: startUnix,
+    // Never hand the endpoints a span they will reject outright.
+    end: Math.min(end.unix(), startUnix + MAX_RANGE_SECONDS),
+  }
 }
 
 export function defaultGranularityForRange(

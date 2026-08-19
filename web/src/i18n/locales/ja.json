@@ -5449,6 +5449,9 @@
     "Regular pricing": "通常料金",
     "Discounted pricing": "割引料金",
     "Higher-reliability endpoints for production workloads.": "本番ワークロード向けの、より信頼性の高いエンドポイント。",
-    "Lower-cost endpoints for development, testing, and non-critical workloads.": "開発・テストや重要度の低いワークロード向けの低コストなエンドポイント。"
+    "Lower-cost endpoints for development, testing, and non-critical workloads.": "開発・テストや重要度の低いワークロード向けの低コストなエンドポイント。",
+    "Est. Cost at Official Rates": "公式料金での推定コスト",
+    "Estimated cost for the same usage based on the model developer’s published API rates.": "モデル開発元が公開している API 料金に基づき、同じ使用量にかかる費用を推定した金額です。",
+    "The time range cannot exceed {{count}} days": "期間は最大 {{count}} 日までです"
   }
 }

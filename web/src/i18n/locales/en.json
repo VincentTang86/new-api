@@ -5449,6 +5449,9 @@
     "Regular pricing": "Regular pricing",
     "Discounted pricing": "Discounted pricing",
     "Higher-reliability endpoints for production workloads.": "Higher-reliability endpoints for production workloads.",
-    "Lower-cost endpoints for development, testing, and non-critical workloads.": "Lower-cost endpoints for development, testing, and non-critical workloads."
+    "Lower-cost endpoints for development, testing, and non-critical workloads.": "Lower-cost endpoints for development, testing, and non-critical workloads.",
+    "Est. Cost at Official Rates": "Est. Cost at Official Rates",
+    "Estimated cost for the same usage based on the model developer’s published API rates.": "Estimated cost for the same usage based on the model developer’s published API rates.",
+    "The time range cannot exceed {{count}} days": "The time range cannot exceed {{count}} days"
   }
 }

@@ -42,9 +42,16 @@ function Calendar({
   locale,
   formatters,
   components,
+  disableOutsideDays = false,
   ...props
 }: React.ComponentProps<typeof DayPicker> & {
   buttonVariant?: React.ComponentProps<typeof Button>['variant']
+  /**
+   * Render the neighbouring months' padding days as read-only. With
+   * `numberOfMonths > 1` the same date is painted in two grids, so letting
+   * both be clickable turns one day into two different selections.
+   */
+  disableOutsideDays?: boolean
 }) {
   const defaultClassNames = getDefaultClassNames()
 
@@ -197,8 +204,15 @@ function Calendar({
             />
           )
         },
-        DayButton: ({ ...props }) => (
-          <CalendarDayButton locale={locale} {...props} />
+        DayButton: ({ modifiers, ...props }) => (
+          <CalendarDayButton
+            locale={locale}
+            modifiers={modifiers}
+            {...props}
+            {...(disableOutsideDays && modifiers.outside
+              ? { disabled: true, tabIndex: -1 }
+              : {})}
+          />
         ),
         WeekNumber: ({ children, ...props }) => {
           return (

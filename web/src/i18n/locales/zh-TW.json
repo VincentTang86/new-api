@@ -5449,6 +5449,9 @@
     "Regular pricing": "標準價格",
     "Discounted pricing": "優惠價格",
     "Higher-reliability endpoints for production workloads.": "更高可靠性的端點，適用於正式業務負載。",
-    "Lower-cost endpoints for development, testing, and non-critical workloads.": "成本更低的端點，適合開發、測試與非關鍵負載。"
+    "Lower-cost endpoints for development, testing, and non-critical workloads.": "成本更低的端點，適合開發、測試與非關鍵負載。",
+    "Est. Cost at Official Rates": "官方價預估費用",
+    "Estimated cost for the same usage based on the model developer’s published API rates.": "依模型開發商公布的 API 價格，對相同用量估算的費用。",
+    "The time range cannot exceed {{count}} days": "時間跨度不能超過 {{count}} 天"
   }
 }

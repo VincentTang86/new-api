@@ -16,11 +16,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, HelpCircle } from 'lucide-react'
 import { Fragment, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Skeleton } from '@/components/ui/skeleton'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import type { ApiKey } from '@/features/keys/types'
 import dayjs from '@/lib/dayjs'
 import { formatCompactNumber, formatNumber, formatQuota } from '@/lib/format'
@@ -254,7 +260,25 @@ export function UsageBreakdownTable({
                     {t('Actual Cost')}
                   </th>
                   <th className={cn(TH_CLASS, 'text-right')}>
-                    {t('Standard Cost')}
+                    <span className='inline-flex items-center justify-end gap-1'>
+                      {t('Est. Cost at Official Rates')}
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger
+                            render={
+                              <span className='hover:text-muted-foreground shrink-0 cursor-help text-[#9ca3af]' />
+                            }
+                          >
+                            <HelpCircle className='size-3.5' />
+                          </TooltipTrigger>
+                          <TooltipContent className='max-w-64'>
+                            {t(
+                              'Estimated cost for the same usage based on the model developer’s published API rates.'
+                            )}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </span>
                   </th>
                   <th className={cn(TH_CLASS, 'text-right')}>{t('Savings')}</th>
                 </tr>

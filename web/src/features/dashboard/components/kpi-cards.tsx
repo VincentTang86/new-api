@@ -23,6 +23,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import {
   Tooltip,
   TooltipContent,
+  TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { formatCompactNumber, formatNumber, formatQuota } from '@/lib/format'
@@ -132,44 +133,48 @@ export function KpiCards({
   ]
 
   return (
-    <div className='flex flex-wrap gap-3'>
-      {cards.map((card) => (
-        <div
-          key={card.key}
-          className='dark:bg-card dark:border-border flex min-w-[150px] flex-1 flex-col gap-2.5 rounded-xl border border-[#e5e7eb] bg-white p-[18px]'
-        >
-          <div className='flex items-center gap-1.5'>
-            <span className='dark:text-muted-foreground text-xs font-semibold whitespace-nowrap text-[#6b7280]'>
-              {card.title}
-            </span>
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <span className='hover:text-muted-foreground shrink-0 cursor-help text-[#9ca3af]' />
-                }
-              >
-                <HelpCircle className='size-3.5' />
-              </TooltipTrigger>
-              <TooltipContent className='max-w-56'>{card.tip}</TooltipContent>
-            </Tooltip>
+    // Without a provider these tips inherit Base UI's 600ms rest delay; ours
+    // defaults to zero so the tip tracks the pointer immediately.
+    <TooltipProvider>
+      <div className='flex flex-wrap gap-3'>
+        {cards.map((card) => (
+          <div
+            key={card.key}
+            className='dark:bg-card dark:border-border flex min-w-[150px] flex-1 flex-col gap-2.5 rounded-xl border border-[#e5e7eb] bg-white p-[18px]'
+          >
+            <div className='flex items-center gap-1.5'>
+              <span className='dark:text-muted-foreground text-xs font-semibold whitespace-nowrap text-[#6b7280]'>
+                {card.title}
+              </span>
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <span className='hover:text-muted-foreground shrink-0 cursor-help text-[#9ca3af]' />
+                  }
+                >
+                  <HelpCircle className='size-3.5' />
+                </TooltipTrigger>
+                <TooltipContent className='max-w-56'>{card.tip}</TooltipContent>
+              </Tooltip>
+            </div>
+            {metricsLoading ? (
+              <>
+                <Skeleton className='h-8 w-20' />
+                <Skeleton className='h-3.5 w-28' />
+              </>
+            ) : (
+              <>
+                <div className='dark:text-foreground text-[26px] leading-tight font-bold tracking-tight text-[#111827] tabular-nums'>
+                  {card.value}
+                </div>
+                <div className='dark:text-muted-foreground text-[11px] leading-relaxed text-[#6b7280]'>
+                  {card.description}
+                </div>
+              </>
+            )}
           </div>
-          {metricsLoading ? (
-            <>
-              <Skeleton className='h-8 w-20' />
-              <Skeleton className='h-3.5 w-28' />
-            </>
-          ) : (
-            <>
-              <div className='dark:text-foreground text-[26px] leading-tight font-bold tracking-tight text-[#111827] tabular-nums'>
-                {card.value}
-              </div>
-              <div className='dark:text-muted-foreground text-[11px] leading-relaxed text-[#6b7280]'>
-                {card.description}
-              </div>
-            </>
-          )}
-        </div>
-      ))}
-    </div>
+        ))}
+      </div>
+    </TooltipProvider>
   )
 }

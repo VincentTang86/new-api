@@ -5449,6 +5449,9 @@
     "Regular pricing": "Tarif standard",
     "Discounted pricing": "Tarif réduit",
     "Higher-reliability endpoints for production workloads.": "Des endpoints à fiabilité renforcée pour les charges de production.",
-    "Lower-cost endpoints for development, testing, and non-critical workloads.": "Des endpoints plus économiques pour le développement, les tests et les charges non critiques."
+    "Lower-cost endpoints for development, testing, and non-critical workloads.": "Des endpoints plus économiques pour le développement, les tests et les charges non critiques.",
+    "Est. Cost at Official Rates": "Coût est. au tarif officiel",
+    "Estimated cost for the same usage based on the model developer’s published API rates.": "Coût estimé pour la même utilisation, sur la base des tarifs d’API publiés par le développeur du modèle.",
+    "The time range cannot exceed {{count}} days": "La plage de dates ne peut pas dépasser {{count}} jours"
   }
 }

@@ -53,6 +53,10 @@ export const api = axios.create({
 // interceptor run. A stable id collapses them into a single toast.
 const SESSION_EXPIRED_TOAST_ID = 'auth-session-expired'
 
+function businessErrorToastId(message: string): string {
+  return `api-error:${message}`
+}
+
 const inFlightGet = new Map<string, Promise<unknown>>()
 const originalGet = api.get.bind(api)
 
@@ -93,11 +97,12 @@ api.interceptors.response.use(
       !response.data.success
     ) {
       const messageKey = getServerErrorMessageKey(response.data)
-      toast.error(
-        messageKey
-          ? t(messageKey)
-          : response.data.message || t('Request failed')
-      )
+      const message = messageKey
+        ? t(messageKey)
+        : response.data.message || t('Request failed')
+      // Parallel queries that fail the same way should read as one problem,
+      // not a stack of identical toasts. Distinct messages still stack.
+      toast.error(message, { id: businessErrorToastId(message) })
     }
     return response
   },
@@ -150,7 +155,7 @@ api.interceptors.response.use(
         : error?.response?.data?.message ||
           error?.message ||
           t('Request failed')
-      toast.error(message)
+      toast.error(message, { id: businessErrorToastId(message) })
     }
     throw error
   }

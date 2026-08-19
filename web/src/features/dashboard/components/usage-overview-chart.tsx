@@ -27,6 +27,7 @@ import { cn } from '@/lib/utils'
 import { VCHART_OPTION } from '@/lib/vchart'
 
 import { USAGE_METRIC_OPTIONS } from '../constants'
+import { EMPTY_AXIS_TICK_COUNT, emptyUsageAxisMax } from '../lib'
 import type { QuotaDataItem, UsageGranularity, UsageMetric } from '../types'
 
 let themeManagerPromise: Promise<
@@ -137,6 +138,10 @@ export function UsageOverviewChart({
     return { chartValues: values, modelOrder: order }
   }, [data, granularity, metric, t])
 
+  // An all-zero range degenerates to the same [0, 0] domain as an empty one,
+  // so both need the placeholder frame.
+  const hasChartData = chartValues.some((entry) => entry.value > 0)
+
   const spec = useMemo(
     () => ({
       type: 'bar' as const,
@@ -161,6 +166,14 @@ export function UsageOverviewChart({
       axes: [
         {
           orient: 'left' as const,
+          ...(hasChartData
+            ? {}
+            : {
+                min: 0,
+                max: emptyUsageAxisMax(metric),
+                nice: false,
+                tick: { forceTickCount: EMPTY_AXIS_TICK_COUNT },
+              }),
           label: {
             style: { fontSize: 11 },
             formatMethod: (value: string | number) =>
@@ -201,7 +214,16 @@ export function UsageOverviewChart({
       theme: resolvedTheme === 'dark' ? 'dark' : 'light',
       background: 'transparent',
     }),
-    [chartValues, formatValue, granularity, modelOrder, resolvedTheme, t]
+    [
+      chartValues,
+      formatValue,
+      granularity,
+      hasChartData,
+      metric,
+      modelOrder,
+      resolvedTheme,
+      t,
+    ]
   )
 
   const chartKey = [
@@ -209,6 +231,7 @@ export function UsageOverviewChart({
     granularity,
     loading ? 'loading' : 'ready',
     chartValues.length,
+    hasChartData ? 'data' : 'empty',
     resolvedTheme,
   ].join('-')
 

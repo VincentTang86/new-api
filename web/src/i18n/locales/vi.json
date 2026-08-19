@@ -5449,6 +5449,9 @@
     "Regular pricing": "Giá tiêu chuẩn",
     "Discounted pricing": "Giá ưu đãi",
     "Higher-reliability endpoints for production workloads.": "Endpoint có độ tin cậy cao hơn cho tải vận hành chính thức.",
-    "Lower-cost endpoints for development, testing, and non-critical workloads.": "Endpoint chi phí thấp cho phát triển, kiểm thử và các tải không quan trọng."
+    "Lower-cost endpoints for development, testing, and non-critical workloads.": "Endpoint chi phí thấp cho phát triển, kiểm thử và các tải không quan trọng.",
+    "Est. Cost at Official Rates": "Chi phí ước tính theo giá chính thức",
+    "Estimated cost for the same usage based on the model developer’s published API rates.": "Chi phí ước tính cho cùng mức sử dụng, dựa trên bảng giá API do nhà phát triển mô hình công bố.",
+    "The time range cannot exceed {{count}} days": "Khoảng thời gian không được vượt quá {{count}} ngày"
   }
 }

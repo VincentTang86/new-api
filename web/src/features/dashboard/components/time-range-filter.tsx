@@ -20,6 +20,7 @@ import { CalendarDays } from 'lucide-react'
 import { useState } from 'react'
 import type { DateRange } from 'react-day-picker'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
 
 import { Calendar } from '@/components/ui/calendar'
 import {
@@ -31,8 +32,16 @@ import dayjs from '@/lib/dayjs'
 import { cn } from '@/lib/utils'
 
 import { RANGE_PRESETS } from '../constants'
-import { MAX_RANGE_DAYS, resolveCustomRange, resolvePresetRange } from '../lib'
+import {
+  MAX_RANGE_DAYS,
+  isRangeWithinLimit,
+  resolveCustomRange,
+  resolvePresetRange,
+} from '../lib'
 import type { DashboardRange } from '../types'
+
+// A stable id keeps repeated attempts collapsed into a single notice.
+const RANGE_LIMIT_TOAST_ID = 'dashboard-range-limit'
 
 const FILTER_BUTTON_BASE =
   'cursor-pointer rounded-[6px] px-3.5 py-[7px] text-[13px] transition-colors'
@@ -157,8 +166,19 @@ export function TimeRangeFilter({
       )
     : null
 
+  const draftTooLong = draftRange !== null && !isRangeWithinLimit(draftRange)
+
   const applyDraft = () => {
     if (!draftRange) return
+    if (!isRangeWithinLimit(draftRange)) {
+      toast.error(
+        t('The time range cannot exceed {{count}} days', {
+          count: MAX_RANGE_DAYS,
+        }),
+        { id: RANGE_LIMIT_TOAST_ID }
+      )
+      return
+    }
     onRangeChange(draftRange)
     setPickerOpen(false)
   }
@@ -212,6 +232,11 @@ export function TimeRangeFilter({
             <Calendar
               mode='range'
               numberOfMonths={2}
+              // `max` counts whole days between the endpoints, so a 30-day
+              // inclusive window is 29. Unlike `disabled` it also guards the
+              // "extend an already complete range" path.
+              max={MAX_RANGE_DAYS - 1}
+              disableOutsideDays
               selected={draft}
               onSelect={setDraft}
               disabled={isDateDisabled}
@@ -247,6 +272,9 @@ export function TimeRangeFilter({
                 hoursLabel={t('End time')}
                 minutesLabel={t('End time')}
               />
+              <span className='dark:text-muted-foreground text-[11px] text-[#9ea3b0]'>
+                {t('Up to {{count}} days', { count: MAX_RANGE_DAYS })}
+              </span>
               <div className='flex-1' />
               <div className='flex gap-2'>
                 <button
@@ -259,7 +287,11 @@ export function TimeRangeFilter({
                 <button
                   type='button'
                   className='cursor-pointer rounded-[6px] bg-[#ff5a5f] px-3.5 py-[6px] text-[13px] font-semibold text-white transition-colors hover:bg-[#e14b50] disabled:cursor-not-allowed disabled:opacity-50'
-                  disabled={!draftRange || draftRange.end <= draftRange.start}
+                  disabled={
+                    !draftRange ||
+                    draftRange.end <= draftRange.start ||
+                    draftTooLong
+                  }
                   onClick={applyDraft}
                 >
                   {t('Apply')}

@@ -5449,6 +5449,9 @@
     "Regular pricing": "Стандартная цена",
     "Discounted pricing": "Сниженная цена",
     "Higher-reliability endpoints for production workloads.": "Более надёжные эндпоинты для рабочих нагрузок.",
-    "Lower-cost endpoints for development, testing, and non-critical workloads.": "Более экономичные эндпоинты для разработки, тестирования и некритичных нагрузок."
+    "Lower-cost endpoints for development, testing, and non-critical workloads.": "Более экономичные эндпоинты для разработки, тестирования и некритичных нагрузок.",
+    "Est. Cost at Official Rates": "Оценка по официальным тарифам",
+    "Estimated cost for the same usage based on the model developer’s published API rates.": "Оценочная стоимость того же объёма использования по опубликованным тарифам API разработчика модели.",
+    "The time range cannot exceed {{count}} days": "Диапазон дат не может превышать {{count}} дн."
   }
 }
