@@ -18,12 +18,28 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { useQuery } from '@tanstack/react-query'
 
+import { ROLE } from '@/lib/roles'
+import { useAuthStore } from '@/stores/auth-store'
+
 import { getSystemOptions } from '../api'
 
+/**
+ * System options, for the accounts allowed to have them.
+ *
+ * `GET /api/option/` is mounted behind RootAuth, so asking for it as anyone
+ * else can only ever produce a 403 toast. Callers outside the system settings
+ * page (the models drawer, the subscriptions provider) render for admins too,
+ * so the gate lives here rather than at each call site.
+ */
 export function useSystemOptions() {
+  const isSuperAdmin = useAuthStore(
+    (state) => state.auth.user?.role === ROLE.SUPER_ADMIN
+  )
+
   return useQuery({
     queryKey: ['system-options'],
     queryFn: getSystemOptions,
+    enabled: isSuperAdmin,
     staleTime: 5 * 60 * 1000,
   })
 }
