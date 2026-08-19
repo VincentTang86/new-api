@@ -19,6 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 import {
   Box,
   ChartLine,
+  ChartPie,
   ClockArrowUp,
   CreditCard,
   List,
@@ -32,7 +33,7 @@ import {
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
-import { type SidebarData } from '@/components/layout/types'
+import type { SidebarData } from '@/components/layout/types'
 import {
   ADMIN_PERMISSION_ACTIONS,
   ADMIN_PERMISSION_RESOURCES,
@@ -133,6 +134,14 @@ export function useSidebarData(): SidebarData {
             title: t('Users'),
             url: '/users',
             icon: Users,
+          },
+          {
+            // checkIsActive matches the exact path, so the users tab needs
+            // listing or the entry un-highlights when you switch to it.
+            title: t('Usage Analytics'),
+            url: '/usage-analytics/flow',
+            activeUrls: ['/usage-analytics/users'],
+            icon: ChartPie,
           },
           {
             title: t('Redemption Codes'),

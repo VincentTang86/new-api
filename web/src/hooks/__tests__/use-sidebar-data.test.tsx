@@ -91,6 +91,7 @@ describe('useSidebarData', () => {
       ['/channels', undefined, { resource: 'channel', action: 'read' }],
       ['/models/metadata', undefined, undefined],
       ['/users', undefined, undefined],
+      ['/usage-analytics/flow', undefined, undefined],
       ['/redemption-codes', undefined, undefined],
       ['/subscriptions', undefined, undefined],
       ['/system-info', ROLE.SUPER_ADMIN, undefined],
