@@ -24,6 +24,8 @@ import {
   type ReactNode,
 } from 'react'
 
+import { cn } from '@/lib/utils'
+
 import { Main } from './main'
 import { PageFooterProvider } from './page-footer'
 
@@ -52,6 +54,8 @@ SectionPageLayoutBreadcrumb.displayName = 'SectionPageLayout.Breadcrumb'
 export type SectionPageLayoutProps = {
   children: ReactNode
   fixedContent?: boolean
+  /** Pin the title/actions row above the scroll area. Off scrolls it away with the content. */
+  stickyHeader?: boolean
 }
 
 export function SectionPageLayout(props: SectionPageLayoutProps) {
@@ -76,36 +80,50 @@ export function SectionPageLayout(props: SectionPageLayoutProps) {
       breadcrumb = child.props.children
   })
 
+  const stickyHeader = props.stickyHeader ?? true
+
+  const header = (
+    <div className='shrink-0 px-3 pt-3 pb-1 sm:ps-10 sm:pe-5 sm:pt-7 sm:pb-1'>
+      {breadcrumb != null && <div className='mb-2 sm:mb-3'>{breadcrumb}</div>}
+      <div className='flex flex-wrap items-center justify-between gap-x-3 gap-y-2 sm:gap-x-4'>
+        <div className='min-w-0 flex-1'>
+          <h2 className='truncate text-lg font-bold tracking-tight sm:text-[22px]'>
+            {title}
+          </h2>
+        </div>
+        {actions != null && (
+          <div className='flex shrink-0 flex-wrap items-center justify-end gap-2 sm:gap-x-4'>
+            {actions}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+
+  const contentPadding = 'px-3 pt-1 pb-3 sm:ps-10 sm:pe-5 sm:pt-1 sm:pb-8'
+
   return (
     <PageFooterProvider container={footerContainer}>
       <Main>
-        <div className='shrink-0 px-3 pt-3 pb-1 sm:ps-10 sm:pe-5 sm:pt-7 sm:pb-1'>
-          {breadcrumb != null && (
-            <div className='mb-2 sm:mb-3'>{breadcrumb}</div>
-          )}
-          <div className='flex flex-wrap items-center justify-between gap-x-3 gap-y-2 sm:gap-x-4'>
-            <div className='min-w-0 flex-1'>
-              <h2 className='truncate text-lg font-bold tracking-tight sm:text-[22px]'>
-                {title}
-              </h2>
+        {stickyHeader ? (
+          <>
+            {header}
+            <div
+              className={cn(
+                'min-h-0 flex-1',
+                props.fixedContent ? 'overflow-hidden' : 'overflow-auto',
+                contentPadding
+              )}
+            >
+              {content}
             </div>
-            {actions != null && (
-              <div className='flex shrink-0 flex-wrap items-center justify-end gap-2 sm:gap-x-4'>
-                {actions}
-              </div>
-            )}
+          </>
+        ) : (
+          <div className='min-h-0 flex-1 overflow-auto'>
+            {header}
+            <div className={contentPadding}>{content}</div>
           </div>
-        </div>
-
-        <div
-          className={
-            props.fixedContent
-              ? 'min-h-0 flex-1 overflow-hidden px-3 pt-1 pb-3 sm:ps-10 sm:pe-5 sm:pt-1 sm:pb-8'
-              : 'min-h-0 flex-1 overflow-auto px-3 pt-1 pb-3 sm:ps-10 sm:pe-5 sm:pt-1 sm:pb-8'
-          }
-        >
-          {content}
-        </div>
+        )}
 
         <div
           ref={setFooterContainer}
