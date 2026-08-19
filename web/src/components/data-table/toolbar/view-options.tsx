@@ -17,7 +17,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { type Table } from '@tanstack/react-table'
-import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
@@ -39,16 +38,17 @@ export function DataTableViewOptions<TData>({
 }: DataTableViewOptionsProps<TData>) {
   const { t } = useTranslation()
 
-  const hideableColumns = React.useMemo(
-    () =>
-      table
-        .getAllColumns()
-        .filter(
-          (column) =>
-            typeof column.accessorFn !== 'undefined' && column.getCanHide()
-        ),
-    [table]
-  )
+  // Read the columns on every render instead of memoizing on `table`: the
+  // table instance keeps the same identity for its whole lifetime, so a memo
+  // would pin the column defs built on the first render and keep showing their
+  // labels in the language that was active back then. TanStack already
+  // memoizes getAllColumns() on the column defs themselves.
+  const hideableColumns = table
+    .getAllColumns()
+    .filter(
+      (column) =>
+        typeof column.accessorFn !== 'undefined' && column.getCanHide()
+    )
 
   return (
     <DropdownMenu modal={false}>

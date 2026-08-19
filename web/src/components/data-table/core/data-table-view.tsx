@@ -49,10 +49,11 @@ export { DataTableRowActionMenu } from './row-action-menu'
 
 export function DataTableView<TData>(props: DataTableViewProps<TData>) {
   const rows = props.rows ?? props.table.getRowModel().rows
-  const colSpan = React.useMemo(
-    () => props.table.getVisibleLeafColumns().length,
-    [props.table]
-  )
+  // Counted on every render rather than memoized on `props.table`: the table
+  // instance keeps one identity for its whole lifetime, so a memo would freeze
+  // the count taken before the user hid or showed a column. TanStack already
+  // memoizes getVisibleLeafColumns() on the visibility state.
+  const colSpan = props.table.getVisibleLeafColumns().length
   const columnClassName = useResolvedColumnClassName(
     props.table,
     props.getColumnClassName,
