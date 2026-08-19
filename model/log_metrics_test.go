@@ -16,12 +16,13 @@ func TestGetUserLogMetrics(t *testing.T) {
 	require.NoError(t, DB.Exec("DELETE FROM logs").Error)
 
 	logs := []Log{
-		// user 1, in range: three consume logs
-		{UserId: 1, Type: LogTypeConsume, CreatedAt: 1000, PromptTokens: 100, CompletionTokens: 50, UseTime: 2, Quota: 10},
+		// user 1, in range: three consume logs; the middle one is a legacy row
+		// without a recorded first response and must stay out of latency stats
+		{UserId: 1, Type: LogTypeConsume, CreatedAt: 1000, PromptTokens: 100, CompletionTokens: 50, UseTime: 2, Quota: 10, FirstResponseMs: 320},
 		{UserId: 1, Type: LogTypeConsume, CreatedAt: 1100, PromptTokens: 200, CompletionTokens: 100, UseTime: 4, Quota: 20},
-		{UserId: 1, Type: LogTypeConsume, CreatedAt: 1200, PromptTokens: 300, CompletionTokens: 150, UseTime: 6, Quota: 30},
-		// user 1, in range: one error log (tokens/use_time/quota must not affect consume totals)
-		{UserId: 1, Type: LogTypeError, CreatedAt: 1150, UseTime: 30, Quota: 999},
+		{UserId: 1, Type: LogTypeConsume, CreatedAt: 1200, PromptTokens: 300, CompletionTokens: 150, UseTime: 6, Quota: 30, FirstResponseMs: 480},
+		// user 1, in range: one error log (tokens/use_time/quota/latency must not affect consume totals)
+		{UserId: 1, Type: LogTypeError, CreatedAt: 1150, UseTime: 30, Quota: 999, FirstResponseMs: 9999},
 		// user 1, in range: topup log must be ignored entirely
 		{UserId: 1, Type: LogTypeTopup, CreatedAt: 1150, Quota: 500},
 		// user 1, out of range: must be excluded
@@ -43,6 +44,11 @@ func TestGetUserLogMetrics(t *testing.T) {
 	assert.Equal(t, int64(3), metrics.ConsumeCount)
 	assert.Equal(t, int64(1), metrics.ErrorCount)
 	assert.InDelta(t, 4.0, metrics.AvgUseTime, 1e-9)
+	// latency: only the two rows with a first response count;
+	// nearest-rank p95 of [320, 480] is 480
+	assert.Equal(t, int64(2), metrics.FrtCount)
+	assert.InDelta(t, 400.0, metrics.AvgFrtMs, 1e-9)
+	assert.Equal(t, int64(480), metrics.P95FrtMs)
 
 	// widening the range picks up the later logs
 	metrics, err = GetUserLogMetrics(1, 1000, 3000)

@@ -69,6 +69,7 @@ type Log struct {
 	PromptTokens      int    `json:"prompt_tokens" gorm:"default:0"`
 	CompletionTokens  int    `json:"completion_tokens" gorm:"default:0"`
 	UseTime           int    `json:"use_time" gorm:"default:0"`
+	FirstResponseMs   int    `json:"first_response_ms" gorm:"default:0"`
 	IsStream          bool   `json:"is_stream"`
 	ChannelId         int    `json:"channel" gorm:"index"`
 	ChannelName       string `json:"channel_name" gorm:"->"`
@@ -350,6 +351,21 @@ func RecordConsumeLog(c *gin.Context, userId int, params RecordConsumeLogParams)
 	upstreamRequestId := c.GetString(common.UpstreamRequestIdKey)
 	createdAt := common.GetTimestamp()
 	otherStr := common.MapToJsonStr(params.Other)
+	// TTFT 只在 Other 里以 "frt"(毫秒)存在（见 service.GenerateTextOtherInfo；
+	// 未收到首包时为 -1000 哨兵值）。抬升为真实列，聚合查询才不必做跨方言的
+	// JSON 提取。
+	firstResponseMs := 0
+	switch v := params.Other["frt"].(type) {
+	case int:
+		firstResponseMs = v
+	case int64:
+		firstResponseMs = int(v)
+	case float64:
+		firstResponseMs = int(v)
+	}
+	if firstResponseMs < 0 {
+		firstResponseMs = 0
+	}
 	// 判断是否需要记录 IP
 	needRecordIp := false
 	if settingMap, err := GetUserSetting(userId, false); err == nil {
@@ -371,6 +387,7 @@ func RecordConsumeLog(c *gin.Context, userId int, params RecordConsumeLogParams)
 		ChannelId:        params.ChannelId,
 		TokenId:          params.TokenId,
 		UseTime:          params.UseTimeSeconds,
+		FirstResponseMs:  firstResponseMs,
 		IsStream:         params.IsStream,
 		Group:            params.Group,
 		Ip: func() string {
@@ -723,11 +740,18 @@ type UserLogMetrics struct {
 	ConsumeCount     int64   `json:"consume_count"`
 	ErrorCount       int64   `json:"error_count"`
 	AvgUseTime       float64 `json:"avg_use_time"` // seconds, consume logs only
+	FrtCount         int64   `json:"frt_count"`    // consume logs with a recorded first response
+	AvgFrtMs         float64 `json:"avg_frt_ms"`   // mean time-to-first-response, ms
+	P95FrtMs         int64   `json:"p95_frt_ms"`   // nearest-rank p95 time-to-first-response, ms
 }
 
 func GetUserLogMetrics(userId int, startTimestamp int64, endTimestamp int64) (metrics UserLogMetrics, err error) {
+	// first_response_ms only exists on rows written after the column landed;
+	// zero rows (legacy or no first packet) stay out of the latency stats via
+	// the CASE guard, so an old range degrades to frt_count = 0 instead of a
+	// skewed average.
 	consumeQuery := LOG_DB.Table("logs").
-		Select("count(*) consume_count, COALESCE(sum(prompt_tokens), 0) prompt_tokens, COALESCE(sum(completion_tokens), 0) completion_tokens, COALESCE(sum(quota), 0) quota, COALESCE(avg(use_time), 0) avg_use_time").
+		Select("count(*) consume_count, COALESCE(sum(prompt_tokens), 0) prompt_tokens, COALESCE(sum(completion_tokens), 0) completion_tokens, COALESCE(sum(quota), 0) quota, COALESCE(avg(use_time), 0) avg_use_time, COALESCE(sum(CASE WHEN first_response_ms > 0 THEN 1 ELSE 0 END), 0) frt_count, COALESCE(avg(CASE WHEN first_response_ms > 0 THEN first_response_ms END), 0) avg_frt_ms").
 		Where("user_id = ?", userId).
 		Where("type = ?", LogTypeConsume)
 	errorQuery := LOG_DB.Table("logs").
@@ -749,6 +773,30 @@ func GetUserLogMetrics(userId int, startTimestamp int64, endTimestamp int64) (me
 	if err := errorQuery.Scan(&metrics).Error; err != nil {
 		common.SysError("failed to query user error log metrics: " + err.Error())
 		return metrics, errors.New("查询统计数据失败")
+	}
+	if metrics.FrtCount > 0 {
+		// Nearest-rank percentile through ORDER BY + LIMIT/OFFSET, which all
+		// supported databases share; percentile_cont does not exist on
+		// MySQL 5.7 or SQLite.
+		offset := int((metrics.FrtCount*95+99)/100) - 1
+		p95Query := LOG_DB.Table("logs").
+			Where("user_id = ?", userId).
+			Where("type = ?", LogTypeConsume).
+			Where("first_response_ms > 0")
+		if startTimestamp != 0 {
+			p95Query = p95Query.Where("created_at >= ?", startTimestamp)
+		}
+		if endTimestamp != 0 {
+			p95Query = p95Query.Where("created_at <= ?", endTimestamp)
+		}
+		var p95 []int64
+		if err := p95Query.Order("first_response_ms").Offset(offset).Limit(1).Pluck("first_response_ms", &p95).Error; err != nil {
+			common.SysError("failed to query user latency percentile: " + err.Error())
+			return metrics, errors.New("查询统计数据失败")
+		}
+		if len(p95) > 0 {
+			metrics.P95FrtMs = p95[0]
+		}
 	}
 	return metrics, nil
 }

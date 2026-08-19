@@ -61,6 +61,9 @@ export interface UserLogMetrics {
   consume_count: number
   error_count: number
   avg_use_time: number // seconds, consume logs only
+  frt_count: number // consume logs with a recorded first response
+  avg_frt_ms: number // mean time-to-first-response, ms
+  p95_frt_ms: number // nearest-rank p95 time-to-first-response, ms
 }
 
 export type UsageMetric = 'tokens' | 'cost' | 'requests'
