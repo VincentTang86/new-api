@@ -54,6 +54,9 @@ export type PricingModel = {
   billing_mode?: string
   /** Raw expression describing dynamic / tiered billing */
   billing_expr?: string
+  /** Admin-configured external list prices (USD per 1M tokens). */
+  official_price?: ReferencePriceLanes
+  openrouter_price?: ReferencePriceLanes
   /** Pricing version returned by backend, useful for cache busting */
   pricing_version?: string
   /**
@@ -68,6 +71,19 @@ export type PricingModel = {
   input_modalities?: Modality[]
   output_modalities?: Modality[]
   capabilities?: ModelCapability[]
+}
+
+/**
+ * One external benchmark's list prices for a model, USD per 1M tokens.
+ * Maintained by admins in the reference-pricing table; absent lanes mean the
+ * source has no such price.
+ */
+export type ReferencePriceLanes = {
+  input?: number | null
+  output?: number | null
+  cached_input?: number | null
+  cache_creation?: number | null
+  cache_hit?: number | null
 }
 
 /** Input/output modalities supported by a model. */

@@ -28,12 +28,6 @@ vi.mock('@/features/pricing/hooks/use-pricing-data', () => ({
   usePricingData: () => usePricingData(),
 }))
 
-// The benchmark supplement is a separate fetch; the tier tabs do not depend on
-// it, so it resolves empty here.
-vi.mock('../official-pricing', () => ({
-  fetchOfficialPricing: () => Promise.resolve({}),
-}))
-
 // The tier catalogue translates through i18next; assert against the keys.
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({

@@ -115,7 +115,8 @@ function isModelInGroup(model: PricingModel, group: string): boolean {
 interface BuildPricingRowsParams {
   models: readonly PricingModel[]
   language?: string
-  /** Parsed `official-pricing.json`, keyed by the backend model_name. */
+  /** Benchmark catalogue built from `/api/pricing` reference prices, keyed by
+   * the backend model_name (see `lib/official-pricing.ts`). */
   catalog: OfficialPricingMap
   /** Group tab the visitor selected; '' prices at ratio 1 with no filtering. */
   selectedGroup: string
@@ -128,9 +129,9 @@ interface BuildPricingRowsParams {
 /**
  * Turn the backend `/api/pricing` models into fully-formatted display rows.
  * FR prices are the model's configured price multiplied by the selected
- * group's ratio; the benchmark columns come from the hand-maintained
- * supplement for the selected "Compare with" source, and savings are computed
- * against that benchmark. Models not enabled for the selected group are
+ * group's ratio; the benchmark columns come from the admin-maintained
+ * reference prices for the selected "Compare with" source, and savings are
+ * computed against that benchmark. Models not enabled for the selected group are
  * dropped, matching what that group can actually call. Every price is USD per
  * 1M tokens (per call for 按次 models): this is a USD comparison table by
  * design, independent of the console's display currency. Everything the table

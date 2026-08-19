@@ -388,17 +388,35 @@ func RecordConsumeLog(c *gin.Context, userId int, params RecordConsumeLogParams)
 		logger.LogError(c, "failed to record log: "+err.Error())
 	}
 	if common.DataExportEnabled {
+		// cache token 分拆只存在于 Other 中（见 service.GenerateTextOtherInfo 系列），进程内为 int
+		cacheTokens, cacheCreationTokens := 0, 0
+		switch v := params.Other["cache_tokens"].(type) {
+		case int:
+			cacheTokens = v
+		case float64:
+			cacheTokens = int(v)
+		}
+		switch v := params.Other["cache_creation_tokens"].(type) {
+		case int:
+			cacheCreationTokens = v
+		case float64:
+			cacheCreationTokens = int(v)
+		}
 		LogQuotaData(QuotaDataLogParams{
-			UserID:    userId,
-			Username:  username,
-			ModelName: params.ModelName,
-			Quota:     params.Quota,
-			CreatedAt: createdAt,
-			TokenUsed: params.PromptTokens + params.CompletionTokens,
-			UseGroup:  params.Group,
-			TokenID:   params.TokenId,
-			ChannelID: params.ChannelId,
-			NodeName:  common.NodeName,
+			UserID:              userId,
+			Username:            username,
+			ModelName:           params.ModelName,
+			Quota:               params.Quota,
+			CreatedAt:           createdAt,
+			TokenUsed:           params.PromptTokens + params.CompletionTokens,
+			UseGroup:            params.Group,
+			TokenID:             params.TokenId,
+			ChannelID:           params.ChannelId,
+			NodeName:            common.NodeName,
+			PromptTokens:        params.PromptTokens,
+			CompletionTokens:    params.CompletionTokens,
+			CacheTokens:         cacheTokens,
+			CacheCreationTokens: cacheCreationTokens,
 		})
 	}
 }

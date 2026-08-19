@@ -23,6 +23,11 @@ type FlowQuotaData struct {
 	TokenUsed    int    `json:"token_used" gorm:"column:token_used"`
 	Count        int    `json:"count" gorm:"column:count"`
 	Quota        int    `json:"quota" gorm:"column:quota"`
+	// token 分拆；历史行无分拆时全为 0（此时 token_used 仍大于 0）
+	PromptTokens        int `json:"prompt_tokens" gorm:"column:prompt_tokens"`
+	CompletionTokens    int `json:"completion_tokens" gorm:"column:completion_tokens"`
+	CacheTokens         int `json:"cache_tokens" gorm:"column:cache_tokens"`
+	CacheCreationTokens int `json:"cache_creation_tokens" gorm:"column:cache_creation_tokens"`
 }
 
 func GetFlowQuotaData(startTime int64, endTime int64, username string, userID int, role int) ([]*FlowQuotaData, error) {
@@ -46,7 +51,7 @@ func flowQuotaBaseQuery(startTime int64, endTime int64) *gorm.DB {
 func getSelfFlowQuotaData(startTime int64, endTime int64, userID int) ([]*FlowQuotaData, error) {
 	rows := make([]*FlowQuotaData, 0)
 	err := flowQuotaBaseQuery(startTime, endTime).
-		Select("token_id, use_group, model_name, sum(count) as count, sum(quota) as quota, sum(token_used) as token_used").
+		Select("token_id, use_group, model_name, sum(count) as count, sum(quota) as quota, sum(token_used) as token_used, sum(prompt_tokens) as prompt_tokens, sum(completion_tokens) as completion_tokens, sum(cache_tokens) as cache_tokens, sum(cache_creation_tokens) as cache_creation_tokens").
 		Where("user_id = ?", userID).
 		Group("token_id, use_group, model_name").
 		Order("quota DESC").
@@ -63,7 +68,7 @@ func getSelfFlowQuotaData(startTime int64, endTime int64, userID int) ([]*FlowQu
 func getAdminFlowQuotaData(startTime int64, endTime int64, username string) ([]*FlowQuotaData, error) {
 	rows := make([]*FlowQuotaData, 0)
 	query := flowQuotaBaseQuery(startTime, endTime).
-		Select("user_id, username, use_group, model_name, channel_id, sum(count) as count, sum(quota) as quota, sum(token_used) as token_used")
+		Select("user_id, username, use_group, model_name, channel_id, sum(count) as count, sum(quota) as quota, sum(token_used) as token_used, sum(prompt_tokens) as prompt_tokens, sum(completion_tokens) as completion_tokens, sum(cache_tokens) as cache_tokens, sum(cache_creation_tokens) as cache_creation_tokens")
 	if username != "" {
 		query = query.Where("username = ?", username)
 	}
@@ -80,7 +85,7 @@ func getAdminFlowQuotaData(startTime int64, endTime int64, username string) ([]*
 func getRootFlowQuotaData(startTime int64, endTime int64, username string) ([]*FlowQuotaData, error) {
 	rows := make([]*FlowQuotaData, 0)
 	query := flowQuotaBaseQuery(startTime, endTime).
-		Select("user_id, username, node_name, token_id, use_group, model_name, channel_id, sum(count) as count, sum(quota) as quota, sum(token_used) as token_used")
+		Select("user_id, username, node_name, token_id, use_group, model_name, channel_id, sum(count) as count, sum(quota) as quota, sum(token_used) as token_used, sum(prompt_tokens) as prompt_tokens, sum(completion_tokens) as completion_tokens, sum(cache_tokens) as cache_tokens, sum(cache_creation_tokens) as cache_creation_tokens")
 	if username != "" {
 		query = query.Where("username = ?", username)
 	}

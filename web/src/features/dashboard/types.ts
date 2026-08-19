@@ -45,6 +45,12 @@ export interface FlowQuotaDataItem {
   token_used?: number
   count?: number
   quota?: number
+  // token splits used for the official-rate cost estimate; rows recorded
+  // before the split columns existed carry zeros while token_used stays > 0
+  prompt_tokens?: number
+  completion_tokens?: number
+  cache_tokens?: number
+  cache_creation_tokens?: number
 }
 
 // Aggregated consume/error log metrics from /api/log/self/metrics

@@ -24,6 +24,8 @@ import { useTranslation } from 'react-i18next'
 import { SectionPageLayout } from '@/components/layout'
 import { FadeIn } from '@/components/page-transition'
 import { TimeRangeFilter } from '@/components/time-range-filter'
+import { usePricingData } from '@/features/pricing/hooks'
+import type { ReferencePriceLanes } from '@/features/pricing/types'
 import {
   rangeSpanMinutes,
   resolvePresetRange,
@@ -100,6 +102,16 @@ export function Dashboard() {
     () => (flowQuery.data?.success ? (flowQuery.data.data ?? []) : []),
     [flowQuery.data]
   )
+  // Official list prices for the breakdown's "Est. Cost at Official Rates"
+  // column; a failed pricing load just leaves those cells dashed.
+  const { models: pricingModels } = usePricingData()
+  const officialPrices = useMemo(() => {
+    const byModel: Record<string, ReferencePriceLanes> = {}
+    for (const model of pricingModels) {
+      if (model.official_price) byModel[model.model_name] = model.official_price
+    }
+    return byModel
+  }, [pricingModels])
   const metrics = metricsQuery.data?.success
     ? metricsQuery.data.data
     : undefined
@@ -212,6 +224,7 @@ export function Dashboard() {
               flowData={flowData}
               loading={flowQuery.isLoading}
               apiKeys={apiKeysQuery.data}
+              officialPrices={officialPrices}
               minHeight={overviewHeight}
             />
           </FadeIn>

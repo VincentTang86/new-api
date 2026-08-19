@@ -1,0 +1,613 @@
+/*
+Copyright (C) 2023-2026 QuantumNous
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as
+published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+For commercial licensing, please contact support@quantumnous.com
+*/
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Code2, Eye, Pencil, Plus, Trash2 } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
+import * as z from 'zod'
+
+import { JsonCodeEditor } from '@/components/json-code-editor'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button'
+import { ComboboxInput } from '@/components/ui/combobox-input'
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Skeleton } from '@/components/ui/skeleton'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { usePricingData } from '@/features/pricing/hooks'
+
+import {
+  deleteReferencePricing,
+  getReferencePricing,
+  saveReferencePricing,
+} from '../api'
+import { SettingsSection } from '../components/settings-section'
+import type { ReferencePricingRow, ReferencePricingSource } from '../types'
+
+const LANES = [
+  { key: 'input', labelKey: 'Input price' },
+  { key: 'output', labelKey: 'Output price' },
+  { key: 'cached_input', labelKey: 'Cached input price' },
+  { key: 'cache_creation', labelKey: 'Explicit cache write price' },
+  { key: 'cache_hit', labelKey: 'Explicit cache hit price' },
+] as const
+
+type LaneKey = (typeof LANES)[number]['key']
+
+const SOURCES: ReferencePricingSource[] = ['official', 'openrouter']
+
+const CACHE_LANES: LaneKey[] = ['cached_input', 'cache_creation', 'cache_hit']
+
+const priceSchema = z.number().positive().max(1_000_000)
+
+const laneObjectSchema = z
+  .object({
+    input: priceSchema.optional(),
+    output: priceSchema.optional(),
+    cached_input: priceSchema.optional(),
+    cache_creation: priceSchema.optional(),
+    cache_hit: priceSchema.optional(),
+  })
+  .strict()
+
+const jsonConfigSchema = z.record(
+  z.string().trim().min(1).max(128),
+  z
+    .object({
+      official: laneObjectSchema.optional(),
+      openrouter: laneObjectSchema.optional(),
+    })
+    .strict()
+)
+
+type ModelRowView = {
+  modelName: string
+  rows: Partial<Record<ReferencePricingSource, ReferencePricingRow>>
+}
+
+type DraftValues = Record<ReferencePricingSource, Record<LaneKey, string>>
+
+type DialogState = {
+  modelName: string
+  isNew: boolean
+  values: DraftValues
+}
+
+const emptyLaneDraft = (): Record<LaneKey, string> => ({
+  input: '',
+  output: '',
+  cached_input: '',
+  cache_creation: '',
+  cache_hit: '',
+})
+
+const draftFromRows = (
+  rows: Partial<Record<ReferencePricingSource, ReferencePricingRow>>
+): DraftValues => {
+  const values = { official: emptyLaneDraft(), openrouter: emptyLaneDraft() }
+  for (const source of SOURCES) {
+    const row = rows[source]
+    if (!row) continue
+    for (const lane of LANES) {
+      const price = row[lane.key]
+      if (typeof price === 'number') {
+        values[source][lane.key] = String(price)
+      }
+    }
+  }
+  return values
+}
+
+const formatLanePrice = (price: number | null | undefined) =>
+  typeof price === 'number' ? `$${price}` : '—'
+
+export function ReferencePricingCard() {
+  const { t } = useTranslation()
+  const queryClient = useQueryClient()
+  const { models: pricingModels } = usePricingData()
+
+  const [editMode, setEditMode] = useState<'table' | 'json'>('table')
+  const [jsonText, setJsonText] = useState('')
+  const [dialog, setDialog] = useState<DialogState | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
+
+  const query = useQuery({
+    queryKey: ['reference-pricing'],
+    queryFn: getReferencePricing,
+  })
+
+  const serverRows = useMemo(() => query.data?.data ?? [], [query.data])
+
+  const modelRows = useMemo<ModelRowView[]>(() => {
+    const byModel = new Map<string, ModelRowView>()
+    for (const row of serverRows) {
+      let view = byModel.get(row.model_name)
+      if (!view) {
+        view = { modelName: row.model_name, rows: {} }
+        byModel.set(row.model_name, view)
+      }
+      view.rows[row.source] = row
+    }
+    return [...byModel.values()].sort((a, b) =>
+      a.modelName.localeCompare(b.modelName, 'en', { numeric: true })
+    )
+  }, [serverRows])
+
+  const modelNameOptions = useMemo(() => {
+    const configured = new Set(modelRows.map((row) => row.modelName))
+    return pricingModels
+      .filter((model) => !configured.has(model.model_name))
+      .map((model) => ({ value: model.model_name, label: model.model_name }))
+  }, [pricingModels, modelRows])
+
+  const saveMutation = useMutation({ mutationFn: saveReferencePricing })
+  const deleteMutation = useMutation({ mutationFn: deleteReferencePricing })
+  const isMutating = saveMutation.isPending || deleteMutation.isPending
+
+  const invalidatePricing = () => {
+    void queryClient.invalidateQueries({ queryKey: ['reference-pricing'] })
+    void queryClient.invalidateQueries({ queryKey: ['pricing'] })
+  }
+
+  const buildJsonText = () => {
+    const config: Record<string, Record<string, Record<string, number>>> = {}
+    for (const view of modelRows) {
+      const entry: Record<string, Record<string, number>> = {}
+      for (const source of SOURCES) {
+        const row = view.rows[source]
+        if (!row) continue
+        const lanes: Record<string, number> = {}
+        for (const lane of LANES) {
+          const price = row[lane.key]
+          if (typeof price === 'number') lanes[lane.key] = price
+        }
+        entry[source] = lanes
+      }
+      config[view.modelName] = entry
+    }
+    return JSON.stringify(config, null, 2)
+  }
+
+  const toggleEditMode = () => {
+    setEditMode((prev) => {
+      if (prev === 'table') {
+        setJsonText(buildJsonText())
+        return 'json'
+      }
+      return 'table'
+    })
+  }
+
+  const openAddDialog = () => {
+    setDialog({
+      modelName: '',
+      isNew: true,
+      values: { official: emptyLaneDraft(), openrouter: emptyLaneDraft() },
+    })
+  }
+
+  const openEditDialog = (view: ModelRowView) => {
+    setDialog({
+      modelName: view.modelName,
+      isNew: false,
+      values: draftFromRows(view.rows),
+    })
+  }
+
+  const handleDialogSave = async () => {
+    if (!dialog) return
+    const modelName = dialog.modelName.trim()
+    if (!modelName || modelName.length > 128) {
+      toast.error(t('Model name is required'))
+      return
+    }
+    if (dialog.isNew && modelRows.some((row) => row.modelName === modelName)) {
+      toast.error(t('This model is already configured'))
+      return
+    }
+    const existing = modelRows.find((row) => row.modelName === modelName)
+    const rows: ReferencePricingRow[] = []
+    for (const source of SOURCES) {
+      const lanes: Partial<Record<LaneKey, number>> = {}
+      let hasValue = false
+      for (const lane of LANES) {
+        const raw = dialog.values[source][lane.key].trim()
+        if (!raw) continue
+        const price = Number(raw)
+        if (!Number.isFinite(price) || price <= 0 || price > 1_000_000) {
+          toast.error(t('Prices must be positive numbers'))
+          return
+        }
+        lanes[lane.key] = price
+        hasValue = true
+      }
+      // 清空某来源全部价格时仍要提交该行，让后端把旧值整行覆盖为空
+      if (hasValue || existing?.rows[source]) {
+        rows.push({ model_name: modelName, source, ...lanes })
+      }
+    }
+    if (rows.length === 0) {
+      toast.error(t('Enter at least one price'))
+      return
+    }
+    const res = await saveMutation.mutateAsync(rows)
+    if (!res.success) {
+      toast.error(res.message)
+      return
+    }
+    invalidatePricing()
+    toast.success(t('Benchmark prices saved'))
+    setDialog(null)
+  }
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return
+    const res = await deleteMutation.mutateAsync(deleteTarget)
+    if (!res.success) {
+      toast.error(res.message)
+      return
+    }
+    invalidatePricing()
+    toast.success(t('Benchmark prices deleted'))
+    setDeleteTarget(null)
+  }
+
+  const handleJsonSave = async () => {
+    let parsed: unknown
+    try {
+      parsed = JSON.parse(jsonText)
+    } catch {
+      toast.error(t('Invalid JSON format'))
+      return
+    }
+    const result = jsonConfigSchema.safeParse(parsed)
+    if (!result.success) {
+      toast.error(t('Invalid JSON format'))
+      return
+    }
+    const rows: ReferencePricingRow[] = []
+    for (const [modelName, sources] of Object.entries(result.data)) {
+      for (const source of SOURCES) {
+        const lanes = sources[source]
+        if (lanes) rows.push({ model_name: modelName, source, ...lanes })
+      }
+    }
+    // JSON 是完整状态：先删掉被移除的模型，再整体 upsert
+    const removed = modelRows
+      .map((row) => row.modelName)
+      .filter((name) => !(name in result.data))
+    for (const name of removed) {
+      const res = await deleteMutation.mutateAsync(name)
+      if (!res.success) {
+        toast.error(res.message)
+        return
+      }
+    }
+    if (rows.length > 0) {
+      const res = await saveMutation.mutateAsync(rows)
+      if (!res.success) {
+        toast.error(res.message)
+        return
+      }
+    }
+    invalidatePricing()
+    toast.success(t('Benchmark prices saved'))
+    setEditMode('table')
+  }
+
+  const sourceLabel = (source: ReferencePricingSource) =>
+    source === 'official' ? t('Official API') : 'OpenRouter'
+
+  return (
+    <SettingsSection title={t('Benchmark Prices')}>
+      <p className='text-muted-foreground text-sm'>
+        {t(
+          'External list prices per model (USD per 1M tokens), used for the pricing page comparison and the dashboard savings estimate.'
+        )}
+      </p>
+
+      <div className='flex flex-wrap justify-end gap-2'>
+        {editMode === 'table' ? (
+          <Button type='button' size='sm' onClick={openAddDialog}>
+            <Plus data-icon='inline-start' />
+            {t('Add model')}
+          </Button>
+        ) : (
+          <Button
+            type='button'
+            size='sm'
+            onClick={handleJsonSave}
+            disabled={isMutating}
+          >
+            {isMutating ? t('Saving...') : t('Save')}
+          </Button>
+        )}
+        <Button
+          type='button'
+          variant='outline'
+          size='sm'
+          onClick={toggleEditMode}
+        >
+          {editMode === 'table' ? (
+            <>
+              <Code2 data-icon='inline-start' />
+              {t('Switch to JSON')}
+            </>
+          ) : (
+            <>
+              <Eye data-icon='inline-start' />
+              {t('Switch to Visual')}
+            </>
+          )}
+        </Button>
+      </div>
+
+      {editMode === 'json' && (
+        <JsonCodeEditor
+          value={jsonText}
+          onChange={setJsonText}
+          heightClassName='h-96 min-h-96 max-h-96'
+          ariaLabel={t('Benchmark Prices')}
+        />
+      )}
+      {editMode === 'table' && query.isLoading && (
+        <div className='space-y-2'>
+          <Skeleton className='h-9 w-full' />
+          <Skeleton className='h-9 w-full' />
+          <Skeleton className='h-9 w-full' />
+        </div>
+      )}
+      {editMode === 'table' && !query.isLoading && (
+        <div className='overflow-x-auto rounded-md border'>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t('Model name')}</TableHead>
+                <TableHead>
+                  {t('Official API')} · {t('Input price')} / {t('Output price')}
+                </TableHead>
+                <TableHead>
+                  OpenRouter · {t('Input price')} / {t('Output price')}
+                </TableHead>
+                <TableHead>{t('Cache prices')}</TableHead>
+                <TableHead className='w-24' />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {modelRows.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={5}
+                    className='text-muted-foreground text-center'
+                  >
+                    {t('No benchmark prices configured yet')}
+                  </TableCell>
+                </TableRow>
+              ) : (
+                modelRows.map((view) => {
+                  const hasCachePrices = SOURCES.some((source) =>
+                    CACHE_LANES.some(
+                      (lane) => typeof view.rows[source]?.[lane] === 'number'
+                    )
+                  )
+                  return (
+                    <TableRow key={view.modelName}>
+                      <TableCell className='font-mono text-sm'>
+                        {view.modelName}
+                      </TableCell>
+                      <TableCell>
+                        {formatLanePrice(view.rows.official?.input)} /{' '}
+                        {formatLanePrice(view.rows.official?.output)}
+                      </TableCell>
+                      <TableCell>
+                        {formatLanePrice(view.rows.openrouter?.input)} /{' '}
+                        {formatLanePrice(view.rows.openrouter?.output)}
+                      </TableCell>
+                      <TableCell>{hasCachePrices ? '✓' : '—'}</TableCell>
+                      <TableCell>
+                        <div className='flex justify-end gap-1'>
+                          <Button
+                            type='button'
+                            variant='ghost'
+                            size='icon-sm'
+                            aria-label={t('Edit')}
+                            onClick={() => openEditDialog(view)}
+                          >
+                            <Pencil />
+                          </Button>
+                          <Button
+                            type='button'
+                            variant='ghost'
+                            size='icon-sm'
+                            aria-label={t('Delete')}
+                            onClick={() => setDeleteTarget(view.modelName)}
+                          >
+                            <Trash2 />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+
+      <Dialog
+        open={dialog !== null}
+        onOpenChange={(open) => {
+          if (!open) setDialog(null)
+        }}
+      >
+        <DialogContent className='sm:max-w-2xl'>
+          <DialogHeader>
+            <DialogTitle>
+              {dialog?.isNew ? t('Add model') : t('Edit benchmark prices')}
+            </DialogTitle>
+          </DialogHeader>
+          {dialog && (
+            <div className='flex flex-col gap-4'>
+              <div className='flex flex-col gap-2'>
+                <Label htmlFor='reference-pricing-model-name'>
+                  {t('Model name')}
+                </Label>
+                {dialog.isNew ? (
+                  <ComboboxInput
+                    id='reference-pricing-model-name'
+                    options={modelNameOptions}
+                    value={dialog.modelName}
+                    onValueChange={(value) =>
+                      setDialog((prev) =>
+                        prev ? { ...prev, modelName: value } : prev
+                      )
+                    }
+                    allowCustomValue
+                  />
+                ) : (
+                  <Input
+                    id='reference-pricing-model-name'
+                    value={dialog.modelName}
+                    disabled
+                  />
+                )}
+              </div>
+              <div className='grid gap-6 sm:grid-cols-2'>
+                {SOURCES.map((source) => (
+                  <div key={source} className='flex flex-col gap-3'>
+                    <p className='text-sm font-medium'>{sourceLabel(source)}</p>
+                    {LANES.map((lane) => (
+                      <div key={lane.key} className='flex flex-col gap-1.5'>
+                        <Label
+                          htmlFor={`reference-pricing-${source}-${lane.key}`}
+                          className='text-muted-foreground text-xs'
+                        >
+                          {t(lane.labelKey)}
+                        </Label>
+                        <Input
+                          id={`reference-pricing-${source}-${lane.key}`}
+                          type='number'
+                          min={0}
+                          step='any'
+                          inputMode='decimal'
+                          value={dialog.values[source][lane.key]}
+                          onChange={(event) => {
+                            const value = event.target.value
+                            setDialog((prev) => {
+                              if (!prev) return prev
+                              return {
+                                ...prev,
+                                values: {
+                                  ...prev.values,
+                                  [source]: {
+                                    ...prev.values[source],
+                                    [lane.key]: value,
+                                  },
+                                },
+                              }
+                            })
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+              <p className='text-muted-foreground text-xs'>
+                {t('Leave a field empty when the source has no such price.')}
+              </p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button
+              type='button'
+              variant='outline'
+              onClick={() => setDialog(null)}
+            >
+              {t('Cancel')}
+            </Button>
+            <Button
+              type='button'
+              onClick={handleDialogSave}
+              disabled={saveMutation.isPending}
+            >
+              {saveMutation.isPending ? t('Saving...') : t('Save')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t('Delete benchmark prices for {{name}}?', {
+                name: deleteTarget ?? '',
+              })}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t(
+                'The pricing page comparison and dashboard savings for this model will show a dash.'
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('Cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={deleteMutation.isPending}
+            >
+              {t('Delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </SettingsSection>
+  )
+}

@@ -22,6 +22,8 @@ import type {
   ConfirmPaymentComplianceResponse,
   FetchUpstreamRatiosRequest,
   LogCleanupTask,
+  ReferencePricingResponse,
+  ReferencePricingRow,
   SystemOptionsResponse,
   SystemTaskListResponse,
   SystemTaskResponse,
@@ -87,6 +89,28 @@ export async function listSystemTasks(limit = 20) {
 export async function resetModelRatios() {
   const res = await api.post<UpdateOptionResponse>(
     '/api/option/rest_model_ratio'
+  )
+  return res.data
+}
+
+export async function getReferencePricing() {
+  const res = await api.get<ReferencePricingResponse>('/api/reference_pricing/')
+  return res.data
+}
+
+export async function saveReferencePricing(rows: ReferencePricingRow[]) {
+  const res = await api.put<UpdateOptionResponse>('/api/reference_pricing/', {
+    rows,
+  })
+  return res.data
+}
+
+export async function deleteReferencePricing(modelName: string) {
+  const res = await api.delete<UpdateOptionResponse>(
+    '/api/reference_pricing/',
+    {
+      params: { model_name: modelName },
+    }
   )
   return res.data
 }

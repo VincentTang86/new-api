@@ -585,4 +585,13 @@ export const STATIC_I18N_KEYS = [
   'This user account is disabled.',
   'Telegram binding failed. Please try again.',
   'Verification scope is missing',
+
+  // Benchmark price settings (section title and price-lane labels are
+  // declared as constants and translated at render time)
+  'Benchmark Prices',
+  'Input price',
+  'Output price',
+  'Cached input price',
+  'Explicit cache write price',
+  'Explicit cache hit price',
 ] as const

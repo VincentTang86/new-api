@@ -26,30 +26,38 @@ func TestGetFlowQuotaDataUsesQuotaDataRoleSpecificDimensions(t *testing.T) {
 	seedFlowLookupData(t)
 
 	seedFlowQuotaData(t, QuotaData{
-		UserID:    1,
-		Username:  "alice",
-		NodeName:  "node-a",
-		TokenID:   11,
-		UseGroup:  "vip",
-		ModelName: "gpt-a",
-		ChannelID: 1,
-		CreatedAt: 1000,
-		Count:     2,
-		Quota:     100,
-		TokenUsed: 40,
+		UserID:              1,
+		Username:            "alice",
+		NodeName:            "node-a",
+		TokenID:             11,
+		UseGroup:            "vip",
+		ModelName:           "gpt-a",
+		ChannelID:           1,
+		CreatedAt:           1000,
+		Count:               2,
+		Quota:               100,
+		TokenUsed:           40,
+		PromptTokens:        30,
+		CompletionTokens:    10,
+		CacheTokens:         5,
+		CacheCreationTokens: 2,
 	})
 	seedFlowQuotaData(t, QuotaData{
-		UserID:    1,
-		Username:  "alice",
-		NodeName:  "node-a",
-		TokenID:   11,
-		UseGroup:  "vip",
-		ModelName: "gpt-a",
-		ChannelID: 1,
-		CreatedAt: 1100,
-		Count:     1,
-		Quota:     50,
-		TokenUsed: 20,
+		UserID:              1,
+		Username:            "alice",
+		NodeName:            "node-a",
+		TokenID:             11,
+		UseGroup:            "vip",
+		ModelName:           "gpt-a",
+		ChannelID:           1,
+		CreatedAt:           1100,
+		Count:               1,
+		Quota:               50,
+		TokenUsed:           20,
+		PromptTokens:        15,
+		CompletionTokens:    5,
+		CacheTokens:         3,
+		CacheCreationTokens: 1,
 	})
 	seedFlowQuotaData(t, QuotaData{
 		UserID:    1,
@@ -93,18 +101,22 @@ func TestGetFlowQuotaDataUsesQuotaDataRoleSpecificDimensions(t *testing.T) {
 	// Token 11 was soft-deleted, so its name is intentionally left empty for the
 	// frontend to render a localized "deleted (id)" label instead.
 	require.Equal(t, FlowQuotaData{
-		UserID:      1,
-		Username:    "alice",
-		NodeName:    "node-a",
-		TokenID:     11,
-		TokenName:   "",
-		UseGroup:    "vip",
-		ChannelID:   1,
-		ChannelName: "east",
-		ModelName:   "gpt-a",
-		TokenUsed:   60,
-		Count:       3,
-		Quota:       150,
+		UserID:              1,
+		Username:            "alice",
+		NodeName:            "node-a",
+		TokenID:             11,
+		TokenName:           "",
+		UseGroup:            "vip",
+		ChannelID:           1,
+		ChannelName:         "east",
+		ModelName:           "gpt-a",
+		TokenUsed:           60,
+		Count:               3,
+		Quota:               150,
+		PromptTokens:        45,
+		CompletionTokens:    15,
+		CacheTokens:         8,
+		CacheCreationTokens: 3,
 	}, *rootRows[0])
 	// A token that still exists resolves to its current name.
 	require.Equal(t, 22, rootRows[1].TokenID)
@@ -139,28 +151,36 @@ func TestLogQuotaDataSplitsRowsByUseGroupTokenChannelAndNode(t *testing.T) {
 	CacheQuotaDataLock.Unlock()
 
 	LogQuotaData(QuotaDataLogParams{
-		UserID:    1,
-		Username:  "alice",
-		ModelName: "gpt-a",
-		CreatedAt: 3661,
-		UseGroup:  "vip",
-		TokenID:   11,
-		ChannelID: 1,
-		NodeName:  "node-a",
-		Quota:     100,
-		TokenUsed: 40,
+		UserID:              1,
+		Username:            "alice",
+		ModelName:           "gpt-a",
+		CreatedAt:           3661,
+		UseGroup:            "vip",
+		TokenID:             11,
+		ChannelID:           1,
+		NodeName:            "node-a",
+		Quota:               100,
+		TokenUsed:           40,
+		PromptTokens:        30,
+		CompletionTokens:    10,
+		CacheTokens:         6,
+		CacheCreationTokens: 4,
 	})
 	LogQuotaData(QuotaDataLogParams{
-		UserID:    1,
-		Username:  "alice",
-		ModelName: "gpt-a",
-		CreatedAt: 3700,
-		UseGroup:  "vip",
-		TokenID:   11,
-		ChannelID: 1,
-		NodeName:  "node-a",
-		Quota:     50,
-		TokenUsed: 20,
+		UserID:              1,
+		Username:            "alice",
+		ModelName:           "gpt-a",
+		CreatedAt:           3700,
+		UseGroup:            "vip",
+		TokenID:             11,
+		ChannelID:           1,
+		NodeName:            "node-a",
+		Quota:               50,
+		TokenUsed:           20,
+		PromptTokens:        15,
+		CompletionTokens:    5,
+		CacheTokens:         2,
+		CacheCreationTokens: 1,
 	})
 	LogQuotaData(QuotaDataLogParams{
 		UserID:    1,
@@ -188,6 +208,10 @@ func TestLogQuotaDataSplitsRowsByUseGroupTokenChannelAndNode(t *testing.T) {
 	require.Equal(t, 2, rows[0].Count)
 	require.Equal(t, 150, rows[0].Quota)
 	require.Equal(t, 60, rows[0].TokenUsed)
+	require.Equal(t, 45, rows[0].PromptTokens)
+	require.Equal(t, 15, rows[0].CompletionTokens)
+	require.Equal(t, 8, rows[0].CacheTokens)
+	require.Equal(t, 5, rows[0].CacheCreationTokens)
 	require.Equal(t, "default", rows[1].UseGroup)
 	require.Equal(t, 25, rows[1].Quota)
 }

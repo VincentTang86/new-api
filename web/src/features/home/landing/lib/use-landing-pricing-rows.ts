@@ -16,7 +16,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -29,7 +28,7 @@ import {
 import { LANDING_PROVIDER_ORDER } from '../constants'
 import type { LandingProviderKey, PricingBenchmark, PricingRow } from '../types'
 import { buildPricingRows } from './build-pricing-rows'
-import { fetchOfficialPricing } from './official-pricing'
+import { buildOfficialPricingCatalog } from './official-pricing'
 import { LANDING_PROVIDERS } from './providers'
 
 /** One tab of the group (price tier) selector. */
@@ -73,15 +72,13 @@ const EXCLUDED_GROUP_KEYS = new Set(['', 'auto'])
 /**
  * Public-page pricing table state: rows driven live by `/api/pricing`, priced
  * at the selected group's ratio and compared against the selected external
- * benchmark (vendor list price or OpenRouter, from the hand-maintained
- * `official-pricing.json`). Shared by the home preview and the models &
- * pricing page so the two never drift — each page instantiates its own tab
- * state.
+ * benchmark (vendor list price or OpenRouter, from the admin-maintained
+ * reference prices carried on the same payload). Shared by the home preview
+ * and the models & pricing page so the two never drift — each page
+ * instantiates its own tab state.
  *
- * Only `/api/pricing` can fail the table: `fetchOfficialPricing` resolves to an
- * empty map when the supplement is missing, which renders as dashes in the
- * benchmark / savings columns. Both loads gate the skeleton so a row is never
- * painted with dashes that then flip to a price.
+ * Only `/api/pricing` can fail the table: a model without configured reference
+ * prices simply renders dashes in the benchmark / savings columns.
  */
 export function useLandingPricingRows(): UseLandingPricingRows {
   const { t, i18n } = useTranslation()
@@ -92,12 +89,7 @@ export function useLandingPricingRows(): UseLandingPricingRows {
   const [providerFilter, setProviderFilter] =
     useState<PricingProviderFilter>('all')
 
-  const { data: catalog, isLoading: isCatalogLoading } = useQuery({
-    queryKey: ['official-pricing'],
-    queryFn: fetchOfficialPricing,
-    staleTime: 5 * 60 * 1000,
-    retry: false,
-  })
+  const catalog = useMemo(() => buildOfficialPricingCatalog(models), [models])
 
   const groups = useMemo<PricingGroupOption[]>(() => {
     // A model enabled for "all" belongs to every group (backend convention).
@@ -160,7 +152,7 @@ export function useLandingPricingRows(): UseLandingPricingRows {
       buildPricingRows({
         models,
         language: i18n.language,
-        catalog: catalog ?? {},
+        catalog,
         selectedGroup,
         groupRatio,
         benchmark,
@@ -192,7 +184,7 @@ export function useLandingPricingRows(): UseLandingPricingRows {
     providers,
     providerFilter,
     setProviderFilter,
-    isLoading: isLoading || isCatalogLoading,
+    isLoading,
     isError: Boolean(error),
     refetch,
   }

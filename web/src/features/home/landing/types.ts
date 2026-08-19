@@ -31,15 +31,15 @@ export type LandingProviderKey =
 
 /**
  * External price source the table compares the group price against — the
- * vendor's own list price or OpenRouter's. Both come from the hand-maintained
- * `official-pricing.json` supplement.
+ * vendor's own list price or OpenRouter's. Both come from the admin-maintained
+ * reference prices carried on `/api/pricing`.
  */
 export type PricingBenchmark = 'official' | 'openrouter'
 
 /**
  * One display row of the pricing table, fully derived from the backend
  * `/api/pricing` model (priced at the selected group's ratio) plus the
- * hand-maintained benchmark supplement for the selected "Compare with" source.
+ * admin-maintained benchmark prices for the selected "Compare with" source.
  *
  * The adapter (`lib/build-pricing-rows.ts`) pre-formats every value to a string
  * so the table/accordion stay presentational. Missing figures (unconfigured

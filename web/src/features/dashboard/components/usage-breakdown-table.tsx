@@ -27,12 +27,19 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import {
+  calculateSavingsRatio,
+  formatSavingsPercent,
+} from '@/features/home/landing/lib/pricing'
 import type { ApiKey } from '@/features/keys/types'
+import type { ReferencePriceLanes } from '@/features/pricing/types'
+import { formatCurrencyFromUSD, getCurrencyDisplay } from '@/lib/currency'
 import dayjs from '@/lib/dayjs'
 import { formatCompactNumber, formatNumber, formatQuota } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
 import { BREAKDOWN_PAGE_SIZES } from '../constants'
+import { estimateOfficialCostUSD } from '../lib/official-cost'
 import type { BreakdownTab, FlowQuotaDataItem } from '../types'
 import { UsagePagination } from './usage-pagination'
 
@@ -53,6 +60,8 @@ interface UsageBreakdownTableProps {
   flowData: FlowQuotaDataItem[]
   loading?: boolean
   apiKeys: ApiKey[] | undefined
+  /** Official list prices per model, from `/api/pricing` reference pricing. */
+  officialPrices?: Record<string, ReferencePriceLanes>
   /** Measured height of the usage overview card, in px. */
   minHeight?: number
 }
@@ -61,6 +70,10 @@ interface UsageTotals {
   requests: number
   tokens: number
   quota: number
+  promptTokens: number
+  completionTokens: number
+  cacheTokens: number
+  cacheCreationTokens: number
 }
 
 interface ModelRow extends UsageTotals {
@@ -101,15 +114,32 @@ function addTotals(target: UsageTotals, item: FlowQuotaDataItem) {
   target.requests += Number(item.count) || 0
   target.tokens += Number(item.token_used) || 0
   target.quota += Number(item.quota) || 0
+  target.promptTokens += Number(item.prompt_tokens) || 0
+  target.completionTokens += Number(item.completion_tokens) || 0
+  target.cacheTokens += Number(item.cache_tokens) || 0
+  target.cacheCreationTokens += Number(item.cache_creation_tokens) || 0
+}
+
+function emptyTotals(): UsageTotals {
+  return {
+    requests: 0,
+    tokens: 0,
+    quota: 0,
+    promptTokens: 0,
+    completionTokens: 0,
+    cacheTokens: 0,
+    cacheCreationTokens: 0,
+  }
 }
 
 export function UsageBreakdownTable({
   flowData,
   loading,
   apiKeys,
+  officialPrices,
   minHeight,
 }: UsageBreakdownTableProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [tab, setTab] = useState<BreakdownTab>('model')
   const [expandedModels, setExpandedModels] = useState<Set<string>>(
     () => new Set()
@@ -121,14 +151,14 @@ export function UsageBreakdownTable({
       const model = item.model_name || t('Unknown')
       let row = byModel.get(model)
       if (!row) {
-        row = { model, requests: 0, tokens: 0, quota: 0, groups: [] }
+        row = { model, groups: [], ...emptyTotals() }
         byModel.set(model, row)
       }
       addTotals(row, item)
       const groupKey = item.use_group || ''
       let groupRow = row.groups.find((entry) => entry.group === groupKey)
       if (!groupRow) {
-        groupRow = { group: groupKey, requests: 0, tokens: 0, quota: 0 }
+        groupRow = { group: groupKey, ...emptyTotals() }
         row.groups.push(groupRow)
       }
       addTotals(groupRow, item)
@@ -162,9 +192,7 @@ export function UsageBreakdownTable({
         row = {
           tokenId,
           name,
-          requests: 0,
-          tokens: 0,
-          quota: 0,
+          ...emptyTotals(),
           // Playground runs on a token that is never persisted, so it has no
           // `accessed_time`; the backend derives its last use from the logs.
           accessedTime:
@@ -192,6 +220,36 @@ export function UsageBreakdownTable({
   // Tier rows show the raw group name; group descriptions are display
   // copy managed elsewhere and can drift from the name.
   const groupLabel = (group: string) => group || t('Unknown')
+
+  // Both cells dash together when no honest estimate exists: model without
+  // configured official prices, or rows from before the token split columns.
+  const officialCells = (model: string, totals: UsageTotals) => {
+    const estUsd = estimateOfficialCostUSD(
+      {
+        promptTokens: totals.promptTokens,
+        completionTokens: totals.completionTokens,
+        cacheTokens: totals.cacheTokens,
+        cacheCreationTokens: totals.cacheCreationTokens,
+      },
+      officialPrices?.[model]
+    )
+    if (estUsd === null) return { est: PLACEHOLDER, savings: PLACEHOLDER }
+    // Same digits as formatQuota so the two cost columns read as one scale.
+    const est = formatCurrencyFromUSD(estUsd, {
+      digitsLarge: 2,
+      digitsSmall: 4,
+      abbreviate: true,
+    })
+    const actualUsd = totals.quota / getCurrencyDisplay().config.quotaPerUnit
+    const ratio = calculateSavingsRatio(actualUsd, estUsd)
+    return {
+      est,
+      savings:
+        ratio === null
+          ? PLACEHOLDER
+          : formatSavingsPercent(ratio, i18n.language),
+    }
+  }
 
   const formatLastUsed = (accessedTime?: number) => {
     if (!accessedTime || accessedTime <= 0) return PLACEHOLDER
@@ -294,79 +352,117 @@ export function UsageBreakdownTable({
                     </td>
                   </tr>
                 )}
-                {modelPagination.pageRows.map((row) => (
-                  <Fragment key={row.model}>
-                    <tr
-                      className='dark:border-border cursor-pointer border-b border-[#e5e7eb] transition-colors hover:bg-[#fafafa] dark:hover:bg-white/5'
-                      onClick={() => toggleModel(row.model)}
-                    >
-                      <td className='px-3.5 py-[13px]'>
-                        <span className='flex items-center gap-1.5'>
-                          <ChevronDown
-                            className={cn(
-                              'size-3.5 text-[#99a1ab] transition-transform',
-                              !expandedModels.has(row.model) && '-rotate-90'
-                            )}
-                          />
-                          <span className='dark:text-foreground text-[13px] font-semibold text-[#111827]'>
-                            {row.model}
-                          </span>
-                        </span>
-                      </td>
-                      <td className={MUTED_NUM}>
-                        {formatNumber(row.requests)}
-                      </td>
-                      <td className={MUTED_NUM}>
-                        {formatCompactNumber(row.tokens)}
-                      </td>
-                      <td className={MUTED_NUM}>
-                        {row.requests > 0
-                          ? formatNumber(Math.round(row.tokens / row.requests))
-                          : PLACEHOLDER}
-                      </td>
-                      <td className={GREEN_NUM}>{formatQuota(row.quota)}</td>
-                      <td className={DASH_NUM}>{PLACEHOLDER}</td>
-                      <td className={DASH_NUM}>{PLACEHOLDER}</td>
-                    </tr>
-                    {expandedModels.has(row.model) &&
-                      row.groups.map((groupRow) => (
-                        <tr
-                          key={`${row.model}-${groupRow.group}`}
-                          className='dark:border-border border-b border-[#e5e7eb] bg-[#fbfcfd] dark:bg-white/2'
-                        >
-                          <td className='px-3.5 py-[9px] pl-9'>
-                            <span className='dark:text-muted-foreground text-xs text-[#9ca3af]'>
-                              {groupLabel(groupRow.group)}
+                {modelPagination.pageRows.map((row) => {
+                  const modelCells = officialCells(row.model, row)
+                  return (
+                    <Fragment key={row.model}>
+                      <tr
+                        className='dark:border-border cursor-pointer border-b border-[#e5e7eb] transition-colors hover:bg-[#fafafa] dark:hover:bg-white/5'
+                        onClick={() => toggleModel(row.model)}
+                      >
+                        <td className='px-3.5 py-[13px]'>
+                          <span className='flex items-center gap-1.5'>
+                            <ChevronDown
+                              className={cn(
+                                'size-3.5 text-[#99a1ab] transition-transform',
+                                !expandedModels.has(row.model) && '-rotate-90'
+                              )}
+                            />
+                            <span className='dark:text-foreground text-[13px] font-semibold text-[#111827]'>
+                              {row.model}
                             </span>
-                          </td>
-                          <td className={cn(MUTED_NUM, 'py-[9px] text-xs')}>
-                            {formatNumber(groupRow.requests)}
-                          </td>
-                          <td className={cn(MUTED_NUM, 'py-[9px] text-xs')}>
-                            {formatCompactNumber(groupRow.tokens)}
-                          </td>
-                          <td className={cn(MUTED_NUM, 'py-[9px] text-xs')}>
-                            {groupRow.requests > 0
-                              ? formatNumber(
-                                  Math.round(
-                                    groupRow.tokens / groupRow.requests
-                                  )
-                                )
-                              : PLACEHOLDER}
-                          </td>
-                          <td className={cn(GREEN_NUM, 'py-[9px] text-xs')}>
-                            {formatQuota(groupRow.quota)}
-                          </td>
-                          <td className={cn(DASH_NUM, 'py-[9px] text-xs')}>
-                            {PLACEHOLDER}
-                          </td>
-                          <td className={cn(DASH_NUM, 'py-[9px] text-xs')}>
-                            {PLACEHOLDER}
-                          </td>
-                        </tr>
-                      ))}
-                  </Fragment>
-                ))}
+                          </span>
+                        </td>
+                        <td className={MUTED_NUM}>
+                          {formatNumber(row.requests)}
+                        </td>
+                        <td className={MUTED_NUM}>
+                          {formatCompactNumber(row.tokens)}
+                        </td>
+                        <td className={MUTED_NUM}>
+                          {row.requests > 0
+                            ? formatNumber(
+                                Math.round(row.tokens / row.requests)
+                              )
+                            : PLACEHOLDER}
+                        </td>
+                        <td className={GREEN_NUM}>{formatQuota(row.quota)}</td>
+                        <td
+                          className={
+                            modelCells.est === PLACEHOLDER
+                              ? DASH_NUM
+                              : MUTED_NUM
+                          }
+                        >
+                          {modelCells.est}
+                        </td>
+                        <td
+                          className={
+                            modelCells.savings === PLACEHOLDER
+                              ? DASH_NUM
+                              : GREEN_NUM
+                          }
+                        >
+                          {modelCells.savings}
+                        </td>
+                      </tr>
+                      {expandedModels.has(row.model) &&
+                        row.groups.map((groupRow) => {
+                          const groupCells = officialCells(row.model, groupRow)
+                          return (
+                            <tr
+                              key={`${row.model}-${groupRow.group}`}
+                              className='dark:border-border border-b border-[#e5e7eb] bg-[#fbfcfd] dark:bg-white/2'
+                            >
+                              <td className='px-3.5 py-[9px] pl-9'>
+                                <span className='dark:text-muted-foreground text-xs text-[#9ca3af]'>
+                                  {groupLabel(groupRow.group)}
+                                </span>
+                              </td>
+                              <td className={cn(MUTED_NUM, 'py-[9px] text-xs')}>
+                                {formatNumber(groupRow.requests)}
+                              </td>
+                              <td className={cn(MUTED_NUM, 'py-[9px] text-xs')}>
+                                {formatCompactNumber(groupRow.tokens)}
+                              </td>
+                              <td className={cn(MUTED_NUM, 'py-[9px] text-xs')}>
+                                {groupRow.requests > 0
+                                  ? formatNumber(
+                                      Math.round(
+                                        groupRow.tokens / groupRow.requests
+                                      )
+                                    )
+                                  : PLACEHOLDER}
+                              </td>
+                              <td className={cn(GREEN_NUM, 'py-[9px] text-xs')}>
+                                {formatQuota(groupRow.quota)}
+                              </td>
+                              <td
+                                className={cn(
+                                  groupCells.est === PLACEHOLDER
+                                    ? DASH_NUM
+                                    : MUTED_NUM,
+                                  'py-[9px] text-xs'
+                                )}
+                              >
+                                {groupCells.est}
+                              </td>
+                              <td
+                                className={cn(
+                                  groupCells.savings === PLACEHOLDER
+                                    ? DASH_NUM
+                                    : GREEN_NUM,
+                                  'py-[9px] text-xs'
+                                )}
+                              >
+                                {groupCells.savings}
+                              </td>
+                            </tr>
+                          )
+                        })}
+                    </Fragment>
+                  )
+                })}
               </tbody>
             </table>
           </div>

@@ -39,6 +39,26 @@ export type UpdateOptionResponse = {
   message: string
 }
 
+export type ReferencePricingSource = 'official' | 'openrouter'
+
+// 外部对比标价（USD / 1M tokens），按 (model_name, source) 一行
+export type ReferencePricingRow = {
+  id?: number
+  model_name: string
+  source: ReferencePricingSource
+  input?: number | null
+  output?: number | null
+  cached_input?: number | null
+  cache_creation?: number | null
+  cache_hit?: number | null
+}
+
+export type ReferencePricingResponse = {
+  success: boolean
+  message: string
+  data?: ReferencePricingRow[]
+}
+
 export type ConfirmPaymentComplianceResponse = {
   success: boolean
   message: string

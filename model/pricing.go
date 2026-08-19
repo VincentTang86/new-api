@@ -35,7 +35,18 @@ type Pricing struct {
 	SupportedEndpointTypes []constant.EndpointType `json:"supported_endpoint_types"`
 	BillingMode            string                  `json:"billing_mode,omitempty"`
 	BillingExpr            string                  `json:"billing_expr,omitempty"`
+	OfficialPrice          *ReferencePrice         `json:"official_price,omitempty"`
+	OpenRouterPrice        *ReferencePrice         `json:"openrouter_price,omitempty"`
 	PricingVersion         string                  `json:"pricing_version,omitempty"`
+}
+
+// ReferencePrice 外部标价（USD / 1M tokens），来自 reference_pricings 表，仅用于对比展示
+type ReferencePrice struct {
+	Input         *float64 `json:"input,omitempty"`
+	Output        *float64 `json:"output,omitempty"`
+	CachedInput   *float64 `json:"cached_input,omitempty"`
+	CacheCreation *float64 `json:"cache_creation,omitempty"`
+	CacheHit      *float64 `json:"cache_hit,omitempty"`
 }
 
 type PricingVendor struct {
@@ -354,6 +365,27 @@ func updatePricing() {
 		}
 	}
 
+	// 外部对比价：模型名 -> 来源 -> 价格
+	referencePriceMap := make(map[string]map[string]*ReferencePrice)
+	if referenceRows, err := GetAllReferencePricing(); err != nil {
+		common.SysError("failed to load reference pricing: " + err.Error())
+	} else {
+		for _, row := range referenceRows {
+			bySource := referencePriceMap[row.ModelName]
+			if bySource == nil {
+				bySource = make(map[string]*ReferencePrice)
+				referencePriceMap[row.ModelName] = bySource
+			}
+			bySource[row.Source] = &ReferencePrice{
+				Input:         row.Input,
+				Output:        row.Output,
+				CachedInput:   row.CachedInput,
+				CacheCreation: row.CacheCreation,
+				CacheHit:      row.CacheHit,
+			}
+		}
+	}
+
 	pricingMap = make([]Pricing, 0)
 	for model, groups := range modelGroupsMap {
 		pricing := Pricing{
@@ -406,12 +438,16 @@ func updatePricing() {
 				pricing.BillingExpr = expr
 			}
 		}
+		if bySource, ok := referencePriceMap[model]; ok {
+			pricing.OfficialPrice = bySource[ReferencePricingSourceOfficial]
+			pricing.OpenRouterPrice = bySource[ReferencePricingSourceOpenRouter]
+		}
 		pricingMap = append(pricingMap, pricing)
 	}
 
 	// 防止大更新后数据不通用
 	if len(pricingMap) > 0 {
-		pricingMap[0].PricingVersion = "5a90f2b86c08bd983a9a2e6d66c255f4eaef9c4bc934386d2b6ae84ef0ff1f1f"
+		pricingMap[0].PricingVersion = "3004b29dbd4d406dee07296878e5fea74cb7435c7ab4e56596d2aa59f65db2b1"
 	}
 
 	// 刷新缓存映射，供高并发快速查询

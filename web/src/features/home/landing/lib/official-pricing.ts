@@ -17,61 +17,50 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 /**
- * Hand-maintained supplement to the backend pricing feed.
+ * Benchmark catalogue for the pricing table.
  *
- * The pricing table is driven by `/api/pricing`, which gives us the model list
- * and every billing ratio, but has NO vendor list price and NO context-window
- * data. Those two facts live in `web/public/official-pricing.json`, keyed by
- * the backend `model_name` (exact match — a model shipped under a variant name
- * such as `kimi/kimi-k3` needs its own entry). The adapter
- * (`lib/build-pricing-rows.ts`) merges the parsed map onto each backend model:
+ * The pricing table is driven by `/api/pricing`, which now also carries the
+ * admin-maintained external list prices (`official_price` / `openrouter_price`
+ * per model, edited in System Settings → Billing → Benchmark Prices and stored
+ * in the backend `reference_pricings` table). This module reshapes those
+ * fields into the map the row adapter (`lib/build-pricing-rows.ts`) consumes:
  *
- *   - official* → the vendor's public list price, USD per 1M tokens
- *     (officialRequestPrice for 按次 / per-request models).
+ *   - official* → the vendor's public list price, USD per 1M tokens.
  *   - openrouter* → OpenRouter's public list price for the same model, used
  *     when the visitor flips the "Compare with" toggle to OpenRouter.
  *   Savings are computed as (benchmark − FR) / benchmark against whichever
- *   benchmark is selected, so a model with no entry for that source simply
- *   shows a dash in the benchmark + savings columns.
- *   - context → context-window label, e.g. '128K'. Brand literal.
- *   - displayName → friendly name; falls back to the model_name when absent.
+ *   benchmark is selected, so a model with no configured price for that source
+ *   simply shows a dash in the benchmark + savings columns.
  *
- * A model that is NOT in the file still appears in the table (the product
+ * A model with NO reference prices still appears in the table (the product
  * decision is to list every model the backend serves) — it just shows FR price
- * only, with dashes for official / savings / context.
- *
- * The JSON ships as a static asset, so editing it is a data change rather than
- * a code change — but it is copied into `web/dist` at build time and embedded
- * into the Go binary, so a price update still needs a frontend rebuild and a
- * redeploy.
- *
- * TODO(product): keep the file in step with the vendors' published pricing
- * pages. Only official list prices and context windows belong there; never our
- * own prices — those are always derived live from the backend ratios.
+ * only, with dashes for the benchmark / savings columns.
  */
-
-/** Static asset served from `web/public/`, embedded into the binary at build. */
-const OFFICIAL_PRICING_URL = '/official-pricing.json'
+import type {
+  PricingModel,
+  ReferencePriceLanes,
+} from '@/features/pricing/types'
 
 export interface OfficialPricingEntry {
+  /** Friendly name; falls back to the model_name when absent. Not currently
+   * populated by the backend feed — kept for the row adapter's contract. */
   displayName?: string
   /** Vendor list price, USD per 1M tokens (token / 按 Token models). */
   officialInput?: number
   officialOutput?: number
-  /** Vendor list price, USD per call (按次 / per-request models). */
+  /** Vendor list price, USD per call (按次 / per-request models). Not part of
+   * the admin-maintained reference pricing yet. */
   officialRequestPrice?: number
   /** OpenRouter list price, USD per 1M tokens (token / 按 Token models). */
   openrouterInput?: number
   openrouterOutput?: number
   /** OpenRouter list price, USD per call (按次 / per-request models). */
   openrouterRequestPrice?: number
-  /** Context-window label, e.g. '128K'. */
-  context?: string
 }
 
 export type OfficialPricingMap = Record<string, OfficialPricingEntry>
 
-function readPrice(value: unknown): number | undefined {
+function readPrice(value: number | null | undefined): number | undefined {
   // A zero or negative "list price" would either be meaningless or make the
   // savings maths dishonest, so it is dropped rather than rendered.
   if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) {
@@ -80,86 +69,35 @@ function readPrice(value: unknown): number | undefined {
   return value
 }
 
-function readLabel(value: unknown): string | undefined {
-  if (typeof value !== 'string') return undefined
-  const trimmed = value.trim()
-  return trimmed.length > 0 ? trimmed : undefined
-}
-
 /**
- * Validate the shipped JSON into the map the pricing adapter consumes.
- *
- * This is the trust boundary for a hand-edited data file on a public marketing
- * page: a malformed entry must degrade to a dash, never throw and never reach
- * the savings calculation. Unknown keys are ignored, bad fields are dropped
- * field by field, and a structurally broken file yields an empty map.
+ * Reshape the per-model reference prices from `/api/pricing` into the
+ * benchmark catalogue. This is the trust boundary for admin-entered numbers on
+ * a public marketing page: an unusable price must degrade to a dash, never
+ * reach the savings calculation. Models without any usable price are omitted.
  */
-export function parseOfficialPricing(raw: unknown): OfficialPricingMap {
-  if (typeof raw !== 'object' || raw === null) return {}
-  const models = (raw as { models?: unknown }).models
-  if (typeof models !== 'object' || models === null || Array.isArray(models)) {
-    return {}
-  }
-
-  const parsed: OfficialPricingMap = {}
-  for (const [modelName, value] of Object.entries(models)) {
-    if (typeof value !== 'object' || value === null || Array.isArray(value)) {
-      continue
-    }
-    const source = value as Record<string, unknown>
+export function buildOfficialPricingCatalog(
+  models: readonly PricingModel[]
+): OfficialPricingMap {
+  const catalog: OfficialPricingMap = {}
+  for (const model of models) {
     const entry: OfficialPricingEntry = {}
+    const official: ReferencePriceLanes = model.official_price ?? {}
+    const openrouter: ReferencePriceLanes = model.openrouter_price ?? {}
 
-    const displayName = readLabel(source.displayName)
-    if (displayName !== undefined) entry.displayName = displayName
-    const context = readLabel(source.context)
-    if (context !== undefined) entry.context = context
-
-    const officialInput = readPrice(source.officialInput)
+    const officialInput = readPrice(official.input)
     if (officialInput !== undefined) entry.officialInput = officialInput
-    const officialOutput = readPrice(source.officialOutput)
+    const officialOutput = readPrice(official.output)
     if (officialOutput !== undefined) entry.officialOutput = officialOutput
-    const officialRequestPrice = readPrice(source.officialRequestPrice)
-    if (officialRequestPrice !== undefined) {
-      entry.officialRequestPrice = officialRequestPrice
-    }
-
-    const openrouterInput = readPrice(source.openrouterInput)
+    const openrouterInput = readPrice(openrouter.input)
     if (openrouterInput !== undefined) entry.openrouterInput = openrouterInput
-    const openrouterOutput = readPrice(source.openrouterOutput)
+    const openrouterOutput = readPrice(openrouter.output)
     if (openrouterOutput !== undefined) {
       entry.openrouterOutput = openrouterOutput
     }
-    const openrouterRequestPrice = readPrice(source.openrouterRequestPrice)
-    if (openrouterRequestPrice !== undefined) {
-      entry.openrouterRequestPrice = openrouterRequestPrice
-    }
 
-    parsed[modelName] = entry
-  }
-  return parsed
-}
-
-/**
- * Load the official price supplement. Never rejects: a missing, unreachable or
- * malformed file leaves the official / savings columns showing dashes while the
- * table keeps rendering our own prices from `/api/pricing`.
- *
- * `cache: 'no-cache'` is deliberate — the backend serves every static asset with
- * `Cache-Control: max-age=604800` (middleware/cache.go), so without forced
- * revalidation a returning visitor would keep last week's list prices.
- */
-export async function fetchOfficialPricing(): Promise<OfficialPricingMap> {
-  try {
-    const response = await fetch(OFFICIAL_PRICING_URL, { cache: 'no-cache' })
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`)
+    if (Object.keys(entry).length > 0) {
+      catalog[model.model_name] = entry
     }
-    return parseOfficialPricing(await response.json())
-  } catch (error) {
-    if (import.meta.env.DEV) {
-      // eslint-disable-next-line no-console
-      console.warn(`Failed to load ${OFFICIAL_PRICING_URL}`, error)
-    }
-    return {}
   }
+  return catalog
 }
