@@ -4,22 +4,25 @@ import (
 	"fmt"
 
 	"github.com/QuantumNous/new-api/common"
+	"github.com/QuantumNous/new-api/constant"
 	"gorm.io/gorm"
 )
 
 type FlowQuotaData struct {
-	UserID      int    `json:"user_id,omitempty" gorm:"column:user_id"`
-	Username    string `json:"username,omitempty" gorm:"column:username"`
-	NodeName    string `json:"node_name,omitempty" gorm:"column:node_name"`
-	TokenID     int    `json:"token_id,omitempty" gorm:"column:token_id"`
-	TokenName   string `json:"token_name,omitempty" gorm:"-"`
-	UseGroup    string `json:"use_group" gorm:"column:use_group"`
-	ChannelID   int    `json:"channel_id,omitempty" gorm:"column:channel_id"`
-	ChannelName string `json:"channel_name,omitempty" gorm:"-"`
-	ModelName   string `json:"model_name" gorm:"column:model_name"`
-	TokenUsed   int    `json:"token_used" gorm:"column:token_used"`
-	Count       int    `json:"count" gorm:"column:count"`
-	Quota       int    `json:"quota" gorm:"column:quota"`
+	UserID       int    `json:"user_id,omitempty" gorm:"column:user_id"`
+	Username     string `json:"username,omitempty" gorm:"column:username"`
+	NodeName     string `json:"node_name,omitempty" gorm:"column:node_name"`
+	TokenID      int    `json:"token_id,omitempty" gorm:"column:token_id"`
+	TokenName    string `json:"token_name,omitempty" gorm:"-"`
+	IsPlayground bool   `json:"is_playground,omitempty" gorm:"-"`
+	LastUsedTime int64  `json:"last_used_time,omitempty" gorm:"-"`
+	UseGroup     string `json:"use_group" gorm:"column:use_group"`
+	ChannelID    int    `json:"channel_id,omitempty" gorm:"column:channel_id"`
+	ChannelName  string `json:"channel_name,omitempty" gorm:"-"`
+	ModelName    string `json:"model_name" gorm:"column:model_name"`
+	TokenUsed    int    `json:"token_used" gorm:"column:token_used"`
+	Count        int    `json:"count" gorm:"column:count"`
+	Quota        int    `json:"quota" gorm:"column:quota"`
 }
 
 func GetFlowQuotaData(startTime int64, endTime int64, username string, userID int, role int) ([]*FlowQuotaData, error) {
@@ -51,7 +54,10 @@ func getSelfFlowQuotaData(startTime int64, endTime int64, userID int) ([]*FlowQu
 	if err != nil {
 		return nil, err
 	}
-	return rows, fillFlowTokenNames(rows)
+	if err := fillFlowTokenNames(rows); err != nil {
+		return rows, err
+	}
+	return rows, fillFlowPlaygroundUsage(rows, userID)
 }
 
 func getAdminFlowQuotaData(startTime int64, endTime int64, username string) ([]*FlowQuotaData, error) {
@@ -89,6 +95,43 @@ func getRootFlowQuotaData(startTime int64, endTime int64, username string) ([]*F
 		return rows, err
 	}
 	return rows, fillFlowChannelNames(rows)
+}
+
+// fillFlowPlaygroundUsage labels the token_id = 0 bucket as playground usage and
+// gives it a last-used timestamp. Playground requests run on a temporary token
+// that is never persisted, so quota_data only keeps the id-less aggregate and
+// there is no `tokens` row to read AccessedTime from; the consume log is the
+// only place that still carries the playground name and an exact timestamp.
+func fillFlowPlaygroundUsage(rows []*FlowQuotaData, userID int) error {
+	idLess := make([]*FlowQuotaData, 0)
+	for _, row := range rows {
+		if row.TokenID == 0 {
+			idLess = append(idLess, row)
+		}
+	}
+	if len(idLess) == 0 {
+		return nil
+	}
+
+	// Not bounded by the dashboard time range on purpose: real API keys show
+	// Token.AccessedTime, which is all-time, so playground has to match.
+	var lastUsedTime int64
+	err := LOG_DB.Table("logs").
+		Select("COALESCE(max(created_at), 0)").
+		Where("user_id = ? and type = ? and token_id = 0", userID, LogTypeConsume).
+		Where("token_name LIKE ?", constant.PlaygroundTokenNamePrefix+"%").
+		Scan(&lastUsedTime).Error
+	if err != nil {
+		return err
+	}
+	if lastUsedTime <= 0 {
+		return nil
+	}
+	for _, row := range idLess {
+		row.IsPlayground = true
+		row.LastUsedTime = lastUsedTime
+	}
+	return nil
 }
 
 func fillFlowTokenNames(rows []*FlowQuotaData) error {

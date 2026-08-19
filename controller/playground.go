@@ -2,8 +2,8 @@ package controller
 
 import (
 	"errors"
-	"fmt"
 
+	"github.com/QuantumNous/new-api/constant"
 	"github.com/QuantumNous/new-api/middleware"
 	"github.com/QuantumNous/new-api/model"
 	relaycommon "github.com/QuantumNous/new-api/relay/common"
@@ -47,7 +47,7 @@ func Playground(c *gin.Context) {
 
 	tempToken := &model.Token{
 		UserId: userId,
-		Name:   fmt.Sprintf("playground-%s", relayInfo.UsingGroup),
+		Name:   constant.PlaygroundTokenNamePrefix + relayInfo.UsingGroup,
 		Group:  relayInfo.UsingGroup,
 	}
 	_ = middleware.SetupContextForToken(c, tempToken)
