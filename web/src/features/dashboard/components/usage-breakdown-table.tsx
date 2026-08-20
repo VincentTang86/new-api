@@ -63,23 +63,38 @@ const DASH_NUM = cn(NUM_CELL, 'text-[#9ca3af] dark:text-muted-foreground/60')
 /**
  * Amounts at or above this display value keep the site-wide four fraction
  * digits. Below it four digits leave too little resolution to tell the actual
- * and official cost columns apart — they round to the same number next to a
- * non-zero savings percentage, which reads as a contradiction — so those rows
- * widen to six digits, the resolution the data is stored at, since one quota
- * unit is $0.000002 at 500000 quota per USD.
+ * and official cost columns apart, so those rows start at six — the resolution
+ * the data is stored at, since one quota unit is $0.000002 at 500000 quota per
+ * USD.
  */
 const SMALL_COST_THRESHOLD = 0.001
 
+/** Widest a cost cell goes; past the storage resolution the digits are noise. */
+const MAX_COST_DIGITS = 6
+
 /**
- * Format a cost cell of this table. Both cost columns go through it so they
- * always round on the same scale; the official estimate arrives as USD and is
- * converted to quota units by the caller.
+ * The savings column rounds to whole percent, so a ratio below this renders as
+ * "0%" — two cost cells showing the same amount beside it are not a
+ * contradiction, and must not drag the row wider.
  */
-function formatCost(quota: number): string {
+const VISIBLE_SAVINGS_RATIO = 0.005
+
+/** Fraction digits a cost cell reads well at on its own. */
+function costDigits(quota: number): number {
   const amount = Math.abs(quotaUnitsToDollars(quota))
+  if (amount >= 1) return 2
+  return amount > 0 && amount < SMALL_COST_THRESHOLD ? MAX_COST_DIGITS : 4
+}
+
+/**
+ * Format a cost cell of this table at an exact width. Both cost columns go
+ * through it so they always round on the same scale; the official estimate
+ * arrives as USD and is converted to quota units by the caller.
+ */
+function formatCost(quota: number, digits: number): string {
   return formatQuotaWithCurrency(quota, {
-    digitsLarge: 2,
-    digitsSmall: amount > 0 && amount < SMALL_COST_THRESHOLD ? 6 : 4,
+    digitsLarge: digits,
+    digitsSmall: digits,
     abbreviate: true,
   })
 }
@@ -249,9 +264,10 @@ export function UsageBreakdownTable({
   // copy managed elsewhere and can drift from the name.
   const groupLabel = (group: string) => group || t('Unknown')
 
-  // Both cells dash together when no honest estimate exists: model without
-  // configured official prices, or rows from before the token split columns.
-  const officialCells = (model: string, totals: UsageTotals) => {
+  // The official cells dash together when no honest estimate exists: model
+  // without configured official prices, or rows from before the token split
+  // columns. The actual cost is always known.
+  const costCells = (model: string, totals: UsageTotals) => {
     const estUsd = estimateOfficialCostUSD(
       {
         promptTokens: totals.promptTokens,
@@ -262,12 +278,37 @@ export function UsageBreakdownTable({
       },
       officialPrices?.[model]
     )
-    if (estUsd === null) return { est: PLACEHOLDER, savings: PLACEHOLDER }
+    if (estUsd === null) {
+      return {
+        actual: formatCost(totals.quota, costDigits(totals.quota)),
+        est: PLACEHOLDER,
+        savings: PLACEHOLDER,
+      }
+    }
+
     const { quotaPerUnit } = getCurrencyDisplay().config
-    const actualUsd = totals.quota / quotaPerUnit
-    const ratio = calculateSavingsRatio(actualUsd, estUsd)
+    const estQuota = estUsd * quotaPerUnit
+    const ratio = calculateSavingsRatio(totals.quota / quotaPerUnit, estUsd)
+
+    let actual = formatCost(totals.quota, costDigits(totals.quota))
+    let est = formatCost(estQuota, costDigits(estQuota))
+
+    // Rounding can collapse both columns onto the same number while the
+    // savings percentage, taken from the raw values, still claims a
+    // difference. Widen the pair a digit at a time until they read apart —
+    // only these rows change width, so a row whose two costs are orders of
+    // magnitude apart keeps each cell at its natural precision.
+    let digits = Math.max(costDigits(totals.quota), costDigits(estQuota))
+    const savingsIsVisible = ratio !== null && ratio >= VISIBLE_SAVINGS_RATIO
+    while (savingsIsVisible && actual === est && digits < MAX_COST_DIGITS) {
+      digits += 1
+      actual = formatCost(totals.quota, digits)
+      est = formatCost(estQuota, digits)
+    }
+
     return {
-      est: formatCost(estUsd * quotaPerUnit),
+      actual,
+      est,
       savings:
         ratio === null
           ? PLACEHOLDER
@@ -377,7 +418,7 @@ export function UsageBreakdownTable({
                   </tr>
                 )}
                 {modelPagination.pageRows.map((row) => {
-                  const modelCells = officialCells(row.model, row)
+                  const modelCells = costCells(row.model, row)
                   return (
                     <Fragment key={row.model}>
                       <tr
@@ -410,7 +451,7 @@ export function UsageBreakdownTable({
                               )
                             : PLACEHOLDER}
                         </td>
-                        <td className={GREEN_NUM}>{formatCost(row.quota)}</td>
+                        <td className={GREEN_NUM}>{modelCells.actual}</td>
                         <td
                           className={
                             modelCells.est === PLACEHOLDER
@@ -432,7 +473,7 @@ export function UsageBreakdownTable({
                       </tr>
                       {expandedModels.has(row.model) &&
                         row.groups.map((groupRow) => {
-                          const groupCells = officialCells(row.model, groupRow)
+                          const groupCells = costCells(row.model, groupRow)
                           return (
                             <tr
                               key={`${row.model}-${groupRow.group}`}
@@ -459,7 +500,7 @@ export function UsageBreakdownTable({
                                   : PLACEHOLDER}
                               </td>
                               <td className={cn(GREEN_NUM, 'py-[9px] text-xs')}>
-                                {formatCost(groupRow.quota)}
+                                {groupCells.actual}
                               </td>
                               <td
                                 className={cn(
@@ -540,7 +581,9 @@ export function UsageBreakdownTable({
                     <td className={MUTED_NUM}>
                       {formatCompactNumber(row.tokens)}
                     </td>
-                    <td className={GREEN_NUM}>{formatCost(row.quota)}</td>
+                    <td className={GREEN_NUM}>
+                      {formatCost(row.quota, costDigits(row.quota))}
+                    </td>
                     <td className={MUTED_NUM}>
                       {formatLastUsed(row.accessedTime)}
                     </td>
