@@ -44,10 +44,10 @@ const ADMIN_MAX_DAYS = 90
 
 vi.mock('sonner', () => ({ toast: { error: vi.fn() } }))
 
-// The dashboard picker relies on these two Calendar props to keep an
-// out-of-budget or ambiguous selection from ever being made. Driving the
-// primitive directly keeps the assertions on the behaviour the picker buys,
-// without standing up the popover.
+// The dashboard picker relies on these Calendar props to keep an out-of-budget
+// or ambiguous selection from ever being made. Driving the primitive directly
+// keeps the assertions on the behaviour the picker buys, without standing up
+// the popover.
 function RangeCalendar(props: { maxDays?: number }) {
   const [selected, setSelected] = useState<DateRange | undefined>()
   const maxDays = props.maxDays ?? SELF_MAX_DAYS
@@ -56,8 +56,9 @@ function RangeCalendar(props: { maxDays?: number }) {
       <Calendar
         mode='range'
         numberOfMonths={2}
+        showOutsideDays={false}
+        resetOnSelect
         max={maxDays - 1}
-        disableOutsideDays
         selected={selected}
         onSelect={setSelected}
         defaultMonth={new Date(2026, 6, 1)}
@@ -72,23 +73,47 @@ function RangeCalendar(props: { maxDays?: number }) {
 }
 
 /**
- * react-day-picker labels each day "Weekday, Month Nth, YYYY", so match on the
- * date part only. With two months on screen the end of July is also painted as
- * August's leading outside row, so pick the cell that belongs to its own month.
+ * react-day-picker labels each day "Weekday, Month Nth, YYYY", and appends
+ * ", selected" once it is part of the range, so match on the date part and
+ * allow anything after it. The length check is load-bearing: with two months on
+ * screen, painting either one's padding days would give a date two cells, and
+ * clicking the wrong one selects a day the caller never sees.
  */
 function dayButton(label: string): HTMLElement {
   const matches = screen.getAllByRole('button', {
-    name: new RegExp(`${label}$`),
+    name: new RegExp(`${label}(,|$)`),
     hidden: true,
   })
-  const owned = matches.filter(
-    (button) => button.parentElement?.dataset.outside !== 'true'
-  )
-  expect(owned).toHaveLength(1)
-  return owned[0]
+  expect(matches).toHaveLength(1)
+  return matches[0]
 }
 
 describe('time range calendar', () => {
+  test('the first click opens the range instead of closing it on one day', async () => {
+    const user = userEvent.setup()
+    render(<RangeCalendar />)
+
+    await user.click(dayButton('July 1st, 2026'))
+
+    // The end stays open so the second endpoint is the user's to pick, and so
+    // the picker knows which day to measure its window from.
+    expect(screen.getByTestId('selection')).toHaveTextContent(
+      'Wed Jul 01 2026 / none'
+    )
+  })
+
+  test('a single day is still selectable, by clicking it twice', async () => {
+    const user = userEvent.setup()
+    render(<RangeCalendar />)
+
+    await user.click(dayButton('July 1st, 2026'))
+    await user.click(dayButton('July 1st, 2026'))
+
+    expect(screen.getByTestId('selection')).toHaveTextContent(
+      'Wed Jul 01 2026 / Wed Jul 01 2026'
+    )
+  })
+
   test('a 31-day span restarts the range instead of selecting it', async () => {
     const user = userEvent.setup()
     render(<RangeCalendar />)
@@ -131,23 +156,19 @@ describe('time range calendar', () => {
     )
   })
 
-  test('neighbouring-month days stay visible but are not selectable', async () => {
-    const user = userEvent.setup()
+  test('a month paints its own days only, so no date has two cells', () => {
     render(<RangeCalendar />)
 
-    const outsideCells = document.querySelectorAll('[data-outside="true"]')
-    expect(outsideCells.length).toBeGreaterThan(0)
-
-    const outsideButtons = [...outsideCells].flatMap((cell) => [
+    // The padding cells stay in the grid to keep the columns aligned, but they
+    // hold no day, so every date is clickable in exactly one month.
+    const padding = [...document.querySelectorAll('[data-outside="true"]')]
+    expect(padding.length).toBeGreaterThan(0)
+    const paddingButtons = padding.flatMap((cell) => [
       ...cell.querySelectorAll('button'),
     ])
-    expect(outsideButtons.length).toBeGreaterThan(0)
-    for (const button of outsideButtons) {
-      expect(button).toBeDisabled()
-    }
-
-    await user.click(outsideButtons[0])
-    expect(screen.getByTestId('selection')).toHaveTextContent('none / none')
+    expect(paddingButtons).toHaveLength(0)
+    // July 31st is the date that used to double up, as August's leading row.
+    expect(dayButton('July 31st, 2026')).toBeInTheDocument()
   })
 })
 
@@ -167,7 +188,6 @@ beforeAll(() => {
   i18next.addResourceBundle('en', 'translation', {
     'Custom Range': 'Custom Range',
     Apply: 'Apply',
-    'Up to {{count}} days': 'Up to {{count}} days',
     'The time range cannot exceed {{count}} days':
       'The time range cannot exceed {{count}} days',
     'Start date': 'Start date',
@@ -197,9 +217,29 @@ async function openPicker(
 }
 
 describe('time range filter', () => {
-  test('advertises the limit next to the apply action', async () => {
-    await openPicker()
-    expect(screen.getByText('Up to 30 days')).toBeInTheDocument()
+  test('the window travels with the anchor and reaches both ways', async () => {
+    const { user } = await openPicker()
+
+    await user.click(dayButton('July 1st, 2026'))
+
+    // The anchor alone is not a range yet, so the footer still asks for the
+    // other end rather than reporting a one-day span nobody chose.
+    expect(screen.getByText('Jul 1, 2026')).toBeInTheDocument()
+    expect(screen.getByText('End date')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Apply' })).toBeDisabled()
+
+    // Forwards, the last day inside a 30-day window is Jul 30.
+    expect(dayButton('July 30th, 2026')).toBeEnabled()
+    expect(dayButton('July 31st, 2026')).toBeDisabled()
+
+    // Close this range, then re-anchor: a complete range frees every past day
+    // again, and the next click starts a fresh window around the day clicked.
+    await user.click(dayButton('July 2nd, 2026'))
+    await user.click(dayButton('August 10th, 2026'))
+
+    // Backwards from the new anchor the window reaches just as far.
+    expect(dayButton('July 12th, 2026')).toBeEnabled()
+    expect(dayButton('July 11th, 2026')).toBeDisabled()
   })
 
   test('will not hand an over-long range to the queries', async () => {
@@ -208,16 +248,13 @@ describe('time range filter', () => {
     await user.click(dayButton('July 1st, 2026'))
     await user.click(dayButton('July 31st, 2026'))
 
-    // The 31st is one day past the cap, so the calendar restarts from it
-    // instead of closing the range on Jul 1.
-    expect(screen.getByText('Jul 31, 2026')).toBeInTheDocument()
+    // The 31st is out of the window, so the click cannot close a range on it.
     expect(screen.getByText('End date')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Apply' }))
 
-    // Either the calendar restarted the range or the apply guard rejected it;
-    // what matters is that no 31-day span reaches the three range queries,
-    // which is what produced three untranslated toasts.
+    // No 31-day span reaches the three range queries, which is what produced
+    // three untranslated toasts.
     for (const [applied] of onRangeChange.mock.calls) {
       expect(applied.end - applied.start).toBeLessThanOrEqual(
         SELF_MAX_DAYS * 86_400
@@ -244,11 +281,13 @@ describe('time range filter', () => {
 })
 
 describe('time range filter honours a wider cap', () => {
-  test('the hint reports the cap it was given, not a hardcoded 30', async () => {
-    await openPicker(vi.fn(), ADMIN_MAX_DAYS)
+  test('the window opens to the cap it was given, not a hardcoded 30', async () => {
+    const { user } = await openPicker(vi.fn(), ADMIN_MAX_DAYS)
 
-    expect(screen.getByText('Up to 90 days')).toBeInTheDocument()
-    expect(screen.queryByText('Up to 30 days')).not.toBeInTheDocument()
+    await user.click(dayButton('July 1st, 2026'))
+
+    // The dashboard's 30-day cap would have stopped at Jul 30.
+    expect(dayButton('August 18th, 2026')).toBeEnabled()
   })
 
   test('a 48-day range applies intact under a 90-day cap', async () => {

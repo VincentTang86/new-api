@@ -18,7 +18,11 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { CalendarDays } from 'lucide-react'
 import { useState } from 'react'
-import type { DateRange } from 'react-day-picker'
+import {
+  useDayPicker,
+  type DateRange,
+  type MonthCaptionProps,
+} from 'react-day-picker'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
@@ -26,6 +30,7 @@ import { Calendar } from '@/components/ui/calendar'
 import {
   Popover,
   PopoverContent,
+  PopoverTitle,
   PopoverTrigger,
 } from '@/components/ui/popover'
 import dayjs from '@/lib/dayjs'
@@ -54,10 +59,59 @@ const FILTER_BUTTON_ACTIVE = 'bg-[#ff5a5f] font-semibold text-white'
 const FILTER_BUTTON_IDLE =
   'border border-[#e5e7eb] bg-white font-medium text-[#6b7280] hover:bg-[#f9fafb] dark:border-border dark:bg-card dark:text-muted-foreground dark:hover:bg-muted'
 
+// The footer row is laid out to the design's pixel grid: 100px date chips and
+// 56px time chips separated by 4px, a 20px lane for the arrow, then the two
+// 68px actions 8px apart against the right gutter.
 const DATE_CHIP_CLASS =
-  'dark:bg-muted dark:text-foreground min-w-24 rounded-[6px] bg-[#f5f5f7] px-2.5 py-1.5 text-center text-xs text-[#3d4047]'
+  'dark:bg-muted dark:text-foreground flex h-[34px] w-[100px] items-center justify-center rounded-[6px] bg-[#f5f5f7] text-[12px] text-[#3d4047]'
 const TIME_INPUT_CLASS =
-  'dark:text-foreground w-5 cursor-text bg-transparent text-center text-xs text-[#3d4047] outline-none'
+  'dark:text-foreground w-[18px] cursor-text bg-transparent text-center text-[12px] text-[#3d4047] outline-none'
+const FOOTER_BUTTON_BASE =
+  'h-[34px] w-[68px] cursor-pointer rounded-[6px] text-[12px] font-medium transition-colors'
+const MONTH_NAV_CLASS =
+  'dark:text-muted-foreground flex size-4 cursor-pointer items-center justify-center text-[#9ea3b0] transition-colors hover:text-[#3d4047] disabled:cursor-not-allowed disabled:opacity-40 dark:hover:text-foreground'
+
+// Every month draws its own arrows, so the shared bar has nothing left to show.
+// react-day-picker still requires a component for the slot, hence the empty one.
+const EmptyNav = () => <nav hidden />
+
+/**
+ * The design puts a ‹ › pair inside each month's caption, where react-day-picker
+ * ships a single nav bar above both grids. Both pairs move the same two-month
+ * window, so whichever one is clicked the two captions stay a month apart.
+ */
+function MonthCaptionWithNav({
+  calendarMonth: _calendarMonth,
+  displayIndex: _displayIndex,
+  children,
+  ...divProps
+}: MonthCaptionProps) {
+  const { components, goToMonth, labels, nextMonth, previousMonth } =
+    useDayPicker()
+  return (
+    <div {...divProps}>
+      <button
+        type='button'
+        aria-label={labels.labelPrevious(previousMonth)}
+        disabled={!previousMonth}
+        className={MONTH_NAV_CLASS}
+        onClick={() => previousMonth && goToMonth(previousMonth)}
+      >
+        <components.Chevron orientation='left' className='size-4' />
+      </button>
+      {children}
+      <button
+        type='button'
+        aria-label={labels.labelNext(nextMonth)}
+        disabled={!nextMonth}
+        className={MONTH_NAV_CLASS}
+        onClick={() => nextMonth && goToMonth(nextMonth)}
+      >
+        <components.Chevron orientation='right' className='size-4' />
+      </button>
+    </div>
+  )
+}
 
 function sanitizeTimePart(raw: string, max: number): string {
   const digits = raw.replaceAll(/\D/g, '').slice(0, 2)
@@ -87,7 +141,7 @@ function TimeField({
   minutesLabel,
 }: TimeFieldProps) {
   return (
-    <div className='dark:bg-muted flex items-center gap-px rounded-[6px] bg-[#f5f5f7] px-2 py-1.5'>
+    <div className='dark:bg-muted flex h-[34px] w-[56px] items-center justify-center gap-px rounded-[6px] bg-[#f5f5f7]'>
       <input
         type='text'
         inputMode='numeric'
@@ -101,7 +155,7 @@ function TimeField({
         }
         className={TIME_INPUT_CLASS}
       />
-      <span className='dark:text-foreground text-xs text-[#3d4047]'>:</span>
+      <span className='dark:text-foreground text-[12px] text-[#3d4047]'>:</span>
       <input
         type='text'
         inputMode='numeric'
@@ -161,15 +215,19 @@ export function TimeRangeFilter(props: TimeRangeFilterProps) {
     setPickerOpen(open)
   }
 
-  const draftRange = draft?.from
-    ? resolveCustomRange(
-        draft.from,
-        draft.to ?? draft.from,
-        { hours: toTimePart(startHH, 0), minutes: toTimePart(startMM, 0) },
-        { hours: toTimePart(endHH, 23), minutes: toTimePart(endMM, 59) },
-        props.maxRangeDays
-      )
-    : null
+  // Only a closed pair is a range. While the calendar holds just the anchor
+  // the footer still reads "End date", so applying then would commit a span
+  // the picker never showed.
+  const draftRange =
+    draft?.from && draft.to
+      ? resolveCustomRange(
+          draft.from,
+          draft.to,
+          { hours: toTimePart(startHH, 0), minutes: toTimePart(startMM, 0) },
+          { hours: toTimePart(endHH, 23), minutes: toTimePart(endMM, 59) },
+          props.maxRangeDays
+        )
+      : null
 
   const draftTooLong =
     draftRange !== null && !isRangeWithinLimit(draftRange, props.maxRangeDays)
@@ -189,8 +247,9 @@ export function TimeRangeFilter(props: TimeRangeFilterProps) {
     setPickerOpen(false)
   }
 
-  // Grey out what the caller's endpoint would reject, so the limit is visible
-  // before the click. `max` on the Calendar is what actually enforces it.
+  // Once an anchor is picked the window travels with it, so the cap reads as
+  // "30 days either side of this day" rather than a wall the click runs into.
+  // Greying out is also what enforces it: an over-long pair is unclickable.
   const isDateDisabled = (date: Date) => {
     if (dayjs(date).isAfter(dayjs(), 'day')) return true
     if (draft?.from && !draft.to) {
@@ -239,76 +298,109 @@ export function TimeRangeFilter(props: TimeRangeFilterProps) {
           <CalendarDays className='size-3.5' />
           {customLabel}
         </PopoverTrigger>
-        <PopoverContent align='start' className='w-auto p-3'>
-          <div className='space-y-3'>
-            <Calendar
-              mode='range'
-              numberOfMonths={2}
-              // `max` counts whole days between the endpoints, so a 30-day
-              // inclusive window is 29. Unlike `disabled` it also guards the
-              // "extend an already complete range" path.
-              max={props.maxRangeDays - 1}
-              disableOutsideDays
-              selected={draft}
-              onSelect={setDraft}
-              disabled={isDateDisabled}
-              defaultMonth={
-                draft?.from ?? dayjs().subtract(1, 'month').toDate()
-              }
+        <PopoverContent
+          align='start'
+          className='w-auto gap-0 rounded-[12px] px-6 py-5 shadow-[0_8px_12px_rgba(0,0,0,0.12)]'
+        >
+          <div className='dark:border-border border-b border-[#e6e8eb] pb-4'>
+            <PopoverTitle className='dark:text-foreground text-[14px] font-semibold text-[#1c1f24]'>
+              {t('Custom Range')}
+            </PopoverTitle>
+          </div>
+          <Calendar
+            mode='range'
+            numberOfMonths={2}
+            // The design shows each month holding its own days only. Dropping
+            // the neighbouring-month padding also means a date is painted in
+            // exactly one grid, so one day can never be two selections.
+            showOutsideDays={false}
+            // The first click sets only the anchor, so the second endpoint is
+            // the user's to pick and `isDateDisabled` can grey out everything
+            // beyond the cap around it. Without this the calendar closes a
+            // same-day range on that first click.
+            resetOnSelect
+            // `max` counts whole days between the endpoints, so a 30-day
+            // inclusive window is 29. It repeats the cap the greyed-out days
+            // already express, for the paths `disabled` does not cover.
+            max={props.maxRangeDays - 1}
+            selected={draft}
+            onSelect={setDraft}
+            disabled={isDateDisabled}
+            defaultMonth={draft?.from ?? dayjs().subtract(1, 'month').toDate()}
+            className='dark:text-foreground p-0 pt-5 pb-4 text-[#3d4047] [--cell-radius:10px] [--cell-size:36px] [&_[data-day]]:text-[12px]'
+            classNames={{
+              // Both months are the same width, so the centre of the row is
+              // the centre of the 32px gutter. Drawing the hairline as an
+              // overlay there keeps the gutter exactly the width it specifies.
+              months:
+                'dark:before:bg-border relative flex flex-row items-stretch gap-8 before:absolute before:inset-y-0 before:left-1/2 before:w-px before:bg-[#e6e8eb]',
+              month: 'flex w-[252px] flex-col gap-1',
+              month_caption: 'flex h-5 w-full items-center justify-between',
+              caption_label:
+                'dark:text-foreground flex-1 text-center text-[13px] font-semibold text-[#1c1f24] select-none',
+              weekday:
+                'dark:text-muted-foreground flex h-6 flex-1 items-center justify-center text-[11px] font-medium text-[#9ea3b0] select-none',
+              week: 'flex w-full',
+            }}
+            components={{ Nav: EmptyNav, MonthCaption: MonthCaptionWithNav }}
+          />
+          <div className='dark:border-border flex items-center gap-1 border-t border-[#e6e8eb] pt-3.5'>
+            <div className={DATE_CHIP_CLASS}>
+              {draft?.from
+                ? dayjs(draft.from).format('MMM D, YYYY')
+                : t('Start date')}
+            </div>
+            <TimeField
+              hours={startHH}
+              minutes={startMM}
+              onHoursChange={setStartHH}
+              onMinutesChange={setStartMM}
+              hoursLabel={t('Start time')}
+              minutesLabel={t('Start time')}
             />
-            <div className='dark:border-border flex flex-wrap items-center gap-2 border-t border-[#e6e8eb] pt-3'>
-              <div className={DATE_CHIP_CLASS}>
-                {draft?.from
-                  ? dayjs(draft.from).format('MMM D, YYYY')
-                  : t('Start date')}
-              </div>
-              <TimeField
-                hours={startHH}
-                minutes={startMM}
-                onHoursChange={setStartHH}
-                onMinutesChange={setStartMM}
-                hoursLabel={t('Start time')}
-                minutesLabel={t('Start time')}
-              />
-              <span className='text-xs text-[#9ea3b0]'>→</span>
-              <div className={DATE_CHIP_CLASS}>
-                {draft?.to
-                  ? dayjs(draft.to).format('MMM D, YYYY')
-                  : t('End date')}
-              </div>
-              <TimeField
-                hours={endHH}
-                minutes={endMM}
-                onHoursChange={setEndHH}
-                onMinutesChange={setEndMM}
-                hoursLabel={t('End time')}
-                minutesLabel={t('End time')}
-              />
-              <span className='dark:text-muted-foreground text-[11px] text-[#9ea3b0]'>
-                {t('Up to {{count}} days', { count: props.maxRangeDays })}
-              </span>
-              <div className='flex-1' />
-              <div className='flex gap-2'>
-                <button
-                  type='button'
-                  className='dark:border-border dark:bg-card dark:text-muted-foreground cursor-pointer rounded-[6px] border border-[#e5e7eb] bg-white px-3.5 py-[6px] text-[13px] font-medium text-[#6b7280] transition-colors hover:bg-[#f9fafb]'
-                  onClick={() => setPickerOpen(false)}
-                >
-                  {t('Cancel')}
-                </button>
-                <button
-                  type='button'
-                  className='cursor-pointer rounded-[6px] bg-[#ff5a5f] px-3.5 py-[6px] text-[13px] font-semibold text-white transition-colors hover:bg-[#e14b50] disabled:cursor-not-allowed disabled:opacity-50'
-                  disabled={
-                    !draftRange ||
-                    draftRange.end <= draftRange.start ||
-                    draftTooLong
-                  }
-                  onClick={applyDraft}
-                >
-                  {t('Apply')}
-                </button>
-              </div>
+            <span className='w-5 text-center text-[11px] text-[#9ea3b0]'>
+              →
+            </span>
+            <div className={DATE_CHIP_CLASS}>
+              {draft?.to
+                ? dayjs(draft.to).format('MMM D, YYYY')
+                : t('End date')}
+            </div>
+            <TimeField
+              hours={endHH}
+              minutes={endMM}
+              onHoursChange={setEndHH}
+              onMinutesChange={setEndMM}
+              hoursLabel={t('End time')}
+              minutesLabel={t('End time')}
+            />
+            <div className='flex-1' />
+            <div className='flex gap-2'>
+              <button
+                type='button'
+                className={cn(
+                  FOOTER_BUTTON_BASE,
+                  'dark:border-border dark:bg-card dark:text-muted-foreground border border-[#e5e8eb] bg-white text-[#3d4047] hover:bg-[#f9fafb]'
+                )}
+                onClick={() => setPickerOpen(false)}
+              >
+                {t('Cancel')}
+              </button>
+              <button
+                type='button'
+                className={cn(
+                  FOOTER_BUTTON_BASE,
+                  'bg-[#ff5a5f] text-white hover:bg-[#e14b50] disabled:cursor-not-allowed disabled:opacity-50'
+                )}
+                disabled={
+                  !draftRange ||
+                  draftRange.end <= draftRange.start ||
+                  draftTooLong
+                }
+                onClick={applyDraft}
+              >
+                {t('Apply')}
+              </button>
             </div>
           </div>
         </PopoverContent>
