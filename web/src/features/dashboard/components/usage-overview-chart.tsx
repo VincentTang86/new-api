@@ -193,6 +193,18 @@ export function UsageOverviewChart({
         },
       ],
       tooltip: {
+        // Hovering a bar segment renders the mark tooltip, which is a separate
+        // path from the dimension tooltip below; without it VChart prints the
+        // raw yField, i.e. quota units instead of a currency amount.
+        mark: {
+          content: [
+            {
+              key: (datum: Record<string, unknown>) => datum?.Model,
+              value: (datum: Record<string, unknown>) =>
+                formatValue(Number(datum?.value) || 0),
+            },
+          ],
+        },
         dimension: {
           updateContent: (
             items:
