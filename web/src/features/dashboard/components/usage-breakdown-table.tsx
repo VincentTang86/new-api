@@ -33,9 +33,13 @@ import {
 } from '@/features/home/landing/lib/pricing'
 import type { ApiKey } from '@/features/keys/types'
 import type { ReferencePriceLanes } from '@/features/pricing/types'
-import { formatCurrencyFromUSD, getCurrencyDisplay } from '@/lib/currency'
+import { formatQuotaWithCurrency, getCurrencyDisplay } from '@/lib/currency'
 import dayjs from '@/lib/dayjs'
-import { formatCompactNumber, formatNumber, formatQuota } from '@/lib/format'
+import {
+  formatCompactNumber,
+  formatNumber,
+  quotaUnitsToDollars,
+} from '@/lib/format'
 import { cn } from '@/lib/utils'
 
 import { BREAKDOWN_PAGE_SIZES } from '../constants'
@@ -55,6 +59,30 @@ const NUM_CELL = 'px-3.5 py-[13px] text-right text-[13px] tabular-nums'
 const MUTED_NUM = cn(NUM_CELL, 'text-[#6b7280] dark:text-muted-foreground')
 const GREEN_NUM = cn(NUM_CELL, 'font-semibold text-[#10b981]')
 const DASH_NUM = cn(NUM_CELL, 'text-[#9ca3af] dark:text-muted-foreground/60')
+
+/**
+ * Amounts at or above this display value keep the site-wide four fraction
+ * digits. Below it four digits leave too little resolution to tell the actual
+ * and official cost columns apart — they round to the same number next to a
+ * non-zero savings percentage, which reads as a contradiction — so those rows
+ * widen to six digits, the resolution the data is stored at, since one quota
+ * unit is $0.000002 at 500000 quota per USD.
+ */
+const SMALL_COST_THRESHOLD = 0.001
+
+/**
+ * Format a cost cell of this table. Both cost columns go through it so they
+ * always round on the same scale; the official estimate arrives as USD and is
+ * converted to quota units by the caller.
+ */
+function formatCost(quota: number): string {
+  const amount = Math.abs(quotaUnitsToDollars(quota))
+  return formatQuotaWithCurrency(quota, {
+    digitsLarge: 2,
+    digitsSmall: amount > 0 && amount < SMALL_COST_THRESHOLD ? 6 : 4,
+    abbreviate: true,
+  })
+}
 
 interface UsageBreakdownTableProps {
   flowData: FlowQuotaDataItem[]
@@ -235,16 +263,11 @@ export function UsageBreakdownTable({
       officialPrices?.[model]
     )
     if (estUsd === null) return { est: PLACEHOLDER, savings: PLACEHOLDER }
-    // Same digits as formatQuota so the two cost columns read as one scale.
-    const est = formatCurrencyFromUSD(estUsd, {
-      digitsLarge: 2,
-      digitsSmall: 4,
-      abbreviate: true,
-    })
-    const actualUsd = totals.quota / getCurrencyDisplay().config.quotaPerUnit
+    const { quotaPerUnit } = getCurrencyDisplay().config
+    const actualUsd = totals.quota / quotaPerUnit
     const ratio = calculateSavingsRatio(actualUsd, estUsd)
     return {
-      est,
+      est: formatCost(estUsd * quotaPerUnit),
       savings:
         ratio === null
           ? PLACEHOLDER
@@ -387,7 +410,7 @@ export function UsageBreakdownTable({
                               )
                             : PLACEHOLDER}
                         </td>
-                        <td className={GREEN_NUM}>{formatQuota(row.quota)}</td>
+                        <td className={GREEN_NUM}>{formatCost(row.quota)}</td>
                         <td
                           className={
                             modelCells.est === PLACEHOLDER
@@ -436,7 +459,7 @@ export function UsageBreakdownTable({
                                   : PLACEHOLDER}
                               </td>
                               <td className={cn(GREEN_NUM, 'py-[9px] text-xs')}>
-                                {formatQuota(groupRow.quota)}
+                                {formatCost(groupRow.quota)}
                               </td>
                               <td
                                 className={cn(
@@ -517,7 +540,7 @@ export function UsageBreakdownTable({
                     <td className={MUTED_NUM}>
                       {formatCompactNumber(row.tokens)}
                     </td>
-                    <td className={GREEN_NUM}>{formatQuota(row.quota)}</td>
+                    <td className={GREEN_NUM}>{formatCost(row.quota)}</td>
                     <td className={MUTED_NUM}>
                       {formatLastUsed(row.accessedTime)}
                     </td>
