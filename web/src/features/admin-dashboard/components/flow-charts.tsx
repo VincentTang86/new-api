@@ -320,7 +320,7 @@ export function FlowCharts(props: FlowChartsProps) {
     isError,
     isLoading,
   } = useQuery({
-    queryKey: ['usage-analytics', 'flow', flowQueryParams, flowRole],
+    queryKey: ['admin-dashboard', 'flow', flowQueryParams, flowRole],
     queryFn: () => getFlowQuotaDates(flowQueryParams, isAdmin),
     select: (res) =>
       requireSuccessfulFlowRows(res, t('Please try again later.')),

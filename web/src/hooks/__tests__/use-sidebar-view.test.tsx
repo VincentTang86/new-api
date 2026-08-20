@@ -118,7 +118,7 @@ describe('useSidebarView identity gating', () => {
     expect(adminUrls).toEqual([
       '/models/metadata',
       '/users',
-      '/usage-analytics/flow',
+      '/admin-dashboard/overview',
       '/redemption-codes',
       '/subscriptions',
     ])
@@ -139,7 +139,7 @@ describe('useSidebarView identity gating', () => {
       '/channels',
       '/models/metadata',
       '/users',
-      '/usage-analytics/flow',
+      '/admin-dashboard/overview',
       '/redemption-codes',
       '/subscriptions',
       '/system-info',

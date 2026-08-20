@@ -18,21 +18,13 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { createFileRoute, redirect } from '@tanstack/react-router'
 
-import { USAGE_ANALYTICS_DEFAULT_SECTION } from '@/features/usage-analytics/section-registry'
-import { ROLE } from '@/lib/roles'
-import { useAuthStore } from '@/stores/auth-store'
-
+// The short-lived /usage-analytics page was folded into the admin dashboard;
+// its bare URL used to open the flow section.
 export const Route = createFileRoute('/_authenticated/usage-analytics/')({
   beforeLoad: () => {
-    const { auth } = useAuthStore.getState()
-
-    if (!auth.user || auth.user.role < ROLE.ADMIN) {
-      throw redirect({ to: '/403' })
-    }
-
     throw redirect({
-      to: '/usage-analytics/$section',
-      params: { section: USAGE_ANALYTICS_DEFAULT_SECTION },
+      to: '/admin-dashboard/$section',
+      params: { section: 'flow' },
     })
   },
 })

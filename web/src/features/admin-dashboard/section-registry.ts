@@ -18,38 +18,42 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { createSectionRegistry } from '@/features/system-settings/utils/section-registry'
 
-const USAGE_ANALYTICS_SECTIONS = [
+const ADMIN_DASHBOARD_SECTIONS = [
+  { id: 'overview', titleKey: 'Overview', build: () => null },
+  { id: 'models', titleKey: 'Model Call Analytics', build: () => null },
   { id: 'flow', titleKey: 'Flow', build: () => null },
   { id: 'users', titleKey: 'User Analytics', build: () => null },
 ] as const
 
-export type UsageAnalyticsSectionId =
-  (typeof USAGE_ANALYTICS_SECTIONS)[number]['id']
+export type AdminDashboardSectionId =
+  (typeof ADMIN_DASHBOARD_SECTIONS)[number]['id']
 
 const registry = createSectionRegistry<
-  UsageAnalyticsSectionId,
+  AdminDashboardSectionId,
   Record<string, never>,
   []
 >({
-  sections: USAGE_ANALYTICS_SECTIONS,
-  defaultSection: 'flow',
-  basePath: '/usage-analytics',
+  sections: ADMIN_DASHBOARD_SECTIONS,
+  defaultSection: 'overview',
+  basePath: '/admin-dashboard',
   urlStyle: 'path',
 })
 
-export const USAGE_ANALYTICS_SECTION_IDS = registry.sectionIds
-export const USAGE_ANALYTICS_DEFAULT_SECTION = registry.defaultSection
+export const ADMIN_DASHBOARD_SECTION_IDS = registry.sectionIds
+export const ADMIN_DASHBOARD_DEFAULT_SECTION = registry.defaultSection
 
-export function isUsageAnalyticsSectionId(
+export function isAdminDashboardSectionId(
   value: string
-): value is UsageAnalyticsSectionId {
-  return (USAGE_ANALYTICS_SECTION_IDS as readonly string[]).includes(value)
+): value is AdminDashboardSectionId {
+  return (ADMIN_DASHBOARD_SECTION_IDS as readonly string[]).includes(value)
 }
 
-export const USAGE_ANALYTICS_SECTION_META: Record<
-  UsageAnalyticsSectionId,
+export const ADMIN_DASHBOARD_SECTION_META: Record<
+  AdminDashboardSectionId,
   { titleKey: string }
 > = {
+  overview: { titleKey: 'Overview' },
+  models: { titleKey: 'Model Call Analytics' },
   flow: { titleKey: 'Flow' },
   users: { titleKey: 'User Analytics' },
 }

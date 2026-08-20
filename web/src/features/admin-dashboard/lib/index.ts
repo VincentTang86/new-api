@@ -16,26 +16,24 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { createFileRoute, redirect } from '@tanstack/react-router'
-
-import {
-  ADMIN_DASHBOARD_DEFAULT_SECTION,
-  isAdminDashboardSectionId,
-} from '@/features/admin-dashboard/section-registry'
-
-// Legacy /usage-analytics/flow and /usage-analytics/users carry over to the
-// same section on the admin dashboard.
-export const Route = createFileRoute(
-  '/_authenticated/usage-analytics/$section'
-)({
-  beforeLoad: ({ params }) => {
-    throw redirect({
-      to: '/admin-dashboard/$section',
-      params: {
-        section: isAdminDashboardSectionId(params.section)
-          ? params.section
-          : ADMIN_DASHBOARD_DEFAULT_SECTION,
-      },
-    })
-  },
-})
+export { getChartColorScheme } from './chart-colors'
+export { defaultTimeGranularityForRange } from './granularity'
+export {
+  buildDashboardFlowData,
+  buildFlowFilterOptions,
+  buildFlowSankeySpec,
+  flowNodeFilterFromSankeyDatum,
+  flowSankeyDatumValue,
+  getFlowStages,
+} from './flow'
+export {
+  compactFlowSelectionLabel,
+  flowDisplayState,
+  flowNodeFilterKey,
+  requireSuccessfulFlowRows,
+  visibleFlowUsers,
+} from './flow-selection'
+export { processUserChartData } from './user-charts-data'
+export { processChartData } from './model-charts-data'
+export { calculateDashboardStats, safeDivide } from './stats'
+export { getPreviewText } from './text'

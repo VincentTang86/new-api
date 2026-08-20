@@ -19,9 +19,9 @@ For commercial licensing, please contact support@quantumnous.com
 import {
   Box,
   ChartLine,
-  ChartPie,
   ClockArrowUp,
   CreditCard,
+  LayoutDashboard,
   List,
   LockKeyhole,
   MessageSquareText,
@@ -136,12 +136,16 @@ export function useSidebarData(): SidebarData {
             icon: Users,
           },
           {
-            // checkIsActive matches the exact path, so the users tab needs
-            // listing or the entry un-highlights when you switch to it.
-            title: t('Usage Analytics'),
-            url: '/usage-analytics/flow',
-            activeUrls: ['/usage-analytics/users'],
-            icon: ChartPie,
+            // checkIsActive matches the exact path, so the other sections
+            // need listing or the entry un-highlights when you switch tabs.
+            title: t('Admin Dashboard'),
+            url: '/admin-dashboard/overview',
+            activeUrls: [
+              '/admin-dashboard/models',
+              '/admin-dashboard/flow',
+              '/admin-dashboard/users',
+            ],
+            icon: LayoutDashboard,
           },
           {
             title: t('Redemption Codes'),

@@ -31,10 +31,7 @@ import { useChartTheme } from '@/lib/use-chart-theme'
 import { VCHART_OPTION } from '@/lib/vchart'
 
 import { getUserQuotaDataByUsers } from '../api'
-import {
-  TOP_USER_LIMIT_OPTIONS,
-  USER_TIME_GRANULARITY_OPTIONS,
-} from '../constants'
+import { TOP_USER_LIMIT_OPTIONS, TIME_GRANULARITY_OPTIONS } from '../constants'
 import { processUserChartData } from '../lib'
 import type { ProcessedUserChartData, UserChartsFilters } from '../types'
 
@@ -94,7 +91,7 @@ export function UserCharts(props: UserChartsProps) {
   )
 
   const { data: userData, isLoading } = useQuery({
-    queryKey: ['usage-analytics', 'user-quota', timeRange],
+    queryKey: ['admin-dashboard', 'user-quota', timeRange],
     queryFn: () => getUserQuotaDataByUsers(timeRange),
     select: (res) => (res.success ? res.data : []),
     staleTime: 60_000,
@@ -122,7 +119,7 @@ export function UserCharts(props: UserChartsProps) {
           className='shrink-0'
         >
           <TabsList>
-            {USER_TIME_GRANULARITY_OPTIONS.map((opt) => (
+            {TIME_GRANULARITY_OPTIONS.map((opt) => (
               <TabsTrigger
                 key={opt.value}
                 value={opt.value}

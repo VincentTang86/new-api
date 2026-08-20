@@ -18,11 +18,46 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { api } from '@/lib/api'
 
-import type { FlowQuotaDataItem, QuotaDataItem } from './types'
+import type {
+  FlowQuotaDataItem,
+  QuotaDataItem,
+  UptimeGroupResult,
+} from './types'
 
 interface RangeParams {
   start_timestamp: number
   end_timestamp: number
+}
+
+// All-site quota rows for the model analytics section; `username` narrows the
+// data to one user so an admin can inspect the site from that user's angle.
+export async function getAllQuotaData(
+  params: RangeParams & { username?: string }
+) {
+  const res = await api.get<{ success: boolean; data: QuotaDataItem[] }>(
+    '/api/data',
+    { params }
+  )
+  return res.data
+}
+
+// The overview summary cards chart the admin's own account, same as the
+// original dashboard did, so they stay on the self endpoint.
+export async function getSelfQuotaData(
+  params: RangeParams & { default_time?: string }
+) {
+  const res = await api.get<{ success: boolean; data: QuotaDataItem[] }>(
+    '/api/data/self',
+    { params }
+  )
+  return res.data
+}
+
+export async function getUptimeStatus() {
+  const res = await api.get<{ success: boolean; data: UptimeGroupResult[] }>(
+    '/api/uptime/status'
+  )
+  return res.data
 }
 
 /**

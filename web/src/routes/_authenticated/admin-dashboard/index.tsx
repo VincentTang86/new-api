@@ -18,24 +18,21 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { createFileRoute, redirect } from '@tanstack/react-router'
 
-import {
-  ADMIN_DASHBOARD_DEFAULT_SECTION,
-  isAdminDashboardSectionId,
-} from '@/features/admin-dashboard/section-registry'
+import { ADMIN_DASHBOARD_DEFAULT_SECTION } from '@/features/admin-dashboard/section-registry'
+import { ROLE } from '@/lib/roles'
+import { useAuthStore } from '@/stores/auth-store'
 
-// Legacy /usage-analytics/flow and /usage-analytics/users carry over to the
-// same section on the admin dashboard.
-export const Route = createFileRoute(
-  '/_authenticated/usage-analytics/$section'
-)({
-  beforeLoad: ({ params }) => {
+export const Route = createFileRoute('/_authenticated/admin-dashboard/')({
+  beforeLoad: () => {
+    const { auth } = useAuthStore.getState()
+
+    if (!auth.user || auth.user.role < ROLE.ADMIN) {
+      throw redirect({ to: '/403' })
+    }
+
     throw redirect({
       to: '/admin-dashboard/$section',
-      params: {
-        section: isAdminDashboardSectionId(params.section)
-          ? params.section
-          : ADMIN_DASHBOARD_DEFAULT_SECTION,
-      },
+      params: { section: ADMIN_DASHBOARD_DEFAULT_SECTION },
     })
   },
 })

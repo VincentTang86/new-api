@@ -18,7 +18,7 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { describe, expect, test } from 'vitest'
 
-import type { QuotaDataItem } from '@/features/dashboard/types'
+import type { QuotaDataItem } from '@/features/admin-dashboard/types'
 
 import { processUserChartData } from '../user-charts-data'
 

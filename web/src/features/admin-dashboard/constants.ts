@@ -18,7 +18,12 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import type { TimeGranularity } from '@/lib/time'
 
-import type { FlowMetric, FlowOverflowMode } from './types'
+import type {
+  ConsumptionDistributionChartType,
+  FlowMetric,
+  FlowOverflowMode,
+  ModelAnalyticsChartTab,
+} from './types'
 
 /*
  * /api/data/flow and /api/data/users enforce no window limit server-side
@@ -31,7 +36,7 @@ import type { FlowMetric, FlowOverflowMode } from './types'
  * so its payload grows linearly with the window. The flow endpoint does not
  * group by time at all, so its row count saturates instead.
  */
-export const USAGE_ANALYTICS_MAX_RANGE_DAYS = 90
+export const ADMIN_DASHBOARD_MAX_RANGE_DAYS = 90
 
 export const FLOW_METRIC_OPTIONS: { value: FlowMetric; labelKey: string }[] = [
   { value: 'quota', labelKey: 'By quota' },
@@ -53,12 +58,34 @@ export const TOP_USER_LIMIT_OPTIONS = [5, 10, 20, 50]
 
 // The bare Hour/Day/Week keys are noun forms: zh renders 'Week' as 「本周」
 // ("this week"), which reads as a date range rather than a bucket size. These
-// three are the adverbial set the console dashboard already uses.
-export const USER_TIME_GRANULARITY_OPTIONS: {
+// three are the adverbial set the console dashboard already uses. Shared by
+// the model analytics and user analytics sections.
+export const TIME_GRANULARITY_OPTIONS: {
   value: TimeGranularity
   labelKey: string
 }[] = [
   { value: 'hour', labelKey: 'Hourly' },
   { value: 'day', labelKey: 'Daily (time granularity)' },
   { value: 'week', labelKey: 'Weekly' },
+]
+
+// Client-side bucketing in processChartData folds older buckets together once
+// a trend chart would exceed this many points.
+export const MAX_CHART_TREND_POINTS = 7
+
+export const CONSUMPTION_DISTRIBUTION_CHART_OPTIONS: {
+  value: ConsumptionDistributionChartType
+  labelKey: string
+}[] = [
+  { value: 'bar', labelKey: 'Bar Chart' },
+  { value: 'area', labelKey: 'Area Chart' },
+]
+
+export const MODEL_ANALYTICS_CHART_OPTIONS: {
+  value: ModelAnalyticsChartTab
+  labelKey: string
+}[] = [
+  { value: 'trend', labelKey: 'Call Trend' },
+  { value: 'proportion', labelKey: 'Call Count Distribution' },
+  { value: 'top', labelKey: 'Call Count Ranking' },
 ]

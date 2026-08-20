@@ -16,21 +16,19 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-export { getChartColorScheme } from './chart-colors'
-export { defaultTimeGranularityForRange } from './granularity'
-export {
-  buildDashboardFlowData,
-  buildFlowFilterOptions,
-  buildFlowSankeySpec,
-  flowNodeFilterFromSankeyDatum,
-  flowSankeyDatumValue,
-  getFlowStages,
-} from './flow'
-export {
-  compactFlowSelectionLabel,
-  flowDisplayState,
-  flowNodeFilterKey,
-  requireSuccessfulFlowRows,
-  visibleFlowUsers,
-} from './flow-selection'
-export { processUserChartData } from './user-charts-data'
+/**
+ * Get plain text preview (strip HTML tags and Markdown formatting)
+ */
+export function getPreviewText(
+  content: string,
+  maxLength: number = 60
+): string {
+  if (!content) return ''
+  const plainText = content
+    .replaceAll(/<[^>]*>/g, '') // Remove HTML tags
+    .replaceAll(/[#*_]/g, '') // Remove Markdown formatting symbols
+    .trim()
+  return plainText.length > maxLength
+    ? `${plainText.substring(0, maxLength)}...`
+    : plainText
+}

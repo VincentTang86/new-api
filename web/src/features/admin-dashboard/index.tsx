@@ -35,43 +35,51 @@ import {
 import { resolvePresetRange, type TimeRange } from '@/lib/time-range'
 
 import { FlowCharts } from './components/flow-charts'
+import { ModelAnalytics } from './components/model-analytics'
+import { OverviewDashboard } from './components/overview/overview-dashboard'
 import { UserCharts } from './components/user-charts'
-import { USAGE_ANALYTICS_MAX_RANGE_DAYS } from './constants'
+import { ADMIN_DASHBOARD_MAX_RANGE_DAYS } from './constants'
 import { defaultTimeGranularityForRange } from './lib'
 import {
-  USAGE_ANALYTICS_DEFAULT_SECTION,
-  USAGE_ANALYTICS_SECTION_IDS,
-  USAGE_ANALYTICS_SECTION_META,
-  isUsageAnalyticsSectionId,
-  type UsageAnalyticsSectionId,
+  ADMIN_DASHBOARD_DEFAULT_SECTION,
+  ADMIN_DASHBOARD_SECTION_IDS,
+  ADMIN_DASHBOARD_SECTION_META,
+  isAdminDashboardSectionId,
+  type AdminDashboardSectionId,
 } from './section-registry'
-import type { UserChartsFilters } from './types'
+import type { ModelChartsFilters, UserChartsFilters } from './types'
 
-const route = getRouteApi('/_authenticated/usage-analytics/$section')
+const route = getRouteApi('/_authenticated/admin-dashboard/$section')
 
 // A day of flow data is close to empty on most deployments, so the page opens
 // on a week rather than on today.
 const INITIAL_RANGE_KEY = '7days'
 const DEFAULT_TOP_USER_LIMIT = 10
 
-export function UsageAnalytics() {
+export function AdminDashboard() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const params = route.useParams()
-  const section: UsageAnalyticsSectionId = isUsageAnalyticsSectionId(
+  const section: AdminDashboardSectionId = isAdminDashboardSectionId(
     params.section
   )
     ? params.section
-    : USAGE_ANALYTICS_DEFAULT_SECTION
+    : ADMIN_DASHBOARD_DEFAULT_SECTION
 
   const [range, setRange] = useState<TimeRange>(() =>
-    resolvePresetRange(INITIAL_RANGE_KEY, USAGE_ANALYTICS_MAX_RANGE_DAYS)
+    resolvePresetRange(INITIAL_RANGE_KEY, ADMIN_DASHBOARD_MAX_RANGE_DAYS)
   )
   const [userFilters, setUserFilters] = useState<UserChartsFilters>(() => ({
     timeGranularity: defaultTimeGranularityForRange(
-      resolvePresetRange(INITIAL_RANGE_KEY, USAGE_ANALYTICS_MAX_RANGE_DAYS)
+      resolvePresetRange(INITIAL_RANGE_KEY, ADMIN_DASHBOARD_MAX_RANGE_DAYS)
     ),
     topUserLimit: DEFAULT_TOP_USER_LIMIT,
+  }))
+  const [modelFilters, setModelFilters] = useState<ModelChartsFilters>(() => ({
+    timeGranularity: defaultTimeGranularityForRange(
+      resolvePresetRange(INITIAL_RANGE_KEY, ADMIN_DASHBOARD_MAX_RANGE_DAYS)
+    ),
+    username: '',
   }))
   // The Sankey labels every user, token and channel by name, so the page owns
   // a way to blank them out before sharing a screen.
@@ -81,26 +89,29 @@ export function UsageAnalytics() {
     setRange(next)
     // Reseed the bucket size: a quarter-long window on hourly buckets would
     // put tens of thousands of points into the trend chart.
-    setUserFilters((prev) => ({
-      ...prev,
-      timeGranularity: defaultTimeGranularityForRange(next),
-    }))
+    const granularity = defaultTimeGranularityForRange(next)
+    setUserFilters((prev) => ({ ...prev, timeGranularity: granularity }))
+    setModelFilters((prev) => ({ ...prev, timeGranularity: granularity }))
   }, [])
 
   const handleSectionChange = useCallback(
     (next: string) => {
-      if (!isUsageAnalyticsSectionId(next)) return
+      if (!isAdminDashboardSectionId(next)) return
       void navigate({
-        to: '/usage-analytics/$section',
+        to: '/admin-dashboard/$section',
         params: { section: next },
       })
     },
     [navigate]
   )
 
+  // The overview is a set of status panels with no time axis, so the range
+  // picker only accompanies the three analytics sections.
+  const showRangeFilter = section !== 'overview'
+
   return (
     <SectionPageLayout stickyHeader={false}>
-      <SectionPageLayout.Title>{t('Usage Analytics')}</SectionPageLayout.Title>
+      <SectionPageLayout.Title>{t('Admin Dashboard')}</SectionPageLayout.Title>
       <SectionPageLayout.Actions>
         {section === 'flow' && (
           <TooltipProvider>
@@ -143,24 +154,35 @@ export function UsageAnalytics() {
             <div className='flex flex-wrap items-center justify-between gap-3'>
               <Tabs value={section} onValueChange={handleSectionChange}>
                 <TabsList className='max-w-full flex-wrap justify-start group-data-horizontal/tabs:h-auto'>
-                  {USAGE_ANALYTICS_SECTION_IDS.map((id) => (
+                  {ADMIN_DASHBOARD_SECTION_IDS.map((id) => (
                     <TabsTrigger key={id} value={id}>
-                      {t(USAGE_ANALYTICS_SECTION_META[id].titleKey)}
+                      {t(ADMIN_DASHBOARD_SECTION_META[id].titleKey)}
                     </TabsTrigger>
                   ))}
                 </TabsList>
               </Tabs>
-              <TimeRangeFilter
-                range={range}
-                onRangeChange={handleRangeChange}
-                maxRangeDays={USAGE_ANALYTICS_MAX_RANGE_DAYS}
-              />
+              {showRangeFilter && (
+                <TimeRangeFilter
+                  range={range}
+                  onRangeChange={handleRangeChange}
+                  maxRangeDays={ADMIN_DASHBOARD_MAX_RANGE_DAYS}
+                />
+              )}
             </div>
           </FadeIn>
           <FadeIn delay={0.1}>
-            {section === 'flow' ? (
+            {section === 'overview' && <OverviewDashboard />}
+            {section === 'models' && (
+              <ModelAnalytics
+                range={range}
+                filters={modelFilters}
+                onFiltersChange={setModelFilters}
+              />
+            )}
+            {section === 'flow' && (
               <FlowCharts range={range} sensitiveVisible={sensitiveVisible} />
-            ) : (
+            )}
+            {section === 'users' && (
               <UserCharts
                 range={range}
                 filters={userFilters}

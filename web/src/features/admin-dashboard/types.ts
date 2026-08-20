@@ -148,10 +148,83 @@ export interface UserChartsFilters {
   topUserLimit: number
 }
 
+// Held by the page so the selections survive switching tabs.
+export interface ModelChartsFilters {
+  timeGranularity: TimeGranularity
+  username: string
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type VChartSpec = Record<string, any>
 
 export interface ProcessedUserChartData {
   spec_user_rank: VChartSpec
   spec_user_trend: VChartSpec
+}
+
+export type ConsumptionDistributionChartType = 'bar' | 'area'
+
+export type ModelAnalyticsChartTab = 'trend' | 'proportion' | 'top'
+
+export interface ProcessedChartData {
+  spec_pie: VChartSpec
+  spec_line: VChartSpec
+  spec_area: VChartSpec
+  spec_model_line: VChartSpec
+  spec_rank_bar: VChartSpec
+  totalQuotaDisplay: string
+  totalCountDisplay: string
+}
+
+// ============================================================================
+// Uptime Monitoring Types
+// ============================================================================
+
+export interface UptimeMonitor {
+  name: string
+  uptime: number
+  status: number
+  group?: string
+}
+
+export interface UptimeGroupResult {
+  categoryName: string
+  monitors: UptimeMonitor[]
+}
+
+// ============================================================================
+// API Info Types
+// ============================================================================
+
+export interface ApiInfoItem {
+  url: string
+  route: string
+  description: string
+  color: string
+}
+
+export interface PingStatus {
+  latency: number | null
+  testing: boolean
+  error: boolean
+}
+
+export type PingStatusMap = Record<string, PingStatus>
+
+// ============================================================================
+// Announcement & FAQ Types
+// ============================================================================
+
+export interface AnnouncementItem {
+  id?: number
+  content: string
+  publishDate?: string
+  type?: 'default' | 'ongoing' | 'success' | 'warning' | 'error'
+  extra?: string
+}
+
+export interface FAQItem {
+  id?: number
+  question: string
+  answer: string
 }
