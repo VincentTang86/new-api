@@ -39,27 +39,46 @@ const USER_GROUPS = {
   Production: { desc: 'Production', ratio: 1 },
 }
 
-type ApiMethod = (url: string, data?: unknown) => Promise<{ data: unknown }>
-type MockableApi = { get: ApiMethod; post: ApiMethod }
+// Each tier serves its own models, the way /api/user/models?group= answers.
+const MODELS_BY_TIER: Record<string, string[]> = {
+  'Best Effort': ['gpt-5-mini'],
+  Production: ['gpt-5-mini', 'claude-opus-4'],
+}
+
+const STORED_KEY_ID = 7
+
+type ApiGet = (
+  url: string,
+  config?: { params?: Record<string, unknown> }
+) => Promise<{ data: unknown }>
+type ApiSend = (url: string, data?: unknown) => Promise<{ data: unknown }>
+type MockableApi = { get: ApiGet; post: ApiSend; put: ApiSend }
 
 const apiClient = api as unknown as MockableApi
 const originalGet = apiClient.get
 const originalPost = apiClient.post
+const originalPut = apiClient.put
 let queryClient: InstanceType<typeof QueryClient> | null = null
+let storedKey: Record<string, unknown> | null = null
 
 function installApiFixtures(
-  createdPayloads: Array<Record<string, unknown>>
+  createdPayloads: Array<Record<string, unknown>>,
+  updatedPayloads: Array<Record<string, unknown>> = []
 ): void {
-  apiClient.get = async (url) => {
+  apiClient.get = async (url, config) => {
     switch (url) {
       case '/api/status':
         return { data: { data: { default_use_auto_group: false } } }
-      case '/api/user/models':
-        return { data: { success: true, data: [] } }
+      case '/api/user/models': {
+        const group = String(config?.params?.group ?? '')
+        return { data: { success: true, data: MODELS_BY_TIER[group] ?? [] } }
+      }
       case '/api/user/self/groups':
         return { data: { success: true, data: USER_GROUPS } }
       case '/api/token/auto-groups':
         return { data: { success: true, data: { groups: [], max_count: 3 } } }
+      case `/api/token/${STORED_KEY_ID}`:
+        return { data: { success: true, data: storedKey } }
       default:
         throw new Error(`Unexpected GET ${url}`)
     }
@@ -68,6 +87,35 @@ function installApiFixtures(
     expect(url).toBe('/api/token/')
     createdPayloads.push(data as Record<string, unknown>)
     return { data: { success: true, data: {} } }
+  }
+  apiClient.put = async (url, data) => {
+    expect(url).toBe('/api/token/')
+    updatedPayloads.push(data as Record<string, unknown>)
+    return { data: { success: true, data: {} } }
+  }
+}
+
+function buildStoredKey(
+  group: string,
+  modelLimits: string
+): Record<string, unknown> {
+  return {
+    id: STORED_KEY_ID,
+    name: 'legacy',
+    key: 'sk-legacy',
+    status: 1,
+    remain_quota: 0,
+    used_quota: 0,
+    unlimited_quota: true,
+    expired_time: -1,
+    created_time: 0,
+    accessed_time: 0,
+    group,
+    auto_groups: null,
+    cross_group_retry: false,
+    model_limits_enabled: modelLimits.length > 0,
+    model_limits: modelLimits,
+    allow_ips: '',
   }
 }
 
@@ -79,11 +127,6 @@ async function renderCreateDrawer(): Promise<void> {
   queryClient.setQueryData(
     ['status'],
     { default_use_auto_group: false },
-    { updatedAt: freshAt }
-  )
-  queryClient.setQueryData(
-    ['user-models'],
-    { success: true, data: [] },
     { updatedAt: freshAt }
   )
   queryClient.setQueryData(
@@ -112,6 +155,52 @@ async function renderCreateDrawer(): Promise<void> {
     },
     { timeout: 1500 }
   )
+}
+
+async function renderUpdateDrawer(
+  key: Record<string, unknown>
+): Promise<void> {
+  storedKey = key
+  queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  })
+  const freshAt = Date.now() + 60_000
+  queryClient.setQueryData(
+    ['status'],
+    { default_use_auto_group: false },
+    { updatedAt: freshAt }
+  )
+  queryClient.setQueryData(
+    ['user-groups'],
+    { success: true, data: USER_GROUPS },
+    { updatedAt: freshAt }
+  )
+  queryClient.setQueryData(
+    ['token-auto-groups'],
+    { success: true, data: { groups: [], max_count: 3 } },
+    { updatedAt: freshAt }
+  )
+
+  render(
+    <QueryClientProvider client={queryClient}>
+      <I18nextProvider i18n={i18n}>
+        <ApiKeysProvider>
+          <ApiKeysMutateDrawer
+            open
+            onOpenChange={() => undefined}
+            currentRow={key as never}
+          />
+        </ApiKeysProvider>
+      </I18nextProvider>
+    </QueryClientProvider>
+  )
+  await waitFor(
+    () => {
+      expect(findButton('Save changes')).toBeEnabled()
+    },
+    { timeout: 1500 }
+  )
+  fireEvent.click(findButton('Advanced Settings'))
 }
 
 function findButton(text: string): HTMLButtonElement {
@@ -145,9 +234,36 @@ function typeName(value: string): void {
   fireEvent.input(input, { target: { value } })
 }
 
+function getModelOptions(): string[] {
+  const trigger = document.querySelector<HTMLElement>(
+    '[data-slot="combobox-chip-input"]'
+  )
+  if (!trigger) {
+    throw new Error('Expected the Model Limits input')
+  }
+  fireEvent.click(trigger)
+  const options = [
+    ...document.querySelectorAll<HTMLElement>('[data-slot="combobox-item"]'),
+  ].map((option) => option.textContent?.trim() ?? '')
+  fireEvent.keyDown(trigger, { key: 'Escape' })
+  return options.sort()
+}
+
+function getModelLimitChips(): string[] {
+  const label = [...document.querySelectorAll<HTMLLabelElement>('label')].find(
+    (candidate) => candidate.textContent?.trim() === 'Model Limits'
+  )
+  const item = label?.closest('[data-slot="form-item"]')
+  return [...(item?.querySelectorAll('[data-slot="combobox-chip"]') ?? [])].map(
+    (chip) => chip.textContent?.replace(/\s+/g, ' ').trim() ?? ''
+  )
+}
+
 afterEach(() => {
   apiClient.get = originalGet
   apiClient.post = originalPost
+  apiClient.put = originalPut
+  storedKey = null
   localStorage.clear()
   queryClient?.clear()
   queryClient = null
@@ -187,5 +303,52 @@ describe('API key service tier selection', () => {
     await waitFor(() => expect(createdPayloads).toHaveLength(1))
     expect(createdPayloads[0]?.group).toBe('Best Effort')
     expect(createdPayloads[0]?.cross_group_retry).toBe(false)
+  })
+
+  test('only offers the models the picked tier serves', async () => {
+    installApiFixtures([])
+    await renderCreateDrawer()
+
+    fireEvent.click(findButton('Advanced Settings'))
+    fireEvent.click(getTierRadio('Production'))
+    await waitFor(() =>
+      expect(getModelOptions()).toEqual(['claude-opus-4', 'gpt-5-mini'])
+    )
+
+    fireEvent.click(getTierRadio('Best Effort'))
+    await waitFor(() => expect(getModelOptions()).toEqual(['gpt-5-mini']))
+  })
+
+  test('drops stored model limits the key\'s own tier does not serve', async () => {
+    installApiFixtures([])
+    await renderUpdateDrawer(
+      buildStoredKey('Best Effort', 'gpt-5-mini,claude-opus-4')
+    )
+
+    await waitFor(() => expect(getModelLimitChips()).toEqual(['gpt-5-mini']))
+    expect(
+      screen.getByText(/Removed .* claude-opus-4/, { exact: false })
+    ).toBeInTheDocument()
+    // One model survived, so the limit still applies and needs no warning.
+    expect(screen.queryByText(/The model limit is now empty/)).toBeNull()
+  })
+
+  test('warns that clearing the last limit opens the whole tier', async () => {
+    const updatedPayloads: Array<Record<string, unknown>> = []
+    installApiFixtures([], updatedPayloads)
+    await renderUpdateDrawer(buildStoredKey('Production', 'claude-opus-4'))
+
+    await waitFor(() => expect(getModelLimitChips()).toEqual(['claude-opus-4']))
+
+    fireEvent.click(getTierRadio('Best Effort'))
+    await waitFor(() => expect(getModelLimitChips()).toEqual([]))
+    expect(
+      screen.getByText(/The model limit is now empty/, { exact: false })
+    ).toBeInTheDocument()
+
+    fireEvent.click(findButton('Save changes'))
+    await waitFor(() => expect(updatedPayloads).toHaveLength(1))
+    expect(updatedPayloads[0]?.model_limits).toBe('')
+    expect(updatedPayloads[0]?.model_limits_enabled).toBe(false)
   })
 })

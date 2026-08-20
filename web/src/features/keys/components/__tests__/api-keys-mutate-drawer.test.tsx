@@ -95,11 +95,6 @@ async function renderCreateDrawer(): Promise<void> {
     { updatedAt: freshAt }
   )
   queryClient.setQueryData(
-    ['user-models'],
-    { success: true, data: [] },
-    { updatedAt: freshAt }
-  )
-  queryClient.setQueryData(
     ['user-groups'],
     {
       success: true,

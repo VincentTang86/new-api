@@ -107,18 +107,11 @@ export function ApiKeysMutateDrawer({
   const { status, loading: statusLoading } = useStatus()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [advancedOpen, setAdvancedOpen] = useState(false)
+  const [droppedModels, setDroppedModels] = useState<string[]>([])
   const [initializedTarget, setInitializedTarget] = useState<string | null>(
     null
   )
   const defaultUseAutoGroup = status?.default_use_auto_group === true
-
-  // Fetch models
-  const { data: modelsData } = useQuery({
-    queryKey: ['user-models'],
-    queryFn: getUserModels,
-    enabled: open,
-    staleTime: 0,
-  })
 
   // Fetch groups
   const {
@@ -154,7 +147,6 @@ export function ApiKeysMutateDrawer({
     staleTime: 0,
   })
 
-  const models = modelsData?.data || []
   const groups = useMemo<ApiKeyGroupOption[]>(
     () =>
       Object.entries(groupsData?.data || {}).map(([key, info]) => ({
@@ -206,6 +198,7 @@ export function ApiKeysMutateDrawer({
   useEffect(() => {
     if (!open) {
       setInitializedTarget(null)
+      setDroppedModels([])
       return
     }
     if (
@@ -270,6 +263,16 @@ export function ApiKeysMutateDrawer({
   const isFormInitialized = initializedTarget === formTarget
   const selectedGroup = form.watch('group')
 
+  // Models are tier-scoped, so the picker only offers what the picked tier
+  // serves. `group=auto` resolves to the union of the deployment's Auto groups.
+  const { data: modelsData, isFetching: modelsFetching } = useQuery({
+    queryKey: ['user-models', selectedGroup],
+    queryFn: () => getUserModels(selectedGroup),
+    enabled: open && isFormInitialized && !!selectedGroup,
+    staleTime: 0,
+  })
+  const models = useMemo(() => modelsData?.data || [], [modelsData])
+
   // Correct the tier after groups load: if the form value is not in available groups, fall back
   useEffect(() => {
     if (groups.length === 0) return
@@ -283,6 +286,32 @@ export function ApiKeysMutateDrawer({
       }
     }
   }, [groups, form, selectedGroup, serviceTiers])
+
+  // A tier switch has to drop the models the new tier does not serve, and so
+  // does opening a key whose stored limits predate its tier. An empty limit
+  // list means "allow every model", so dropping the last selection widens the
+  // key instead of narrowing it and the form says so rather than doing it
+  // quietly.
+  useEffect(() => {
+    if (!isFormInitialized || modelsFetching) return
+    // A tier with no models at all is a misconfigured deployment or a failed
+    // response, not a reason to wipe what the user picked.
+    if (models.length === 0) return
+
+    const available = new Set(models)
+    const selected = form.getValues('model_limits')
+    const kept = selected.filter((model) => available.has(model))
+    if (kept.length === selected.length) {
+      setDroppedModels((prev) => (prev.length === 0 ? prev : []))
+      return
+    }
+
+    setDroppedModels(selected.filter((model) => !available.has(model)))
+    form.setValue('model_limits', kept, {
+      shouldDirty: true,
+      shouldValidate: true,
+    })
+  }, [form, isFormInitialized, models, modelsFetching])
 
   const onSubmit = async (data: ApiKeyFormValues) => {
     setIsSubmitting(true)
@@ -703,7 +732,10 @@ export function ApiKeysMutateDrawer({
                                 value: m,
                               }))}
                               selected={field.value}
-                              onChange={field.onChange}
+                              onChange={(value) => {
+                                setDroppedModels([])
+                                field.onChange(value)
+                              }}
                               placeholder={t(
                                 'Select models (empty for allow all)'
                               )}
@@ -712,6 +744,26 @@ export function ApiKeysMutateDrawer({
                           <FormDescription>
                             {t('Limit which models can be used with this key')}
                           </FormDescription>
+                          {droppedModels.length > 0 && (
+                            <div className='flex flex-col gap-1 text-xs'>
+                              <p className='text-muted-foreground'>
+                                {t(
+                                  'Removed {{count}} model(s) this service tier does not offer: {{models}}',
+                                  {
+                                    count: droppedModels.length,
+                                    models: droppedModels.join(', '),
+                                  }
+                                )}
+                              </p>
+                              {field.value.length === 0 && (
+                                <p className='text-destructive'>
+                                  {t(
+                                    'The model limit is now empty, so this key can use every model in this service tier.'
+                                  )}
+                                </p>
+                              )}
+                            </div>
+                          )}
                           <FormMessage />
                         </FormItem>
                       )}
