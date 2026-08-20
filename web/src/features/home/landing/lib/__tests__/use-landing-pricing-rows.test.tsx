@@ -17,7 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { renderHook, waitFor } from '@testing-library/react'
+import { act, renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import type { PricingModel } from '@/features/pricing/types'
@@ -146,6 +146,52 @@ describe('useLandingPricingRows tier tabs', () => {
     ])
     expect(result.current.groups[1].description).toBeUndefined()
     expect(result.current.groups[1].label).toBe('vip')
+  })
+
+  test('keeps the vendor filter when the new tier still lists that vendor', async () => {
+    mockPricing(
+      {
+        Production: { desc: 'reliable', ratio: 1 },
+        'Best Effort': { desc: 'cheap', ratio: 0.76 },
+      },
+      { Production: 1, 'Best Effort': 0.76 },
+      [model('deepseek-chat', ['all']), model('kimi-k2', ['Production'])]
+    )
+
+    const { result } = renderRows()
+
+    await waitFor(() => expect(result.current.groups).toHaveLength(2))
+    act(() => result.current.setProviderFilter('deepseek'))
+    act(() => result.current.setSelectedGroup('Best Effort'))
+
+    expect(result.current.providerFilter).toBe('deepseek')
+    expect(result.current.rows.map((row) => row.modelId)).toEqual([
+      'deepseek-chat',
+    ])
+  })
+
+  test('falls back to All when the new tier drops the filtered vendor', async () => {
+    // The Kimi tab only exists under Production; leaving the filter on it
+    // would render an empty table with no vendor tab selected.
+    mockPricing(
+      {
+        Production: { desc: 'reliable', ratio: 1 },
+        'Best Effort': { desc: 'cheap', ratio: 0.76 },
+      },
+      { Production: 1, 'Best Effort': 0.76 },
+      [model('deepseek-chat', ['all']), model('kimi-k2', ['Production'])]
+    )
+
+    const { result } = renderRows()
+
+    await waitFor(() => expect(result.current.groups).toHaveLength(2))
+    act(() => result.current.setProviderFilter('kimi'))
+    act(() => result.current.setSelectedGroup('Best Effort'))
+
+    expect(result.current.providerFilter).toBe('all')
+    expect(result.current.rows.map((row) => row.modelId)).toEqual([
+      'deepseek-chat',
+    ])
   })
 
   test('drops tiers that would render an empty table', async () => {

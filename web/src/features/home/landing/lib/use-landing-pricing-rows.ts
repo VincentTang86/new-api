@@ -169,10 +169,21 @@ export function useLandingPricingRows(): UseLandingPricingRows {
     )
   }, [allRows])
 
+  // Each tier carries its own vendor line-up, so the pick only survives a tier
+  // switch when the new tier still lists that vendor; otherwise it falls back
+  // to "All", which beats an empty table with no tab selected. Derived, like
+  // the group choice above, so the pick returns if the vendor comes back.
+  const activeProviderFilter = useMemo<PricingProviderFilter>(() => {
+    if (providers.some((provider) => provider.key === providerFilter)) {
+      return providerFilter
+    }
+    return 'all'
+  }, [providerFilter, providers])
+
   const rows = useMemo(() => {
-    if (providerFilter === 'all') return allRows
-    return allRows.filter((row) => row.provider === providerFilter)
-  }, [allRows, providerFilter])
+    if (activeProviderFilter === 'all') return allRows
+    return allRows.filter((row) => row.provider === activeProviderFilter)
+  }, [allRows, activeProviderFilter])
 
   return {
     rows,
@@ -182,7 +193,7 @@ export function useLandingPricingRows(): UseLandingPricingRows {
     benchmark,
     setBenchmark,
     providers,
-    providerFilter,
+    providerFilter: activeProviderFilter,
     setProviderFilter,
     isLoading,
     isError: Boolean(error),
