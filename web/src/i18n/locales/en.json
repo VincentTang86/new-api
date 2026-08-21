@@ -1833,7 +1833,6 @@
     "Failed to repair channel consistency": "Failed to repair channel consistency",
     "Failed to reset 2FA": "Failed to reset 2FA",
     "Failed to reset Passkey": "Failed to reset Passkey",
-    "Failed to reset model ratios": "Failed to reset model ratios",
     "Failed to reset usage": "Failed to reset usage",
     "Failed to save": "Failed to save",
     "Failed to save API info": "Failed to save API info",
@@ -2638,7 +2637,6 @@
     "Model performance metrics": "Model performance metrics",
     "Model price is not configured. Please complete model pricing in settings.": "Model price is not configured. Please complete model pricing in settings.",
     "Model prices": "Model prices",
-    "Model prices reset successfully": "Model prices reset successfully",
     "Model pricing comparison": "Model pricing comparison",
     "Model pull failed: {{msg}}": "Model pull failed: {{msg}}",
     "Model ratio": "Model ratio",
@@ -3780,7 +3778,6 @@
     "Reset Two-Factor Authentication": "Reset Two-Factor Authentication",
     "Reset active {{plan}} subscriptions for this user?": "Reset active {{plan}} subscriptions for this user?",
     "Reset all active subscriptions under {{plan}}?": "Reset all active subscriptions under {{plan}}?",
-    "Reset all model prices?": "Reset all model prices?",
     "Reset all model ratios?": "Reset all model ratios?",
     "Reset all settings to default values": "Reset all settings to default values",
     "Reset at:": "Reset at:",
@@ -3792,7 +3789,6 @@
     "Reset failed": "Reset failed",
     "Reset model ratios": "Reset model ratios",
     "Reset password": "Reset password",
-    "Reset prices": "Reset prices",
     "Reset quota": "Reset quota",
     "Reset ratios": "Reset ratios",
     "Reset subscription quota": "Reset subscription quota",
@@ -4543,7 +4539,6 @@
     "This user has no bindings": "This user has no bindings",
     "This week": "This week",
     "This will append 2 template rules (Codex CLI and Claude CLI) to the existing rule list.": "This will append 2 template rules (Codex CLI and Claude CLI) to the existing rule list.",
-    "This will clear custom pricing ratios and revert to upstream defaults.": "This will clear custom pricing ratios and revert to upstream defaults.",
     "This will delete all": "This will delete all",
     "This will delete all channel affinity cache entries still in memory.": "This will delete all channel affinity cache entries still in memory.",
     "This will delete temporary cache files that have not been used for more than 10 minutes": "This will delete temporary cache files that have not been used for more than 10 minutes",
@@ -5470,11 +5465,6 @@
     "© 2025 Your Company. All rights reserved.": "© 2025 Your Company. All rights reserved.",
     "、": ", ",
     "，": ", ",
-    "，and ": ", and ",
-    "Resetting only rewrites ModelRatio with the hardcoded default table ({{count}} models); other pricing fields are unchanged.": "Resetting only rewrites ModelRatio with the hardcoded default table ({{count}} models); other pricing fields are unchanged.",
-    "Failed to load the default table. Custom model ratios will still be wiped by the reset.": "Failed to load the default table. Custom model ratios will still be wiped by the reset.",
-    "The following {{count}} custom model ratios will be deleted:": "The following {{count}} custom model ratios will be deleted:",
-    "No custom model ratios will be deleted.": "No custom model ratios will be deleted.",
-    "Type RESET to confirm": "Type RESET to confirm"
+    "，and ": ", and "
   }
 }

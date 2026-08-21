@@ -1833,7 +1833,6 @@
     "Failed to repair channel consistency": "Не удалось восстановить согласованность каналов",
     "Failed to reset 2FA": "Не удалось сбросить 2FA",
     "Failed to reset Passkey": "Не удалось сбросить Passkey",
-    "Failed to reset model ratios": "Не удалось сбросить коэффициенты модели",
     "Failed to reset usage": "Не удалось сбросить использование",
     "Failed to save": "Не удалось сохранить",
     "Failed to save API info": "Не удалось сохранить информацию API",
@@ -2638,7 +2637,6 @@
     "Model performance metrics": "Метрики производительности моделей",
     "Model price is not configured. Please complete model pricing in settings.": "Цена модели не настроена. Заполните тарификацию модели в настройках.",
     "Model prices": "Цены моделей",
-    "Model prices reset successfully": "Цены моделей успешно сброшены",
     "Model pricing comparison": "Сравнение цен на модели",
     "Model pull failed: {{msg}}": "Ошибка тяги модели: {{msg}}",
     "Model ratio": "Коэффициент модели",
@@ -3780,7 +3778,6 @@
     "Reset Two-Factor Authentication": "Сброс 2FA",
     "Reset active {{plan}} subscriptions for this user?": "Сбросить активные подписки {{plan}} для этого пользователя?",
     "Reset all active subscriptions under {{plan}}?": "Сбросить все активные подписки по {{plan}}?",
-    "Reset all model prices?": "Сбросить все цены моделей?",
     "Reset all model ratios?": "Сбросить все соотношения моделей?",
     "Reset all settings to default values": "Сбросить все настройки до значений по умолчанию",
     "Reset at:": "Сброс в:",
@@ -3792,7 +3789,6 @@
     "Reset failed": "Ошибка сброса",
     "Reset model ratios": "Коэффициенты моделей сброшены",
     "Reset password": "Сбросить пароль",
-    "Reset prices": "Сбросить цены",
     "Reset quota": "Сбросить квоту",
     "Reset ratios": "Сбросить соотношения",
     "Reset subscription quota": "Сбросить квоту подписки",
@@ -4543,7 +4539,6 @@
     "This user has no bindings": "У этого пользователя нет привязок",
     "This week": "На этой неделе",
     "This will append 2 template rules (Codex CLI and Claude CLI) to the existing rule list.": "Это добавит 2 шаблонных правила (Codex CLI и Claude CLI) к существующему списку правил.",
-    "This will clear custom pricing ratios and revert to upstream defaults.": "Это очистит пользовательские ценовые коэффициенты и вернет к стандартным значениям поставщика.",
     "This will delete all": "Это удалит все",
     "This will delete all channel affinity cache entries still in memory.": "Это удалит все записи кэша привязки каналов из памяти.",
     "This will delete temporary cache files that have not been used for more than 10 minutes": "Будут удалены временные файлы кэша, не использовавшиеся более 10 минут",
@@ -5470,11 +5465,6 @@
     "© 2025 Your Company. All rights reserved.": "© 2025 Ваша Компания. Все права защищены.",
     "、": ", ",
     "，": ", ",
-    "，and ": " и ",
-    "Resetting only rewrites ModelRatio with the hardcoded default table ({{count}} models); other pricing fields are unchanged.": "Resetting only rewrites ModelRatio with the hardcoded default table ({{count}} models); other pricing fields are unchanged.",
-    "Failed to load the default table. Custom model ratios will still be wiped by the reset.": "Failed to load the default table. Custom model ratios will still be wiped by the reset.",
-    "The following {{count}} custom model ratios will be deleted:": "The following {{count}} custom model ratios will be deleted:",
-    "No custom model ratios will be deleted.": "No custom model ratios will be deleted.",
-    "Type RESET to confirm": "Type RESET to confirm"
+    "，and ": " и "
   }
 }

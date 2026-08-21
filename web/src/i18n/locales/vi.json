@@ -1833,7 +1833,6 @@
     "Failed to repair channel consistency": "Không thể sửa tính nhất quán kênh",
     "Failed to reset 2FA": "Không thể đặt lại 2FA",
     "Failed to reset Passkey": "Không thể đặt lại Passkey",
-    "Failed to reset model ratios": "Không thể đặt lại tỷ lệ mô hình",
     "Failed to reset usage": "Không thể đặt lại mức dùng",
     "Failed to save": "Lưu thất bại",
     "Failed to save API info": "Không thể lưu thông tin API",
@@ -2638,7 +2637,6 @@
     "Model performance metrics": "Chỉ số hiệu năng mô hình",
     "Model price is not configured. Please complete model pricing in settings.": "Giá mô hình chưa được cấu hình. Vui lòng hoàn tất định giá mô hình trong cài đặt.",
     "Model prices": "Giá mô hình",
-    "Model prices reset successfully": "Đã đặt lại giá mô hình thành công",
     "Model pricing comparison": "Bảng so sánh giá mô hình",
     "Model pull failed: {{msg}}": "Tải mô hình thất bại: {{msg}}",
     "Model ratio": "Tỷ lệ mô hình",
@@ -3780,7 +3778,6 @@
     "Reset Two-Factor Authentication": "Đặt lại Xác thực hai yếu tố",
     "Reset active {{plan}} subscriptions for this user?": "Đặt lại các gói đăng ký {{plan}} đang hoạt động của người dùng này?",
     "Reset all active subscriptions under {{plan}}?": "Đặt lại tất cả gói đăng ký đang hoạt động trong {{plan}}?",
-    "Reset all model prices?": "Đặt lại tất cả giá mô hình?",
     "Reset all model ratios?": "Đặt lại tất cả tỷ lệ mô hình?",
     "Reset all settings to default values": "Đặt lại tất cả cài đặt về giá trị mặc định",
     "Reset at:": "Đặt lại lúc:",
@@ -3792,7 +3789,6 @@
     "Reset failed": "Đặt lại thất bại",
     "Reset model ratios": "Đã đặt lại tỷ lệ mô hình",
     "Reset password": "Đặt lại mật khẩu",
-    "Reset prices": "Đặt lại giá",
     "Reset quota": "Đặt lại hạn mức",
     "Reset ratios": "Đặt lại tỷ lệ",
     "Reset subscription quota": "Đặt lại hạn mức gói đăng ký",
@@ -4543,7 +4539,6 @@
     "This user has no bindings": "Người dùng này không có liên kết nào",
     "This week": "Tuần này",
     "This will append 2 template rules (Codex CLI and Claude CLI) to the existing rule list.": "Thao tác này sẽ thêm 2 quy tắc mẫu (Codex CLI và Claude CLI) vào danh sách quy tắc hiện có.",
-    "This will clear custom pricing ratios and revert to upstream defaults.": "Điều này sẽ xóa các tỷ lệ giá tùy chỉnh và trở về mặc định ban đầu.",
     "This will delete all": "Thao tác này sẽ xóa tất cả",
     "This will delete all channel affinity cache entries still in memory.": "Thao tác này sẽ xóa tất cả mục bộ nhớ đệm ưu tiên kênh còn trong bộ nhớ.",
     "This will delete temporary cache files that have not been used for more than 10 minutes": "Thao tác này sẽ xóa các tệp bộ nhớ đệm tạm không được sử dụng hơn 10 phút",
@@ -5470,11 +5465,6 @@
     "© 2025 Your Company. All rights reserved.": "© 2025 Công ty của bạn. Mọi quyền được bảo lưu.",
     "、": ", ",
     "，": ", ",
-    "，and ": " và ",
-    "Resetting only rewrites ModelRatio with the hardcoded default table ({{count}} models); other pricing fields are unchanged.": "Resetting only rewrites ModelRatio with the hardcoded default table ({{count}} models); other pricing fields are unchanged.",
-    "Failed to load the default table. Custom model ratios will still be wiped by the reset.": "Failed to load the default table. Custom model ratios will still be wiped by the reset.",
-    "The following {{count}} custom model ratios will be deleted:": "The following {{count}} custom model ratios will be deleted:",
-    "No custom model ratios will be deleted.": "No custom model ratios will be deleted.",
-    "Type RESET to confirm": "Type RESET to confirm"
+    "，and ": " và "
   }
 }

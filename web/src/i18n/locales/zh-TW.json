@@ -1833,7 +1833,6 @@
     "Failed to repair channel consistency": "修復渠道一致性失敗",
     "Failed to reset 2FA": "重置 2FA 失敗",
     "Failed to reset Passkey": "重置 Passkey 失敗",
-    "Failed to reset model ratios": "重置模型比率失敗",
     "Failed to reset usage": "重置用量失敗",
     "Failed to save": "儲存失敗",
     "Failed to save API info": "儲存 API 資訊失敗",
@@ -2638,7 +2637,6 @@
     "Model performance metrics": "模型效能指標",
     "Model price is not configured. Please complete model pricing in settings.": "模型價格未設定，請前往設定補充模型價格。",
     "Model prices": "模型價格",
-    "Model prices reset successfully": "模型價格重置成功",
     "Model pricing comparison": "模型價格對比表",
     "Model pull failed: {{msg}}": "模型拉取失敗：{{msg}}",
     "Model ratio": "模型倍率",
@@ -3780,7 +3778,6 @@
     "Reset Two-Factor Authentication": "重置 2FA",
     "Reset active {{plan}} subscriptions for this user?": "要重置此用戶的有效 {{plan}} 訂閱嗎？",
     "Reset all active subscriptions under {{plan}}?": "要重置 {{plan}} 下的所有有效訂閱嗎？",
-    "Reset all model prices?": "重置所有模型價格嗎？",
     "Reset all model ratios?": "重置所有模型比例嗎？",
     "Reset all settings to default values": "將所有設定重置為預設值",
     "Reset at:": "重設於：",
@@ -3792,7 +3789,6 @@
     "Reset failed": "重置失敗",
     "Reset model ratios": "重置模型倍率",
     "Reset password": "重設密碼",
-    "Reset prices": "重置價格",
     "Reset quota": "重置額度",
     "Reset ratios": "重置比例",
     "Reset subscription quota": "重置訂閱額度",
@@ -4543,7 +4539,6 @@
     "This user has no bindings": "該用戶無任何連結",
     "This week": "本週",
     "This will append 2 template rules (Codex CLI and Claude CLI) to the existing rule list.": "這將在現有規則列表中追加 2 條模板規則（Codex CLI 和 Claude CLI）。",
-    "This will clear custom pricing ratios and revert to upstream defaults.": "這將清除自訂定價比例並恢復到上游預設值。",
     "This will delete all": "這將刪除所有",
     "This will delete all channel affinity cache entries still in memory.": "這將刪除記憶體中所有的渠道親和性緩存條目。",
     "This will delete temporary cache files that have not been used for more than 10 minutes": "這將刪除超過 10 分鐘未使用的臨時緩存檔案",
@@ -5470,11 +5465,6 @@
     "© 2025 Your Company. All rights reserved.": "© 2025 您的公司。保留所有權利。",
     "、": "、",
     "，": "，",
-    "，and ": "，並",
-    "Resetting only rewrites ModelRatio with the hardcoded default table ({{count}} models); other pricing fields are unchanged.": "Resetting only rewrites ModelRatio with the hardcoded default table ({{count}} models); other pricing fields are unchanged.",
-    "Failed to load the default table. Custom model ratios will still be wiped by the reset.": "Failed to load the default table. Custom model ratios will still be wiped by the reset.",
-    "The following {{count}} custom model ratios will be deleted:": "The following {{count}} custom model ratios will be deleted:",
-    "No custom model ratios will be deleted.": "No custom model ratios will be deleted.",
-    "Type RESET to confirm": "Type RESET to confirm"
+    "，and ": "，並"
   }
 }
