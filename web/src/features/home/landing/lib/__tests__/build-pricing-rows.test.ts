@@ -201,8 +201,8 @@ describe('buildPricingRows', () => {
     const official = build(model, catalog)
 
     expect(official.isPerRequest).toBe(true)
-    // Per-call price is USD too; three decimals below a dollar.
-    expect(official.frInput).toBe('$0.040')
+    // Per-call price is USD too, on the same magnitude rule.
+    expect(official.frInput).toBe('$0.04')
     expect(official.frOutput).toBe('')
     expect(official.savingsInput).toBe('50%')
     // The output side has no meaning for a per-call price.

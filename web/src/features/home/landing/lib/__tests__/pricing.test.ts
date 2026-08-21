@@ -21,8 +21,7 @@ import { describe, expect, test } from 'vitest'
 import {
   LANDING_PRICE_PLACEHOLDER,
   calculateSavingsRatio,
-  formatInputPrice,
-  formatOutputPrice,
+  formatLandingPrice,
   formatSavingsPercent,
 } from '../pricing'
 
@@ -46,40 +45,55 @@ describe('calculateSavingsRatio', () => {
     expect(calculateSavingsRatio(3, 2.5)).toBe(null)
   })
 
+  test('returns null for a gap that rounds away to "0%"', () => {
+    // 0.4% off would render as "0%" beside two prices that clearly differ.
+    expect(calculateSavingsRatio(2.49, 2.5)).toBe(null)
+    // 0.5% is the first gap worth stating; it renders as "1%".
+    expect(calculateSavingsRatio(2.4875, 2.5)).toBeCloseTo(0.005)
+  })
+
   test('returns null for non-finite input', () => {
     expect(calculateSavingsRatio(Number.NaN, 2.5)).toBe(null)
     expect(calculateSavingsRatio(1.25, Number.POSITIVE_INFINITY)).toBe(null)
   })
 })
 
-describe('formatInputPrice', () => {
-  test('keeps three decimals below a dollar so sub-cent rates stay legible', () => {
-    expect(formatInputPrice(0.075)).toBe('$0.075')
-    expect(formatInputPrice(0.5)).toBe('$0.500')
-  })
-
-  test('drops to two decimals from a dollar up', () => {
-    expect(formatInputPrice(1)).toBe('$1.00')
-    expect(formatInputPrice(1.25)).toBe('$1.25')
-    expect(formatInputPrice(10.5)).toBe('$10.50')
+describe('formatLandingPrice', () => {
+  test.each<[number, string]>([
+    // Every configured digit survives — the reported bug was 0.7875 landing in
+    // the table as "$0.787".
+    [0.7875, '$0.7875'],
+    [0.787, '$0.787'],
+    [0.000016, '$0.000016'],
+    // Cents stay the floor, however round the rate is.
+    [1, '$1.00'],
+    [1.25, '$1.25'],
+    [10.5, '$10.50'],
+    [75, '$75.00'],
+    // Zeros past that floor are noise: a rate configured as 0.16 reads back as
+    // "$0.16", not "$0.160", and both price columns agree on it.
+    [0.16, '$0.16'],
+    [0.32, '$0.32'],
+    [0.02, '$0.02'],
+    [0.5, '$0.50'],
+    // A price is a ratio x 2 x group-ratio product, so it arrives carrying
+    // float drift that must not surface as digits.
+    [0.7875 * 0.9, '$0.70875'],
+    [0.1 + 0.2, '$0.30'],
+    // Finer than twelve decimals is unstatable, but still not free.
+    [1e-15, '<$0.000000000001'],
+    [0, '$0.00'],
+  ])('formats %p as %p', (value, expected) => {
+    expect(formatLandingPrice(value)).toBe(expected)
   })
 
   test('renders a placeholder for unusable values', () => {
-    expect(formatInputPrice(-1)).toBe(LANDING_PRICE_PLACEHOLDER)
-    expect(formatInputPrice(Number.NaN)).toBe(LANDING_PRICE_PLACEHOLDER)
-  })
-})
-
-describe('formatOutputPrice', () => {
-  test('always renders two decimals', () => {
-    expect(formatOutputPrice(0.5)).toBe('$0.50')
-    expect(formatOutputPrice(5)).toBe('$5.00')
-    expect(formatOutputPrice(10)).toBe('$10.00')
-  })
-
-  test('renders a placeholder for unusable values', () => {
-    expect(formatOutputPrice(-1)).toBe(LANDING_PRICE_PLACEHOLDER)
-    expect(formatOutputPrice(Number.NaN)).toBe(LANDING_PRICE_PLACEHOLDER)
+    expect(formatLandingPrice(undefined)).toBe(LANDING_PRICE_PLACEHOLDER)
+    expect(formatLandingPrice(-1)).toBe(LANDING_PRICE_PLACEHOLDER)
+    expect(formatLandingPrice(Number.NaN)).toBe(LANDING_PRICE_PLACEHOLDER)
+    expect(formatLandingPrice(Number.POSITIVE_INFINITY)).toBe(
+      LANDING_PRICE_PLACEHOLDER
+    )
   })
 })
 

@@ -72,13 +72,6 @@ const SMALL_COST_THRESHOLD = 0.001
 /** Widest a cost cell goes; past the storage resolution the digits are noise. */
 const MAX_COST_DIGITS = 6
 
-/**
- * The savings column rounds to whole percent, so a ratio below this renders as
- * "0%" — two cost cells showing the same amount beside it are not a
- * contradiction, and must not drag the row wider.
- */
-const VISIBLE_SAVINGS_RATIO = 0.005
-
 /** Fraction digits a cost cell reads well at on its own. */
 function costDigits(quota: number): number {
   const amount = Math.abs(quotaUnitsToDollars(quota))
@@ -299,8 +292,9 @@ export function UsageBreakdownTable({
     // only these rows change width, so a row whose two costs are orders of
     // magnitude apart keeps each cell at its natural precision.
     let digits = Math.max(costDigits(totals.quota), costDigits(estQuota))
-    const savingsIsVisible = ratio !== null && ratio >= VISIBLE_SAVINGS_RATIO
-    while (savingsIsVisible && actual === est && digits < MAX_COST_DIGITS) {
+    // calculateSavingsRatio already drops a ratio too thin to render, so a
+    // non-null one is a claim the two cost cells have to read apart from.
+    while (ratio !== null && actual === est && digits < MAX_COST_DIGITS) {
       digits += 1
       actual = formatCost(totals.quota, digits)
       est = formatCost(estQuota, digits)

@@ -26,8 +26,7 @@ import type { OfficialPricingMap } from './official-pricing'
 import {
   LANDING_PRICE_PLACEHOLDER,
   calculateSavingsRatio,
-  formatInputPrice,
-  formatOutputPrice,
+  formatLandingPrice,
   formatSavingsPercent,
 } from './pricing'
 
@@ -71,20 +70,6 @@ export function resolveProviderKey(
     if (haystack.includes(alias)) return key
   }
   return null
-}
-
-/** Vendor list price for the input columns, or the placeholder dash. */
-function officialInputDisplay(value: number | undefined): string {
-  return value === undefined
-    ? LANDING_PRICE_PLACEHOLDER
-    : formatInputPrice(value)
-}
-
-/** Vendor list price for the output columns, or the placeholder dash. */
-function officialOutputDisplay(value: number | undefined): string {
-  return value === undefined
-    ? LANDING_PRICE_PLACEHOLDER
-    : formatOutputPrice(value)
 }
 
 /**
@@ -171,9 +156,9 @@ export function buildPricingRows(params: BuildPricingRowsParams): PricingRow[] {
         return {
           ...base,
           isPerRequest: true,
-          frInput: formatInputPrice(ourUSD),
+          frInput: formatLandingPrice(ourUSD),
           frOutput: '',
-          officialInput: officialInputDisplay(benchmarkRequestPrice),
+          officialInput: formatLandingPrice(benchmarkRequestPrice),
           officialOutput: LANDING_PRICE_PLACEHOLDER,
           savingsInput: formatSavings(benchmarkRequestPrice, ourUSD, language),
           savingsOutput: LANDING_PRICE_PLACEHOLDER,
@@ -193,10 +178,10 @@ export function buildPricingRows(params: BuildPricingRowsParams): PricingRow[] {
       return {
         ...base,
         isPerRequest: false,
-        frInput: formatInputPrice(inputUSD),
-        frOutput: formatOutputPrice(outputUSD),
-        officialInput: officialInputDisplay(benchmarkInput),
-        officialOutput: officialOutputDisplay(benchmarkOutput),
+        frInput: formatLandingPrice(inputUSD),
+        frOutput: formatLandingPrice(outputUSD),
+        officialInput: formatLandingPrice(benchmarkInput),
+        officialOutput: formatLandingPrice(benchmarkOutput),
         savingsInput: formatSavings(benchmarkInput, inputUSD, language),
         savingsOutput: formatSavings(benchmarkOutput, outputUSD, language),
       }
