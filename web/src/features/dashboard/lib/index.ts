@@ -19,3 +19,5 @@ For commercial licensing, please contact support@quantumnous.com
 export { safeDivide } from './stats'
 export { EMPTY_AXIS_TICK_COUNT, emptyUsageAxisMax } from './chart-axis'
 export { defaultGranularityForRange } from './range'
+export { buildCompletionTimeDisplay } from './completion-time'
+export type { CompletionTimeDisplay } from './completion-time'

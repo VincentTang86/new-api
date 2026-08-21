@@ -60,7 +60,8 @@ export interface UserLogMetrics {
   quota: number // consume logs only
   consume_count: number
   error_count: number
-  avg_use_time: number // seconds, consume logs only
+  avg_use_time: number // mean completion time, seconds, consume logs only
+  p95_use_time: number // nearest-rank p95 completion time, seconds
   frt_count: number // consume logs with a recorded first response
   avg_frt_ms: number // mean time-to-first-response, ms
   p95_frt_ms: number // nearest-rank p95 time-to-first-response, ms

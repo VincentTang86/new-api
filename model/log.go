@@ -739,33 +739,59 @@ type UserLogMetrics struct {
 	Quota            int64   `json:"quota"` // consume logs only
 	ConsumeCount     int64   `json:"consume_count"`
 	ErrorCount       int64   `json:"error_count"`
-	AvgUseTime       float64 `json:"avg_use_time"` // seconds, consume logs only
+	AvgUseTime       float64 `json:"avg_use_time"` // mean completion time, seconds, consume logs only
+	P95UseTime       int64   `json:"p95_use_time"` // nearest-rank p95 completion time, seconds
 	FrtCount         int64   `json:"frt_count"`    // consume logs with a recorded first response
 	AvgFrtMs         float64 `json:"avg_frt_ms"`   // mean time-to-first-response, ms
 	P95FrtMs         int64   `json:"p95_frt_ms"`   // nearest-rank p95 time-to-first-response, ms
 }
 
-func GetUserLogMetrics(userId int, startTimestamp int64, endTimestamp int64) (metrics UserLogMetrics, err error) {
-	// first_response_ms only exists on rows written after the column landed;
-	// zero rows (legacy or no first packet) stay out of the latency stats via
-	// the CASE guard, so an old range degrades to frt_count = 0 instead of a
-	// skewed average.
-	consumeQuery := LOG_DB.Table("logs").
-		Select("count(*) consume_count, COALESCE(sum(prompt_tokens), 0) prompt_tokens, COALESCE(sum(completion_tokens), 0) completion_tokens, COALESCE(sum(quota), 0) quota, COALESCE(avg(use_time), 0) avg_use_time, COALESCE(sum(CASE WHEN first_response_ms > 0 THEN 1 ELSE 0 END), 0) frt_count, COALESCE(avg(CASE WHEN first_response_ms > 0 THEN first_response_ms END), 0) avg_frt_ms").
+// userLogsInRange scopes the dashboard queries to one user's logs of a single
+// type; an unset boundary means "open ended", matching what the console sends
+// for the preset ranges.
+func userLogsInRange(userId int, logType int, startTimestamp int64, endTimestamp int64) *gorm.DB {
+	query := LOG_DB.Table("logs").
 		Where("user_id = ?", userId).
-		Where("type = ?", LogTypeConsume)
-	errorQuery := LOG_DB.Table("logs").
-		Select("count(*) error_count").
-		Where("user_id = ?", userId).
-		Where("type = ?", LogTypeError)
+		Where("type = ?", logType)
 	if startTimestamp != 0 {
-		consumeQuery = consumeQuery.Where("created_at >= ?", startTimestamp)
-		errorQuery = errorQuery.Where("created_at >= ?", startTimestamp)
+		query = query.Where("created_at >= ?", startTimestamp)
 	}
 	if endTimestamp != 0 {
-		consumeQuery = consumeQuery.Where("created_at <= ?", endTimestamp)
-		errorQuery = errorQuery.Where("created_at <= ?", endTimestamp)
+		query = query.Where("created_at <= ?", endTimestamp)
 	}
+	return query
+}
+
+// nearestRankP95 reads the p95 row of an already-scoped query. ORDER BY plus
+// LIMIT/OFFSET is the only percentile shape SQLite, MySQL 5.7 and PostgreSQL
+// all support; percentile_cont exists on neither of the first two. count must
+// describe the same population the query selects, and column is an internal
+// literal, never request input.
+func nearestRankP95(query *gorm.DB, column string, count int64) (int64, error) {
+	if count <= 0 {
+		return 0, nil
+	}
+	offset := int((count*95+99)/100) - 1
+	var values []int64
+	if err := query.Order(column).Offset(offset).Limit(1).Pluck(column, &values).Error; err != nil {
+		return 0, err
+	}
+	if len(values) == 0 {
+		return 0, nil
+	}
+	return values[0], nil
+}
+
+func GetUserLogMetrics(userId int, startTimestamp int64, endTimestamp int64) (metrics UserLogMetrics, err error) {
+	// use_time is written for every consume log, so the completion time average
+	// and its p95 share one population and can never disagree about which rows
+	// they cover. first_response_ms is different: only streaming requests record
+	// a first packet, so the CASE guard keeps the zero rows out of the TTFT stats
+	// instead of skewing them towards zero.
+	consumeQuery := userLogsInRange(userId, LogTypeConsume, startTimestamp, endTimestamp).
+		Select("count(*) consume_count, COALESCE(sum(prompt_tokens), 0) prompt_tokens, COALESCE(sum(completion_tokens), 0) completion_tokens, COALESCE(sum(quota), 0) quota, COALESCE(avg(use_time), 0) avg_use_time, COALESCE(sum(CASE WHEN first_response_ms > 0 THEN 1 ELSE 0 END), 0) frt_count, COALESCE(avg(CASE WHEN first_response_ms > 0 THEN first_response_ms END), 0) avg_frt_ms")
+	errorQuery := userLogsInRange(userId, LogTypeError, startTimestamp, endTimestamp).
+		Select("count(*) error_count")
 	if err := consumeQuery.Scan(&metrics).Error; err != nil {
 		common.SysError("failed to query user log metrics: " + err.Error())
 		return metrics, errors.New("查询统计数据失败")
@@ -774,30 +800,22 @@ func GetUserLogMetrics(userId int, startTimestamp int64, endTimestamp int64) (me
 		common.SysError("failed to query user error log metrics: " + err.Error())
 		return metrics, errors.New("查询统计数据失败")
 	}
-	if metrics.FrtCount > 0 {
-		// Nearest-rank percentile through ORDER BY + LIMIT/OFFSET, which all
-		// supported databases share; percentile_cont does not exist on
-		// MySQL 5.7 or SQLite.
-		offset := int((metrics.FrtCount*95+99)/100) - 1
-		p95Query := LOG_DB.Table("logs").
-			Where("user_id = ?", userId).
-			Where("type = ?", LogTypeConsume).
-			Where("first_response_ms > 0")
-		if startTimestamp != 0 {
-			p95Query = p95Query.Where("created_at >= ?", startTimestamp)
-		}
-		if endTimestamp != 0 {
-			p95Query = p95Query.Where("created_at <= ?", endTimestamp)
-		}
-		var p95 []int64
-		if err := p95Query.Order("first_response_ms").Offset(offset).Limit(1).Pluck("first_response_ms", &p95).Error; err != nil {
-			common.SysError("failed to query user latency percentile: " + err.Error())
-			return metrics, errors.New("查询统计数据失败")
-		}
-		if len(p95) > 0 {
-			metrics.P95FrtMs = p95[0]
-		}
+	p95UseTime, err := nearestRankP95(
+		userLogsInRange(userId, LogTypeConsume, startTimestamp, endTimestamp),
+		"use_time", metrics.ConsumeCount)
+	if err != nil {
+		common.SysError("failed to query user completion time percentile: " + err.Error())
+		return metrics, errors.New("查询统计数据失败")
 	}
+	metrics.P95UseTime = p95UseTime
+	p95Frt, err := nearestRankP95(
+		userLogsInRange(userId, LogTypeConsume, startTimestamp, endTimestamp).Where("first_response_ms > 0"),
+		"first_response_ms", metrics.FrtCount)
+	if err != nil {
+		common.SysError("failed to query user latency percentile: " + err.Error())
+		return metrics, errors.New("查询统计数据失败")
+	}
+	metrics.P95FrtMs = p95Frt
 	return metrics, nil
 }
 

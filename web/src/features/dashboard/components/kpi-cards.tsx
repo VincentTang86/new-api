@@ -28,16 +28,10 @@ import {
 } from '@/components/ui/tooltip'
 import { formatCompactNumber, formatNumber, formatQuota } from '@/lib/format'
 
-import { safeDivide } from '../lib'
+import { buildCompletionTimeDisplay, safeDivide } from '../lib'
 import type { UserLogMetrics } from '../types'
 
 const PLACEHOLDER = '-'
-
-// Latency values are TTFT milliseconds; second-scale values read better as
-// seconds (LLM first tokens routinely take over 1s).
-function formatLatencyMs(ms: number): string {
-  return ms >= 1000 ? `${(ms / 1000).toFixed(1)}s` : `${Math.round(ms)}ms`
-}
 
 interface KpiCardsProps {
   metrics: UserLogMetrics | undefined
@@ -90,19 +84,10 @@ export function KpiCards({
   const errorsLine = metrics
     ? `${t('Errors')}: ${formatNumber(failed)} / ${formatNumber(attempted)}`
     : `${t('Errors')}: ${PLACEHOLDER}`
-  // Prefer time-to-first-response; ranges predating the first_response_ms
-  // column fall back to the whole-request seconds average.
-  let avgResponse = PLACEHOLDER
-  if (metrics && succeeded > 0) {
-    avgResponse =
-      metrics.frt_count > 0
-        ? formatLatencyMs(metrics.avg_frt_ms)
-        : `${metrics.avg_use_time.toFixed(1)}s`
-  }
-  const p95Response =
-    metrics && metrics.p95_frt_ms > 0
-      ? formatLatencyMs(metrics.p95_frt_ms)
-      : PLACEHOLDER
+  const completionTime = buildCompletionTimeDisplay(metrics)
+  const completionTimeLine = completionTime.ttft
+    ? `P95: ${completionTime.p95} · ${t('First token')}: ${completionTime.ttft}`
+    : `P95: ${completionTime.p95}`
   const inOutLine = metrics
     ? `${t('In')}: ${formatCompactNumber(metrics.prompt_tokens)} / ${t('Out')}: ${formatCompactNumber(metrics.completion_tokens)}`
     : `${t('In')}: ${PLACEHOLDER} / ${t('Out')}: ${PLACEHOLDER}`
@@ -139,13 +124,13 @@ export function KpiCards({
       description: errorsLine,
     },
     {
-      key: 'avg-response',
-      title: t('Avg Response'),
+      key: 'completion-time',
+      title: t('Avg Completion Time'),
       tip: t(
-        'Average time to first response; streaming requests count the first token. Ranges without that data fall back to total duration.'
+        'Average end-to-end time to complete a request, from the moment it is accepted to the last token returned.'
       ),
-      value: avgResponse,
-      description: `P95: ${p95Response}`,
+      value: completionTime.value,
+      description: completionTimeLine,
     },
   ]
 
