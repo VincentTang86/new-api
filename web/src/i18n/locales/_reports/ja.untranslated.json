@@ -14,5 +14,10 @@
   "No benchmark prices configured yet": "No benchmark prices configured yet",
   "Prices must be positive numbers": "Prices must be positive numbers",
   "The pricing page comparison and dashboard savings for this model will show a dash.": "The pricing page comparison and dashboard savings for this model will show a dash.",
-  "This model is already configured": "This model is already configured"
+  "This model is already configured": "This model is already configured",
+  "Resetting only rewrites ModelRatio with the hardcoded default table ({{count}} models); other pricing fields are unchanged.": "Resetting only rewrites ModelRatio with the hardcoded default table ({{count}} models); other pricing fields are unchanged.",
+  "Failed to load the default table. Custom model ratios will still be wiped by the reset.": "Failed to load the default table. Custom model ratios will still be wiped by the reset.",
+  "The following {{count}} custom model ratios will be deleted:": "The following {{count}} custom model ratios will be deleted:",
+  "No custom model ratios will be deleted.": "No custom model ratios will be deleted.",
+  "Type RESET to confirm": "Type RESET to confirm"
 }

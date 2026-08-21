@@ -25,12 +25,14 @@ import { toast } from 'sonner'
 import * as z from 'zod'
 
 import { ConfirmDialog } from '@/components/confirm-dialog'
+import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
-import { resetModelRatios } from '../api'
+import { getDefaultModelRatio, resetModelRatios } from '../api'
 import { SettingsPageTitleStatusPortal } from '../components/settings-page-context'
 import { SettingsSection } from '../components/settings-section'
 import { useUpdateOption } from '../hooks/use-update-option'
+import { safeJsonParse } from '../utils/json-parser'
 import { positiveIntegerSchema } from '../utils/numeric-field'
 import { GroupRatioForm } from './group-ratio-form'
 import { ModelRatioForm } from './model-ratio-form'
@@ -164,6 +166,12 @@ export function RatioSettingsCard({
   const updateOption = useUpdateOption()
   const queryClient = useQueryClient()
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [resetConfirmText, setResetConfirmText] = useState('')
+  const [resetPreview, setResetPreview] = useState<{
+    defaultCount: number
+    lostModels: string[]
+  } | null>(null)
+  const [resetPreviewError, setResetPreviewError] = useState(false)
 
   const resetMutation = useMutation({
     mutationFn: resetModelRatios,
@@ -393,9 +401,34 @@ export function RatioSettingsCard({
     [updateOption]
   )
 
-  const handleResetRatios = useCallback(() => {
+  const handleResetRatios = useCallback(async () => {
+    setResetConfirmText('')
+    setResetPreview(null)
+    setResetPreviewError(false)
     setConfirmOpen(true)
-  }, [])
+    try {
+      const res = await getDefaultModelRatio()
+      if (!res.success || typeof res.data !== 'string') {
+        throw new Error(res.message || 'failed to load default model ratio')
+      }
+      const defaultMap = safeJsonParse<Record<string, unknown>>(res.data, {
+        fallback: {},
+        silent: true,
+      })
+      const currentMap = safeJsonParse<Record<string, unknown>>(
+        savedModelValues.ModelRatio,
+        { fallback: {}, silent: true }
+      )
+      setResetPreview({
+        defaultCount: Object.keys(defaultMap).length,
+        lostModels: Object.keys(currentMap)
+          .filter((model) => !(model in defaultMap))
+          .sort(),
+      })
+    } catch {
+      setResetPreviewError(true)
+    }
+  }, [savedModelValues.ModelRatio])
 
   const { mutate: resetMutate } = resetMutation
   const handleConfirmReset = useCallback(() => {
@@ -497,16 +530,56 @@ export function RatioSettingsCard({
 
       <ConfirmDialog
         open={confirmOpen}
-        onOpenChange={setConfirmOpen}
+        onOpenChange={(open) => {
+          setConfirmOpen(open)
+          if (!open) setResetConfirmText('')
+        }}
         title={t('Reset all model prices?')}
-        desc={t(
-          'This will clear custom pricing ratios and revert to upstream defaults.'
-        )}
+        desc={
+          resetPreview
+            ? t(
+                'Resetting only rewrites ModelRatio with the hardcoded default table ({{count}} models); other pricing fields are unchanged.',
+                { count: resetPreview.defaultCount }
+              )
+            : resetPreviewError
+              ? t(
+                  'Failed to load the default table. Custom model ratios will still be wiped by the reset.'
+                )
+              : t('Loading...')
+        }
         destructive
         isLoading={resetMutation.isPending}
         handleConfirm={handleConfirmReset}
         confirmText={t('Reset')}
-      />
+        disabled={resetConfirmText.trim() !== 'RESET'}
+      >
+        <div className='space-y-3'>
+          {resetPreview && resetPreview.lostModels.length > 0 && (
+            <div className='space-y-1.5'>
+              <p className='text-destructive text-sm font-medium'>
+                {t(
+                  'The following {{count}} custom model ratios will be deleted:',
+                  { count: resetPreview.lostModels.length }
+                )}
+              </p>
+              <div className='max-h-40 overflow-y-auto rounded-md border p-2 font-mono text-xs leading-5'>
+                {resetPreview.lostModels.join(', ')}
+              </div>
+            </div>
+          )}
+          {resetPreview && resetPreview.lostModels.length === 0 && (
+            <p className='text-muted-foreground text-sm'>
+              {t('No custom model ratios will be deleted.')}
+            </p>
+          )}
+          <Input
+            value={resetConfirmText}
+            onChange={(event) => setResetConfirmText(event.target.value)}
+            placeholder={t('Type RESET to confirm')}
+            aria-label={t('Type RESET to confirm')}
+          />
+        </div>
+      </ConfirmDialog>
     </>
   )
 }

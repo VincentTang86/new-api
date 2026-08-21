@@ -93,6 +93,15 @@ export async function resetModelRatios() {
   return res.data
 }
 
+export async function getDefaultModelRatio() {
+  const res = await api.get<{
+    success: boolean
+    message?: string
+    data?: string
+  }>('/api/option/default_model_ratio')
+  return res.data
+}
+
 export async function getReferencePricing() {
   const res = await api.get<ReferencePricingResponse>('/api/reference_pricing/')
   return res.data

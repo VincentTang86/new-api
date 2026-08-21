@@ -76,6 +76,15 @@ func GetPricing(c *gin.Context) {
 	})
 }
 
+// GetDefaultModelRatio exposes the hardcoded default ModelRatio table so the
+// admin UI can show which custom entries a reset would wipe before running it.
+func GetDefaultModelRatio(c *gin.Context) {
+	c.JSON(200, gin.H{
+		"success": true,
+		"data":    ratio_setting.DefaultModelRatio2JSONString(),
+	})
+}
+
 func ResetModelRatio(c *gin.Context) {
 	defaultStr := ratio_setting.DefaultModelRatio2JSONString()
 	err := model.UpdateOption("ModelRatio", defaultStr)

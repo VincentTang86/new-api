@@ -5470,6 +5470,11 @@
     "© 2025 Your Company. All rights reserved.": "© 2025 您的公司。保留所有权利。",
     "、": "、",
     "，": "，",
-    "，and ": "，并"
+    "，and ": "，并",
+    "Resetting only rewrites ModelRatio with the hardcoded default table ({{count}} models); other pricing fields are unchanged.": "重置只会用硬编码默认表（{{count}} 个模型）覆盖 ModelRatio；其他定价字段不受影响。",
+    "Failed to load the default table. Custom model ratios will still be wiped by the reset.": "默认表加载失败，重置仍会清除自有模型倍率。",
+    "The following {{count}} custom model ratios will be deleted:": "以下 {{count}} 个自有模型的倍率将被删除：",
+    "No custom model ratios will be deleted.": "没有自有模型倍率会被删除。",
+    "Type RESET to confirm": "输入 RESET 以确认"
   }
 }

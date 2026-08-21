@@ -5470,6 +5470,11 @@
     "© 2025 Your Company. All rights reserved.": "© 2025 Your Company. All rights reserved.",
     "、": ", ",
     "，": ", ",
-    "，and ": ", and "
+    "，and ": ", and ",
+    "Resetting only rewrites ModelRatio with the hardcoded default table ({{count}} models); other pricing fields are unchanged.": "Resetting only rewrites ModelRatio with the hardcoded default table ({{count}} models); other pricing fields are unchanged.",
+    "Failed to load the default table. Custom model ratios will still be wiped by the reset.": "Failed to load the default table. Custom model ratios will still be wiped by the reset.",
+    "The following {{count}} custom model ratios will be deleted:": "The following {{count}} custom model ratios will be deleted:",
+    "No custom model ratios will be deleted.": "No custom model ratios will be deleted.",
+    "Type RESET to confirm": "Type RESET to confirm"
   }
 }
