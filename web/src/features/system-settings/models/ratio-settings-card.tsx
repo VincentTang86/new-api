@@ -462,7 +462,6 @@ export function RatioSettingsCard({
           </SettingsSection>
         </Tabs>
       )}
-
     </>
   )
 }
