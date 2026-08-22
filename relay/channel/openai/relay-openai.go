@@ -119,6 +119,7 @@ func OaiStreamHandler(c *gin.Context, info *relaycommon.RelayInfo, resp *http.Re
 	var usage = &dto.Usage{}
 	var lastStreamData string
 	var secondLastStreamData string // 存储倒数第二个stream data，用于音频模型
+	var upstreamIdCaptured bool
 	seenStreamToolCalls := make(map[string]struct{})
 	var streamFunctionCallNames []string
 
@@ -133,6 +134,21 @@ func OaiStreamHandler(c *gin.Context, info *relaycommon.RelayInfo, resp *http.Re
 			}
 		}
 		if len(data) > 0 {
+			// Body-id fallback: capture from the first chunk that carries an
+			// id, not the last one — on a mid-stream failure the last frame
+			// can be an error frame, and errors are exactly when the upstream
+			// id is needed. A header id captured in doRequest still wins
+			// (fill-if-empty).
+			if !upstreamIdCaptured {
+				var idProbe struct {
+					Id string `json:"id"`
+				}
+				if probeErr := common.UnmarshalJsonStr(data, &idProbe); probeErr == nil && idProbe.Id != "" {
+					common.SetUpstreamRequestId(c, idProbe.Id)
+					upstreamIdCaptured = true
+				}
+			}
+
 			// 对音频模型，保存倒数第二个stream data
 			if isAudioModel && lastStreamData != "" {
 				secondLastStreamData = lastStreamData
@@ -248,6 +264,9 @@ func OpenaiHandler(c *gin.Context, info *relaycommon.RelayInfo, resp *http.Respo
 	if err != nil {
 		return nil, types.NewOpenAIError(err, types.ErrorCodeBadResponseBody, http.StatusInternalServerError)
 	}
+	// Body-id fallback for providers without a verified request-id header; a
+	// header id captured in doRequest takes precedence (fill-if-empty).
+	common.SetUpstreamRequestId(c, simpleResponse.Id)
 
 	if oaiError := simpleResponse.GetOpenAIError(); oaiError != nil && oaiError.Type != "" {
 		return nil, types.WithOpenAIError(*oaiError, resp.StatusCode)
