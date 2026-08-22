@@ -50,45 +50,48 @@ export function PricingPreviewTable(props: PricingPreviewTableProps) {
       : t('OpenRouter Output / 1M')
 
   const columns = [
-    // Column shares come from the design's fixed 1412px track (260 / 205×4 /
-    // 252 / 80). The four price columns are equal there, which is also what
-    // keeps the longest benchmark header — "OpenRouter Выход / 1M" — on one
-    // line.
+    // Column shares follow the design's fixed track, with the model column
+    // widened: at the design's 18% it cut model ids mid-name from ~22
+    // characters up (`deepseek-v4-flash-0731`), while the price and savings
+    // columns carry right-aligned figures far narrower than their share. The
+    // four price columns stay equal, which is what keeps the longest benchmark
+    // header — Vietnamese "OpenRouter Đầu vào / 1M" — on one line. Names longer
+    // than the wider column still truncate; the row's tooltip carries them.
     {
       key: 'model',
       label: t('Model'),
       align: 'text-left',
-      width: 'w-[18%]',
+      width: 'w-[26%]',
     },
     {
       key: 'fr-input',
       label: t('FR Input / 1M'),
       align: 'text-right',
-      width: 'w-[15%]',
+      width: 'w-[13.5%]',
     },
     {
       key: 'fr-output',
       label: t('FR Output / 1M'),
       align: 'text-right',
-      width: 'w-[15%]',
+      width: 'w-[13.5%]',
     },
     {
       key: 'bench-input',
       label: benchInputLabel,
       align: 'text-right',
-      width: 'w-[15%]',
+      width: 'w-[13.5%]',
     },
     {
       key: 'bench-output',
       label: benchOutputLabel,
       align: 'text-right',
-      width: 'w-[15%]',
+      width: 'w-[13.5%]',
     },
     {
       key: 'savings',
       label: t('Savings'),
       align: 'text-right',
-      width: 'w-[16%]',
+      width: 'w-[14%]',
     },
     {
       key: 'detail',
@@ -109,9 +112,11 @@ export function PricingPreviewTable(props: PricingPreviewTableProps) {
       />
       {/* Headers never wrap; below the width where the longest locale's
        * headers still fit on one line, the table scrolls sideways instead of
-       * breaking the row rhythm. */}
+       * breaking the row rhythm. That width is what the minimum encodes: at
+       * 1160px the price columns are 156px, enough for the 149px Vietnamese
+       * benchmark header to clear the one beside it. */}
       <div className='overflow-x-auto'>
-        <table className='w-full min-w-[960px] table-fixed text-sm'>
+        <table className='w-full min-w-[1160px] table-fixed text-sm'>
           <colgroup>
             {columns.map((column) => (
               <col key={column.key} className={column.width} />

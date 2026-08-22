@@ -23,7 +23,8 @@ import {
   createRouter,
   RouterProvider,
 } from '@tanstack/react-router'
-import { act, render } from '@testing-library/react'
+import { act, render, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 import type { PricingRow } from '../../types'
@@ -90,6 +91,20 @@ async function renderList(
   })
 
   return container
+}
+
+/** The tooltip popup carries no role of its own; this is the surface the
+ * shared TooltipContent renders the name onto. */
+const TOOLTIP_POPUP = '[data-slot="tooltip-content"]'
+
+/** Both presentations render in jsdom, so a name has to be picked out of the
+ * table rather than the accordion beside it. */
+function tableModelName(container: HTMLElement, name: string): HTMLElement {
+  const table = container.querySelector<HTMLElement>(
+    '[data-slot="pricing-table"]'
+  )
+  if (table === null) throw new Error('expected the desktop pricing table')
+  return within(table).getByText(name)
 }
 
 // The router scrolls after navigation and jsdom's scrollTo only logs "not
@@ -163,6 +178,73 @@ describe('PricingModelList', () => {
 
     const withoutSavings = [...bodyRows[1].querySelectorAll('td')]
     expect(withoutSavings[4].textContent).toBe('—')
+  })
+
+  test('gives the model column the widest share of the fixed track', async () => {
+    const container = await renderList(SAMPLE_ROWS)
+    const shares = [...container.querySelectorAll('colgroup col')].map((col) => {
+      const share = /w-\[([\d.]+)%\]/.exec(col.className)
+      return share ? Number.parseFloat(share[1]) : Number.NaN
+    })
+
+    expect(shares).toHaveLength(7)
+    expect(shares.reduce((total, share) => total + share, 0)).toBeCloseTo(100)
+    // Model ids are the only free-form text in the row — every other column
+    // holds a short right-aligned figure — so the name column takes the
+    // largest share of the track.
+    const [modelShare, ...priceShares] = shares
+    for (const share of priceShares) {
+      expect(modelShare).toBeGreaterThan(share)
+    }
+  })
+
+  test('scrolls the track sideways rather than shrink below its headers', async () => {
+    const container = await renderList(SAMPLE_ROWS)
+    const table = container.querySelector('table')
+
+    expect(table?.className ?? '').toMatch(/\btable-fixed\b/)
+    // The widest benchmark header is ~149px, which the 13.5% price columns only
+    // clear from this width up; narrower than that the wrapper scrolls.
+    const minWidth = /min-w-\[(\d+)px\]/.exec(table?.className ?? '')
+    expect(Number(minWidth?.[1])).toBeGreaterThanOrEqual(1160)
+    expect(table?.parentElement?.className ?? '').toMatch(/\boverflow-x-auto\b/)
+  })
+
+  test('reveals the full model name on hover when the column cuts it', async () => {
+    const container = await renderList(SAMPLE_ROWS)
+    const name = tableModelName(container, 'GPT-4o')
+    // jsdom lays nothing out, so the cut itself is what the fixture states.
+    Object.defineProperty(name, 'scrollWidth', {
+      configurable: true,
+      value: 320,
+    })
+    Object.defineProperty(name, 'clientWidth', {
+      configurable: true,
+      value: 160,
+    })
+
+    await userEvent.hover(name)
+
+    expect(
+      await screen.findByText('GPT-4o', { selector: TOOLTIP_POPUP })
+    ).toBeVisible()
+  })
+
+  test('leaves a model name that fits without a tooltip repeating it', async () => {
+    const container = await renderList(SAMPLE_ROWS)
+    const name = tableModelName(container, 'GPT-4o')
+    Object.defineProperty(name, 'scrollWidth', {
+      configurable: true,
+      value: 160,
+    })
+    Object.defineProperty(name, 'clientWidth', {
+      configurable: true,
+      value: 160,
+    })
+
+    await userEvent.hover(name)
+
+    expect(document.querySelector(TOOLTIP_POPUP)).toBeNull()
   })
 
   test('renders a fallback instead of an empty table shell', async () => {
