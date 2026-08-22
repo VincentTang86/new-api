@@ -549,9 +549,18 @@ func doRequest(c *gin.Context, req *http.Request, info *common.RelayInfo) (*http
 		))
 	}
 
-	if upID := resp.Header.Get(common2.RequestIdKey); upID != "" {
-		c.Set(common2.UpstreamRequestIdKey, upID)
+	// Capture the provider's request id for this upstream attempt. Reset (not
+	// fill-if-empty) because the retry loop reuses one gin context across
+	// channels: a stale id from a failed attempt must never survive into the
+	// logs of the attempt that succeeded.
+	upstreamRequestId := ""
+	for _, header := range common2.UpstreamRequestIdHeaderCandidates(info.ChannelType) {
+		if v := resp.Header.Get(header); v != "" {
+			upstreamRequestId = v
+			break
+		}
 	}
+	common2.ResetUpstreamRequestId(c, upstreamRequestId)
 
 	_ = req.Body.Close()
 	_ = c.Request.Body.Close()
