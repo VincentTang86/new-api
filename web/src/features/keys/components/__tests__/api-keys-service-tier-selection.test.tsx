@@ -17,6 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, test } from 'vitest'
 
 const { createInstance } = await import('i18next')
@@ -157,9 +158,7 @@ async function renderCreateDrawer(): Promise<void> {
   )
 }
 
-async function renderUpdateDrawer(
-  key: Record<string, unknown>
-): Promise<void> {
+async function renderUpdateDrawer(key: Record<string, unknown>): Promise<void> {
   storedKey = key
   queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
@@ -234,19 +233,27 @@ function typeName(value: string): void {
   fireEvent.input(input, { target: { value } })
 }
 
-function getModelOptions(): string[] {
-  const trigger = document.querySelector<HTMLElement>(
+// The combobox opens on the pointer/focus sequence, which fireEvent.click does
+// not produce, so opening it needs userEvent. Opening is a separate step from
+// reading because reopening the list inside a waitFor callback spins the event
+// loop: every poll fires another click that never opens anything, and the
+// starved loop never reaches waitFor's own timeout.
+async function openModelOptions(): Promise<void> {
+  const input = document.querySelector<HTMLElement>(
     '[data-slot="combobox-chip-input"]'
   )
-  if (!trigger) {
+  if (!input) {
     throw new Error('Expected the Model Limits input')
   }
-  fireEvent.click(trigger)
-  const options = [
+  await userEvent.click(input)
+}
+
+function getModelOptions(): string[] {
+  return [
     ...document.querySelectorAll<HTMLElement>('[data-slot="combobox-item"]'),
-  ].map((option) => option.textContent?.trim() ?? '')
-  fireEvent.keyDown(trigger, { key: 'Escape' })
-  return options.sort()
+  ]
+    .map((option) => option.textContent?.trim() ?? '')
+    .sort()
 }
 
 function getModelLimitChips(): string[] {
@@ -311,15 +318,17 @@ describe('API key service tier selection', () => {
 
     fireEvent.click(findButton('Advanced Settings'))
     fireEvent.click(getTierRadio('Production'))
+    await openModelOptions()
     await waitFor(() =>
       expect(getModelOptions()).toEqual(['claude-opus-4', 'gpt-5-mini'])
     )
 
     fireEvent.click(getTierRadio('Best Effort'))
+    await openModelOptions()
     await waitFor(() => expect(getModelOptions()).toEqual(['gpt-5-mini']))
   })
 
-  test('drops stored model limits the key\'s own tier does not serve', async () => {
+  test("drops stored model limits the key's own tier does not serve", async () => {
     installApiFixtures([])
     await renderUpdateDrawer(
       buildStoredKey('Best Effort', 'gpt-5-mini,claude-opus-4')
