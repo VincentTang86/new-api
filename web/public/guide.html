@@ -411,9 +411,9 @@
         <footer class="page-footer">
           <a href="/">fairrouter.ai</a>
           <a href="/pricing" id="link-pricing">Models &amp; Pricing</a>
-          <a href="/about" id="link-about">About</a>
+          <a href="/about" id="link-about">Contact Us</a>
           <a href="/privacy-policy" id="link-privacy">Privacy Policy</a>
-          <a href="/user-agreement" id="link-terms">Terms of Service</a>
+          <a href="/user-agreement" id="link-terms">User Agreement</a>
         </footer>
       </main>
     </div>
@@ -495,9 +495,9 @@
         nav: {
           console: 'Console',
           pricing: 'Models & Pricing',
-          about: 'About',
+          about: 'Contact Us',
           privacy: 'Privacy Policy',
-          terms: 'Terms of Service',
+          terms: 'User Agreement',
         },
         sections: [
           {
@@ -517,7 +517,7 @@
                 'steps',
                 [
                   'Create an account and sign in.',
-                  'Add credit in **Wallet**, then create a key in **API Keys**.',
+                  'Top up on the **Credits** page, then create a key in **API Keys**.',
                   'Point any OpenAI-compatible SDK or app at [[https://fairrouter.ai/v1]].',
                 ],
               ],
@@ -538,7 +538,7 @@
               ],
               [
                 'note',
-                '**Add an email address in Profile right after signing in.** Password recovery sends a reset link to the address on your account, so without one there is no self-service way back into a locked account.',
+                '**Add an email address in Account Settings → Account Bindings right after signing in.** Password recovery sends a reset link to the address on your account, so without one there is no self-service way back into a locked account.',
               ],
             ],
           },
@@ -559,22 +559,21 @@
                     'Try a model in the browser before writing any code.',
                   ],
                   [
-                    'Chat',
-                    'Hand a key straight to a connected chat application.',
-                  ],
-                  [
-                    'Overview / Dashboard',
-                    'Charts of requests, tokens and spend over time.',
+                    'Dashboard',
+                    'Charts and breakdowns of requests, tokens, spend and latency.',
                   ],
                   ['API Keys', 'Create, edit, disable and delete keys.'],
-                  ['Usage Logs', 'One row per request: model, tokens, cost.'],
                   [
-                    'Task Logs',
+                    'Request Logs',
+                    'One row per request: model, tokens, cost, latency.',
+                  ],
+                  [
+                    'Async Tasks',
                     'Requests submitted as long-running asynchronous jobs.',
                   ],
-                  ['Wallet', 'Balance, top-ups and order history.'],
+                  ['Credits', 'Balance, top-ups and order history.'],
                   [
-                    'Profile',
+                    'Account Settings',
                     'Email, password, two-factor authentication, sessions.',
                   ],
                 ],
@@ -587,38 +586,45 @@
             b: [
               [
                 'p',
-                'Go to **API Keys** and choose **Create API Key**. Only the name is mandatory; the defaults are right for a first key.',
+                'Go to **API Keys** and choose **Create API Key**. Only the name and the service tier are mandatory; the defaults are right for a first key.',
               ],
               [
                 'table',
                 [
                   ['Field', 'What it means'],
                   [
-                    'Name',
-                    'How the key is labelled in your list. Name it after the app or machine that will use it.',
+                    'Name *',
+                    'Required. How the key is labelled in your list — name it after the app or machine that will use it.',
                   ],
                   [
-                    'Group',
-                    'The routing group the key uses, which also decides the price. Leave it on [[default]] unless support tells you otherwise.',
+                    'Service Tier *',
+                    'Required. The tiers your account can use are shown as cards; the tier decides both the price and which models the key can reach.',
                   ],
                   [
                     'Expiration Time',
                     'Never, or a preset or custom expiry. An expired key stops working but stays in the list.',
                   ],
-                  ['Quantity', 'Create several keys in one go.'],
+                  [
+                    'Quantity',
+                    'Create several keys in one go (shown when creating).',
+                  ],
                   [
                     'Quota / Unlimited Quota',
-                    'A spending cap for this key. Usage is always deducted from your account balance; the cap only limits how much this one key may spend.',
+                    'Unlimited is on by default. Turn it off to cap what this key may spend; usage is always deducted from your account balance either way.',
                   ],
                   [
                     'Model Limits',
-                    'Restrict the key to selected model IDs. Leave it empty to allow every model in the catalog.',
+                    'Restrict the key to selected models. Leave it empty to allow every model in the selected service tier.',
                   ],
                   [
-                    'IP Whitelist',
+                    'IP Whitelist (supports CIDR)',
                     'Accept requests only from these addresses or CIDR ranges.',
                   ],
                 ],
+              ],
+              [
+                'p',
+                'Model Limits follow the tier you pick: switch tiers and any model the new tier does not offer is dropped from the list, with a note naming what was removed. If that empties the list, a red warning appears — an empty list means the key may use every model in that tier.',
               ],
               [
                 'p',
@@ -701,11 +707,11 @@
             b: [
               [
                 'p',
-                '[Models & Pricing](/pricing) is public — you can read it before creating an account. Each row shows the input and output price per one million tokens in US dollars, next to the provider’s official list price so the saving is visible.',
+                '[Models & Pricing](/pricing) is public — you can read it before creating an account. Each row shows the input and output price per one million tokens in US dollars, next to a benchmark price so the saving is visible. **Compare with** switches that benchmark between the provider’s official API and OpenRouter.',
               ],
               [
                 'p',
-                'Text models are billed per token: input tokens × input price, plus output tokens × output price. Where a model supports prompt caching, cached input tokens are billed at the lower cached rate. The exact token counts and the exact charge for every request appear in **Usage Logs**.',
+                'Text models are billed per token: input tokens × input price, plus output tokens × output price. Where a model supports prompt caching, cached input tokens are billed at the lower cached rate; the table lists input and output, and the cached rates are on each model’s detail page. The exact token counts and the exact charge for every request appear in **Request Logs**.',
               ],
               [
                 'p',
@@ -713,7 +719,7 @@
               ],
               [
                 'note',
-                'The price applied to a request comes from the model plus the group of the key that made it. Unless support has moved you to a special group, everything runs on [[default]] and matches the public pricing page.',
+                'The price applied to a request comes from the model plus the service tier of the key that made it. The public pricing page has a price tier selector, so you can read the rates for the tier your key uses before you call it.',
               ],
             ],
           },
@@ -728,9 +734,9 @@
               [
                 'steps',
                 [
-                  'Open **Wallet** in the console. The cards at the top show Current Balance, Total Usage and API Requests.',
+                  'Open **Credits** in the console. The cards at the top show Current Balance, Total Usage and API Requests.',
                   'Choose one of the preset amounts, or enter a custom amount.',
-                  'Continue to checkout and pay by card, bank transfer or WeChat Pay.',
+                  'Continue to checkout and pay with one of the methods offered on the page.',
                   'The balance updates as soon as the payment is confirmed. Past top-ups are listed under Order History.',
                 ],
               ],
@@ -740,7 +746,7 @@
               ],
               [
                 'note',
-                'There is no automatic top-up. At a zero balance requests are rejected with an insufficient-quota error until you add credit, so keep an eye on the Wallet card or the Overview page.',
+                'There is no automatic top-up. At a zero balance requests are rejected with an insufficient-quota error until you add credit, so keep an eye on the Credits page or the balance card on the Dashboard.',
               ],
             ],
           },
@@ -750,15 +756,15 @@
             b: [
               [
                 'p',
-                '**Usage Logs** lists one row per request with the time, model, key, prompt and completion tokens, and the amount charged. Filter by date range, model or key to find a specific call, and export the filtered rows when you need them outside the console.',
+                '**Request Logs** lists one row per request with the time, model, key, prompt and completion tokens, the latency and the amount charged. Filter by date range, model, group or key name to narrow things down, or search by request ID — including the upstream request ID returned by the provider — to pin down a single call.',
               ],
               [
                 'p',
-                '**Task Logs** covers requests submitted as asynchronous jobs rather than answered in the response.',
+                '**Async Tasks** covers requests submitted as asynchronous jobs rather than answered in the response.',
               ],
               [
                 'p',
-                '**Overview** and **Dashboard** turn the same data into charts — spend per day, requests per model — which is the fastest way to spot a client calling more than you expected.',
+                '**Dashboard** turns the same data into charts — requests, tokens, spend and completion time over the period you pick — and the usage breakdown below splits it by model or by key, with the actual cost, the estimated cost at official rates and the saving. It is the fastest way to spot a client calling more than you expected.',
               ],
             ],
           },
@@ -780,7 +786,7 @@
               ],
               [
                 'p',
-                'The ⋯ menu on each key row shortens this. **Copy Connection Info** copies the address and the key together, the **Chat** submenu hands them straight to a supported app (Cherry Studio, LobeChat, DeepChat, OpenCat, AMA, AI as Workspace, FluentRead, AionUI), and **CC Switch** prepares the settings for Claude Code–style tools.',
+                'The ⋯ menu on each key row shortens this. **Copy Connection Info** copies the address and the key together, the **Chat** submenu hands them straight to a supported app (Cherry Studio, LobeChat, DeepChat, OpenCat, AMA, AI as Workspace, FluentRead, AionUI), and **CC Switch** prepares the settings for Claude Code–style tools, for Claude, Codex or Gemini.',
               ],
               [
                 'note',
@@ -794,11 +800,11 @@
             b: [
               [
                 'p',
-                '**Playground** runs a chat against any model your account can reach, straight from the console and without a key. It is the quickest way to compare two models on the same prompt, or to confirm a model is answering before you debug your own code.',
+                '**Playground** runs a chat against any model your account can reach, straight from the console and without a key. It is also linked from the site header, and opening it asks you to sign in first. It is the quickest way to compare two models on the same prompt, or to confirm a model is answering before you debug your own code.',
               ],
               [
                 'note',
-                'Playground calls are real API calls: they appear in Usage Logs and are charged to your balance like any other request.',
+                'Playground calls are real API calls: they appear in Request Logs and are charged to your balance like any other request.',
               ],
             ],
           },
@@ -806,15 +812,18 @@
             id: 'security',
             t: 'Account and security',
             b: [
-              ['p', '**Profile** holds everything about the account itself.'],
+              [
+                'p',
+                '**Account Settings** holds everything about the account itself.',
+              ],
               [
                 'ul',
                 [
-                  'Update your username and display name, and set the interface language.',
-                  'Bind an email address and change your password.',
+                  'Bind an email address, or a third-party account, under **Account Bindings**.',
+                  'Change your password under **Security**, and set the interface language under Language Preferences.',
                   'Turn on two-factor authentication (TOTP) and keep the backup codes somewhere safe.',
                   'Review recent login sessions and sign out any device you do not recognise.',
-                  'Generate a system access token if you want to manage the account programmatically. That token is for account management only — model calls use your API keys.',
+                  'Generate an **Access Token** if you want to manage the account programmatically. That token is for account management only — model calls use your API keys.',
                 ],
               ],
             ],
@@ -835,7 +844,7 @@
                   [
                     '403 insufficient quota',
                     'Your balance, or the key’s own quota, is exhausted.',
-                    'Add credit in Wallet, or raise the quota on the key.',
+                    'Add credit on the Credits page, or raise the quota on the key.',
                   ],
                   [
                     '403 other',
@@ -844,7 +853,7 @@
                   ],
                   [
                     '404 model not found',
-                    'The model ID does not exist, or is not available to the key’s group.',
+                    'The model ID does not exist, or the key’s service tier does not offer it.',
                     'Copy the ID from Models & Pricing.',
                   ],
                   [
@@ -861,7 +870,7 @@
               ],
               [
                 'p',
-                'Failed requests are recorded in Usage Logs too, so the log row is usually the fastest way to see what the gateway saw.',
+                'Failed requests are recorded in Request Logs too, so the log row is usually the fastest way to see what the gateway saw.',
               ],
             ],
           },
@@ -871,7 +880,7 @@
             b: [
               [
                 'p',
-                'Email [fairrouter@protonmail.com](mailto:fairrouter@protonmail.com). A person reads every message, normally within one business day and never later than seven. Include your account name, and for a specific request the time and model from Usage Logs.',
+                'Email [fairrouter@protonmail.com](mailto:fairrouter@protonmail.com). A person reads every message, normally within one business day and never later than seven. Include your account name, and for a specific request the time and model from Request Logs.',
               ],
               [
                 'p',
@@ -892,10 +901,10 @@
         copied: '已复制',
         nav: {
           console: '控制台',
-          pricing: '模型与价格',
-          about: '关于',
+          pricing: '模型与定价',
+          about: '联系我们',
           privacy: '隐私政策',
-          terms: '服务条款',
+          terms: '用户协议',
         },
         sections: [
           {
@@ -908,14 +917,14 @@
               ],
               [
                 'p',
-                '如果你调用过 OpenAI API，就已经会用 Fair Router：把 SDK 的接口地址指向 [[https://fairrouter.ai/v1]]，使用 Fair Router 的密钥，再从[模型与价格](/pricing)页面挑一个模型 ID 即可。',
+                '如果你调用过 OpenAI API，就已经会用 Fair Router：把 SDK 的接口地址指向 [[https://fairrouter.ai/v1]]，使用 Fair Router 的密钥，再从[模型与定价](/pricing)页面挑一个模型 ID 即可。',
               ],
               ['h3', '三步拿到第一个回复'],
               [
                 'steps',
                 [
                   '注册账号并登录。',
-                  '在**钱包**中充值，然后在 **API 密钥**中创建密钥。',
+                  '在**余额**页充值，然后在 **API 密钥**中创建密钥。',
                   '把任意兼容 OpenAI 的 SDK 或应用指向 [[https://fairrouter.ai/v1]]。',
                 ],
               ],
@@ -936,7 +945,7 @@
               ],
               [
                 'note',
-                '**登录后请尽快在「个人资料」中绑定邮箱。**找回密码时重置链接会发送到账号绑定的邮箱，没有邮箱就无法自助找回账号。',
+                '**登录后请尽快在「账户设置」→「账户绑定」中绑定邮箱。**找回密码时重置链接会发送到账号绑定的邮箱，没有邮箱就无法自助找回账号。',
               ],
             ],
           },
@@ -949,14 +958,13 @@
                 'table',
                 [
                   ['位置', '用途'],
-                  ['游乐场', '写代码之前，先在浏览器里试用模型。'],
-                  ['聊天', '把密钥直接交给已接入的聊天应用。'],
-                  ['概览 / 数据看板', '请求量、token 量和消费的趋势图表。'],
+                  ['在线测试', '写代码之前，先在浏览器里试用模型。'],
+                  ['数据看板', '请求量、token、费用与耗时的图表和明细。'],
                   ['API 密钥', '创建、编辑、禁用和删除密钥。'],
-                  ['使用日志', '每个请求一行：模型、token、费用。'],
-                  ['任务日志', '以异步任务方式提交的请求。'],
-                  ['钱包', '余额、充值和订单历史。'],
-                  ['个人资料', '邮箱、密码、两步验证、登录设备。'],
+                  ['请求日志', '每个请求一行：模型、token、费用、耗时。'],
+                  ['异步任务', '以异步任务方式提交的请求。'],
+                  ['余额', '当前余额、充值和订单历史。'],
+                  ['账户设置', '邮箱、密码、两步验证、登录设备。'],
                 ],
               ],
             ],
@@ -967,35 +975,42 @@
             b: [
               [
                 'p',
-                '进入 **API 密钥**，点击**创建 API 密钥**。只有名称是必填项，其余保持默认即可创建第一个密钥。',
+                '进入 **API 密钥**，点击**创建 API 密钥**。只有名称和服务等级是必填项，其余保持默认即可创建第一个密钥。',
               ],
               [
                 'table',
                 [
                   ['字段', '含义'],
                   [
-                    '名称',
-                    '密钥在列表中的标识。建议按使用它的应用或机器命名。',
+                    '名称 *',
+                    '必填。密钥在列表中的标识，建议按使用它的应用或机器命名。',
                   ],
                   [
-                    '分组',
-                    '密钥使用的路由分组，同时决定价格。除非客服另有说明，保持 [[default]] 即可。',
+                    '服务等级 *',
+                    '必填。以卡片形式列出账号可用的服务等级；等级同时决定价格和该密钥能调用的模型范围。',
                   ],
                   [
                     '过期时间',
                     '永不过期，或选择预设 / 自定义时间。过期后密钥停止工作，但仍保留在列表中。',
                   ],
-                  ['数量', '一次创建多个密钥。'],
+                  ['数量', '一次创建多个密钥（仅创建时可选）。'],
                   [
                     '额度 / 无限配额',
-                    '该密钥的消费上限。费用始终从账户余额扣除，这个上限只限制这一个密钥能花多少。',
+                    '默认开启无限配额；关掉后填写该密钥的消费上限。无论哪种方式，费用始终从账户余额扣除。',
                   ],
                   [
                     '模型限制',
-                    '限制该密钥只能调用指定模型 ID。留空表示允许目录中的全部模型。',
+                    '限制该密钥只能调用选中的模型。留空表示所选服务等级下的全部模型都可用。',
                   ],
-                  ['IP 白名单', '只接受来自这些地址或 CIDR 网段的请求。'],
+                  [
+                    'IP 白名单（支持 CIDR 表达式）',
+                    '只接受来自这些地址或 CIDR 网段的请求。',
+                  ],
                 ],
+              ],
+              [
+                'p',
+                '模型限制跟随所选服务等级：切换等级时，新等级不提供的模型会被移除，并在字段下方列出被移除的模型；如果因此清空了列表，会出现红色提示——列表为空意味着该密钥可以使用这一等级下的全部模型。',
               ],
               [
                 'p',
@@ -1026,7 +1041,7 @@
               ['h3', '可以用哪些模型 ID？'],
               [
                 'p',
-                '完整列表见[模型与价格](/pricing)页面，也可以通过模型接口获取：',
+                '完整列表见[模型与定价](/pricing)页面，也可以通过模型接口获取：',
               ],
               ['code', 'models'],
             ],
@@ -1065,20 +1080,20 @@
           },
           {
             id: 'models',
-            t: '模型与价格',
+            t: '模型与定价',
             b: [
               [
                 'p',
-                '[模型与价格](/pricing)页面对所有人公开，注册前即可查看。每一行给出每百万 token 的输入价和输出价（美元），并同时列出厂商官方定价，便于直接对比节省幅度。',
+                '[模型与定价](/pricing)页面对所有人公开，注册前即可查看。每一行给出每百万 token 的输入价和输出价（美元），并列出用于对比的基准价，便于直接看出节省幅度。**对比对象**可在厂商官方 API 与 OpenRouter 之间切换。',
               ],
               [
                 'p',
-                '文本模型按 token 计费：输入 token × 输入价，加上输出 token × 输出价。模型支持提示缓存时，命中缓存的输入 token 按更低的缓存价计费。每个请求的实际 token 数和实际扣费都可以在**使用日志**中查到。',
+                '文本模型按 token 计费：输入 token × 输入价，加上输出 token × 输出价。模型支持提示缓存时，命中缓存的输入 token 按更低的缓存价计费；列表页只展示输入价与输出价，缓存价在模型详情页查看。每个请求的实际 token 数和实际扣费都可以在**请求日志**中查到。',
               ],
               ['p', '余额和站点上的所有价格均以美元显示。'],
               [
                 'note',
-                '一个请求的价格由模型和发起请求的密钥所属分组共同决定。除非客服为你单独调整过分组，否则都运行在 [[default]] 分组，与公开定价页面一致。',
+                '一个请求的价格由模型和发起请求的密钥所选的服务等级共同决定。公开定价页面顶部可以切换价格档位，调用之前就能看到该等级对应的价格。',
               ],
             ],
           },
@@ -1093,9 +1108,9 @@
               [
                 'steps',
                 [
-                  '打开控制台的**钱包**页面，顶部卡片显示当前余额、总用量和 API 请求数。',
+                  '打开控制台的**余额**页面，顶部卡片显示当前余额、总用量和 API 请求数。',
                   '选择一个预设金额，或输入自定义金额。',
-                  '进入收银台，使用银行卡、银行转账或微信支付完成付款。',
+                  '进入收银台，使用页面上提供的任一支付方式完成付款。',
                   '支付确认后余额立即到账，历史充值记录在订单历史中查看。',
                 ],
               ],
@@ -1105,7 +1120,7 @@
               ],
               [
                 'note',
-                '系统不会自动充值。余额为零时，请求会返回额度不足的错误，直到重新充值为止，因此请留意钱包卡片或概览页面的余额。',
+                '系统不会自动充值。余额为零时，请求会返回额度不足的错误，直到重新充值为止，因此请留意余额页面或数据看板上的余额卡片。',
               ],
             ],
           },
@@ -1115,15 +1130,15 @@
             b: [
               [
                 'p',
-                '**使用日志**为每个请求记录一行，包含时间、模型、密钥、输入与输出 token 以及扣费金额。可以按时间范围、模型或密钥筛选定位某一次调用，也可以把筛选结果导出，在控制台之外使用。',
+                '**请求日志**为每个请求记录一行，包含时间、模型、密钥、输入与输出 token、耗时以及扣费金额。可以按时间范围、模型、分组或密钥名称筛选，也可以用请求 ID（含上游厂商返回的上游请求 ID）精确定位某一次调用。',
               ],
               [
                 'p',
-                '**任务日志**记录以异步任务方式提交、而非在响应中直接返回结果的请求。',
+                '**异步任务**记录以异步任务方式提交、而非在响应中直接返回结果的请求。',
               ],
               [
                 'p',
-                '**概览**和**数据看板**把同一批数据做成图表——每日消费、各模型请求量——这是发现某个客户端调用量异常的最快方式。',
+                '**数据看板**把同一批数据做成图表——所选时间范围内的请求数、token、费用与完成耗时——下方的用量明细还能按模型或按密钥拆分，给出实际费用、官方价预估费用与节省额。这是发现某个客户端调用量异常的最快方式。',
               ],
             ],
           },
@@ -1140,12 +1155,12 @@
                 [
                   '接口地址：[[https://fairrouter.ai/v1]]——部分应用只需要填 [[https://fairrouter.ai]]，会自行拼接 [[/v1]]。',
                   'API 密钥：你的 [[sk-…]] 密钥。',
-                  '模型：来自[模型与价格](/pricing)页面的模型 ID。',
+                  '模型：来自[模型与定价](/pricing)页面的模型 ID。',
                 ],
               ],
               [
                 'p',
-                '每个密钥行的 ⋯ 菜单可以简化这一步：**复制连接信息**会把地址和密钥一起复制；**聊天**子菜单可直接把配置交给已支持的应用（Cherry Studio、LobeChat、DeepChat、OpenCat、AMA 问天、AI as Workspace、流畅阅读、AionUI）；**CC Switch** 则用于 Claude Code 一类工具的配置。',
+                '每个密钥行的 ⋯ 菜单可以简化这一步：**复制连接信息**会把地址和密钥一起复制；**聊天**子菜单可直接把配置交给已支持的应用（Cherry Studio、LobeChat、DeepChat、OpenCat、AMA 问天、AI as Workspace、流畅阅读、AionUI）；**CC Switch** 则用于 Claude Code 一类工具的配置，可选 Claude、Codex 或 Gemini。',
               ],
               [
                 'note',
@@ -1155,15 +1170,15 @@
           },
           {
             id: 'playground',
-            t: '在游乐场中试用',
+            t: '在「在线测试」中试用',
             b: [
               [
                 'p',
-                '**游乐场**可以直接在控制台中与账号可用的任意模型对话，无需密钥。想用同一个提示词对比两个模型，或者在排查自己代码之前先确认模型能正常回复，用它最快。',
+                '**在线测试**可以直接在控制台中与账号可用的任意模型对话，无需密钥。公开页头部也有入口，未登录时会先跳转登录。想用同一个提示词对比两个模型，或者在排查自己代码之前先确认模型能正常回复，用它最快。',
               ],
               [
                 'note',
-                '游乐场的调用是真实的 API 调用：同样会记录在使用日志中，并从余额扣费。',
+                '在线测试的调用是真实的 API 调用：同样会记录在请求日志中，并从余额扣费。',
               ],
             ],
           },
@@ -1171,15 +1186,15 @@
             id: 'security',
             t: '账号与安全',
             b: [
-              ['p', '**个人资料**页面管理账号本身的一切设置。'],
+              ['p', '**账户设置**页面管理账号本身的一切设置。'],
               [
                 'ul',
                 [
-                  '修改用户名和显示名称，设置界面语言。',
-                  '绑定邮箱、修改密码。',
+                  '在**账户绑定**中绑定邮箱或第三方账号。',
+                  '在**安全**中更改密码，在语言偏好中设置界面语言。',
                   '开启两步验证（TOTP），并妥善保存备份码。',
                   '查看近期登录会话，退出任何不认识的设备。',
-                  '需要以程序方式管理账号时，可生成系统访问令牌。该令牌仅用于账号管理，调用模型请使用 API 密钥。',
+                  '需要以程序方式管理账号时，可在安全中生成**访问令牌**。该令牌仅用于账号管理，调用模型请使用 API 密钥。',
                 ],
               ],
             ],
@@ -1200,7 +1215,7 @@
                   [
                     '403 额度不足',
                     '账户余额或该密钥自身的额度已用尽。',
-                    '在钱包中充值，或提高该密钥的额度。',
+                    '在余额页面充值，或提高该密钥的额度。',
                   ],
                   [
                     '403 其他',
@@ -1209,8 +1224,8 @@
                   ],
                   [
                     '404 模型不存在',
-                    '模型 ID 不存在，或该密钥所属分组不可用。',
-                    '从模型与价格页面复制正确的模型 ID。',
+                    '模型 ID 不存在，或该密钥所选服务等级不提供该模型。',
+                    '从模型与定价页面复制正确的模型 ID。',
                   ],
                   [
                     '429',
@@ -1226,7 +1241,7 @@
               ],
               [
                 'p',
-                '失败的请求同样会记录在使用日志中，查看对应日志行通常是最快的排查方式。',
+                '失败的请求同样会记录在请求日志中，查看对应日志行通常是最快的排查方式。',
               ],
             ],
           },
@@ -1236,7 +1251,7 @@
             b: [
               [
                 'p',
-                '发送邮件至 [fairrouter@protonmail.com](mailto:fairrouter@protonmail.com)。每封邮件都有专人查看，通常在 1 个工作日内回复，最迟不超过 7 天。请附上账号名称；如果是某一次具体请求的问题，请附上使用日志中的时间和模型。',
+                '发送邮件至 [fairrouter@protonmail.com](mailto:fairrouter@protonmail.com)。每封邮件都有专人查看，通常在 1 个工作日内回复，最迟不超过 7 天。请附上账号名称；如果是某一次具体请求的问题，请附上请求日志中的时间和模型。',
               ],
               [
                 'p',
@@ -1257,10 +1272,10 @@
         copied: '已複製',
         nav: {
           console: '控制台',
-          pricing: '模型與價格',
-          about: '關於',
+          pricing: '模型與定價',
+          about: '聯絡我們',
           privacy: '隱私政策',
-          terms: '服務條款',
+          terms: '使用者協議',
         },
         sections: [
           {
@@ -1273,14 +1288,14 @@
               ],
               [
                 'p',
-                '如果你呼叫過 OpenAI API，就已經會用 Fair Router：把 SDK 的介面位址指向 [[https://fairrouter.ai/v1]]，使用 Fair Router 的金鑰，再從[模型與價格](/pricing)頁面挑一個模型 ID 即可。',
+                '如果你呼叫過 OpenAI API，就已經會用 Fair Router：把 SDK 的介面位址指向 [[https://fairrouter.ai/v1]]，使用 Fair Router 的金鑰，再從[模型與定價](/pricing)頁面挑一個模型 ID 即可。',
               ],
               ['h3', '三步取得第一個回覆'],
               [
                 'steps',
                 [
                   '註冊帳號並登入。',
-                  '在**錢包**中儲值，然後在 **API 金鑰**中建立金鑰。',
+                  '在**餘額**頁儲值，然後在 **API 金鑰**中建立金鑰。',
                   '把任意相容 OpenAI 的 SDK 或應用程式指向 [[https://fairrouter.ai/v1]]。',
                 ],
               ],
@@ -1301,7 +1316,7 @@
               ],
               [
                 'note',
-                '**登入後請盡快在「個人資料」中綁定電子郵件。**忘記密碼時，重設連結會寄到帳號綁定的信箱，沒有信箱就無法自助取回帳號。',
+                '**登入後請盡快在「帳戶設定」→「用戶連結」中綁定電子郵件。**忘記密碼時，重設連結會寄到帳號綁定的信箱，沒有信箱就無法自助取回帳號。',
               ],
             ],
           },
@@ -1314,14 +1329,13 @@
                 'table',
                 [
                   ['位置', '用途'],
-                  ['遊樂場', '寫程式之前，先在瀏覽器中試用模型。'],
-                  ['聊天', '把金鑰直接交給已接入的聊天應用程式。'],
-                  ['概覽 / 數據看板', '請求量、token 量與消費的趨勢圖表。'],
+                  ['線上測試', '寫程式之前，先在瀏覽器中試用模型。'],
+                  ['數據看板', '請求量、token、費用與耗時的圖表與明細。'],
                   ['API 金鑰', '建立、編輯、停用與刪除金鑰。'],
-                  ['使用日誌', '每個請求一列：模型、token、費用。'],
-                  ['任務日誌', '以非同步任務方式送出的請求。'],
-                  ['錢包', '餘額、儲值與訂單歷史。'],
-                  ['個人資料', '電子郵件、密碼、兩步驟驗證、登入裝置。'],
+                  ['請求日誌', '每個請求一列：模型、token、費用、耗時。'],
+                  ['非同步任務', '以非同步任務方式送出的請求。'],
+                  ['餘額', '目前餘額、儲值與訂單歷史。'],
+                  ['帳戶設定', '電子郵件、密碼、兩步驟驗證、登入裝置。'],
                 ],
               ],
             ],
@@ -1332,35 +1346,42 @@
             b: [
               [
                 'p',
-                '進入 **API 金鑰**，點選**建立 API 金鑰**。只有名稱是必填，其餘維持預設即可建立第一組金鑰。',
+                '進入 **API 金鑰**，點選**建立 API 金鑰**。只有名稱與服務等級是必填，其餘維持預設即可建立第一組金鑰。',
               ],
               [
                 'table',
                 [
                   ['欄位', '說明'],
                   [
-                    '名稱',
-                    '金鑰在清單中的識別名稱，建議依使用它的應用或機器命名。',
+                    '名稱 *',
+                    '必填。金鑰在清單中的識別名稱，建議依使用它的應用或機器命名。',
                   ],
                   [
-                    '分組',
-                    '金鑰使用的路由分組，同時決定價格。除非客服另有說明，維持 [[default]] 即可。',
+                    '服務等級 *',
+                    '必填。以卡片列出帳號可用的服務等級；等級同時決定價格與該金鑰能呼叫的模型範圍。',
                   ],
                   [
                     '過期時間',
                     '永不過期，或選擇預設 / 自訂時間。過期後金鑰停止運作，但仍保留在清單中。',
                   ],
-                  ['數量', '一次建立多組金鑰。'],
+                  ['數量', '一次建立多組金鑰（僅建立時可選）。'],
                   [
                     '額度 / 無限配額',
-                    '此金鑰的消費上限。費用一律從帳戶餘額扣除，這個上限只限制這一組金鑰能花多少。',
+                    '預設開啟無限配額；關閉後填入此金鑰的消費上限。無論哪一種，費用一律從帳戶餘額扣除。',
                   ],
                   [
                     '模型限制',
-                    '限制該金鑰只能呼叫指定的模型 ID。留空表示允許目錄中的全部模型。',
+                    '限制該金鑰只能呼叫選取的模型。留空表示所選服務等級下的全部模型都可用。',
                   ],
-                  ['IP 白名單', '只接受來自這些位址或 CIDR 網段的請求。'],
+                  [
+                    'IP 白名單（支援 CIDR 運算式）',
+                    '只接受來自這些位址或 CIDR 網段的請求。',
+                  ],
                 ],
+              ],
+              [
+                'p',
+                '模型限制會跟隨所選的服務等級：切換等級時，新等級不提供的模型會被移除，並在欄位下方列出被移除的模型；若因此清空清單，會出現紅色提示——清單為空代表該金鑰可使用這一等級下的全部模型。',
               ],
               [
                 'p',
@@ -1391,7 +1412,7 @@
               ['h3', '可以使用哪些模型 ID？'],
               [
                 'p',
-                '完整清單見[模型與價格](/pricing)頁面，也可以透過模型介面取得：',
+                '完整清單見[模型與定價](/pricing)頁面，也可以透過模型介面取得：',
               ],
               ['code', 'models'],
             ],
@@ -1430,20 +1451,20 @@
           },
           {
             id: 'models',
-            t: '模型與價格',
+            t: '模型與定價',
             b: [
               [
                 'p',
-                '[模型與價格](/pricing)頁面對所有人公開，註冊前即可查看。每一列列出每百萬 token 的輸入價與輸出價（美元），並同時附上廠商官方定價，方便直接比較節省幅度。',
+                '[模型與定價](/pricing)頁面對所有人公開，註冊前即可查看。每一列列出每百萬 token 的輸入價與輸出價（美元），並附上用於比較的基準價，方便直接看出節省幅度。**比較對象**可在廠商官方 API 與 OpenRouter 之間切換。',
               ],
               [
                 'p',
-                '文字模型依 token 計費：輸入 token × 輸入價，加上輸出 token × 輸出價。模型支援提示快取時，命中快取的輸入 token 以較低的快取價計費。每個請求的實際 token 數與實際扣款都可在**使用日誌**中查到。',
+                '文字模型依 token 計費：輸入 token × 輸入價，加上輸出 token × 輸出價。模型支援提示快取時，命中快取的輸入 token 以較低的快取價計費；清單頁只顯示輸入價與輸出價，快取價在模型詳情頁查看。每個請求的實際 token 數與實際扣款都可在**請求日誌**中查到。',
               ],
               ['p', '餘額與站上所有價格均以美元顯示。'],
               [
                 'note',
-                '一個請求的價格由模型與送出請求的金鑰所屬分組共同決定。除非客服為你另行調整分組，否則都執行在 [[default]] 分組，與公開定價頁面一致。',
+                '一個請求的價格由模型與送出請求的金鑰所選的服務等級共同決定。公開定價頁面上方可切換價格檔位，呼叫之前就能看到該等級對應的價格。',
               ],
             ],
           },
@@ -1455,9 +1476,9 @@
               [
                 'steps',
                 [
-                  '開啟控制台的**錢包**頁面，上方卡片顯示目前餘額、總用量與 API 請求數。',
+                  '開啟控制台的**餘額**頁面，上方卡片顯示目前餘額、總用量與 API 請求數。',
                   '選擇預設金額，或輸入自訂金額。',
-                  '進入結帳頁，使用信用卡、銀行轉帳或微信支付完成付款。',
+                  '進入結帳頁，使用頁面上提供的任一支付方式完成付款。',
                   '付款確認後餘額立即到帳，歷史儲值紀錄可在訂單歷史查看。',
                 ],
               ],
@@ -1467,7 +1488,7 @@
               ],
               [
                 'note',
-                '系統不會自動儲值。餘額歸零時，請求會回傳額度不足的錯誤，直到重新儲值為止，請留意錢包卡片或概覽頁面的餘額。',
+                '系統不會自動儲值。餘額歸零時，請求會回傳額度不足的錯誤，直到重新儲值為止，請留意餘額頁面或數據看板上的餘額卡片。',
               ],
             ],
           },
@@ -1477,15 +1498,15 @@
             b: [
               [
                 'p',
-                '**使用日誌**為每個請求記錄一列，包含時間、模型、金鑰、輸入與輸出 token 以及扣款金額。可依時間範圍、模型或金鑰篩選定位某次呼叫，也可將篩選結果匯出，在控制台之外使用。',
+                '**請求日誌**為每個請求記錄一列，包含時間、模型、金鑰、輸入與輸出 token、耗時以及扣款金額。可依時間範圍、模型、分組或金鑰名稱篩選，也可用請求 ID（含上游廠商回傳的上游請求 ID）精確定位某次呼叫。',
               ],
               [
                 'p',
-                '**任務日誌**記錄以非同步任務方式送出、而非直接在回應中返回結果的請求。',
+                '**非同步任務**記錄以非同步任務方式送出、而非直接在回應中返回結果的請求。',
               ],
               [
                 'p',
-                '**概覽**與**數據看板**把同一批資料製成圖表——每日消費、各模型請求量——這是發現某個用戶端呼叫量異常的最快方式。',
+                '**數據看板**把同一批資料製成圖表——所選時間範圍內的請求數、token、費用與完成耗時——下方的用量明細還能依模型或依金鑰拆分，列出實際費用、官方價預估費用與節省額。這是發現某個用戶端呼叫量異常的最快方式。',
               ],
             ],
           },
@@ -1502,12 +1523,12 @@
                 [
                   '介面位址：[[https://fairrouter.ai/v1]]——部分應用只需填 [[https://fairrouter.ai]]，會自行補上 [[/v1]]。',
                   'API 金鑰：你的 [[sk-…]] 金鑰。',
-                  '模型：來自[模型與價格](/pricing)頁面的模型 ID。',
+                  '模型：來自[模型與定價](/pricing)頁面的模型 ID。',
                 ],
               ],
               [
                 'p',
-                '每列金鑰的 ⋯ 選單可簡化這個步驟：**複製連接資訊**會把位址與金鑰一起複製；**聊天**子選單可直接把設定交給已支援的應用（Cherry Studio、LobeChat、DeepChat、OpenCat、AMA 問天、AI as Workspace、流暢閱讀、AionUI）；**CC Switch** 則用於 Claude Code 這類工具的設定。',
+                '每列金鑰的 ⋯ 選單可簡化這個步驟：**複製連接資訊**會把位址與金鑰一起複製；**聊天**子選單可直接把設定交給已支援的應用（Cherry Studio、LobeChat、DeepChat、OpenCat、AMA 問天、AI as Workspace、流暢閱讀、AionUI）；**CC Switch** 則用於 Claude Code 這類工具的設定，可選 Claude、Codex 或 Gemini。',
               ],
               [
                 'note',
@@ -1517,15 +1538,15 @@
           },
           {
             id: 'playground',
-            t: '在遊樂場中試用',
+            t: '在「線上測試」中試用',
             b: [
               [
                 'p',
-                '**遊樂場**可直接在控制台與帳號可用的任意模型對話，不需要金鑰。想用同一段提示詞比較兩個模型，或在除錯自己的程式前先確認模型能正常回覆，用它最快。',
+                '**線上測試**可直接在控制台與帳號可用的任意模型對話，不需要金鑰。公開頁頂部導覽也有入口，未登入時會先導向登入。想用同一段提示詞比較兩個模型，或在除錯自己的程式前先確認模型能正常回覆，用它最快。',
               ],
               [
                 'note',
-                '遊樂場的呼叫是真實的 API 呼叫：同樣會記錄在使用日誌中，並從餘額扣款。',
+                '線上測試的呼叫是真實的 API 呼叫：同樣會記錄在請求日誌中，並從餘額扣款。',
               ],
             ],
           },
@@ -1533,15 +1554,15 @@
             id: 'security',
             t: '帳號與安全',
             b: [
-              ['p', '**個人資料**頁面管理帳號本身的所有設定。'],
+              ['p', '**帳戶設定**頁面管理帳號本身的所有設定。'],
               [
                 'ul',
                 [
-                  '修改使用者名稱與顯示名稱，設定介面語言。',
-                  '綁定電子郵件、修改密碼。',
+                  '在**用戶連結**中綁定電子郵件或第三方帳號。',
+                  '在**安全**中修改密碼，在語言偏好中設定介面語言。',
                   '開啟兩步驟驗證（TOTP），並妥善保存備援碼。',
                   '檢視近期登入工作階段，登出任何不認識的裝置。',
-                  '需要以程式方式管理帳號時，可產生系統存取權杖。該權杖僅供帳號管理，呼叫模型請使用 API 金鑰。',
+                  '需要以程式方式管理帳號時，可在安全中產生**存取令牌**。該令牌僅供帳號管理，呼叫模型請使用 API 金鑰。',
                 ],
               ],
             ],
@@ -1562,7 +1583,7 @@
                   [
                     '403 額度不足',
                     '帳戶餘額或該金鑰本身的額度已用盡。',
-                    '在錢包中儲值，或提高該金鑰的額度。',
+                    '在餘額頁面儲值，或提高該金鑰的額度。',
                   ],
                   [
                     '403 其他',
@@ -1571,8 +1592,8 @@
                   ],
                   [
                     '404 模型不存在',
-                    '模型 ID 不存在，或該金鑰所屬分組無法使用。',
-                    '從模型與價格頁面複製正確的模型 ID。',
+                    '模型 ID 不存在，或該金鑰所選服務等級不提供該模型。',
+                    '從模型與定價頁面複製正確的模型 ID。',
                   ],
                   ['429', '超出請求頻率限制。', '降低請求頻率，並採退避重試。'],
                   [
@@ -1584,7 +1605,7 @@
               ],
               [
                 'p',
-                '失敗的請求同樣會記錄在使用日誌中，查看對應的日誌列通常是最快的排查方式。',
+                '失敗的請求同樣會記錄在請求日誌中，查看對應的日誌列通常是最快的排查方式。',
               ],
             ],
           },
@@ -1594,7 +1615,7 @@
             b: [
               [
                 'p',
-                '請寄信至 [fairrouter@protonmail.com](mailto:fairrouter@protonmail.com)。每封信都有專人閱讀，通常於 1 個工作天內回覆，最遲不超過 7 天。請附上帳號名稱；若是特定請求的問題，請附上使用日誌中的時間與模型。',
+                '請寄信至 [fairrouter@protonmail.com](mailto:fairrouter@protonmail.com)。每封信都有專人閱讀，通常於 1 個工作天內回覆，最遲不超過 7 天。請附上帳號名稱；若是特定請求的問題，請附上請求日誌中的時間與模型。',
               ],
               [
                 'p',
@@ -1615,8 +1636,8 @@
         copied: 'Copié',
         nav: {
           console: 'Console',
-          pricing: 'Modèles & Tarifs',
-          about: 'À propos',
+          pricing: 'Modèles & tarifs',
+          about: 'Nous contacter',
           privacy: 'Politique de confidentialité',
           terms: 'Conditions d’utilisation',
         },
@@ -1631,14 +1652,14 @@
               ],
               [
                 'p',
-                'Si vous avez déjà appelé l’API OpenAI, vous savez déjà utiliser Fair Router : pointez votre SDK vers [[https://fairrouter.ai/v1]], utilisez votre clé Fair Router et choisissez un identifiant de modèle sur la page [Modèles & Tarifs](/pricing).',
+                'Si vous avez déjà appelé l’API OpenAI, vous savez déjà utiliser Fair Router : pointez votre SDK vers [[https://fairrouter.ai/v1]], utilisez votre clé Fair Router et choisissez un identifiant de modèle sur la page [Modèles & tarifs](/pricing).',
               ],
               ['h3', 'Trois étapes jusqu’à la première réponse'],
               [
                 'steps',
                 [
                   'Créez un compte et connectez-vous.',
-                  'Créditez votre compte dans **Portefeuille**, puis créez une clé dans **Clés API**.',
+                  'Créditez votre compte sur la page **Crédits**, puis créez une clé dans **Clés API**.',
                   'Pointez n’importe quel SDK ou application compatible OpenAI vers [[https://fairrouter.ai/v1]].',
                 ],
               ],
@@ -1659,7 +1680,7 @@
               ],
               [
                 'note',
-                '**Ajoutez une adresse e-mail dans Profil dès votre première connexion.** La récupération de mot de passe envoie un lien de réinitialisation à l’adresse enregistrée : sans elle, aucun moyen de récupérer seul un compte verrouillé.',
+                '**Ajoutez une adresse e-mail dans Paramètres du compte → Associations de compte dès votre première connexion.** La récupération de mot de passe envoie un lien de réinitialisation à l’adresse enregistrée : sans elle, aucun moyen de récupérer seul un compte verrouillé.',
               ],
             ],
           },
@@ -1676,35 +1697,31 @@
                 [
                   ['Où', 'Ce que vous y faites'],
                   [
-                    'Aire de jeux',
+                    'Test en ligne',
                     'Essayer un modèle dans le navigateur avant d’écrire du code.',
                   ],
                   [
-                    'Discuter',
-                    'Transmettre une clé directement à une application de chat connectée.',
-                  ],
-                  [
-                    'Vue d’ensemble / Tableau de bord',
-                    'Graphiques des requêtes, des tokens et des dépenses dans le temps.',
+                    'Tableau de bord',
+                    'Graphiques et détails des requêtes, des tokens, des dépenses et des temps de réponse.',
                   ],
                   [
                     'Clés API',
                     'Créer, modifier, désactiver et supprimer des clés.',
                   ],
                   [
-                    'Journaux d’utilisation',
-                    'Une ligne par requête : modèle, tokens, coût.',
+                    'Journaux des requêtes',
+                    'Une ligne par requête : modèle, tokens, coût, latence.',
                   ],
                   [
-                    'Journaux de tâches',
+                    'Tâches asynchrones',
                     'Requêtes soumises sous forme de tâches asynchrones.',
                   ],
                   [
-                    'Portefeuille',
+                    'Crédits',
                     'Solde, rechargements et historique des commandes.',
                   ],
                   [
-                    'Profil',
+                    'Paramètres du compte',
                     'E-mail, mot de passe, double authentification, sessions.',
                   ],
                 ],
@@ -1717,38 +1734,45 @@
             b: [
               [
                 'p',
-                'Allez dans **Clés API** puis **Créer une clé API**. Seul le nom est obligatoire ; les valeurs par défaut conviennent pour une première clé.',
+                'Allez dans **Clés API** puis **Créer une clé API**. Seuls le nom et le niveau de service sont obligatoires ; les valeurs par défaut conviennent pour une première clé.',
               ],
               [
                 'table',
                 [
                   ['Champ', 'Signification'],
                   [
-                    'Nom',
-                    'Le libellé de la clé dans votre liste. Nommez-la d’après l’application ou la machine qui l’utilisera.',
+                    'Nom *',
+                    'Obligatoire. Le libellé de la clé dans votre liste : nommez-la d’après l’application ou la machine qui l’utilisera.',
                   ],
                   [
-                    'Groupe',
-                    'Le groupe de routage utilisé par la clé, qui détermine aussi le prix. Laissez [[default]] sauf indication contraire du support.',
+                    'Niveau de service *',
+                    'Obligatoire. Les niveaux accessibles à votre compte sont présentés sous forme de cartes ; le niveau détermine à la fois le prix et les modèles que la clé peut atteindre.',
                   ],
                   [
                     'Heure d’expiration',
                     'Jamais, ou une échéance prédéfinie ou personnalisée. Une clé expirée cesse de fonctionner mais reste dans la liste.',
                   ],
-                  ['Quantité', 'Créer plusieurs clés en une fois.'],
+                  [
+                    'Quantité',
+                    'Créer plusieurs clés en une fois (à la création seulement).',
+                  ],
                   [
                     'Quota / Quota illimité',
-                    'Un plafond de dépense pour cette clé. La consommation est toujours déduite du solde du compte ; le plafond limite seulement ce que cette clé peut dépenser.',
+                    'Le quota illimité est actif par défaut. Désactivez-le pour plafonner la dépense de cette clé ; dans tous les cas la consommation est déduite du solde du compte.',
                   ],
                   [
                     'Limites du modèle',
-                    'Restreindre la clé à certains identifiants de modèles. Laissez vide pour autoriser tout le catalogue.',
+                    'Restreindre la clé à certains modèles. Laissez vide pour autoriser tous les modèles du niveau de service choisi.',
                   ],
                   [
-                    'Liste blanche d’IP',
+                    'Liste blanche d’IP (CIDR pris en charge)',
                     'N’accepter que les requêtes provenant de ces adresses ou plages CIDR.',
                   ],
                 ],
+              ],
+              [
+                'p',
+                'Les limites du modèle suivent le niveau choisi : en changeant de niveau, les modèles que le nouveau niveau ne propose pas sont retirés de la liste, avec une note qui les nomme. Si la liste devient vide, un avertissement rouge apparaît — une liste vide signifie que la clé peut utiliser tous les modèles de ce niveau.',
               ],
               [
                 'p',
@@ -1782,7 +1806,7 @@
               ['h3', 'Quels identifiants de modèles utiliser ?'],
               [
                 'p',
-                'La liste exacte figure sur [Modèles & Tarifs](/pricing) et est renvoyée par le point de terminaison des modèles :',
+                'La liste exacte figure sur [Modèles & tarifs](/pricing) et est renvoyée par le point de terminaison des modèles :',
               ],
               ['code', 'models'],
             ],
@@ -1831,11 +1855,11 @@
             b: [
               [
                 'p',
-                'La page [Modèles & Tarifs](/pricing) est publique : vous pouvez la consulter avant de créer un compte. Chaque ligne indique le prix d’entrée et de sortie par million de tokens en dollars américains, à côté du tarif officiel du fournisseur, afin que l’économie soit visible.',
+                'La page [Modèles & tarifs](/pricing) est publique : vous pouvez la consulter avant de créer un compte. Chaque ligne indique le prix d’entrée et de sortie par million de tokens en dollars américains, à côté d’un tarif de référence, afin que l’économie soit visible. **Comparer avec** bascule cette référence entre l’API officielle du fournisseur et OpenRouter.',
               ],
               [
                 'p',
-                'Les modèles de texte sont facturés au token : tokens d’entrée × prix d’entrée, plus tokens de sortie × prix de sortie. Lorsqu’un modèle prend en charge la mise en cache des prompts, les tokens d’entrée servis depuis le cache sont facturés au tarif de cache, plus bas. Le décompte exact et le montant exact de chaque requête apparaissent dans les **Journaux d’utilisation**.',
+                'Les modèles de texte sont facturés au token : tokens d’entrée × prix d’entrée, plus tokens de sortie × prix de sortie. Lorsqu’un modèle prend en charge la mise en cache des prompts, les tokens d’entrée servis depuis le cache sont facturés au tarif de cache, plus bas ; le tableau affiche l’entrée et la sortie, et les tarifs de cache figurent sur la page de détail de chaque modèle. Le décompte exact et le montant exact de chaque requête apparaissent dans les **Journaux des requêtes**.',
               ],
               [
                 'p',
@@ -1843,7 +1867,7 @@
               ],
               [
                 'note',
-                'Le prix appliqué à une requête dépend du modèle et du groupe de la clé qui l’a émise. Sauf si le support vous a placé dans un groupe particulier, tout passe par [[default]] et correspond à la page de tarifs publique.',
+                'Le prix appliqué à une requête dépend du modèle et du niveau de service de la clé qui l’a émise. La page de tarifs publique propose un sélecteur de niveau tarifaire : vous pouvez donc lire les tarifs du niveau utilisé par votre clé avant même de l’appeler.',
               ],
             ],
           },
@@ -1858,9 +1882,9 @@
               [
                 'steps',
                 [
-                  'Ouvrez **Portefeuille** dans la console. Les cartes du haut indiquent le solde actuel, l’utilisation totale et le nombre de requêtes API.',
+                  'Ouvrez **Crédits** dans la console. Les cartes du haut indiquent le solde actuel, l’utilisation totale et le nombre de requêtes API.',
                   'Choisissez un montant prédéfini ou saisissez un montant personnalisé.',
-                  'Passez au paiement et réglez par carte, virement bancaire ou WeChat Pay.',
+                  'Passez au paiement et réglez avec l’un des moyens proposés sur la page.',
                   'Le solde est mis à jour dès la confirmation du paiement. Les rechargements passés figurent dans l’historique des commandes.',
                 ],
               ],
@@ -1870,7 +1894,7 @@
               ],
               [
                 'note',
-                'Il n’y a pas de rechargement automatique. À solde nul, les requêtes sont rejetées avec une erreur de quota insuffisant jusqu’au prochain rechargement : surveillez la carte Portefeuille ou la page Vue d’ensemble.',
+                'Il n’y a pas de rechargement automatique. À solde nul, les requêtes sont rejetées avec une erreur de quota insuffisant jusqu’au prochain rechargement : surveillez la page Crédits ou la carte de solde du tableau de bord.',
               ],
             ],
           },
@@ -1880,15 +1904,15 @@
             b: [
               [
                 'p',
-                'Les **Journaux d’utilisation** affichent une ligne par requête avec l’heure, le modèle, la clé, les tokens d’entrée et de sortie, et le montant facturé. Filtrez par période, modèle ou clé pour retrouver un appel précis, et exportez les lignes filtrées si vous en avez besoin hors de la console.',
+                'Les **Journaux des requêtes** affichent une ligne par requête avec l’heure, le modèle, la clé, les tokens d’entrée et de sortie, la latence et le montant facturé. Filtrez par période, modèle, groupe ou nom de clé, ou recherchez par identifiant de requête — y compris l’identifiant de requête en amont renvoyé par le fournisseur — pour retrouver un appel précis.',
               ],
               [
                 'p',
-                'Les **Journaux de tâches** couvrent les requêtes soumises comme tâches asynchrones plutôt que traitées dans la réponse.',
+                'Les **Tâches asynchrones** couvrent les requêtes soumises comme tâches asynchrones plutôt que traitées dans la réponse.',
               ],
               [
                 'p',
-                '**Vue d’ensemble** et **Tableau de bord** transforment ces mêmes données en graphiques — dépense par jour, requêtes par modèle — le moyen le plus rapide de repérer un client qui appelle plus que prévu.',
+                'Le **Tableau de bord** transforme ces mêmes données en graphiques — requêtes, tokens, dépenses et temps de réponse sur la période choisie — et le détail d’utilisation en dessous les ventile par modèle ou par clé, avec le coût réel, le coût estimé aux tarifs officiels et l’économie. C’est le moyen le plus rapide de repérer un client qui appelle plus que prévu.',
               ],
             ],
           },
@@ -1905,12 +1929,12 @@
                 [
                   'URL de base de l’API : [[https://fairrouter.ai/v1]] — certaines applications demandent [[https://fairrouter.ai]] et ajoutent [[/v1]] elles-mêmes.',
                   'Clé API : votre clé [[sk-…]].',
-                  'Modèle : un identifiant issu de [Modèles & Tarifs](/pricing).',
+                  'Modèle : un identifiant issu de [Modèles & tarifs](/pricing).',
                 ],
               ],
               [
                 'p',
-                'Le menu ⋯ de chaque ligne raccourcit l’opération : **Copier les infos de connexion** copie l’adresse et la clé ensemble, le sous-menu **Discuter** les transmet directement à une application prise en charge (Cherry Studio, LobeChat, DeepChat, OpenCat, AMA, AI as Workspace, FluentRead, AionUI), et **CC Switch** prépare la configuration des outils de type Claude Code.',
+                'Le menu ⋯ de chaque ligne raccourcit l’opération : **Copier les infos de connexion** copie l’adresse et la clé ensemble, le sous-menu **Discuter** les transmet directement à une application prise en charge (Cherry Studio, LobeChat, DeepChat, OpenCat, AMA, AI as Workspace, FluentRead, AionUI), et **CC Switch** prépare la configuration des outils de type Claude Code, pour Claude, Codex ou Gemini.',
               ],
               [
                 'note',
@@ -1920,15 +1944,15 @@
           },
           {
             id: 'playground',
-            t: 'Tester dans l’Aire de jeux',
+            t: 'Tester dans le Test en ligne',
             b: [
               [
                 'p',
-                'L’**Aire de jeux** lance une conversation avec n’importe quel modèle accessible à votre compte, directement depuis la console et sans clé. C’est le moyen le plus rapide de comparer deux modèles sur le même prompt, ou de vérifier qu’un modèle répond avant de déboguer votre propre code.',
+                'Le **Test en ligne** lance une conversation avec n’importe quel modèle accessible à votre compte, directement depuis la console et sans clé. Il est aussi accessible depuis l’en-tête du site, et son ouverture demande d’abord de se connecter. C’est le moyen le plus rapide de comparer deux modèles sur le même prompt, ou de vérifier qu’un modèle répond avant de déboguer votre propre code.',
               ],
               [
                 'note',
-                'Les appels depuis l’Aire de jeux sont de vrais appels API : ils apparaissent dans les journaux d’utilisation et sont débités de votre solde comme les autres.',
+                'Les appels depuis le Test en ligne sont de vrais appels API : ils apparaissent dans les journaux des requêtes et sont débités de votre solde comme les autres.',
               ],
             ],
           },
@@ -1938,16 +1962,16 @@
             b: [
               [
                 'p',
-                'Le **Profil** regroupe tout ce qui concerne le compte lui-même.',
+                'Les **Paramètres du compte** regroupent tout ce qui concerne le compte lui-même.',
               ],
               [
                 'ul',
                 [
-                  'Modifier votre nom d’utilisateur et votre nom affiché, et choisir la langue de l’interface.',
-                  'Associer une adresse e-mail et changer votre mot de passe.',
+                  'Associer une adresse e-mail ou un compte tiers dans **Associations de compte**.',
+                  'Changer votre mot de passe dans **Sécurité**, et choisir la langue de l’interface dans Préférences de langue.',
                   'Activer la double authentification (TOTP) et conserver les codes de secours en lieu sûr.',
                   'Consulter les sessions de connexion récentes et déconnecter tout appareil inconnu.',
-                  'Générer un jeton d’accès système pour piloter le compte par programme. Ce jeton sert uniquement à la gestion du compte — les appels de modèles utilisent vos clés API.',
+                  'Générer un **jeton d’accès** pour piloter le compte par programme. Ce jeton sert uniquement à la gestion du compte — les appels de modèles utilisent vos clés API.',
                 ],
               ],
             ],
@@ -1968,7 +1992,7 @@
                   [
                     '403 quota insuffisant',
                     'Votre solde, ou le quota propre à la clé, est épuisé.',
-                    'Créditez le compte dans Portefeuille, ou augmentez le quota de la clé.',
+                    'Créditez le compte sur la page Crédits, ou augmentez le quota de la clé.',
                   ],
                   [
                     '403 autre',
@@ -1977,8 +2001,8 @@
                   ],
                   [
                     '404 modèle introuvable',
-                    'L’identifiant du modèle n’existe pas, ou n’est pas disponible pour le groupe de la clé.',
-                    'Copiez l’identifiant depuis Modèles & Tarifs.',
+                    'L’identifiant du modèle n’existe pas, ou le niveau de service de la clé ne le propose pas.',
+                    'Copiez l’identifiant depuis Modèles & tarifs.',
                   ],
                   [
                     '429',
@@ -1994,7 +2018,7 @@
               ],
               [
                 'p',
-                'Les requêtes en échec sont également enregistrées dans les journaux d’utilisation : la ligne de journal est en général le moyen le plus rapide de voir ce que la passerelle a reçu.',
+                'Les requêtes en échec sont également enregistrées dans les journaux des requêtes : la ligne de journal est en général le moyen le plus rapide de voir ce que la passerelle a reçu.',
               ],
             ],
           },
@@ -2004,7 +2028,7 @@
             b: [
               [
                 'p',
-                'Écrivez à [fairrouter@protonmail.com](mailto:fairrouter@protonmail.com). Une personne lit chaque message, normalement sous un jour ouvré et jamais au-delà de sept. Indiquez le nom de votre compte et, pour une requête précise, l’heure et le modèle relevés dans les journaux d’utilisation.',
+                'Écrivez à [fairrouter@protonmail.com](mailto:fairrouter@protonmail.com). Une personne lit chaque message, normalement sous un jour ouvré et jamais au-delà de sept. Indiquez le nom de votre compte et, pour une requête précise, l’heure et le modèle relevés dans les journaux des requêtes.',
               ],
               [
                 'p',
@@ -2026,9 +2050,9 @@
         nav: {
           console: 'Консоль',
           pricing: 'Модели и цены',
-          about: 'О проекте',
+          about: 'Связаться с нами',
           privacy: 'Политика конфиденциальности',
-          terms: 'Условия использования',
+          terms: 'Пользовательское соглашение',
         },
         sections: [
           {
@@ -2048,7 +2072,7 @@
                 'steps',
                 [
                   'Создайте аккаунт и войдите.',
-                  'Пополните баланс в разделе **Кошелек**, затем создайте ключ в разделе **Ключи API**.',
+                  'Пополните баланс на странице **Баланс**, затем создайте ключ в разделе **Ключи API**.',
                   'Направьте любой совместимый с OpenAI SDK или приложение на [[https://fairrouter.ai/v1]].',
                 ],
               ],
@@ -2069,7 +2093,7 @@
               ],
               [
                 'note',
-                '**Сразу после входа добавьте адрес электронной почты в разделе «Профиль».** Восстановление пароля отправляет ссылку на почту, указанную в аккаунте, поэтому без неё самостоятельно вернуть доступ не получится.',
+                '**Сразу после входа добавьте адрес электронной почты в разделе «Настройки аккаунта» → «Привязки аккаунта».** Восстановление пароля отправляет ссылку на почту, указанную в аккаунте, поэтому без неё самостоятельно вернуть доступ не получится.',
               ],
             ],
           },
@@ -2086,32 +2110,28 @@
                 [
                   ['Раздел', 'Что там делают'],
                   [
-                    'Песочница',
+                    'Онлайн-тест',
                     'Попробовать модель в браузере, ещё не написав код.',
                   ],
                   [
-                    'Чат',
-                    'Передать ключ сразу в подключённое приложение для чата.',
-                  ],
-                  [
-                    'Обзор / Панель управления',
-                    'Графики запросов, токенов и расходов во времени.',
+                    'Панель управления',
+                    'Графики и детализация запросов, токенов, расходов и времени ответа.',
                   ],
                   [
                     'Ключи API',
                     'Создание, изменение, отключение и удаление ключей.',
                   ],
                   [
-                    'Журнал использования',
-                    'По строке на каждый запрос: модель, токены, стоимость.',
+                    'Журнал запросов',
+                    'По строке на каждый запрос: модель, токены, стоимость, время.',
                   ],
                   [
-                    'Журнал задач',
+                    'Асинхронные задачи',
                     'Запросы, отправленные как асинхронные задачи.',
                   ],
-                  ['Кошелек', 'Баланс, пополнения и история заказов.'],
+                  ['Баланс', 'Текущий баланс, пополнения и история заказов.'],
                   [
-                    'Профиль',
+                    'Настройки аккаунта',
                     'Почта, пароль, двухфакторная аутентификация, сессии.',
                   ],
                 ],
@@ -2124,38 +2144,45 @@
             b: [
               [
                 'p',
-                'Перейдите в **Ключи API** и выберите **Создать ключ API**. Обязательно только название; остальные значения по умолчанию подходят для первого ключа.',
+                'Перейдите в **Ключи API** и выберите **Создать ключ API**. Обязательны только название и уровень сервиса; остальные значения по умолчанию подходят для первого ключа.',
               ],
               [
                 'table',
                 [
                   ['Поле', 'Что означает'],
                   [
-                    'Название',
-                    'Как ключ подписан в списке. Назовите его по приложению или машине, которая будет его использовать.',
+                    'Название *',
+                    'Обязательно. Как ключ подписан в списке: назовите его по приложению или машине, которая будет его использовать.',
                   ],
                   [
-                    'Группа',
-                    'Группа маршрутизации ключа, от неё же зависит цена. Оставьте [[default]], если поддержка не указала иное.',
+                    'Уровень сервиса *',
+                    'Обязательно. Доступные аккаунту уровни показаны карточками; уровень определяет и цену, и набор моделей, доступных ключу.',
                   ],
                   [
                     'Время истечения срока действия',
                     'Никогда либо готовый или произвольный срок. Истёкший ключ перестаёт работать, но остаётся в списке.',
                   ],
-                  ['Количество', 'Создать несколько ключей сразу.'],
+                  [
+                    'Количество',
+                    'Создать несколько ключей сразу (только при создании).',
+                  ],
                   [
                     'Квота / Неограниченная квота',
-                    'Лимит расходов для этого ключа. Списание всегда идёт с баланса аккаунта; лимит ограничивает только траты одного ключа.',
+                    'Неограниченная квота включена по умолчанию. Отключите её, чтобы задать лимит расходов ключа; списание в любом случае идёт с баланса аккаунта.',
                   ],
                   [
                     'Лимиты модели',
-                    'Разрешить ключу только выбранные идентификаторы моделей. Пустое значение — доступен весь каталог.',
+                    'Разрешить ключу только выбранные модели. Пустое значение — доступны все модели выбранного уровня сервиса.',
                   ],
                   [
-                    'Белый список IP',
+                    'Белый список IP (поддерживается CIDR)',
                     'Принимать запросы только с этих адресов или диапазонов CIDR.',
                   ],
                 ],
+              ],
+              [
+                'p',
+                'Лимиты модели следуют за выбранным уровнем: при смене уровня модели, которых новый уровень не предлагает, убираются из списка, а под полем перечисляется, что именно убрано. Если список опустеет, появится красное предупреждение — пустой список означает, что ключу доступны все модели этого уровня.',
               ],
               [
                 'p',
@@ -2238,16 +2265,16 @@
             b: [
               [
                 'p',
-                'Страница [Модели и цены](/pricing) открыта всем — её можно изучить до регистрации. В каждой строке указана цена входных и выходных токенов за миллион в долларах США рядом с официальной ценой поставщика, чтобы экономия была видна сразу.',
+                'Страница [Модели и цены](/pricing) открыта всем — её можно изучить до регистрации. В каждой строке указана цена входных и выходных токенов за миллион в долларах США рядом с эталонной ценой, чтобы экономия была видна сразу. Переключатель **Сравнить с** меняет эталон между официальным API поставщика и OpenRouter.',
               ],
               [
                 'p',
-                'Текстовые модели тарифицируются по токенам: входные токены × цена входа плюс выходные токены × цена выхода. Если модель поддерживает кеширование промптов, входные токены из кеша считаются по сниженной цене кеша. Точное число токенов и точная сумма по каждому запросу видны в **Журнале использования**.',
+                'Текстовые модели тарифицируются по токенам: входные токены × цена входа плюс выходные токены × цена выхода. Если модель поддерживает кеширование промптов, входные токены из кеша считаются по сниженной цене кеша; в таблице показаны вход и выход, а цены кеша — на странице конкретной модели. Точное число токенов и точная сумма по каждому запросу видны в **Журнале запросов**.',
               ],
               ['p', 'Баланс и все цены на сайте отображаются в долларах США.'],
               [
                 'note',
-                'Цена запроса складывается из модели и группы того ключа, которым он отправлен. Если поддержка не переводила вас в особую группу, всё идёт через [[default]] и совпадает с публичной страницей цен.',
+                'Цена запроса складывается из модели и уровня сервиса того ключа, которым он отправлен. На публичной странице цен есть переключатель тарифного уровня, поэтому цены нужного уровня можно посмотреть заранее.',
               ],
             ],
           },
@@ -2262,9 +2289,9 @@
               [
                 'steps',
                 [
-                  'Откройте **Кошелек** в консоли. Карточки сверху показывают текущий баланс, общее использование и число запросов API.',
+                  'Откройте раздел **Баланс** в консоли. Карточки сверху показывают текущий баланс, общее использование и число запросов API.',
                   'Выберите одну из готовых сумм или введите свою.',
-                  'Перейдите к оплате картой, банковским переводом или через WeChat Pay.',
+                  'Перейдите к оплате и рассчитайтесь любым из способов, предложенных на странице.',
                   'Баланс обновляется сразу после подтверждения платежа. Прошлые пополнения — в истории заказов.',
                 ],
               ],
@@ -2274,7 +2301,7 @@
               ],
               [
                 'note',
-                'Автопополнения нет. При нулевом балансе запросы отклоняются с ошибкой о нехватке квоты до следующего пополнения, поэтому следите за карточкой Кошелька или страницей Обзор.',
+                'Автопополнения нет. При нулевом балансе запросы отклоняются с ошибкой о нехватке квоты до следующего пополнения, поэтому следите за страницей Баланс или карточкой баланса на панели управления.',
               ],
             ],
           },
@@ -2284,15 +2311,15 @@
             b: [
               [
                 'p',
-                '**Журнал использования** содержит по строке на запрос: время, модель, ключ, входные и выходные токены и списанную сумму. Фильтруйте по периоду, модели или ключу, чтобы найти конкретный вызов, и выгружайте отфильтрованные строки, если они нужны вне консоли.',
+                '**Журнал запросов** содержит по строке на запрос: время, модель, ключ, входные и выходные токены, время выполнения и списанную сумму. Фильтруйте по периоду, модели, группе или названию ключа, а чтобы найти конкретный вызов — ищите по ID запроса, в том числе по ID вышестоящего запроса, который вернул поставщик.',
               ],
               [
                 'p',
-                '**Журнал задач** охватывает запросы, отправленные как асинхронные задачи, а не отвеченные сразу.',
+                '**Асинхронные задачи** охватывают запросы, отправленные как асинхронные задачи, а не отвеченные сразу.',
               ],
               [
                 'p',
-                '**Обзор** и **Панель управления** превращают те же данные в графики — расходы по дням, запросы по моделям — это самый быстрый способ заметить клиента, который обращается чаще ожидаемого.',
+                '**Панель управления** превращает те же данные в графики — запросы, токены, расходы и время выполнения за выбранный период, — а детализация ниже разбивает их по моделям или ключам с фактической стоимостью, оценкой по официальным ценам и экономией. Это самый быстрый способ заметить клиента, который обращается чаще ожидаемого.',
               ],
             ],
           },
@@ -2314,7 +2341,7 @@
               ],
               [
                 'p',
-                'Меню ⋯ в строке ключа сокращает эти шаги: **Копировать данные подключения** копирует адрес и ключ вместе, подменю **Чат** передаёт их сразу в поддерживаемое приложение (Cherry Studio, LobeChat, DeepChat, OpenCat, AMA, AI as Workspace, FluentRead, AionUI), а **CC Switch** готовит настройки для инструментов вроде Claude Code.',
+                'Меню ⋯ в строке ключа сокращает эти шаги: **Копировать данные подключения** копирует адрес и ключ вместе, подменю **Чат** передаёт их сразу в поддерживаемое приложение (Cherry Studio, LobeChat, DeepChat, OpenCat, AMA, AI as Workspace, FluentRead, AionUI), а **CC Switch** готовит настройки для инструментов вроде Claude Code — для Claude, Codex или Gemini.',
               ],
               [
                 'note',
@@ -2324,15 +2351,15 @@
           },
           {
             id: 'playground',
-            t: 'Проверка в Песочнице',
+            t: 'Проверка в Онлайн-тесте',
             b: [
               [
                 'p',
-                '**Песочница** ведёт диалог с любой доступной аккаунту моделью прямо из консоли и без ключа. Это самый быстрый способ сравнить две модели на одном промпте или убедиться, что модель отвечает, прежде чем отлаживать собственный код.',
+                '**Онлайн-тест** ведёт диалог с любой доступной аккаунту моделью прямо из консоли и без ключа. Ссылка на него есть и в шапке сайта, при открытии сначала попросят войти. Это самый быстрый способ сравнить две модели на одном промпте или убедиться, что модель отвечает, прежде чем отлаживать собственный код.',
               ],
               [
                 'note',
-                'Вызовы из Песочницы — настоящие вызовы API: они попадают в журнал использования и списываются с баланса так же, как любые другие.',
+                'Вызовы из Онлайн-теста — настоящие вызовы API: они попадают в журнал запросов и списываются с баланса так же, как любые другие.',
               ],
             ],
           },
@@ -2342,16 +2369,16 @@
             b: [
               [
                 'p',
-                'В разделе **Профиль** собрано всё, что касается самого аккаунта.',
+                'В разделе **Настройки аккаунта** собрано всё, что касается самого аккаунта.',
               ],
               [
                 'ul',
                 [
-                  'Изменить имя пользователя и отображаемое имя, выбрать язык интерфейса.',
-                  'Привязать адрес электронной почты и сменить пароль.',
+                  'Привязать адрес электронной почты или сторонний аккаунт в разделе **Привязки аккаунта**.',
+                  'Сменить пароль в разделе **Безопасность**, а язык интерфейса выбрать в языковых настройках.',
                   'Включить двухфакторную аутентификацию (TOTP) и надёжно сохранить резервные коды.',
                   'Просмотреть недавние сессии входа и завершить сессию любого незнакомого устройства.',
-                  'Создать системный токен доступа для программного управления аккаунтом. Этот токен нужен только для управления аккаунтом — вызовы моделей выполняются ключами API.',
+                  'Создать **токен доступа** для программного управления аккаунтом. Этот токен нужен только для управления аккаунтом — вызовы моделей выполняются ключами API.',
                 ],
               ],
             ],
@@ -2372,7 +2399,7 @@
                   [
                     '403, недостаточно квоты',
                     'Исчерпан баланс или собственная квота ключа.',
-                    'Пополните баланс в Кошельке либо увеличьте квоту ключа.',
+                    'Пополните баланс на странице Баланс либо увеличьте квоту ключа.',
                   ],
                   [
                     '403, прочее',
@@ -2381,7 +2408,7 @@
                   ],
                   [
                     '404, модель не найдена',
-                    'Идентификатор модели не существует или недоступен группе ключа.',
+                    'Идентификатор модели не существует либо не предлагается уровнем сервиса этого ключа.',
                     'Скопируйте идентификатор со страницы Модели и цены.',
                   ],
                   [
@@ -2398,7 +2425,7 @@
               ],
               [
                 'p',
-                'Неудачные запросы тоже записываются в журнал использования, поэтому строка журнала — обычно самый быстрый способ увидеть, что получил шлюз.',
+                'Неудачные запросы тоже записываются в журнал запросов, поэтому строка журнала — обычно самый быстрый способ увидеть, что получил шлюз.',
               ],
             ],
           },
@@ -2408,7 +2435,7 @@
             b: [
               [
                 'p',
-                'Пишите на [fairrouter@protonmail.com](mailto:fairrouter@protonmail.com). Каждое письмо читает человек, обычно ответ приходит в течение одного рабочего дня и не позднее семи. Укажите имя аккаунта, а для конкретного запроса — время и модель из журнала использования.',
+                'Пишите на [fairrouter@protonmail.com](mailto:fairrouter@protonmail.com). Каждое письмо читает человек, обычно ответ приходит в течение одного рабочего дня и не позднее семи. Укажите имя аккаунта, а для конкретного запроса — время и модель из журнала запросов.',
               ],
               [
                 'p',
@@ -2430,7 +2457,7 @@
         nav: {
           console: 'コンソール',
           pricing: 'モデルと料金',
-          about: 'このサービスについて',
+          about: 'お問い合わせ',
           privacy: 'プライバシーポリシー',
           terms: '利用規約',
         },
@@ -2452,7 +2479,7 @@
                 'steps',
                 [
                   'アカウントを作成してログインします。',
-                  '**ウォレット**でチャージし、**APIキー**でキーを作成します。',
+                  '**クレジット**ページでチャージし、**APIキー**でキーを作成します。',
                   'OpenAI 互換の SDK やアプリのベース URL を [[https://fairrouter.ai/v1]] に設定します。',
                 ],
               ],
@@ -2473,7 +2500,7 @@
               ],
               [
                 'note',
-                '**ログインしたら、まず「プロフィール」でメールアドレスを登録してください。**パスワードの再設定リンクはアカウントに登録されたアドレスへ送られるため、未登録のままではロックされたアカウントを自分で復旧できません。',
+                '**ログインしたら、まず「アカウント設定」→「アカウントバインディング」でメールアドレスを登録してください。**パスワードの再設定リンクはアカウントに登録されたアドレスへ送られるため、未登録のままではロックされたアカウントを自分で復旧できません。',
               ],
             ],
           },
@@ -2487,23 +2514,22 @@
                 [
                   ['場所', 'できること'],
                   [
-                    'プレイグラウンド',
+                    'オンラインテスト',
                     'コードを書く前にブラウザーでモデルを試す。',
                   ],
-                  ['チャット', 'キーを対応チャットアプリへそのまま渡す。'],
                   [
-                    '概要 / ダッシュボード',
-                    'リクエスト数・トークン数・利用金額の推移グラフ。',
+                    'ダッシュボード',
+                    'リクエスト数・トークン・利用金額・応答時間のグラフと内訳。',
                   ],
                   ['APIキー', 'キーの作成・編集・無効化・削除。'],
                   [
-                    '利用履歴',
-                    'リクエスト 1 件につき 1 行：モデル、トークン、料金。',
+                    'リクエストログ',
+                    'リクエスト 1 件につき 1 行：モデル、トークン、料金、所要時間。',
                   ],
-                  ['タスクログ', '非同期ジョブとして送信されたリクエスト。'],
-                  ['ウォレット', '残高、チャージ、注文履歴。'],
+                  ['非同期タスク', '非同期ジョブとして送信されたリクエスト。'],
+                  ['クレジット', '現在の残高、チャージ、注文履歴。'],
                   [
-                    'プロフィール',
+                    'アカウント設定',
                     'メール、パスワード、二段階認証、ログインセッション。',
                   ],
                 ],
@@ -2516,38 +2542,42 @@
             b: [
               [
                 'p',
-                '**APIキー**を開き、**APIキーを作成**を選びます。必須項目は名称だけで、他は既定値のままで最初のキーとして問題ありません。',
+                '**APIキー**を開き、**APIキーを作成**を選びます。必須項目は名称とサービスティアだけで、他は既定値のままで最初のキーとして問題ありません。',
               ],
               [
                 'table',
                 [
                   ['項目', '意味'],
                   [
-                    '名称',
-                    '一覧に表示されるキーの名前。使用するアプリやマシンの名前を付けると分かりやすくなります。',
+                    '名称 *',
+                    '必須。一覧に表示されるキーの名前で、使用するアプリやマシンの名前を付けると分かりやすくなります。',
                   ],
                   [
-                    'グループ',
-                    'キーが使うルーティンググループで、料金もこれで決まります。サポートから指示がなければ [[default]] のままにしてください。',
+                    'サービスティア *',
+                    '必須。アカウントで利用できるティアがカードで表示されます。ティアは料金と、そのキーが呼び出せるモデルの範囲の両方を決めます。',
                   ],
                   [
                     '有効期限',
                     '無期限、またはプリセット／任意の期限。期限切れのキーは使えなくなりますが一覧には残ります。',
                   ],
-                  ['数量', 'キーをまとめて複数作成します。'],
+                  ['数量', 'キーをまとめて複数作成します（作成時のみ）。'],
                   [
                     'クォータ / 無制限のクォータ',
-                    'このキーの利用上限額です。料金は常にアカウント残高から差し引かれ、この上限はこのキーが使える金額だけを制限します。',
+                    '既定では無制限のクォータが有効です。オフにするとこのキーの利用上限額を設定できます。いずれの場合も料金はアカウント残高から差し引かれます。',
                   ],
                   [
                     'モデル制限',
-                    '指定したモデル ID だけに制限します。空欄ならカタログ内のすべてのモデルを利用できます。',
+                    '選んだモデルだけに制限します。空欄なら選択したサービスティアのすべてのモデルを利用できます。',
                   ],
                   [
-                    'IP ホワイトリスト',
+                    'IP ホワイトリスト（CIDR 対応）',
                     'ここに記載したアドレスまたは CIDR 範囲からのリクエストのみ受け付けます。',
                   ],
                 ],
+              ],
+              [
+                'p',
+                'モデル制限は選んだサービスティアに追随します。ティアを切り替えると、新しいティアで提供されないモデルは一覧から除外され、除外されたモデルが欄の下に表示されます。その結果一覧が空になった場合は赤い警告が出ます。空欄はそのティアのすべてのモデルを利用できるという意味だからです。',
               ],
               [
                 'p',
@@ -2624,16 +2654,16 @@
             b: [
               [
                 'p',
-                '[モデルと料金](/pricing)ページは公開されており、アカウント作成前でも確認できます。各行には 100 万トークンあたりの入力・出力価格が米ドルで表示され、提供元の公式価格も併記されるので、どれだけ安いかがひと目で分かります。',
+                '[モデルと料金](/pricing)ページは公開されており、アカウント作成前でも確認できます。各行には 100 万トークンあたりの入力・出力価格が米ドルで表示され、比較用の基準価格も併記されるので、どれだけ安いかがひと目で分かります。**比較対象**は提供元の公式 API と OpenRouter を切り替えられます。',
               ],
               [
                 'p',
-                'テキストモデルはトークン課金です。入力トークン × 入力単価に、出力トークン × 出力単価を加えた金額になります。プロンプトキャッシュに対応したモデルでは、キャッシュされた入力トークンはより安いキャッシュ単価で計算されます。リクエストごとの正確なトークン数と請求額は**利用履歴**で確認できます。',
+                'テキストモデルはトークン課金です。入力トークン × 入力単価に、出力トークン × 出力単価を加えた金額になります。プロンプトキャッシュに対応したモデルでは、キャッシュされた入力トークンはより安いキャッシュ単価で計算されます。一覧に表示されるのは入力と出力の単価で、キャッシュ単価は各モデルの詳細ページで確認できます。リクエストごとの正確なトークン数と請求額は**リクエストログ**で確認できます。',
               ],
               ['p', '残高およびサイト上のすべての価格は米ドル表示です。'],
               [
                 'note',
-                'リクエストに適用される価格は、モデルと、そのリクエストを送ったキーのグループで決まります。サポートが特別なグループを設定していない限り、すべて [[default]] で動作し、公開されている料金ページと一致します。',
+                'リクエストに適用される価格は、モデルと、そのリクエストを送ったキーのサービスティアで決まります。公開されている料金ページには料金ティアの切り替えがあるため、呼び出す前にそのティアの価格を確認できます。',
               ],
             ],
           },
@@ -2648,9 +2678,9 @@
               [
                 'steps',
                 [
-                  'コンソールの**ウォレット**を開きます。上部のカードに現在の残高、総使用量、API リクエスト数が表示されます。',
+                  'コンソールの**クレジット**を開きます。上部のカードに現在の残高、総使用量、API リクエスト数が表示されます。',
                   'プリセット金額を選ぶか、カスタム金額を入力します。',
-                  '決済画面へ進み、カード、銀行振込、または WeChat Pay で支払います。',
+                  '決済画面へ進み、ページに表示されている支払い方法のいずれかで支払います。',
                   '決済が確認されると残高はすぐに反映されます。過去のチャージは注文履歴で確認できます。',
                 ],
               ],
@@ -2660,7 +2690,7 @@
               ],
               [
                 'note',
-                '自動チャージはありません。残高がゼロになるとチャージするまでリクエストはクォータ不足エラーで拒否されるため、ウォレットのカードや概要ページで残高を確認してください。',
+                '自動チャージはありません。残高がゼロになるとチャージするまでリクエストはクォータ不足エラーで拒否されるため、クレジットページやダッシュボードの残高カードで残高を確認してください。',
               ],
             ],
           },
@@ -2670,15 +2700,15 @@
             b: [
               [
                 'p',
-                '**利用履歴**にはリクエストごとに 1 行が記録され、時刻、モデル、キー、入力・出力トークン数、請求額が並びます。期間・モデル・キーで絞り込めば特定の呼び出しを探せますし、絞り込んだ結果はエクスポートしてコンソールの外でも利用できます。',
+                '**リクエストログ**にはリクエストごとに 1 行が記録され、時刻、モデル、キー、入力・出力トークン数、所要時間、請求額が並びます。期間・モデル・グループ・キー名で絞り込めるほか、リクエスト ID（プロバイダーが返した上流リクエスト ID を含む）で特定の呼び出しを直接探せます。',
               ],
               [
                 'p',
-                '**タスクログ**は、応答内で結果を返さず非同期ジョブとして処理されたリクエストを記録します。',
+                '**非同期タスク**は、応答内で結果を返さず非同期ジョブとして処理されたリクエストを記録します。',
               ],
               [
                 'p',
-                '**概要**と**ダッシュボード**は同じデータをグラフ化します。日別の利用金額やモデル別のリクエスト数を見れば、想定より多く呼び出しているクライアントをすばやく見つけられます。',
+                '**ダッシュボード**は同じデータをグラフ化します。選んだ期間のリクエスト数・トークン・利用金額・完了時間に加え、下部の利用内訳ではモデル別・キー別に実際の料金、公式価格での概算、節約額まで確認できるため、想定より多く呼び出しているクライアントをすばやく見つけられます。',
               ],
             ],
           },
@@ -2700,7 +2730,7 @@
               ],
               [
                 'p',
-                'キー一覧の各行にある ⋯ メニューを使うと手間が省けます。**接続情報をコピー**でアドレスとキーをまとめてコピーでき、**チャット**サブメニューは対応アプリ（Cherry Studio、LobeChat、DeepChat、OpenCat、AMA、AI as Workspace、FluentRead、AionUI）へ直接設定を渡します。**CC Switch** は Claude Code 系ツール向けの設定を用意します。',
+                'キー一覧の各行にある ⋯ メニューを使うと手間が省けます。**接続情報をコピー**でアドレスとキーをまとめてコピーでき、**チャット**サブメニューは対応アプリ（Cherry Studio、LobeChat、DeepChat、OpenCat、AMA、AI as Workspace、FluentRead、AionUI）へ直接設定を渡します。**CC Switch** は Claude Code 系ツール向けの設定を Claude・Codex・Gemini から選んで用意します。',
               ],
               [
                 'note',
@@ -2710,15 +2740,15 @@
           },
           {
             id: 'playground',
-            t: 'プレイグラウンドで試す',
+            t: 'オンラインテストで試す',
             b: [
               [
                 'p',
-                '**プレイグラウンド**では、キーを用意しなくてもコンソールから、アカウントで利用できる任意のモデルとチャットできます。同じプロンプトで 2 つのモデルを比べたいときや、自分のコードを調べる前にモデルが応答するか確かめたいときに最も手軽です。',
+                '**オンラインテスト**では、キーを用意しなくてもコンソールから、アカウントで利用できる任意のモデルとチャットできます。サイトのヘッダーからも開け、その場合はまずログインが求められます。同じプロンプトで 2 つのモデルを比べたいときや、自分のコードを調べる前にモデルが応答するか確かめたいときに最も手軽です。',
               ],
               [
                 'note',
-                'プレイグラウンドの呼び出しも実際の API 呼び出しです。利用履歴に記録され、他のリクエストと同じく残高から課金されます。',
+                'オンラインテストの呼び出しも実際の API 呼び出しです。リクエストログに記録され、他のリクエストと同じく残高から課金されます。',
               ],
             ],
           },
@@ -2728,16 +2758,16 @@
             b: [
               [
                 'p',
-                'アカウント自体の設定は**プロフィール**にまとまっています。',
+                'アカウント自体の設定は**アカウント設定**にまとまっています。',
               ],
               [
                 'ul',
                 [
-                  'ユーザー名と表示名の変更、インターフェース言語の設定。',
-                  'メールアドレスの登録とパスワードの変更。',
+                  '**アカウントバインディング**でメールアドレスや外部アカウントを登録する。',
+                  '**セキュリティ**でパスワードを変更し、言語設定でインターフェース言語を選ぶ。',
                   '二段階認証（TOTP）の有効化。バックアップコードは安全な場所に保管してください。',
                   '最近のログインセッションを確認し、心当たりのない端末をログアウトさせる。',
-                  'アカウントをプログラムから管理したい場合はシステムアクセストークンを発行できます。このトークンはアカウント管理専用で、モデルの呼び出しには API キーを使います。',
+                  'アカウントをプログラムから管理したい場合はセキュリティで**アクセストークン**を発行できます。このトークンはアカウント管理専用で、モデルの呼び出しには API キーを使います。',
                 ],
               ],
             ],
@@ -2758,7 +2788,7 @@
                   [
                     '403 クォータ不足',
                     '残高またはキー自身のクォータを使い切っています。',
-                    'ウォレットでチャージするか、キーのクォータを引き上げます。',
+                    'クレジットページでチャージするか、キーのクォータを引き上げます。',
                   ],
                   [
                     '403 その他',
@@ -2767,7 +2797,7 @@
                   ],
                   [
                     '404 モデルが見つからない',
-                    'モデル ID が存在しないか、キーのグループでは利用できません。',
+                    'モデル ID が存在しないか、キーのサービスティアでは提供されていません。',
                     'モデルと料金ページから ID をコピーします。',
                   ],
                   [
@@ -2784,7 +2814,7 @@
               ],
               [
                 'p',
-                '失敗したリクエストも利用履歴に記録されるため、該当行を見るのがゲートウェイ側の状況を把握する最短の方法です。',
+                '失敗したリクエストもリクエストログに記録されるため、該当行を見るのがゲートウェイ側の状況を把握する最短の方法です。',
               ],
             ],
           },
@@ -2794,7 +2824,7 @@
             b: [
               [
                 'p',
-                '[fairrouter@protonmail.com](mailto:fairrouter@protonmail.com) までメールでご連絡ください。すべてのメールを担当者が確認し、通常 1 営業日以内、遅くとも 7 日以内に返信します。アカウント名を明記し、特定のリクエストについては利用履歴の時刻とモデルも添えてください。',
+                '[fairrouter@protonmail.com](mailto:fairrouter@protonmail.com) までメールでご連絡ください。すべてのメールを担当者が確認し、通常 1 営業日以内、遅くとも 7 日以内に返信します。アカウント名を明記し、特定のリクエストについてはリクエストログの時刻とモデルも添えてください。',
               ],
               [
                 'p',
@@ -2815,10 +2845,10 @@
         copied: 'Đã sao chép',
         nav: {
           console: 'Bảng điều khiển',
-          pricing: 'Mô hình & Giá',
-          about: 'Giới thiệu',
+          pricing: 'Mô hình & giá',
+          about: 'Liên hệ',
           privacy: 'Chính sách bảo mật',
-          terms: 'Điều khoản dịch vụ',
+          terms: 'Thỏa thuận người dùng',
         },
         sections: [
           {
@@ -2831,14 +2861,14 @@
               ],
               [
                 'p',
-                'Nếu bạn từng gọi API của OpenAI thì bạn đã biết dùng Fair Router: trỏ SDK tới [[https://fairrouter.ai/v1]], dùng khóa Fair Router của bạn và chọn một mã mô hình trên trang [Mô hình & Giá](/pricing).',
+                'Nếu bạn từng gọi API của OpenAI thì bạn đã biết dùng Fair Router: trỏ SDK tới [[https://fairrouter.ai/v1]], dùng khóa Fair Router của bạn và chọn một mã mô hình trên trang [Mô hình & giá](/pricing).',
               ],
               ['h3', 'Ba bước tới phản hồi đầu tiên'],
               [
                 'steps',
                 [
                   'Tạo tài khoản và đăng nhập.',
-                  'Nạp tiền trong **Ví**, rồi tạo khóa trong **Khóa API**.',
+                  'Nạp tiền ở trang **Số dư**, rồi tạo khóa trong **Khóa API**.',
                   'Trỏ bất kỳ SDK hoặc ứng dụng tương thích OpenAI nào tới [[https://fairrouter.ai/v1]].',
                 ],
               ],
@@ -2859,7 +2889,7 @@
               ],
               [
                 'note',
-                '**Hãy thêm địa chỉ email trong Hồ sơ ngay sau khi đăng nhập.** Chức năng khôi phục mật khẩu gửi liên kết đặt lại tới email gắn với tài khoản, nên nếu thiếu email bạn sẽ không thể tự lấy lại tài khoản bị khóa.',
+                '**Hãy thêm địa chỉ email trong Cài đặt tài khoản → Liên kết tài khoản ngay sau khi đăng nhập.** Chức năng khôi phục mật khẩu gửi liên kết đặt lại tới email gắn với tài khoản, nên nếu thiếu email bạn sẽ không thể tự lấy lại tài khoản bị khóa.',
               ],
             ],
           },
@@ -2876,29 +2906,28 @@
                 [
                   ['Vị trí', 'Dùng để làm gì'],
                   [
-                    'Sân chơi',
+                    'Thử nghiệm trực tuyến',
                     'Thử một mô hình ngay trên trình duyệt trước khi viết mã.',
                   ],
                   [
-                    'Trò chuyện',
-                    'Đưa khóa thẳng sang một ứng dụng chat đã hỗ trợ.',
-                  ],
-                  [
-                    'Tổng quan / Bảng điều khiển',
-                    'Biểu đồ số yêu cầu, số token và chi tiêu theo thời gian.',
+                    'Bảng điều khiển',
+                    'Biểu đồ và chi tiết số yêu cầu, token, chi tiêu và thời gian phản hồi.',
                   ],
                   ['Khóa API', 'Tạo, sửa, vô hiệu hóa và xóa khóa.'],
                   [
-                    'Nhật ký sử dụng',
-                    'Mỗi yêu cầu một dòng: mô hình, token, chi phí.',
+                    'Nhật ký yêu cầu',
+                    'Mỗi yêu cầu một dòng: mô hình, token, chi phí, thời gian.',
                   ],
                   [
-                    'Nhật ký tác vụ',
+                    'Tác vụ bất đồng bộ',
                     'Các yêu cầu gửi dưới dạng tác vụ bất đồng bộ.',
                   ],
-                  ['Ví', 'Số dư, các lần nạp tiền và lịch sử đơn hàng.'],
                   [
-                    'Hồ sơ',
+                    'Số dư',
+                    'Số dư hiện tại, các lần nạp tiền và lịch sử đơn hàng.',
+                  ],
+                  [
+                    'Cài đặt tài khoản',
                     'Email, mật khẩu, xác thực hai yếu tố, phiên đăng nhập.',
                   ],
                 ],
@@ -2911,38 +2940,42 @@
             b: [
               [
                 'p',
-                'Vào **Khóa API** rồi chọn **Tạo Khóa API**. Chỉ tên là bắt buộc; các giá trị mặc định đã phù hợp cho khóa đầu tiên.',
+                'Vào **Khóa API** rồi chọn **Tạo Khóa API**. Chỉ tên và cấp dịch vụ là bắt buộc; các giá trị mặc định đã phù hợp cho khóa đầu tiên.',
               ],
               [
                 'table',
                 [
                   ['Trường', 'Ý nghĩa'],
                   [
-                    'Tên',
-                    'Nhãn của khóa trong danh sách. Nên đặt theo ứng dụng hoặc máy sẽ dùng khóa đó.',
+                    'Tên *',
+                    'Bắt buộc. Nhãn của khóa trong danh sách; nên đặt theo ứng dụng hoặc máy sẽ dùng khóa đó.',
                   ],
                   [
-                    'Nhóm',
-                    'Nhóm định tuyến mà khóa sử dụng, đồng thời quyết định giá. Hãy để [[default]] trừ khi bộ phận hỗ trợ hướng dẫn khác.',
+                    'Cấp dịch vụ *',
+                    'Bắt buộc. Các cấp mà tài khoản của bạn dùng được hiển thị dưới dạng thẻ; cấp dịch vụ quyết định cả giá lẫn nhóm mô hình mà khóa có thể gọi.',
                   ],
                   [
                     'Thời gian hết hạn',
                     'Không hết hạn, hoặc chọn mốc có sẵn hay tùy chỉnh. Khóa hết hạn sẽ ngừng hoạt động nhưng vẫn nằm trong danh sách.',
                   ],
-                  ['Số lượng', 'Tạo nhiều khóa cùng lúc.'],
+                  ['Số lượng', 'Tạo nhiều khóa cùng lúc (chỉ khi tạo mới).'],
                   [
                     'Hạn mức / Hạn mức không giới hạn',
-                    'Trần chi tiêu của riêng khóa này. Chi phí luôn trừ vào số dư tài khoản; trần này chỉ giới hạn mức chi của một khóa.',
+                    'Hạn mức không giới hạn được bật sẵn. Tắt nó để đặt trần chi tiêu cho khóa này; dù thế nào chi phí vẫn trừ vào số dư tài khoản.',
                   ],
                   [
                     'Giới hạn Mô hình',
-                    'Chỉ cho phép khóa gọi những mã mô hình được chọn. Để trống nghĩa là dùng được toàn bộ danh mục.',
+                    'Chỉ cho phép khóa gọi những mô hình được chọn. Để trống nghĩa là dùng được mọi mô hình trong cấp dịch vụ đã chọn.',
                   ],
                   [
-                    'Danh sách IP cho phép',
+                    'Danh sách IP cho phép (hỗ trợ CIDR)',
                     'Chỉ nhận yêu cầu từ các địa chỉ hoặc dải CIDR này.',
                   ],
                 ],
+              ],
+              [
+                'p',
+                'Giới hạn Mô hình đi theo cấp dịch vụ đã chọn: khi bạn đổi cấp, những mô hình cấp mới không cung cấp sẽ bị loại khỏi danh sách và được liệt kê ngay bên dưới trường đó. Nếu vì vậy danh sách trống, một cảnh báo màu đỏ sẽ hiện ra — danh sách trống nghĩa là khóa dùng được mọi mô hình trong cấp đó.',
               ],
               [
                 'p',
@@ -2976,7 +3009,7 @@
               ['h3', 'Dùng được những mã mô hình nào?'],
               [
                 'p',
-                'Danh sách chính xác có trên trang [Mô hình & Giá](/pricing) và cũng được trả về bởi endpoint mô hình:',
+                'Danh sách chính xác có trên trang [Mô hình & giá](/pricing) và cũng được trả về bởi endpoint mô hình:',
               ],
               ['code', 'models'],
             ],
@@ -3025,11 +3058,11 @@
             b: [
               [
                 'p',
-                'Trang [Mô hình & Giá](/pricing) là công khai — bạn có thể xem trước khi tạo tài khoản. Mỗi dòng hiển thị giá đầu vào và đầu ra cho mỗi triệu token bằng đô la Mỹ, đặt cạnh giá niêm yết chính thức của nhà cung cấp để thấy rõ mức tiết kiệm.',
+                'Trang [Mô hình & giá](/pricing) là công khai — bạn có thể xem trước khi tạo tài khoản. Mỗi dòng hiển thị giá đầu vào và đầu ra cho mỗi triệu token bằng đô la Mỹ, đặt cạnh một mức giá tham chiếu để thấy rõ mức tiết kiệm. **So sánh với** cho phép đổi mức tham chiếu giữa API chính thức của nhà cung cấp và OpenRouter.',
               ],
               [
                 'p',
-                'Mô hình văn bản tính phí theo token: token đầu vào × giá đầu vào, cộng token đầu ra × giá đầu ra. Với mô hình hỗ trợ bộ nhớ đệm prompt, token đầu vào lấy từ bộ nhớ đệm được tính theo mức giá đệm thấp hơn. Số token và số tiền chính xác của từng yêu cầu đều hiển thị trong **Nhật ký sử dụng**.',
+                'Mô hình văn bản tính phí theo token: token đầu vào × giá đầu vào, cộng token đầu ra × giá đầu ra. Với mô hình hỗ trợ bộ nhớ đệm prompt, token đầu vào lấy từ bộ nhớ đệm được tính theo mức giá đệm thấp hơn; bảng chỉ hiển thị giá đầu vào và đầu ra, còn giá bộ nhớ đệm nằm ở trang chi tiết của từng mô hình. Số token và số tiền chính xác của từng yêu cầu đều hiển thị trong **Nhật ký yêu cầu**.',
               ],
               [
                 'p',
@@ -3037,7 +3070,7 @@
               ],
               [
                 'note',
-                'Giá áp cho một yêu cầu phụ thuộc vào mô hình và nhóm của khóa đã gửi yêu cầu đó. Trừ khi bộ phận hỗ trợ chuyển bạn sang nhóm riêng, mọi thứ đều chạy trên [[default]] và khớp với trang giá công khai.',
+                'Giá áp cho một yêu cầu phụ thuộc vào mô hình và cấp dịch vụ của khóa đã gửi yêu cầu đó. Trang giá công khai có bộ chọn bậc giá, nên bạn có thể xem trước mức giá của cấp mà khóa đang dùng.',
               ],
             ],
           },
@@ -3052,9 +3085,9 @@
               [
                 'steps',
                 [
-                  'Mở **Ví** trong bảng điều khiển. Các thẻ phía trên hiển thị số dư hiện tại, tổng mức sử dụng và số yêu cầu API.',
+                  'Mở **Số dư** trong bảng điều khiển. Các thẻ phía trên hiển thị số dư hiện tại, tổng mức sử dụng và số yêu cầu API.',
                   'Chọn một mức tiền có sẵn hoặc nhập số tiền tùy chỉnh.',
-                  'Chuyển sang trang thanh toán và trả bằng thẻ, chuyển khoản ngân hàng hoặc WeChat Pay.',
+                  'Chuyển sang trang thanh toán và trả bằng một trong các phương thức được cung cấp trên trang.',
                   'Số dư được cập nhật ngay khi thanh toán được xác nhận. Các lần nạp trước đó nằm trong lịch sử đơn hàng.',
                 ],
               ],
@@ -3064,7 +3097,7 @@
               ],
               [
                 'note',
-                'Không có nạp tiền tự động. Khi số dư về 0, các yêu cầu sẽ bị từ chối kèm lỗi thiếu hạn mức cho tới khi bạn nạp thêm, vì vậy hãy theo dõi thẻ Ví hoặc trang Tổng quan.',
+                'Không có nạp tiền tự động. Khi số dư về 0, các yêu cầu sẽ bị từ chối kèm lỗi thiếu hạn mức cho tới khi bạn nạp thêm, vì vậy hãy theo dõi trang Số dư hoặc thẻ số dư trên bảng điều khiển.',
               ],
             ],
           },
@@ -3074,15 +3107,15 @@
             b: [
               [
                 'p',
-                '**Nhật ký sử dụng** liệt kê mỗi yêu cầu một dòng, gồm thời điểm, mô hình, khóa, token đầu vào và đầu ra, cùng số tiền đã tính. Lọc theo khoảng thời gian, mô hình hoặc khóa để tìm một lần gọi cụ thể, và xuất các dòng đã lọc khi cần dùng ngoài bảng điều khiển.',
+                '**Nhật ký yêu cầu** liệt kê mỗi yêu cầu một dòng, gồm thời điểm, mô hình, khóa, token đầu vào và đầu ra, thời gian xử lý cùng số tiền đã tính. Lọc theo khoảng thời gian, mô hình, nhóm hoặc tên khóa, hoặc tìm theo ID yêu cầu — kể cả ID yêu cầu thượng nguồn do nhà cung cấp trả về — để xác định đúng một lần gọi.',
               ],
               [
                 'p',
-                '**Nhật ký tác vụ** ghi lại những yêu cầu được gửi dưới dạng tác vụ bất đồng bộ thay vì trả kết quả ngay trong phản hồi.',
+                '**Tác vụ bất đồng bộ** ghi lại những yêu cầu được gửi dưới dạng tác vụ bất đồng bộ thay vì trả kết quả ngay trong phản hồi.',
               ],
               [
                 'p',
-                '**Tổng quan** và **Bảng điều khiển** chuyển cùng dữ liệu đó thành biểu đồ — chi tiêu theo ngày, số yêu cầu theo mô hình — cách nhanh nhất để phát hiện một ứng dụng đang gọi nhiều hơn dự kiến.',
+                '**Bảng điều khiển** chuyển cùng dữ liệu đó thành biểu đồ — số yêu cầu, token, chi tiêu và thời gian hoàn tất trong khoảng bạn chọn — còn phần chi tiết sử dụng bên dưới tách theo mô hình hoặc theo khóa, kèm chi phí thực tế, chi phí ước tính theo giá chính thức và mức tiết kiệm. Đây là cách nhanh nhất để phát hiện một ứng dụng đang gọi nhiều hơn dự kiến.',
               ],
             ],
           },
@@ -3099,12 +3132,12 @@
                 [
                   'Địa chỉ gốc API: [[https://fairrouter.ai/v1]] — một số ứng dụng chỉ cần [[https://fairrouter.ai]] và tự thêm [[/v1]].',
                   'Khóa API: khóa [[sk-…]] của bạn.',
-                  'Mô hình: một mã lấy từ [Mô hình & Giá](/pricing).',
+                  'Mô hình: một mã lấy từ [Mô hình & giá](/pricing).',
                 ],
               ],
               [
                 'p',
-                'Menu ⋯ ở mỗi dòng khóa giúp rút ngắn việc này: **Sao chép thông tin kết nối** chép cả địa chỉ lẫn khóa, menu con **Trò chuyện** chuyển thẳng cấu hình sang ứng dụng được hỗ trợ (Cherry Studio, LobeChat, DeepChat, OpenCat, AMA, AI as Workspace, FluentRead, AionUI), còn **CC Switch** chuẩn bị cấu hình cho các công cụ kiểu Claude Code.',
+                'Menu ⋯ ở mỗi dòng khóa giúp rút ngắn việc này: **Sao chép thông tin kết nối** chép cả địa chỉ lẫn khóa, menu con **Trò chuyện** chuyển thẳng cấu hình sang ứng dụng được hỗ trợ (Cherry Studio, LobeChat, DeepChat, OpenCat, AMA, AI as Workspace, FluentRead, AionUI), còn **CC Switch** chuẩn bị cấu hình cho các công cụ kiểu Claude Code, chọn giữa Claude, Codex hoặc Gemini.',
               ],
               [
                 'note',
@@ -3114,15 +3147,15 @@
           },
           {
             id: 'playground',
-            t: 'Thử trong Sân chơi',
+            t: 'Thử nghiệm trực tuyến',
             b: [
               [
                 'p',
-                '**Sân chơi** cho phép trò chuyện với bất kỳ mô hình nào tài khoản của bạn dùng được, ngay trong bảng điều khiển và không cần khóa. Đây là cách nhanh nhất để so sánh hai mô hình trên cùng một prompt, hoặc xác nhận mô hình vẫn trả lời trước khi bạn gỡ lỗi mã của mình.',
+                '**Thử nghiệm trực tuyến** cho phép trò chuyện với bất kỳ mô hình nào tài khoản của bạn dùng được, ngay trong bảng điều khiển và không cần khóa. Trang này cũng có liên kết ở đầu trang công khai, khi mở sẽ yêu cầu đăng nhập trước. Đây là cách nhanh nhất để so sánh hai mô hình trên cùng một prompt, hoặc xác nhận mô hình vẫn trả lời trước khi bạn gỡ lỗi mã của mình.',
               ],
               [
                 'note',
-                'Các lần gọi từ Sân chơi là lệnh gọi API thật: chúng xuất hiện trong nhật ký sử dụng và bị trừ vào số dư như mọi yêu cầu khác.',
+                'Các lần gọi từ Thử nghiệm trực tuyến là lệnh gọi API thật: chúng xuất hiện trong nhật ký yêu cầu và bị trừ vào số dư như mọi yêu cầu khác.',
               ],
             ],
           },
@@ -3132,16 +3165,16 @@
             b: [
               [
                 'p',
-                '**Hồ sơ** chứa mọi thiết lập liên quan tới chính tài khoản.',
+                '**Cài đặt tài khoản** chứa mọi thiết lập liên quan tới chính tài khoản.',
               ],
               [
                 'ul',
                 [
-                  'Đổi tên đăng nhập và tên hiển thị, chọn ngôn ngữ giao diện.',
-                  'Gắn địa chỉ email và đổi mật khẩu.',
+                  'Gắn địa chỉ email hoặc tài khoản bên thứ ba trong **Liên kết tài khoản**.',
+                  'Đổi mật khẩu trong **Bảo mật**, và chọn ngôn ngữ giao diện trong Tùy chọn ngôn ngữ.',
                   'Bật xác thực hai yếu tố (TOTP) và cất mã dự phòng ở nơi an toàn.',
                   'Xem các phiên đăng nhập gần đây và đăng xuất mọi thiết bị lạ.',
-                  'Tạo mã truy cập hệ thống nếu bạn muốn quản lý tài khoản bằng chương trình. Mã này chỉ dùng để quản lý tài khoản — gọi mô hình thì dùng khóa API.',
+                  'Tạo **token truy cập** nếu bạn muốn quản lý tài khoản bằng chương trình. Token này chỉ dùng để quản lý tài khoản — gọi mô hình thì dùng khóa API.',
                 ],
               ],
             ],
@@ -3162,7 +3195,7 @@
                   [
                     '403 thiếu hạn mức',
                     'Số dư tài khoản, hoặc hạn mức riêng của khóa, đã cạn.',
-                    'Nạp tiền trong Ví, hoặc nâng hạn mức của khóa.',
+                    'Nạp tiền ở trang Số dư, hoặc nâng hạn mức của khóa.',
                   ],
                   [
                     '403 lý do khác',
@@ -3171,8 +3204,8 @@
                   ],
                   [
                     '404 không tìm thấy mô hình',
-                    'Mã mô hình không tồn tại, hoặc không khả dụng với nhóm của khóa.',
-                    'Sao chép mã từ trang Mô hình & Giá.',
+                    'Mã mô hình không tồn tại, hoặc cấp dịch vụ của khóa không cung cấp mô hình đó.',
+                    'Sao chép mã từ trang Mô hình & giá.',
                   ],
                   [
                     '429',
@@ -3188,7 +3221,7 @@
               ],
               [
                 'p',
-                'Các yêu cầu thất bại cũng được ghi vào nhật ký sử dụng, nên xem dòng nhật ký tương ứng thường là cách nhanh nhất để biết cổng đã nhận được gì.',
+                'Các yêu cầu thất bại cũng được ghi vào nhật ký yêu cầu, nên xem dòng nhật ký tương ứng thường là cách nhanh nhất để biết cổng đã nhận được gì.',
               ],
             ],
           },
@@ -3198,7 +3231,7 @@
             b: [
               [
                 'p',
-                'Gửi email tới [fairrouter@protonmail.com](mailto:fairrouter@protonmail.com). Mọi thư đều có người đọc, thường trả lời trong vòng một ngày làm việc và không quá bảy ngày. Hãy ghi tên tài khoản, và với một yêu cầu cụ thể thì kèm thời điểm cùng mô hình lấy từ nhật ký sử dụng.',
+                'Gửi email tới [fairrouter@protonmail.com](mailto:fairrouter@protonmail.com). Mọi thư đều có người đọc, thường trả lời trong vòng một ngày làm việc và không quá bảy ngày. Hãy ghi tên tài khoản, và với một yêu cầu cụ thể thì kèm thời điểm cùng mô hình lấy từ nhật ký yêu cầu.',
               ],
               [
                 'p',
