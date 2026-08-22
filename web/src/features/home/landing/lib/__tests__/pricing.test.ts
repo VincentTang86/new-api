@@ -80,6 +80,11 @@ describe('formatLandingPrice', () => {
     // float drift that must not surface as digits.
     [0.7875 * 0.9, '$0.70875'],
     [0.1 + 0.2, '$0.30'],
+    // The ratios are themselves stored snapped to twelve decimals, so the
+    // product can drift past the twelfth decimal: kimi-k3's $2.60 input times a
+    // completion ratio of 4.942307692308 read as "$12.850000000001".
+    [1.3 * 2 * 4.942307692308, '$12.85'],
+    [15.000000000001 * 2 * 2.5, '$75.00'],
     // Finer than twelve decimals is unstatable, but still not free.
     [1e-15, '<$0.000000000001'],
     [0, '$0.00'],

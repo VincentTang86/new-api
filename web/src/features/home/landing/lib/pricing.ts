@@ -33,6 +33,17 @@ const MIN_PRICE_DECIMALS = 2
  */
 const MAX_PRICE_DECIMALS = 12
 
+/**
+ * Significant digits a price is snapped to before it is stated. A price is a
+ * product of ratios that were themselves snapped to twelve decimals, and the
+ * multiplication amplifies that snapping past the twelfth decimal: a completion
+ * ratio stored as 4.942307692308 against a $2.60 input arrives as
+ * 12.850000000000800, which twelve decimals faithfully render as
+ * "$12.850000000001". Ten significant digits absorb the drift and still keep
+ * every digit a configured rate can honestly carry.
+ */
+const PRICE_SIGNIFICANT_DIGITS = 10
+
 /** Stands in for a rate too fine even for that, so it never reads free. */
 const BELOW_RESOLUTION_PRICE = `<$${(10 ** -MAX_PRICE_DECIMALS).toFixed(
   MAX_PRICE_DECIMALS
@@ -62,7 +73,8 @@ export function formatLandingPrice(value: number | undefined): string {
     return LANDING_PRICE_PLACEHOLDER
   }
 
-  const [whole, fraction = ''] = value.toFixed(MAX_PRICE_DECIMALS).split('.')
+  const stated = Number.parseFloat(value.toPrecision(PRICE_SIGNIFICANT_DIGITS))
+  const [whole, fraction = ''] = stated.toFixed(MAX_PRICE_DECIMALS).split('.')
   const trimmed = fraction.replace(/0+$/, '').padEnd(MIN_PRICE_DECIMALS, '0')
   const price = `${whole}.${trimmed}`
   // A free model reads "$0.00"; a rate too fine to state must not.
