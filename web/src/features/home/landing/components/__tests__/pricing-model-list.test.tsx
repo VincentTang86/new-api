@@ -63,25 +63,27 @@ const SAMPLE_ROWS: PricingRow[] = [
   },
 ]
 
+type TestRouter = ReturnType<typeof createRouter>
+
 async function renderList(
   rows: readonly PricingRow[],
   variant: PricingListVariant = 'preview'
-): Promise<HTMLElement> {
+): Promise<{ container: HTMLElement; router: TestRouter }> {
   const rootRoute = createRootRoute()
   const indexRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/',
+    // The rows write the opened model into the URL, so the route under test
+    // has to accept the param the way the real `/` and `/pricing` routes do.
+    validateSearch: (search: Record<string, unknown>) => ({
+      model: typeof search.model === 'string' ? search.model : undefined,
+    }),
     component: () => (
       <PricingModelList rows={rows} variant={variant} benchmark='official' />
     ),
   })
-  const modelRoute = createRoute({
-    getParentRoute: () => rootRoute,
-    path: '/pricing/$modelId',
-    component: () => null,
-  })
   const router = createRouter({
-    routeTree: rootRoute.addChildren([indexRoute, modelRoute]),
+    routeTree: rootRoute.addChildren([indexRoute]),
     history: createMemoryHistory({ initialEntries: ['/'] }),
   })
 
@@ -90,7 +92,7 @@ async function renderList(
     container = render(<RouterProvider router={router as never} />).container
   })
 
-  return container
+  return { container, router: router as TestRouter }
 }
 
 /** The tooltip popup carries no role of its own; this is the surface the
@@ -115,7 +117,7 @@ beforeEach(() => {
 
 describe('PricingModelList', () => {
   test('renders the seven designed columns in order, each a column header', async () => {
-    const container = await renderList(SAMPLE_ROWS)
+    const { container } = await renderList(SAMPLE_ROWS)
     const headers = [...container.querySelectorAll('thead th')]
 
     expect(headers.length).toBe(7)
@@ -138,7 +140,7 @@ describe('PricingModelList', () => {
   test('ships both responsive presentations, gated by the md breakpoint', async () => {
     // Seven columns cannot fit a phone. The contract is table-above-md /
     // accordion-below-md — not a horizontally scrolling table.
-    const container = await renderList(SAMPLE_ROWS)
+    const { container } = await renderList(SAMPLE_ROWS)
 
     const tableWrapper = container.querySelector('[data-slot="pricing-table"]')
     expect(tableWrapper).not.toBeNull()
@@ -154,7 +156,7 @@ describe('PricingModelList', () => {
   })
 
   test('renders one body row per model, with the model name as its row header', async () => {
-    const container = await renderList(SAMPLE_ROWS)
+    const { container } = await renderList(SAMPLE_ROWS)
     const bodyRows = [...container.querySelectorAll('tbody tr')]
 
     expect(bodyRows.length).toBe(SAMPLE_ROWS.length)
@@ -170,7 +172,7 @@ describe('PricingModelList', () => {
   test('collapses the savings pill to a dash when a row has no savings', async () => {
     // A row the adapter could not compute savings for arrives with dashes in
     // both savings fields; the combined pill must degrade to a single dash.
-    const container = await renderList(SAMPLE_ROWS)
+    const { container } = await renderList(SAMPLE_ROWS)
     const bodyRows = [...container.querySelectorAll('tbody tr')]
 
     const withSavings = [...bodyRows[0].querySelectorAll('td')]
@@ -181,11 +183,13 @@ describe('PricingModelList', () => {
   })
 
   test('gives the model column the widest share of the fixed track', async () => {
-    const container = await renderList(SAMPLE_ROWS)
-    const shares = [...container.querySelectorAll('colgroup col')].map((col) => {
-      const share = /w-\[([\d.]+)%\]/.exec(col.className)
-      return share ? Number.parseFloat(share[1]) : Number.NaN
-    })
+    const { container } = await renderList(SAMPLE_ROWS)
+    const shares = [...container.querySelectorAll('colgroup col')].map(
+      (col) => {
+        const share = /w-\[([\d.]+)%\]/.exec(col.className)
+        return share ? Number.parseFloat(share[1]) : Number.NaN
+      }
+    )
 
     expect(shares).toHaveLength(7)
     expect(shares.reduce((total, share) => total + share, 0)).toBeCloseTo(100)
@@ -199,7 +203,7 @@ describe('PricingModelList', () => {
   })
 
   test('scrolls the track sideways rather than shrink below its headers', async () => {
-    const container = await renderList(SAMPLE_ROWS)
+    const { container } = await renderList(SAMPLE_ROWS)
     const table = container.querySelector('table')
 
     expect(table?.className ?? '').toMatch(/\btable-fixed\b/)
@@ -211,7 +215,7 @@ describe('PricingModelList', () => {
   })
 
   test('reveals the full model name on hover when the column cuts it', async () => {
-    const container = await renderList(SAMPLE_ROWS)
+    const { container } = await renderList(SAMPLE_ROWS)
     const name = tableModelName(container, 'GPT-4o')
     // jsdom lays nothing out, so the cut itself is what the fixture states.
     Object.defineProperty(name, 'scrollWidth', {
@@ -231,7 +235,7 @@ describe('PricingModelList', () => {
   })
 
   test('leaves a model name that fits without a tooltip repeating it', async () => {
-    const container = await renderList(SAMPLE_ROWS)
+    const { container } = await renderList(SAMPLE_ROWS)
     const name = tableModelName(container, 'GPT-4o')
     Object.defineProperty(name, 'scrollWidth', {
       configurable: true,
@@ -247,8 +251,39 @@ describe('PricingModelList', () => {
     expect(document.querySelector(TOOLTIP_POPUP)).toBeNull()
   })
 
+  test('opens the details drawer by naming the model in the URL', async () => {
+    // The drawer itself is mounted by the page; the row's whole job is to put
+    // the model in the URL, which is also what makes the panel linkable.
+    const { container, router } = await renderList(SAMPLE_ROWS)
+    const row = container.querySelector('tbody tr')
+    if (row === null) throw new Error('expected a body row')
+
+    await act(async () => {
+      await userEvent.click(row)
+    })
+
+    expect(router.state.location.search).toEqual({ model: 'gpt-4o' })
+  })
+
+  test('opens the drawer from the accordion panel on a phone', async () => {
+    const { container, router } = await renderList(SAMPLE_ROWS, 'catalogue')
+    const accordion = container.querySelector<HTMLElement>(
+      '[data-slot="pricing-accordion"]'
+    )
+    if (accordion === null) throw new Error('expected the mobile accordion')
+
+    await act(async () => {
+      await userEvent.click(within(accordion).getAllByText('DeepSeek R1')[0])
+    })
+    await act(async () => {
+      await userEvent.click(within(accordion).getByText('View →'))
+    })
+
+    expect(router.state.location.search).toEqual({ model: 'deepseek-r1' })
+  })
+
   test('renders a fallback instead of an empty table shell', async () => {
-    const container = await renderList([])
+    const { container } = await renderList([])
 
     expect(container.querySelector('table')).toBe(null)
     expect(container.querySelector('[data-slot="pricing-accordion"]')).toBe(

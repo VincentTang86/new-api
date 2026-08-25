@@ -16,10 +16,11 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { Link } from '@tanstack/react-router'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+
+import { useModelDetailsDrawer } from '@/features/pricing/hooks/use-model-details-drawer'
 
 import { LANDING_PRICE_PLACEHOLDER } from '../../lib/pricing'
 import type { PricingBenchmark, PricingRow } from '../../types'
@@ -39,6 +40,7 @@ interface PricingPreviewAccordionProps {
  */
 export function PricingPreviewAccordion(props: PricingPreviewAccordionProps) {
   const { t } = useTranslation()
+  const { openModel } = useModelDetailsDrawer()
   const panelIdPrefix = useId()
   const [openId, setOpenId] = useState<string | null>(null)
 
@@ -138,13 +140,16 @@ export function PricingPreviewAccordion(props: PricingPreviewAccordionProps) {
                     </dd>
                   </div>
                 </dl>
-                <Link
-                  to='/pricing/$modelId'
-                  params={{ modelId: row.modelId }}
-                  className='mt-3 inline-block text-[13px] font-medium text-(--pd-primary) transition-opacity hover:opacity-80'
+                {/* Tapping the row itself expands it — seven columns of
+                 * figures are the point of the panel on a phone — so the
+                 * details drawer opens from this button instead. */}
+                <button
+                  type='button'
+                  onClick={() => openModel(row.modelId)}
+                  className='mt-3 inline-block cursor-pointer text-[13px] font-medium text-(--pd-primary) transition-opacity hover:opacity-80'
                 >
                   {t('View →')}
-                </Link>
+                </button>
               </div>
             )}
           </div>

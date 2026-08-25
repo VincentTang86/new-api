@@ -23,11 +23,13 @@ import { ModelsPricing } from '@/features/models-pricing'
 import { getFreshModuleAccess } from '@/lib/nav-modules'
 import { useAuthStore } from '@/stores/auth-store'
 
-// The page itself no longer reads these — it renders a curated static table.
-// The schema stays because other features still deep-link here with filters
+// Only `model` is read by the page — the filter params below are inert here,
+// but the schema stays because other features still deep-link with them
 // (features/rankings/components/entity-links.tsx, features/dashboard's overview
 // dashboard), and dropping it would make those links throw on navigation.
 const pricingSearchSchema = z.object({
+  /** Model whose details drawer is open, if any. */
+  model: z.string().optional(),
   search: z.string().optional(),
   sort: z.string().optional(),
   vendor: z.string().optional(),

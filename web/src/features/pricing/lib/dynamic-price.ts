@@ -21,11 +21,9 @@ import { formatBillingCurrencyFromUSD } from '@/lib/currency'
 import { TOKEN_UNIT_DIVISORS } from '../constants'
 import type { PricingModel, TokenUnit } from '../types'
 import {
-  BILLING_PRICING_VARS,
   parseTiersFromExpr,
   splitBillingExprAndRequestRules,
   tryParseRequestRuleExpr,
-  type BillingVar,
   type ParsedTier,
 } from './billing-expr'
 import { getDisplayGroupRatio } from './model-helpers'
@@ -37,30 +35,6 @@ type DynamicPriceOptions = {
   usdExchangeRate?: number
   groupRatioMultiplier?: number
 }
-
-export type DynamicPriceEntry = {
-  key: string
-  field: string
-  label: string
-  shortLabel: string
-  value: number
-  formatted: string
-  variable: BillingVar
-}
-
-export type DynamicPricingSummary = {
-  tiers: ParsedTier[]
-  tier: ParsedTier | null
-  tierCount: number
-  hasRequestRules: boolean
-  isSpecialExpression: boolean
-  rawExpression: string
-  entries: DynamicPriceEntry[]
-  primaryEntries: DynamicPriceEntry[]
-  secondaryEntries: DynamicPriceEntry[]
-}
-
-const PRIMARY_DYNAMIC_FIELDS = new Set(['inputPrice', 'outputPrice'])
 
 export function isDynamicPricingModel(model: PricingModel): boolean {
   return model.billing_mode === 'tiered_expr' && Boolean(model.billing_expr)
@@ -121,62 +95,4 @@ export function hasDynamicRequestRules(model: PricingModel): boolean {
     model.billing_expr || ''
   )
   return Boolean(tryParseRequestRuleExpr(requestRuleExpr || '')?.length)
-}
-
-export function getDynamicPriceEntries(
-  tier: ParsedTier | null,
-  options: DynamicPriceOptions
-): DynamicPriceEntry[] {
-  if (!tier) return []
-
-  return BILLING_PRICING_VARS.flatMap((variable) => {
-    if (!variable.field) return []
-    const value = Number(tier[variable.field])
-    if (!Number.isFinite(value) || value <= 0) return []
-
-    return [
-      {
-        key: variable.key,
-        field: variable.field,
-        label: variable.label,
-        shortLabel: variable.shortLabel,
-        value,
-        formatted: formatDynamicUnitPrice(value, options),
-        variable,
-      },
-    ]
-  }).sort((a, b) => {
-    const aPrimary = PRIMARY_DYNAMIC_FIELDS.has(a.field)
-    const bPrimary = PRIMARY_DYNAMIC_FIELDS.has(b.field)
-    if (aPrimary !== bPrimary) return aPrimary ? -1 : 1
-    return 0
-  })
-}
-
-export function getDynamicPricingSummary(
-  model: PricingModel,
-  options: DynamicPriceOptions
-): DynamicPricingSummary | null {
-  if (!isDynamicPricingModel(model)) return null
-
-  const tiers = getDynamicPricingTiers(model)
-  const tier = tiers[0] || null
-  const entries = getDynamicPriceEntries(tier, options)
-  const rawExpression = model.billing_expr || ''
-
-  return {
-    tiers,
-    tier,
-    tierCount: tiers.length,
-    hasRequestRules: hasDynamicRequestRules(model),
-    isSpecialExpression: rawExpression.trim().length > 0 && tiers.length === 0,
-    rawExpression,
-    entries,
-    primaryEntries: entries.filter((entry) =>
-      PRIMARY_DYNAMIC_FIELDS.has(entry.field)
-    ),
-    secondaryEntries: entries.filter(
-      (entry) => !PRIMARY_DYNAMIC_FIELDS.has(entry.field)
-    ),
-  }
 }

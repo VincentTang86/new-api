@@ -20,6 +20,7 @@ import { Link } from '@tanstack/react-router'
 import { ArrowRight } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
+import { ModelDetailsDrawerHost } from '@/features/pricing/components/model-details-drawer-host'
 import { useSystemConfig } from '@/hooks/use-system-config'
 import { cn } from '@/lib/utils'
 
@@ -64,6 +65,8 @@ export function LandingPricingPreview() {
         providerFilter={table.providerFilter}
         onProviderChange={table.setProviderFilter}
       />
+
+      <ModelDetailsDrawerHost />
 
       <PricingModelList
         rows={previewRows}

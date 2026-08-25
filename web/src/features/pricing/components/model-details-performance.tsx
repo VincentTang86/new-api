@@ -230,7 +230,7 @@ export function ModelDetailsPerformance(props: { model: PricingModel }) {
         />
         <StatCard
           icon={Timer}
-          label={t('Average latency')}
+          label={t('Avg Completion Time')}
           value={formatLatency(avgLatency)}
         />
         <StatCard
@@ -252,7 +252,7 @@ export function ModelDetailsPerformance(props: { model: PricingModel }) {
         <SectionHeader
           icon={HeartPulse}
           title={t('Per-group performance')}
-          description={t('Average latency, TTFT, TPS, and success rate')}
+          description={t('Avg Completion Time, TTFT, TPS, and success rate')}
         />
         <StaticDataTable
           className='rounded-lg'
@@ -284,7 +284,7 @@ export function ModelDetailsPerformance(props: { model: PricingModel }) {
             },
             {
               id: 'latency',
-              header: t('Average latency'),
+              header: t('Avg Completion Time'),
               className: tableStyles.compactHeaderCellRight,
               cellClassName: tableStyles.compactMutedNumericCell,
               cell: (perf) => formatLatency(perf.avg_latency_ms),

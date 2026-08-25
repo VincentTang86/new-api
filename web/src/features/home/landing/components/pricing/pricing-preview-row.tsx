@@ -16,7 +16,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { Link } from '@tanstack/react-router'
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -26,6 +25,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { useModelDetailsDrawer } from '@/features/pricing/hooks/use-model-details-drawer'
 
 import { LANDING_PRICE_PLACEHOLDER } from '../../lib/pricing'
 import type { PricingRow } from '../../types'
@@ -40,6 +40,7 @@ interface PricingPreviewRowProps {
 
 export function PricingPreviewRow(props: PricingPreviewRowProps) {
   const { t } = useTranslation()
+  const { openModel } = useModelDetailsDrawer()
   const row = props.row
   const nameRef = useRef<HTMLSpanElement>(null)
   // Whether the name is cut depends on the viewport the column share resolves
@@ -56,7 +57,13 @@ export function PricingPreviewRow(props: PricingPreviewRowProps) {
   const frOutput = row.isPerRequest ? LANDING_PRICE_PLACEHOLDER : row.frOutput
 
   return (
-    <tr className='border-b border-(--pd-border) transition-colors last:border-b-0 odd:bg-(--pd-surface) even:bg-(--pd-surface-alt) hover:bg-(--pd-accent-bg-hover)'>
+    // The whole row opens the details drawer, as the design does. The View
+    // cell below stays a real button so the same action is reachable by
+    // keyboard without inventing row-level key handling.
+    <tr
+      onClick={() => openModel(row.modelId)}
+      className='cursor-pointer border-b border-(--pd-border) transition-colors last:border-b-0 odd:bg-(--pd-surface) even:bg-(--pd-surface-alt) hover:bg-(--pd-accent-bg-hover)'
+    >
       <th scope='row' className='px-6 py-4 text-left font-normal'>
         <div className='flex items-center gap-2.5'>
           <ProviderMark
@@ -105,13 +112,16 @@ export function PricingPreviewRow(props: PricingPreviewRowProps) {
         <SavingsBadge row={row} />
       </td>
       <td className='px-6 py-4 text-right'>
-        <Link
-          to='/pricing/$modelId'
-          params={{ modelId: row.modelId }}
-          className='pd-font-ui text-[13px] font-medium whitespace-nowrap text-(--pd-primary) transition-opacity hover:opacity-80'
+        <button
+          type='button'
+          onClick={(event) => {
+            event.stopPropagation()
+            openModel(row.modelId)
+          }}
+          className='pd-font-ui cursor-pointer text-[13px] font-medium whitespace-nowrap text-(--pd-primary) transition-opacity hover:opacity-80'
         >
           {t('View →')}
-        </Link>
+        </button>
       </td>
     </tr>
   )

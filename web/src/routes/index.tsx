@@ -17,9 +17,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { createFileRoute } from '@tanstack/react-router'
+import z from 'zod'
 
 import { Home } from '@/features/home'
 
+// The landing page's pricing preview opens model details in a drawer, and the
+// open model lives in the URL so the drawer survives a reload and can be shared.
+const homeSearchSchema = z.object({
+  model: z.string().optional(),
+})
+
 export const Route = createFileRoute('/')({
+  validateSearch: homeSearchSchema,
   component: Home,
 })

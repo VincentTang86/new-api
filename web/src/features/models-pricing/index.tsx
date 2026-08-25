@@ -23,6 +23,7 @@ import { PricingModelList } from '@/features/home/landing/components/pricing/pri
 import { PricingTableControls } from '@/features/home/landing/components/pricing/pricing-table-controls'
 import { LANDING_CONTAINER } from '@/features/home/landing/constants'
 import { useLandingPricingRows } from '@/features/home/landing/lib/use-landing-pricing-rows'
+import { ModelDetailsDrawerHost } from '@/features/pricing/components/model-details-drawer-host'
 import { useSystemConfig } from '@/hooks/use-system-config'
 
 export function ModelsPricing() {
@@ -66,6 +67,8 @@ export function ModelsPricing() {
             providerFilter={table.providerFilter}
             onProviderChange={table.setProviderFilter}
           />
+
+          <ModelDetailsDrawerHost />
 
           <PricingModelList
             rows={table.rows}
