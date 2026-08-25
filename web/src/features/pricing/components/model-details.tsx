@@ -673,13 +673,19 @@ export function ModelDetailsDrawer(props: ModelDetailsDrawerProps) {
       <SheetContent
         side='right'
         showCloseButton={false}
-        overlayClassName='bg-black/30 supports-backdrop-filter:backdrop-blur-none'
+        overlayClassName='bg-black/30 duration-200 supports-backdrop-filter:backdrop-blur-none'
         // The `sm:` prefix is load-bearing: SheetContent's right-side base
         // carries `sm:max-w-sm`, and tailwind-merge only drops it for an
         // override at the same breakpoint. 90vw at every width keeps the
         // 880px panel off the edge on narrower screens.
+        //
+        // The design slides the panel in from fully off-screen over 350ms
+        // rather than nudging it 2.5rem while fading, so the translate and
+        // opacity transition styles are overridden too — `ease-in-out` is
+        // already the design's cubic-bezier(0.4, 0, 0.2, 1).
         className={sideDrawerContentClassName(
-          'top-[55px] bottom-0 h-auto w-[880px] max-w-[90vw] shadow-[-8px_0_24px_rgba(0,0,0,0.08)] sm:max-w-[90vw]'
+          'top-[55px] bottom-0 h-auto w-[880px] max-w-[90vw] shadow-[-8px_0_24px_rgba(0,0,0,0.08)] sm:max-w-[90vw] ' +
+            'duration-[350ms] data-starting-style:translate-x-full data-ending-style:translate-x-full data-starting-style:opacity-100 data-ending-style:opacity-100 motion-reduce:transition-none'
         )}
       >
         <SheetHeader className='sr-only'>
