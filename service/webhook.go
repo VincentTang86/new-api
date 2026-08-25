@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/QuantumNous/new-api/common"
@@ -32,10 +33,11 @@ func generateSignature(secret string, payload []byte) string {
 
 // SendWebhookNotify 发送 webhook 通知
 func SendWebhookNotify(webhookURL string, secret string, data dto.Notify) error {
-	// 处理占位符
+	// 处理占位符，与 email/bark/gotify 保持一致：content 里是 {{value}} 而不是
+	// fmt 动词，用 Sprintf 回填会往末尾追加 %!(EXTRA ...) 把正文写坏。
 	content := data.Content
 	for _, value := range data.Values {
-		content = fmt.Sprintf(content, value)
+		content = strings.Replace(content, dto.ContentValueParam, fmt.Sprintf("%v", value), 1)
 	}
 
 	// 构建 webhook 负载

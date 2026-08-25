@@ -17,9 +17,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import axios, { type AxiosRequestConfig } from 'axios'
-import { t } from 'i18next'
+import i18next, { t } from 'i18next'
 import { toast } from 'sonner'
 
+import { toIntlLocale } from '@/i18n/languages'
 import {
   applyAuthRotation,
   clearAuthentication,
@@ -165,6 +166,14 @@ api.interceptors.request.use((config) => {
   const accessToken = useAuthStore.getState().auth.accessToken
   if (accessToken) {
     config.headers.Authorization = `Bearer ${accessToken}`
+  }
+  // Backend i18n — API error messages and the verification / password-reset
+  // emails — reads Accept-Language. The value the browser sends on its own is
+  // the OS locale, not the language the visitor picked in the UI, so send the
+  // active interface language as a BCP-47 tag instead.
+  const locale = toIntlLocale(i18next.language)
+  if (locale) {
+    config.headers['Accept-Language'] = locale
   }
   return config
 })

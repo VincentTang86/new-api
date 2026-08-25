@@ -200,10 +200,15 @@ func ParseAcceptLanguage(header string) string {
 // normalizeLang normalizes language code to supported format
 func normalizeLang(lang string) string {
 	lang = strings.ToLower(strings.TrimSpace(lang))
+	lang = strings.ReplaceAll(lang, "_", "-")
 
-	// Handle common variations
+	// Handle common variations. The frontend stores its own camelCase interface
+	// codes ("zhCN" / "zhTW") in the user language setting, so those must map as
+	// well as the BCP-47 tags browsers send on Accept-Language.
 	switch {
-	case strings.HasPrefix(lang, "zh-tw"):
+	case strings.HasPrefix(lang, "zh-tw"), strings.HasPrefix(lang, "zhtw"),
+		strings.HasPrefix(lang, "zh-hk"), strings.HasPrefix(lang, "zh-mo"),
+		strings.HasPrefix(lang, "zh-hant"):
 		return LangZhTW
 	case strings.HasPrefix(lang, "zh"):
 		return LangZhCN

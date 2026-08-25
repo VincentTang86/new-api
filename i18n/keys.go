@@ -336,3 +336,20 @@ const (
 	MsgCustomOAuthBindingNotFound   = "custom_oauth.binding_not_found"
 	MsgCustomOAuthProviderIdInvalid = "custom_oauth.provider_id_field_invalid"
 )
+
+// Email template messages
+const (
+	MsgEmailVerificationSubject  = "email.verification_subject"
+	MsgEmailVerificationBody     = "email.verification_body"
+	MsgEmailPasswordResetSubject = "email.password_reset_subject"
+	MsgEmailPasswordResetBody    = "email.password_reset_body"
+)
+
+// Notification messages
+const (
+	MsgNotifyQuotaLowTitle             = "notify.quota_low_title"
+	MsgNotifySubscriptionQuotaLowTitle = "notify.subscription_quota_low_title"
+	MsgNotifyQuotaLowBark              = "notify.quota_low_bark"
+	MsgNotifyQuotaLowPlain             = "notify.quota_low_plain"
+	MsgNotifyQuotaLowHTML              = "notify.quota_low_html"
+)
