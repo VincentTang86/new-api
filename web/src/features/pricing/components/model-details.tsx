@@ -654,22 +654,28 @@ export function ModelDetailsContent(props: ModelDetailsContentProps) {
 // Drawer wrapper
 // ----------------------------------------------------------------------------
 
-export interface ModelDetailsDrawerProps extends ModelDetailsContentProps {
+export interface ModelDetailsDrawerProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  /** Names the panel for assistive tech; the visible title is in the body. */
+  title: string
+  children: React.ReactNode
 }
 
 /**
  * Model details as the design draws them: a panel that slides in from the right
  * of the catalogue, starting below the sticky public header so the page it
  * belongs to stays visible behind it.
+ *
+ * Callers keep this mounted and flip `open`. Unmounting it to close skips the
+ * exit transition, because the panel has to stay in the tree while it slides
+ * away.
  */
 export function ModelDetailsDrawer(props: ModelDetailsDrawerProps) {
   const { t } = useTranslation()
-  const { open, onOpenChange, ...contentProps } = props
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={props.open} onOpenChange={props.onOpenChange}>
       <SheetContent
         side='right'
         showCloseButton={false}
@@ -689,7 +695,7 @@ export function ModelDetailsDrawer(props: ModelDetailsDrawerProps) {
         )}
       >
         <SheetHeader className='sr-only'>
-          <SheetTitle>{props.model.model_name}</SheetTitle>
+          <SheetTitle>{props.title}</SheetTitle>
           <SheetDescription>{t('Model details')}</SheetDescription>
         </SheetHeader>
         {/* The design gives the close control its own bar above the content
@@ -702,9 +708,7 @@ export function ModelDetailsDrawer(props: ModelDetailsDrawerProps) {
             <X className='size-3.5' />
           </SheetClose>
         </div>
-        <div className='flex-1 overflow-y-auto px-5 pb-8'>
-          <ModelDetailsContent {...contentProps} />
-        </div>
+        <div className='flex-1 overflow-y-auto px-5 pb-8'>{props.children}</div>
       </SheetContent>
     </Sheet>
   )
