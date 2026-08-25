@@ -91,7 +91,7 @@ export function ModelDetailsDrawerHost() {
       <SheetContent
         side='right'
         overlayClassName='bg-black/30 supports-backdrop-filter:backdrop-blur-none'
-        className='bg-background text-foreground top-[55px] bottom-0 flex h-auto w-[880px] max-w-[90vw] flex-col gap-0 overflow-hidden p-0 shadow-[-8px_0_24px_rgba(0,0,0,0.08)]'
+        className='bg-background text-foreground top-[55px] bottom-0 flex h-auto w-[880px] max-w-[90vw] flex-col gap-0 overflow-hidden p-0 shadow-[-8px_0_24px_rgba(0,0,0,0.08)] sm:max-w-[90vw]'
       >
         <SheetHeader className='sr-only'>
           <SheetTitle>{modelId}</SheetTitle>

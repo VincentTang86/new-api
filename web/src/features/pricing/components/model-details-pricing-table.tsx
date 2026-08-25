@@ -237,7 +237,7 @@ export function ModelDetailsPricingTable(props: {
   return (
     <div className='overflow-x-auto rounded-[10px] border border-(--pd-border)'>
       <table className='w-full min-w-max border-collapse text-left'>
-        <thead className='bg-(--pd-surface-muted)'>
+        <thead className='border-b border-(--pd-border) bg-(--pd-surface-muted)'>
           <tr>
             <th scope='col' className={headCellClass}>
               {t('Plan')}
@@ -274,7 +274,7 @@ export function ModelDetailsPricingTable(props: {
                 key={`${group}-${tier.label || tierIndex}`}
                 className={
                   tierIndex === 0
-                    ? 'border-t border-(--pd-border)'
+                    ? 'border-t border-(--pd-border) first:border-t-0'
                     : 'border-t border-(--pd-border-soft)'
                 }
               >

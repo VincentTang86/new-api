@@ -51,7 +51,6 @@ import {
   formatUptimePct,
   getSuccessRateTextClass,
 } from '@/features/performance-metrics/lib/format'
-import { getLobeIcon } from '@/lib/lobe-icon'
 import { cn } from '@/lib/utils'
 
 import { parseTags } from '../lib/model-helpers'
@@ -147,7 +146,7 @@ function OverviewMetric(props: {
   const Icon = props.icon
 
   return (
-    <div className='flex min-w-0 flex-1 flex-col gap-1 px-3 py-2'>
+    <div className='flex min-w-0 flex-1 flex-col gap-1 p-2'>
       <div className='truncate text-[9px] font-medium tracking-wider text-(--pd-faint) uppercase'>
         {props.label}
       </div>
@@ -201,7 +200,7 @@ function OverviewSummaryGrid(props: { model: PricingModel }) {
       : 0
 
   return (
-    <div className='flex divide-x divide-(--pd-border) overflow-hidden rounded-lg border border-(--pd-border) bg-(--pd-surface) max-[480px]:flex-col max-[480px]:divide-x-0 max-[480px]:divide-y'>
+    <div className='flex w-full divide-x divide-(--pd-border) border border-(--pd-border) bg-(--pd-surface) max-[480px]:flex-col max-[480px]:divide-x-0 max-[480px]:divide-y'>
       <OverviewMetric
         icon={Timer}
         label='TPS'
@@ -483,48 +482,42 @@ function ModelBackendDetailsSection(props: { model: PricingModel }) {
 function ModelHeader(props: { model: PricingModel }) {
   const { t } = useTranslation()
   const model = props.model
-  const modelIconKey = model.icon || model.vendor_icon
-  const modelIcon = modelIconKey ? getLobeIcon(modelIconKey, 20) : null
   const description = model.description || model.vendor_description || null
 
   return (
-    <header className='pb-4'>
+    <header className='flex flex-col gap-5'>
       <div className='flex items-start justify-between gap-3'>
         <div className='flex min-w-0 flex-col gap-1.5'>
-          <div className='flex items-center gap-2'>
-            {modelIcon}
-            <h1 className='font-mono text-[22px] font-bold tracking-tight text-(--pd-ink-strong) sm:text-[26px]'>
+          <div className='flex min-w-0 items-center gap-2'>
+            <h1 className='min-w-0 font-mono text-[22px] leading-tight font-bold tracking-tight text-(--pd-ink-strong) sm:text-[26px]'>
               {model.model_name}
             </h1>
             <CopyButton
               value={model.model_name || ''}
-              className='size-6'
-              iconClassName='size-3'
+              className='size-6 shrink-0'
+              iconClassName='size-3.5'
               tooltip={t('Copy model name')}
               successTooltip={t('Copied!')}
               aria-label={t('Copy model name')}
             />
           </div>
-          <div className='flex flex-wrap items-center gap-1.5'>
-            {model.vendor_name && (
-              <span className='rounded-full bg-(--pd-accent-bg) px-2.5 py-[3px] text-[11px] font-semibold text-(--pd-primary)'>
-                {model.vendor_name}
-              </span>
-            )}
-            <ModelBillingModeBadge model={model} />
-          </div>
+          {model.vendor_name && (
+            <span className='w-fit rounded-full bg-(--pd-accent-bg) px-2.5 py-[3px] text-[11px] font-semibold text-(--pd-primary)'>
+              {model.vendor_name}
+            </span>
+          )}
         </div>
         {/* Trying a model starts with a key, so this lands on the console's
          * API keys page rather than a chat surface. */}
         <Link
           to='/keys'
-          className='shrink-0 rounded-lg border border-(--pd-primary)/25 bg-(--pd-accent-bg) px-4 py-2.5 text-[13px] font-semibold whitespace-nowrap text-(--pd-primary) transition-colors hover:bg-(--pd-accent-bg-hover)'
+          className='shrink-0 rounded-lg border border-(--pd-primary)/25 bg-(--pd-accent-bg) px-[18px] py-2.5 text-[13px] font-semibold whitespace-nowrap text-(--pd-primary) transition-colors hover:bg-(--pd-accent-bg-hover)'
         >
           {t('Try this model')}
         </Link>
       </div>
       {description && (
-        <p className='mt-4 text-[13px] leading-relaxed text-(--pd-muted-2)'>
+        <p className='pt-2 pb-4 text-[13px] leading-relaxed text-(--pd-muted-2)'>
           {description}
         </p>
       )}
@@ -681,8 +674,12 @@ export function ModelDetailsDrawer(props: ModelDetailsDrawerProps) {
         side='right'
         showCloseButton={false}
         overlayClassName='bg-black/30 supports-backdrop-filter:backdrop-blur-none'
+        // The `sm:` prefix is load-bearing: SheetContent's right-side base
+        // carries `sm:max-w-sm`, and tailwind-merge only drops it for an
+        // override at the same breakpoint. 90vw at every width keeps the
+        // 880px panel off the edge on narrower screens.
         className={sideDrawerContentClassName(
-          'top-[55px] bottom-0 h-auto w-[880px] max-w-[90vw] shadow-[-8px_0_24px_rgba(0,0,0,0.08)]'
+          'top-[55px] bottom-0 h-auto w-[880px] max-w-[90vw] shadow-[-8px_0_24px_rgba(0,0,0,0.08)] sm:max-w-[90vw]'
         )}
       >
         <SheetHeader className='sr-only'>
