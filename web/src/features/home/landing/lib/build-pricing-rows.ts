@@ -17,6 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { QUOTA_TYPE_VALUES } from '@/features/pricing/constants'
+import { parseTiersFromExpr } from '@/features/pricing/lib/billing-expr'
 import { getConfiguredGroupRatio } from '@/features/pricing/lib/model-helpers'
 import { tokenPriceUSD } from '@/features/pricing/lib/price'
 import type { PricingModel } from '@/features/pricing/types'
@@ -173,8 +174,33 @@ export function buildPricingRows(params: BuildPricingRowsParams): PricingRow[] {
         benchmark === 'official'
           ? catalog.officialOutput
           : catalog.openrouterOutput
-      const inputUSD = tokenPriceUSD(model, 'input', ratio)
-      const outputUSD = tokenPriceUSD(model, 'output', ratio)
+
+      // A tiered-expression model carries its prices in the expression, not in
+      // model_ratio; render its first (standard) tier. A model with neither an
+      // expression nor a configured ratio would otherwise present the backend's
+      // 37.5 fallback ratio as a real $75 price — dash it out instead.
+      const exprTier =
+        model.billing_mode === 'tiered_expr' && model.billing_expr
+          ? parseTiersFromExpr(model.billing_expr)[0]
+          : undefined
+      if (!exprTier && model.unset_ratio) {
+        return {
+          ...base,
+          isPerRequest: false,
+          frInput: LANDING_PRICE_PLACEHOLDER,
+          frOutput: LANDING_PRICE_PLACEHOLDER,
+          officialInput: formatLandingPrice(benchmarkInput),
+          officialOutput: formatLandingPrice(benchmarkOutput),
+          savingsInput: LANDING_PRICE_PLACEHOLDER,
+          savingsOutput: LANDING_PRICE_PLACEHOLDER,
+        }
+      }
+      const inputUSD = exprTier
+        ? Number(exprTier.inputPrice ?? 0) * ratio
+        : tokenPriceUSD(model, 'input', ratio)
+      const outputUSD = exprTier
+        ? Number(exprTier.outputPrice ?? 0) * ratio
+        : tokenPriceUSD(model, 'output', ratio)
       return {
         ...base,
         isPerRequest: false,

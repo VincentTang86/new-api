@@ -38,6 +38,9 @@ export type PricingModel = {
   vendor_description?: string
   quota_type: number
   model_ratio: number
+  /** True when no ratio is configured and model_ratio carries the backend
+   * fallback (37.5) — never a real selling price. */
+  unset_ratio?: boolean
   completion_ratio: number
   model_price?: number
   cache_ratio?: number | null

@@ -80,6 +80,59 @@ describe('buildPricingRows', () => {
     expect(row.savingsOutput).toBe('50%')
   })
 
+  test('a tiered-expression model prices from its expression, not the fallback ratio', () => {
+    // gpt-image-2 shape: billing lives in the expression while model_ratio
+    // carries the backend's 37.5 fallback. The row must read $0.30/$1.80 from
+    // the expression (and scale by group ratio), never $75 from the fallback.
+    const model = tokenModel({
+      model_ratio: 37.5,
+      completion_ratio: 2,
+      unset_ratio: true,
+      billing_mode: 'tiered_expr',
+      billing_expr:
+        'tier("base", p * 0.3 + c * 1.8 + cr * 0.12 + img * 0.48 + img_o * 1.8)',
+    })
+    const row = build(model, {
+      'demo-model': { officialInput: 0.6, officialOutput: 3.6 },
+    })
+    expect(row.frInput).toBe('$0.30')
+    expect(row.frOutput).toBe('$1.80')
+    expect(row.savingsInput).toBe('50%')
+    expect(row.savingsOutput).toBe('50%')
+
+    const scaled = build(model, {}, { groupRatio: { default: 5 } })
+    expect(scaled.frInput).toBe('$1.50')
+    expect(scaled.frOutput).toBe('$9.00')
+  })
+
+  test('a multi-tier expression renders its first (standard) tier', () => {
+    const row = build(
+      tokenModel({
+        unset_ratio: true,
+        billing_mode: 'tiered_expr',
+        billing_expr:
+          'len <= 200000 ? tier("standard", p * 3 + c * 15) : tier("long_context", p * 6 + c * 22.5)',
+      }),
+      {}
+    )
+    expect(row.frInput).toBe('$3.00')
+    expect(row.frOutput).toBe('$15.00')
+  })
+
+  test('a model with neither expression nor configured ratio shows dashes, not the fallback price', () => {
+    const row = build(
+      tokenModel({ model_ratio: 37.5, completion_ratio: 2, unset_ratio: true }),
+      { 'demo-model': { officialInput: 2.5, officialOutput: 10 } }
+    )
+    expect(row.frInput).toBe(LANDING_PRICE_PLACEHOLDER)
+    expect(row.frOutput).toBe(LANDING_PRICE_PLACEHOLDER)
+    expect(row.savingsInput).toBe(LANDING_PRICE_PLACEHOLDER)
+    expect(row.savingsOutput).toBe(LANDING_PRICE_PLACEHOLDER)
+    // The benchmark columns still render so the table stays comparable.
+    expect(row.officialInput).toBe('$2.50')
+    expect(row.officialOutput).toBe('$10.00')
+  })
+
   test('prices FR by the selected group ratio, so a cheaper tier deepens the saving', () => {
     // groupRatio 0.5 halves FR input to 0.625 → 75% off the $2.50 list price.
     const row = build(

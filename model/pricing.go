@@ -23,6 +23,10 @@ type Pricing struct {
 	VendorID               int                     `json:"vendor_id,omitempty"`
 	QuotaType              int                     `json:"quota_type"`
 	ModelRatio             float64                 `json:"model_ratio"`
+	// UnsetRatio marks a token model whose ratio is not configured, so ModelRatio
+	// carries the backend fallback (37.5) rather than a real price. Display layers
+	// should not present that fallback as a genuine selling price.
+	UnsetRatio bool `json:"unset_ratio,omitempty"`
 	ModelPrice             float64                 `json:"model_price"`
 	OwnerBy                string                  `json:"owner_by"`
 	CompletionRatio        float64                 `json:"completion_ratio"`
@@ -410,10 +414,11 @@ func updatePricing() {
 			pricing.ModelPrice = modelPrice
 			pricing.QuotaType = 1
 		} else {
-			modelRatio, _, _ := ratio_setting.GetModelRatio(model)
+			modelRatio, hasRatioSetting, _ := ratio_setting.GetModelRatio(model)
 			pricing.ModelRatio = modelRatio
 			pricing.CompletionRatio = ratio_setting.GetCompletionRatio(model)
 			pricing.QuotaType = 0
+			pricing.UnsetRatio = !hasRatioSetting
 		}
 		if cacheRatio, ok := ratio_setting.GetCacheRatio(model); ok {
 			pricing.CacheRatio = &cacheRatio
