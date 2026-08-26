@@ -58,6 +58,17 @@ function businessErrorToastId(message: string): string {
   return `api-error:${message}`
 }
 
+// Waking a laptop drops the sockets that were open and React Query refires
+// every active query before Wi-Fi has finished reassociating, so the first
+// transport failures after a wake are routine and get retried. Reporting one
+// right away turned every lid open into a "Network Error" popup. Wait instead:
+// if any request reaches the server before the delay is up, the connection is
+// back and the failure was noise.
+const TRANSPORT_ERROR_TOAST_ID = 'api-transport-error'
+const TRANSPORT_ERROR_DELAY_MS = 8000
+
+let responsesReceived = 0
+
 const inFlightGet = new Map<string, Promise<unknown>>()
 const originalGet = api.get.bind(api)
 
@@ -88,6 +99,8 @@ function redirectToSignIn(): void {
 
 api.interceptors.response.use(
   (response) => {
+    responsesReceived += 1
+
     if (response.config.acceptAuthRotation && response.data?.success === true) {
       applyAuthRotation(response.data.data)
     }
@@ -108,9 +121,14 @@ api.interceptors.response.use(
     return response
   },
   async (error) => {
+    // Requests the app aborted itself — a route change, a superseded query —
+    // are not failures the visitor needs to hear about.
+    if (axios.isCancel(error)) throw error
+
     const config = error?.config as ApiRequestConfig | undefined
     const skipErrorHandler = config?.skipErrorHandler
     const status = error?.response?.status
+    if (error?.response) responsesReceived += 1
 
     if (status === 401) {
       // Signing out clears the store before React unmounts the authenticated
@@ -150,13 +168,21 @@ api.interceptors.response.use(
         toast.error(t('Session expired!'), { id: SESSION_EXPIRED_TOAST_ID })
       }
     } else if (!skipErrorHandler) {
-      const messageKey = getServerErrorMessageKey(error)
-      const message = messageKey
-        ? t(messageKey)
-        : error?.response?.data?.message ||
-          error?.message ||
-          t('Request failed')
-      toast.error(message, { id: businessErrorToastId(message) })
+      if (error?.response) {
+        const messageKey = getServerErrorMessageKey(error)
+        const message = messageKey
+          ? t(messageKey)
+          : error.response.data?.message || error.message || t('Request failed')
+        toast.error(message, { id: businessErrorToastId(message) })
+      } else {
+        const seen = responsesReceived
+        setTimeout(() => {
+          if (responsesReceived !== seen) return
+          toast.error(t('Network connection failed or server not responding'), {
+            id: TRANSPORT_ERROR_TOAST_ID,
+          })
+        }, TRANSPORT_ERROR_DELAY_MS)
+      }
     }
     throw error
   }

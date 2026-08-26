@@ -16,7 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { AxiosError, type AxiosAdapter } from 'axios'
+import { AxiosError, CanceledError, type AxiosAdapter } from 'axios'
 import { toast } from 'sonner'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
@@ -99,6 +99,63 @@ describe('unauthorized response handling', () => {
 
     await expect(api.post('/api/user/self')).rejects.toThrow()
     await expect(api.post('/api/user/auth/sessions')).rejects.toThrow()
+
+    expect(toast.error).not.toHaveBeenCalled()
+  })
+})
+
+const networkFailure: AxiosAdapter = (config) =>
+  Promise.reject(new AxiosError('Network Error', 'ERR_NETWORK', config))
+
+const reachable: AxiosAdapter = (config) =>
+  Promise.resolve({
+    status: 200,
+    statusText: 'OK',
+    data: { success: true, data: {} },
+    headers: {},
+    config,
+  })
+
+describe('transport failure handling', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  test('a dropped connection stays silent once a later request reaches the server', async () => {
+    api.defaults.adapter = networkFailure
+    await expect(api.get('/api/pricing')).rejects.toThrow()
+
+    api.defaults.adapter = reachable
+    await api.get('/api/status')
+    await vi.advanceTimersByTimeAsync(30_000)
+
+    expect(toast.error).not.toHaveBeenCalled()
+  })
+
+  test('a connection that never comes back reports under a shared toast id', async () => {
+    api.defaults.adapter = networkFailure
+
+    await expect(api.get('/api/pricing')).rejects.toThrow()
+    await expect(api.get('/api/status')).rejects.toThrow()
+    await vi.advanceTimersByTimeAsync(30_000)
+
+    expect(toast.error).toHaveBeenCalledTimes(2)
+    expect(toast.error).toHaveBeenCalledWith(
+      'Network connection failed or server not responding',
+      { id: 'api-transport-error' }
+    )
+  })
+
+  test('a request the app aborted itself is not reported', async () => {
+    api.defaults.adapter = (config) =>
+      Promise.reject(new CanceledError('canceled', config))
+
+    await expect(api.get('/api/pricing')).rejects.toThrow()
+    await vi.advanceTimersByTimeAsync(30_000)
 
     expect(toast.error).not.toHaveBeenCalled()
   })
