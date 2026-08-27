@@ -38,10 +38,52 @@ func (a *TaskAdaptor) Init(info *relaycommon.RelayInfo) {
 }
 
 func (a *TaskAdaptor) ValidateRequestAndSetAction(c *gin.Context, info *relaycommon.RelayInfo) (taskErr *taskdto.TaskError) {
+	if IsH3Model(info.OriginModelName) {
+		return a.validateH3Request(c, info)
+	}
 	return relaycommon.ValidateBasicTaskRequest(c, info, constant.TaskActionGenerate)
 }
 
+// validateH3Request 自建 H3 的校验流程。v2 的再生成接口允许不带 prompt（按
+// source_task_id 引用源任务的输入），过不了 ValidateBasicTaskRequest 的非空
+// prompt 校验，且 H3 的时长/分辨率/素材数量上界都比通用校验严得多。
+func (a *TaskAdaptor) validateH3Request(c *gin.Context, info *relaycommon.RelayInfo) *taskdto.TaskError {
+	if strings.HasPrefix(c.GetHeader("Content-Type"), "multipart/form-data") {
+		return service.TaskErrorWrapperLocal(errors.New("MiniMax-H3 only accepts application/json requests"),
+			"invalid_content_type", http.StatusBadRequest)
+	}
+
+	var req relaycommon.TaskSubmitReq
+	if err := common.UnmarshalBodyReusable(c, &req); err != nil {
+		return service.TaskErrorWrapperLocal(err, "invalid_request", http.StatusBadRequest)
+	}
+	if reference := strings.TrimSpace(req.InputReference); reference != "" {
+		req.Images = []string{reference}
+	} else if len(req.Images) == 0 && strings.TrimSpace(req.Image) != "" {
+		req.Images = []string{strings.TrimSpace(req.Image)}
+	}
+
+	payload, err := buildH3Payload(c, info, req)
+	if err != nil {
+		return service.TaskErrorWrapperLocal(err, "invalid_request", http.StatusBadRequest)
+	}
+
+	relaycommon.StoreTaskRequest(c, info, payload.Action, req)
+	c.Set(h3PayloadContextKey, payload)
+	return nil
+}
+
 func (a *TaskAdaptor) BuildRequestURL(info *relaycommon.RelayInfo) (string, error) {
+	if IsH3Model(info.OriginModelName) {
+		switch info.Action {
+		case constant.TaskActionRegenerate:
+			return fmt.Sprintf("%s%s", a.baseURL, V2RegenerationEndpoint), nil
+		case constant.TaskActionContextIR:
+			return fmt.Sprintf("%s%s", a.baseURL, V2ContextIREndpoint), nil
+		default:
+			return fmt.Sprintf("%s%s", a.baseURL, V2GenerationEndpoint), nil
+		}
+	}
 	return fmt.Sprintf("%s%s", a.baseURL, TextToVideoEndpoint), nil
 }
 
@@ -53,6 +95,18 @@ func (a *TaskAdaptor) BuildRequestHeader(c *gin.Context, req *http.Request, info
 }
 
 func (a *TaskAdaptor) BuildRequestBody(c *gin.Context, info *relaycommon.RelayInfo) (io.Reader, error) {
+	if IsH3Model(info.OriginModelName) {
+		payload, ok := getH3Payload(c)
+		if !ok {
+			return nil, fmt.Errorf("h3 request not found in context")
+		}
+		data, err := common.Marshal(payload.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "marshal h3 request failed")
+		}
+		return bytes.NewReader(data), nil
+	}
+
 	v, exists := c.Get("task_request")
 	if !exists {
 		return nil, fmt.Errorf("request not found in context")
@@ -87,6 +141,10 @@ func (a *TaskAdaptor) DoResponse(c *gin.Context, resp *http.Response, info *rela
 	}
 	_ = resp.Body.Close()
 
+	if IsH3Model(info.OriginModelName) {
+		return a.doH3Response(c, resp, info, responseBody)
+	}
+
 	var hResp VideoResponse
 	if err := common.Unmarshal(responseBody, &hResp); err != nil {
 		taskErr = service.TaskErrorWrapper(errors.Wrapf(err, "body: %s", responseBody), "unmarshal_response_body_failed", http.StatusInternalServerError)
@@ -118,7 +176,12 @@ func (a *TaskAdaptor) FetchTask(baseUrl, key string, body map[string]any, proxy 
 		return nil, fmt.Errorf("invalid task_id")
 	}
 
+	// v1 与 v2 的查询端点不同，而 FetchTask 的入参里没有 RelayInfo，模型名由
+	// 调用方放进 body 传进来。
 	uri := fmt.Sprintf("%s%s?task_id=%s", baseUrl, QueryTaskEndpoint, taskID)
+	if modelName, _ := body["model"].(string); IsH3Model(modelName) {
+		uri = fmt.Sprintf("%s%s%s", baseUrl, V2QueryTaskEndpoint, taskID)
+	}
 
 	req, err := http.NewRequest(http.MethodGet, uri, nil)
 	if err != nil {
@@ -183,6 +246,13 @@ func (a *TaskAdaptor) parseResolutionFromSize(size string, modelConfig ModelConf
 }
 
 func (a *TaskAdaptor) ParseTaskResult(respBody []byte) (*relaycommon.TaskInfo, error) {
+	// v2 的查询响应把任务包在 task 对象里，v1 是平铺的，按结构判别即可，
+	// 不需要把模型名再透传一层。
+	var v2Resp QueryV2Response
+	if err := common.Unmarshal(respBody, &v2Resp); err == nil && v2Resp.Task != nil {
+		return parseH3TaskResult(v2Resp.Task), nil
+	}
+
 	resTask := QueryTaskResponse{}
 	if err := common.Unmarshal(respBody, &resTask); err != nil {
 		return nil, errors.Wrap(err, "unmarshal task result failed")
@@ -225,6 +295,11 @@ func (a *TaskAdaptor) ParseTaskResult(respBody []byte) (*relaycommon.TaskInfo, e
 }
 
 func (a *TaskAdaptor) ConvertToOpenAIVideo(originTask *model.Task) ([]byte, error) {
+	var v2Resp QueryV2Response
+	if err := common.Unmarshal(originTask.Data, &v2Resp); err == nil && v2Resp.Task != nil {
+		return convertH3ToOpenAIVideo(originTask, v2Resp.Task)
+	}
+
 	var hailuoResp QueryTaskResponse
 	if err := common.Unmarshal(originTask.Data, &hailuoResp); err != nil {
 		return nil, errors.Wrap(err, "unmarshal hailuo task data failed")

@@ -75,6 +75,8 @@ type TaskAdaptor interface {
 
 	// ── Polling ──────────────────────────────────────────────────────
 
+	// FetchTask 查询上游任务状态。body 携带 task_id、action 与 model：同一渠道
+	// 下不同模型的查询端点可能不同（例如 MiniMax 的 v1 海螺与 v2 H3）。
 	FetchTask(baseUrl, key string, body map[string]any, proxy string) (*http.Response, error)
 	ParseTaskResult(respBody []byte) (*relaycommon.TaskInfo, error)
 }

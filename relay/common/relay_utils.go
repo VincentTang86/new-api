@@ -117,7 +117,10 @@ func createTaskError(err error, code string, statusCode int, localError bool) *d
 	}
 }
 
-func storeTaskRequest(c *gin.Context, info *RelayInfo, action string, requestObj TaskSubmitReq) {
+// StoreTaskRequest 记录本次任务的动作与解析后的请求体，供适配器后续通过
+// GetTaskRequest 取回。自建校验流程的适配器（如 MiniMax-H3，它的再生成接口
+// 允许不带 prompt，走不了 ValidateBasicTaskRequest）需要直接调用它。
+func StoreTaskRequest(c *gin.Context, info *RelayInfo, action string, requestObj TaskSubmitReq) {
 	info.Action = action
 	c.Set("task_request", requestObj)
 }
@@ -261,7 +264,7 @@ func ValidateMultipartDirect(c *gin.Context, info *RelayInfo) *dto.TaskError {
 		// OtherRatios 已移到 Sora adaptor 的 EstimateBilling 中设置
 	}
 
-	storeTaskRequest(c, info, action, req)
+	StoreTaskRequest(c, info, action, req)
 
 	return nil
 }
@@ -308,6 +311,6 @@ func ValidateBasicTaskRequest(c *gin.Context, info *RelayInfo, action string) *d
 		req.Images = []string{req.Image}
 	}
 
-	storeTaskRequest(c, info, action, req)
+	StoreTaskRequest(c, info, action, req)
 	return nil
 }
