@@ -38,8 +38,7 @@ export interface PricingGroupOption {
   label: string
   /** Translated tier blurb; absent for tiers outside the design's catalogue. */
   description?: string
-  ratio: number
-  /** Cheaper than the most expensive tier — carries the "Lower cost" badge. */
+  /** The tier the catalogue prices below the regular one; badged as such. */
   lowerCost: boolean
 }
 
@@ -114,27 +113,22 @@ export function useLandingPricingRows(): UseLandingPricingRows {
           label: known ? t(known.label) : key,
           description: known ? t(known.pricingBlurb) : undefined,
           order: known?.order ?? UNKNOWN_SERVICE_TIER_ORDER,
-          ratio:
-            typeof groupRatio[key] === 'number' &&
-            Number.isFinite(groupRatio[key])
-              ? groupRatio[key]
-              : 1,
+          // The discount belongs to the tier itself, exactly as on the API key
+          // tier cards. Deriving it from the configured group ratios put the
+          // badge on whichever tier an operator happened to price lowest, and
+          // dropped it entirely when the tiers shared a ratio.
+          lowerCost: known?.lowerCost ?? false,
         }
       })
       // Stable sort, so unknown tiers keep the backend's relative order.
       .sort((a, b) => a.order - b.order)
-    const maxRatio = options.reduce(
-      (max, option) => Math.max(max, option.ratio),
-      Number.NEGATIVE_INFINITY
-    )
     return options.map((option) => ({
       key: option.key,
       label: option.label,
       description: option.description,
-      ratio: option.ratio,
-      lowerCost: option.ratio < maxRatio,
+      lowerCost: option.lowerCost,
     }))
-  }, [usableGroup, groupRatio, models, t])
+  }, [usableGroup, models, t])
 
   // An explicit choice wins while it exists; otherwise take the leading tab, so
   // the tier the design puts first is also the one that opens selected.

@@ -29,6 +29,8 @@ interface KnownServiceTier {
   workloadBlurb: string
   /** i18n key for the badge naming how the tier is priced. */
   pricingBadge: string
+  /** Priced below the regular tier — carries the "Lower cost" badge. */
+  lowerCost: boolean
 }
 
 /**
@@ -47,6 +49,7 @@ const KNOWN_SERVICE_TIERS: Record<string, KnownServiceTier> = {
     pricingBlurb: 'Reliable endpoints suitable for production workloads.',
     workloadBlurb: 'Higher-reliability endpoints for production workloads.',
     pricingBadge: 'Regular pricing',
+    lowerCost: false,
   },
   besteffort: {
     order: 1,
@@ -56,6 +59,7 @@ const KNOWN_SERVICE_TIERS: Record<string, KnownServiceTier> = {
     workloadBlurb:
       'Lower-cost endpoints for development, testing, and non-critical workloads.',
     pricingBadge: 'Discounted pricing',
+    lowerCost: true,
   },
 }
 

@@ -122,7 +122,32 @@ describe('useLandingPricingRows tier tabs', () => {
     )
     // Separators and case do not stop a tier from being recognised.
     expect(bestEffort.label).toBe('Best Effort')
-    expect(bestEffort.lowerCost).toBe(true)
+  })
+
+  test('badges the discounted tier from the catalogue, not the group ratios', async () => {
+    // Operator ratios that price Production below Best Effort (or price both
+    // the same) must not move the "Lower cost" badge off the discounted tier.
+    mockPricing(
+      {
+        Production: { desc: 'reliable', ratio: 0.5 },
+        'Best Effort': { desc: 'cheap', ratio: 1 },
+        vip: { desc: 'operator tier', ratio: 0.1 },
+      },
+      { Production: 0.5, 'Best Effort': 1, vip: 0.1 },
+      [model('gpt-5', ['all'])]
+    )
+
+    const { result } = renderRows()
+
+    await waitFor(() => expect(result.current.groups).toHaveLength(3))
+    expect(
+      result.current.groups.map((group) => [group.key, group.lowerCost])
+    ).toEqual([
+      ['Production', false],
+      ['Best Effort', true],
+      // An unrecognised tier is not in the catalogue, so it carries no badge.
+      ['vip', false],
+    ])
   })
 
   test('keeps unrecognised tiers raw, undescribed and last', async () => {
