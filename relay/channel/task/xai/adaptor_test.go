@@ -240,8 +240,9 @@ func TestBuildRequestBodyMatchesBilledParameters(t *testing.T) {
 	assert.Equal(t, ratios["seconds"], float64(body.Duration))
 	require.True(t, SupportedResolution(body.Resolution))
 	assert.Equal(t, ratios["resolution"], resolutionBillingRatio(testModel, body.Resolution))
-	assert.Equal(t, "https://example.com/a.png", body.ImageURL)
-	assert.Empty(t, body.ImageURLs)
+	require.NotNil(t, body.Image)
+	assert.Equal(t, "https://example.com/a.png", body.Image.URL)
+	assert.Empty(t, body.Images)
 }
 
 func TestEstimateBillingPrefersConfiguredResolutionRatios(t *testing.T) {
@@ -283,4 +284,51 @@ func TestEstimateBillingFallsBackToOfficialRatioForUnconfiguredTier(t *testing.T
 
 	require.NotNil(t, ratios)
 	assert.Equal(t, 3.125, ratios["resolution"])
+}
+
+// 上游 REST 收的是 {"url": ...} 对象而不是裸字符串；写成字符串会被静默忽略，
+// 请求照样成功但退化成纯文生视频，用户付了图生视频的钱却拿不到效果。
+func TestBuildRequestBodyWrapsImagesAsObjects(t *testing.T) {
+	t.Run("single image goes to image", func(t *testing.T) {
+		c, info := newTestContext(t, `{"prompt":"a cat","duration":5,"image":"https://example.com/a.png"}`)
+		adaptor := &TaskAdaptor{}
+		require.Nil(t, adaptor.ValidateRequestAndSetAction(c, info))
+
+		raw := mustBuildBody(t, adaptor, c, info)
+
+		assert.Contains(t, string(raw), `"image":{"url":"https://example.com/a.png"}`)
+		assert.NotContains(t, string(raw), `"image_url"`)
+	})
+
+	t.Run("reference images go to images", func(t *testing.T) {
+		c, info := newTestContext(t, `{"prompt":"a cat","duration":5,"images":["https://example.com/a.png","https://example.com/b.png"]}`)
+		adaptor := &TaskAdaptor{}
+		require.Nil(t, adaptor.ValidateRequestAndSetAction(c, info))
+
+		raw := mustBuildBody(t, adaptor, c, info)
+
+		assert.Contains(t, string(raw), `"images":[{"url":"https://example.com/a.png"},{"url":"https://example.com/b.png"}]`)
+		assert.NotContains(t, string(raw), `"image_urls"`)
+	})
+}
+
+func TestValidateRequestRejectsOverlongReferenceClip(t *testing.T) {
+	// 参考图模式上游只到 10 秒，比其他模式更严。
+	c, info := newTestContext(t, `{"prompt":"a cat","duration":12,"images":["a","b"]}`)
+	adaptor := &TaskAdaptor{}
+
+	taskErr := adaptor.ValidateRequestAndSetAction(c, info)
+
+	require.NotNil(t, taskErr)
+	assert.Equal(t, http.StatusBadRequest, taskErr.StatusCode)
+	assert.Equal(t, "invalid_duration", taskErr.Code)
+}
+
+func mustBuildBody(t *testing.T, adaptor *TaskAdaptor, c *gin.Context, info *relaycommon.RelayInfo) []byte {
+	t.Helper()
+	reader, err := adaptor.BuildRequestBody(c, info)
+	require.NoError(t, err)
+	raw, err := io.ReadAll(reader)
+	require.NoError(t, err)
+	return raw
 }

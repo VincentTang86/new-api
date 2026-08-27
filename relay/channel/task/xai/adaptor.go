@@ -27,15 +27,21 @@ import (
 // Request / Response structures
 // ============================
 
+// imageRef 是上游表示一张输入图的结构。REST 接口收的是 {"url": "..."} 对象，
+// 不是裸字符串——xAI SDK 的 image_url 参数只是它在客户端侧的写法。
+type imageRef struct {
+	URL string `json:"url"`
+}
+
 // videoGenerationRequest 是 xAI POST /v1/videos/generations 的请求体。
-// image_url 用于图生视频，image_urls 用于参考图生视频，两者互斥。
+// image 用于图生视频，images 用于参考图生视频，两者互斥。
 type videoGenerationRequest struct {
-	Model      string   `json:"model"`
-	Prompt     string   `json:"prompt,omitempty"`
-	ImageURL   string   `json:"image_url,omitempty"`
-	ImageURLs  []string `json:"image_urls,omitempty"`
-	Duration   int      `json:"duration,omitempty"`
-	Resolution string   `json:"resolution,omitempty"`
+	Model      string     `json:"model"`
+	Prompt     string     `json:"prompt,omitempty"`
+	Image      *imageRef  `json:"image,omitempty"`
+	Images     []imageRef `json:"images,omitempty"`
+	Duration   int        `json:"duration,omitempty"`
+	Resolution string     `json:"resolution,omitempty"`
 }
 
 // videoTaskResponse 同时用于提交响应与轮询响应。
@@ -123,6 +129,11 @@ func (a *TaskAdaptor) ValidateRequestAndSetAction(c *gin.Context, info *relaycom
 				fmt.Errorf("reference-to-video supports up to 720p"),
 				"invalid_resolution", http.StatusBadRequest)
 		}
+		if seconds > MaxReferenceDurationSeconds {
+			return service.TaskErrorWrapperLocal(
+				fmt.Errorf("reference-to-video supports at most %d seconds", MaxReferenceDurationSeconds),
+				"invalid_duration", http.StatusBadRequest)
+		}
 		info.Action = constant.TaskActionReferenceGenerate
 	}
 	return nil
@@ -190,13 +201,16 @@ func (a *TaskAdaptor) BuildRequestBody(c *gin.Context, info *relaycommon.RelayIn
 	body.Prompt = req.Prompt
 	body.Duration = resolveDuration(req)
 	body.Resolution = resolveResolution(req)
-	body.ImageURL = ""
-	body.ImageURLs = nil
+	body.Image = nil
+	body.Images = nil
 	switch info.Action {
 	case constant.TaskActionGenerate:
-		body.ImageURL = req.Images[0]
+		body.Image = &imageRef{URL: req.Images[0]}
 	case constant.TaskActionReferenceGenerate:
-		body.ImageURLs = req.Images
+		body.Images = make([]imageRef, 0, len(req.Images))
+		for _, url := range req.Images {
+			body.Images = append(body.Images, imageRef{URL: url})
+		}
 	}
 
 	data, err := common.Marshal(body)

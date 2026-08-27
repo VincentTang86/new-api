@@ -22,6 +22,9 @@ const (
 	// 图片数量是按张加价的乘数，必须有上界。
 	MaxReferenceImages = 7
 
+	// MaxReferenceDurationSeconds 是 reference-to-video 的时长上限，比其他模式更严。
+	MaxReferenceDurationSeconds = 10
+
 	// 未指定时的取值。两者都会显式下发给上游，保证计费口径与实际生成一致。
 	defaultDurationSeconds = 6
 	defaultResolution      = "720p"
