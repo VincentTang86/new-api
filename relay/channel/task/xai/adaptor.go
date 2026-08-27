@@ -34,14 +34,15 @@ type imageRef struct {
 }
 
 // videoGenerationRequest 是 xAI POST /v1/videos/generations 的请求体。
-// image 用于图生视频，images 用于参考图生视频，两者互斥。
+// image 用于图生视频，reference_images 用于参考图生视频，两者互斥。
+// 上游已废弃 images 字段，传它会直接 400。
 type videoGenerationRequest struct {
-	Model      string     `json:"model"`
-	Prompt     string     `json:"prompt,omitempty"`
-	Image      *imageRef  `json:"image,omitempty"`
-	Images     []imageRef `json:"images,omitempty"`
-	Duration   int        `json:"duration,omitempty"`
-	Resolution string     `json:"resolution,omitempty"`
+	Model           string     `json:"model"`
+	Prompt          string     `json:"prompt,omitempty"`
+	Image           *imageRef  `json:"image,omitempty"`
+	ReferenceImages []imageRef `json:"reference_images,omitempty"`
+	Duration        int        `json:"duration,omitempty"`
+	Resolution      string     `json:"resolution,omitempty"`
 }
 
 // videoTaskResponse 同时用于提交响应与轮询响应。
@@ -202,14 +203,14 @@ func (a *TaskAdaptor) BuildRequestBody(c *gin.Context, info *relaycommon.RelayIn
 	body.Duration = resolveDuration(req)
 	body.Resolution = resolveResolution(req)
 	body.Image = nil
-	body.Images = nil
+	body.ReferenceImages = nil
 	switch info.Action {
 	case constant.TaskActionGenerate:
 		body.Image = &imageRef{URL: req.Images[0]}
 	case constant.TaskActionReferenceGenerate:
-		body.Images = make([]imageRef, 0, len(req.Images))
+		body.ReferenceImages = make([]imageRef, 0, len(req.Images))
 		for _, url := range req.Images {
-			body.Images = append(body.Images, imageRef{URL: url})
+			body.ReferenceImages = append(body.ReferenceImages, imageRef{URL: url})
 		}
 	}
 

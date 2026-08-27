@@ -242,7 +242,7 @@ func TestBuildRequestBodyMatchesBilledParameters(t *testing.T) {
 	assert.Equal(t, ratios["resolution"], resolutionBillingRatio(testModel, body.Resolution))
 	require.NotNil(t, body.Image)
 	assert.Equal(t, "https://example.com/a.png", body.Image.URL)
-	assert.Empty(t, body.Images)
+	assert.Empty(t, body.ReferenceImages)
 }
 
 func TestEstimateBillingPrefersConfiguredResolutionRatios(t *testing.T) {
@@ -300,15 +300,16 @@ func TestBuildRequestBodyWrapsImagesAsObjects(t *testing.T) {
 		assert.NotContains(t, string(raw), `"image_url"`)
 	})
 
-	t.Run("reference images go to images", func(t *testing.T) {
+	t.Run("reference images go to reference_images", func(t *testing.T) {
 		c, info := newTestContext(t, `{"prompt":"a cat","duration":5,"images":["https://example.com/a.png","https://example.com/b.png"]}`)
 		adaptor := &TaskAdaptor{}
 		require.Nil(t, adaptor.ValidateRequestAndSetAction(c, info))
 
 		raw := mustBuildBody(t, adaptor, c, info)
 
-		assert.Contains(t, string(raw), `"images":[{"url":"https://example.com/a.png"},{"url":"https://example.com/b.png"}]`)
-		assert.NotContains(t, string(raw), `"image_urls"`)
+		assert.Contains(t, string(raw), `"reference_images":[{"url":"https://example.com/a.png"},{"url":"https://example.com/b.png"}]`)
+		// 上游已废弃 images，传它会 400
+		assert.NotContains(t, string(raw), `"images":`)
 	})
 }
 
