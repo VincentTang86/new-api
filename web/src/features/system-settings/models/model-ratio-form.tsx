@@ -50,6 +50,7 @@ import {
 type ModelFormValues = {
   ModelPrice: string
   ModelImageInputPrice: string
+  ModelResolutionRatio: string
   ModelRatio: string
   CacheRatio: string
   CreateCacheRatio: string
@@ -73,6 +74,7 @@ type ModelRatioFormProps = {
 type ModelJsonFieldName =
   | 'ModelPrice'
   | 'ModelImageInputPrice'
+  | 'ModelResolutionRatio'
   | 'ModelRatio'
   | 'CacheRatio'
   | 'CreateCacheRatio'
@@ -97,6 +99,12 @@ const modelJsonFields: Array<{
     labelKey: 'Per-image input price',
     descriptionKey:
       'JSON map of model → USD cost per input image. Added on top of the per-request price, for models that bill image inputs separately.',
+  },
+  {
+    name: 'ModelResolutionRatio',
+    labelKey: 'Resolution billing multipliers',
+    descriptionKey:
+      'JSON map of model → resolution tier → multiplier against the base per-second price. Overrides the built-in upstream ratios when your selling tiers differ from the vendor list price.',
   },
   {
     name: 'ModelRatio',

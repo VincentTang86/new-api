@@ -108,7 +108,7 @@ func (a *TaskAdaptor) ValidateRequestAndSetAction(c *gin.Context, info *relaycom
 	}
 
 	resolution := resolveResolution(req)
-	if _, ok := ResolutionRatio(resolution); !ok {
+	if !SupportedResolution(resolution) {
 		return service.TaskErrorWrapperLocal(
 			fmt.Errorf("unsupported resolution: %s", resolution),
 			"invalid_resolution", http.StatusBadRequest)
@@ -134,8 +134,8 @@ func (a *TaskAdaptor) EstimateBilling(c *gin.Context, info *relaycommon.RelayInf
 	if err != nil {
 		return nil
 	}
-	ratio, ok := ResolutionRatio(resolveResolution(req))
-	if !ok {
+	resolution := resolveResolution(req)
+	if !SupportedResolution(resolution) {
 		return nil
 	}
 
@@ -150,8 +150,18 @@ func (a *TaskAdaptor) EstimateBilling(c *gin.Context, info *relaycommon.RelayInf
 
 	return map[string]float64{
 		"seconds":    float64(resolveDuration(req)),
-		"resolution": ratio,
+		"resolution": resolutionBillingRatio(info.OriginModelName, resolution),
 	}
+}
+
+// resolutionBillingRatio 返回分辨率相对基准秒价的计费倍率。管理员配置的售价
+// 档位优先，未配置时回落到 xAI 官方比值——自定售价的档位关系（例如 480p/720p/
+// 1080p 卖 $0.04/$0.06/$0.11）与官方并不一致，写死比值就配不出来。
+func resolutionBillingRatio(modelName, resolution string) float64 {
+	if ratio, ok := ratio_setting.GetModelResolutionRatio(modelName, resolution); ok {
+		return ratio
+	}
+	return officialResolutionRatios[resolution]
 }
 
 func (a *TaskAdaptor) BuildRequestURL(info *relaycommon.RelayInfo) (string, error) {

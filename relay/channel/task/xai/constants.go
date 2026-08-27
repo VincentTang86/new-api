@@ -29,19 +29,21 @@ const (
 	resolution1080p = "1080p"
 )
 
-// resolutionRatios 是各分辨率相对 480p 基准秒价的比值。
+// officialResolutionRatios 是各分辨率相对 480p 基准秒价的比值。
 // xAI 官方价：480p $0.08/秒、720p $0.14/秒、1080p $0.25/秒。管理员配置的
 // ModelPrice 即 480p 每秒价，改基准价时高分辨率档位自动同比例跟随。
-var resolutionRatios = map[string]float64{
+// 自定售价的档位关系与官方不同时，用 ModelResolutionRatio 覆盖这里的比值。
+var officialResolutionRatios = map[string]float64{
 	"480p":          1,
 	"720p":          1.75,
 	resolution1080p: 3.125,
 }
 
-// ResolutionRatio 返回分辨率对应的计费倍率，第二个返回值表示该分辨率是否受支持。
-func ResolutionRatio(resolution string) (float64, bool) {
-	ratio, ok := resolutionRatios[resolution]
-	return ratio, ok
+// SupportedResolution 判断上游是否支持该分辨率档位。倍率可以由管理员改价，
+// 但档位白名单取决于上游能力，不能被配置解锁。
+func SupportedResolution(resolution string) bool {
+	_, ok := officialResolutionRatios[resolution]
+	return ok
 }
 
 // normalizeResolution 把分辨率标签或 WxH 尺寸统一成 xAI 的分辨率档位。

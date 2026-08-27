@@ -44,6 +44,14 @@ func setImageInputPrice(t *testing.T, json string) {
 	})
 }
 
+func setResolutionRatio(t *testing.T, json string) {
+	t.Helper()
+	require.NoError(t, ratio_setting.UpdateModelResolutionRatioByJSONString(json))
+	t.Cleanup(func() {
+		require.NoError(t, ratio_setting.UpdateModelResolutionRatioByJSONString("{}"))
+	})
+}
+
 func TestValidateRequestRejectsOutOfBoundValues(t *testing.T) {
 	tests := []struct {
 		name string
@@ -230,9 +238,49 @@ func TestBuildRequestBodyMatchesBilledParameters(t *testing.T) {
 
 	assert.Equal(t, testModel, body.Model)
 	assert.Equal(t, ratios["seconds"], float64(body.Duration))
-	billedRatio, ok := ResolutionRatio(body.Resolution)
-	require.True(t, ok)
-	assert.Equal(t, ratios["resolution"], billedRatio)
+	require.True(t, SupportedResolution(body.Resolution))
+	assert.Equal(t, ratios["resolution"], resolutionBillingRatio(testModel, body.Resolution))
 	assert.Equal(t, "https://example.com/a.png", body.ImageURL)
 	assert.Empty(t, body.ImageURLs)
+}
+
+func TestEstimateBillingPrefersConfiguredResolutionRatios(t *testing.T) {
+	// 自定售价 480p/720p/1080p = $0.04/$0.06/$0.11，档位关系（1 / 1.5 / 2.75）
+	// 与官方（1 / 1.75 / 3.125）不同，配置必须盖过内置比值。
+	setResolutionRatio(t, `{"`+testModel+`":{"720p":1.5,"1080p":2.75}}`)
+
+	tests := []struct {
+		name  string
+		size  string
+		ratio float64
+	}{
+		{name: "configured 720p overrides the official ratio", size: "720p", ratio: 1.5},
+		{name: "configured 1080p overrides the official ratio", size: "1080p", ratio: 2.75},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			c, info := newTestContext(t, `{"prompt":"a cat","duration":5,"size":"`+tc.size+`"}`)
+			adaptor := &TaskAdaptor{}
+			require.Nil(t, adaptor.ValidateRequestAndSetAction(c, info))
+
+			ratios := adaptor.EstimateBilling(c, info)
+
+			require.NotNil(t, ratios)
+			assert.Equal(t, tc.ratio, ratios["resolution"])
+		})
+	}
+}
+
+func TestEstimateBillingFallsBackToOfficialRatioForUnconfiguredTier(t *testing.T) {
+	// 只配了 720p，其余档位仍按上游官方比值计费，不会静默变成 1 倍。
+	setResolutionRatio(t, `{"`+testModel+`":{"720p":1.5}}`)
+	c, info := newTestContext(t, `{"prompt":"a cat","duration":5,"size":"1080p"}`)
+	adaptor := &TaskAdaptor{}
+	require.Nil(t, adaptor.ValidateRequestAndSetAction(c, info))
+
+	ratios := adaptor.EstimateBilling(c, info)
+
+	require.NotNil(t, ratios)
+	assert.Equal(t, 3.125, ratios["resolution"])
 }

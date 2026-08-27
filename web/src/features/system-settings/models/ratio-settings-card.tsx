@@ -105,6 +105,7 @@ const createModelSchema = (t: Translate) =>
   z.object({
     ModelPrice: createJsonStringField(t),
     ModelImageInputPrice: createJsonStringField(t),
+    ModelResolutionRatio: createJsonStringField(t),
     ModelRatio: createJsonStringField(t),
     CacheRatio: createJsonStringField(t),
     CreateCacheRatio: createJsonStringField(t),
@@ -166,6 +167,9 @@ export function RatioSettingsCard({
     ModelImageInputPrice: normalizeJsonString(
       modelDefaults.ModelImageInputPrice
     ),
+    ModelResolutionRatio: normalizeJsonString(
+      modelDefaults.ModelResolutionRatio
+    ),
     ModelRatio: normalizeJsonString(modelDefaults.ModelRatio),
     CacheRatio: normalizeJsonString(modelDefaults.CacheRatio),
     CreateCacheRatio: normalizeJsonString(modelDefaults.CreateCacheRatio),
@@ -207,6 +211,9 @@ export function RatioSettingsCard({
       ModelImageInputPrice: formatJsonForTextarea(
         modelDefaults.ModelImageInputPrice
       ),
+      ModelResolutionRatio: formatJsonForTextarea(
+        modelDefaults.ModelResolutionRatio
+      ),
       ModelRatio: formatJsonForTextarea(modelDefaults.ModelRatio),
       CacheRatio: formatJsonForTextarea(modelDefaults.CacheRatio),
       CreateCacheRatio: formatJsonForTextarea(modelDefaults.CreateCacheRatio),
@@ -243,6 +250,9 @@ export function RatioSettingsCard({
       ModelImageInputPrice: normalizeJsonString(
         modelDefaults.ModelImageInputPrice
       ),
+      ModelResolutionRatio: normalizeJsonString(
+        modelDefaults.ModelResolutionRatio
+      ),
       ModelRatio: normalizeJsonString(modelDefaults.ModelRatio),
       CacheRatio: normalizeJsonString(modelDefaults.CacheRatio),
       CreateCacheRatio: normalizeJsonString(modelDefaults.CreateCacheRatio),
@@ -263,6 +273,9 @@ export function RatioSettingsCard({
       ModelPrice: formatJsonForTextarea(modelDefaults.ModelPrice),
       ModelImageInputPrice: formatJsonForTextarea(
         modelDefaults.ModelImageInputPrice
+      ),
+      ModelResolutionRatio: formatJsonForTextarea(
+        modelDefaults.ModelResolutionRatio
       ),
       ModelRatio: formatJsonForTextarea(modelDefaults.ModelRatio),
       CacheRatio: formatJsonForTextarea(modelDefaults.CacheRatio),
@@ -310,6 +323,7 @@ export function RatioSettingsCard({
       const normalized = {
         ModelPrice: normalizeJsonString(values.ModelPrice),
         ModelImageInputPrice: normalizeJsonString(values.ModelImageInputPrice),
+        ModelResolutionRatio: normalizeJsonString(values.ModelResolutionRatio),
         ModelRatio: normalizeJsonString(values.ModelRatio),
         CacheRatio: normalizeJsonString(values.CacheRatio),
         CreateCacheRatio: normalizeJsonString(values.CreateCacheRatio),

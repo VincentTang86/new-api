@@ -324,6 +324,7 @@ var defaultAudioCompletionRatio = map[string]float64{
 
 var modelPriceMap = types.NewRWMap[string, float64]()
 var modelImageInputPriceMap = types.NewRWMap[string, float64]()
+var modelResolutionRatioMap = types.NewRWMap[string, map[string]float64]()
 var modelRatioMap = types.NewRWMap[string, float64]()
 var completionRatioMap = types.NewRWMap[string, float64]()
 
@@ -412,6 +413,61 @@ func ValidateModelImageInputPriceJSON(jsonStr string) error {
 // isValidModelImageInputPrice 同时排除 NaN 与 ±Inf：两个比较对它们都为 false。
 func isValidModelImageInputPrice(price float64) bool {
 	return price >= 0 && price <= MaxModelImageInputPrice
+}
+
+// MaxModelResolutionRatio 是分辨率计费倍率的上限。倍率乘在模型基准价上，
+// 无上限的配置值可能让额度换算饱和成异常账单。
+const MaxModelResolutionRatio = 1000.0
+
+func ModelResolutionRatio2JSONString() string {
+	return modelResolutionRatioMap.MarshalJSONString()
+}
+
+func UpdateModelResolutionRatioByJSONString(jsonStr string) error {
+	return types.LoadFromJsonStringWithCallback(modelResolutionRatioMap, jsonStr, InvalidateExposedDataCache)
+}
+
+// GetModelResolutionRatio 返回模型在指定分辨率档位下相对基准价的计费倍率，
+// 供按秒计费的视频模型按售价口径定档。未配置时返回 0, false，
+// 由调用方回落到适配器内置的上游官方比值。
+func GetModelResolutionRatio(name, resolution string) (float64, bool) {
+	ratios, ok := modelResolutionRatioMap.Get(FormatMatchingModelName(name))
+	if !ok {
+		return 0, false
+	}
+	target := normalizeResolutionKey(resolution)
+	for key, ratio := range ratios {
+		if normalizeResolutionKey(key) == target && isValidModelResolutionRatio(ratio) {
+			return ratio, true
+		}
+	}
+	return 0, false
+}
+
+// ValidateModelResolutionRatioJSON 校验管理员提交的分辨率倍率表。
+// 倍率是乘性的：0 会让模型变免费，负数会产生负计费，都必须在写库前拒绝。
+func ValidateModelResolutionRatioJSON(jsonStr string) error {
+	ratios := make(map[string]map[string]float64)
+	if err := common.UnmarshalJsonStr(jsonStr, &ratios); err != nil {
+		return fmt.Errorf("分辨率倍率格式错误: %w", err)
+	}
+	for name, byResolution := range ratios {
+		for resolution, ratio := range byResolution {
+			if !isValidModelResolutionRatio(ratio) {
+				return fmt.Errorf("模型 %q 的 %s 分辨率倍率必须是大于 0 且不超过 %g 的数字", name, resolution, MaxModelResolutionRatio)
+			}
+		}
+	}
+	return nil
+}
+
+// isValidModelResolutionRatio 同时排除 NaN 与 ±Inf：两个比较对它们都为 false。
+func isValidModelResolutionRatio(ratio float64) bool {
+	return ratio > 0 && ratio <= MaxModelResolutionRatio
+}
+
+func normalizeResolutionKey(resolution string) string {
+	return strings.ToLower(strings.TrimSpace(resolution))
 }
 
 func UpdateModelRatioByJSONString(jsonStr string) error {

@@ -143,6 +143,7 @@ func InitOptionMap() {
 	common.OptionMap["ModelRatio"] = ratio_setting.ModelRatio2JSONString()
 	common.OptionMap["ModelPrice"] = ratio_setting.ModelPrice2JSONString()
 	common.OptionMap["ModelImageInputPrice"] = ratio_setting.ModelImageInputPrice2JSONString()
+	common.OptionMap["ModelResolutionRatio"] = ratio_setting.ModelResolutionRatio2JSONString()
 	common.OptionMap["CacheRatio"] = ratio_setting.CacheRatio2JSONString()
 	common.OptionMap["CreateCacheRatio"] = ratio_setting.CreateCacheRatio2JSONString()
 	common.OptionMap["GroupRatio"] = ratio_setting.GroupRatio2JSONString()
@@ -215,6 +216,9 @@ func validateOptionValue(key string, value string) error {
 	}
 	if key == "ModelImageInputPrice" {
 		return ratio_setting.ValidateModelImageInputPriceJSON(value)
+	}
+	if key == "ModelResolutionRatio" {
+		return ratio_setting.ValidateModelResolutionRatioJSON(value)
 	}
 	return nil
 }
@@ -569,6 +573,8 @@ func updateOptionMap(key string, value string) (err error) {
 		err = ratio_setting.UpdateModelPriceByJSONString(value)
 	case "ModelImageInputPrice":
 		err = ratio_setting.UpdateModelImageInputPriceByJSONString(value)
+	case "ModelResolutionRatio":
+		err = ratio_setting.UpdateModelResolutionRatioByJSONString(value)
 	case "CacheRatio":
 		err = ratio_setting.UpdateCacheRatioByJSONString(value)
 	case "CreateCacheRatio":
