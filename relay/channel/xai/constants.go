@@ -25,8 +25,8 @@ var ModelList = []string{
 	"grok-imagine-image-pro",
 	"grok-imagine-image",
 	"grok-2-image-1212",
-	// video generation model
-	"grok-imagine-video",
+	// video generation model (走 relay/channel/task/xai 的异步任务适配器)
+	"grok-imagine-video-1.5",
 }
 
 var ChannelName = "xai"
