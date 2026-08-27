@@ -16,23 +16,25 @@ import (
 )
 
 type Pricing struct {
-	ModelName              string                  `json:"model_name"`
-	Description            string                  `json:"description,omitempty"`
-	Icon                   string                  `json:"icon,omitempty"`
-	Tags                   string                  `json:"tags,omitempty"`
-	VendorID               int                     `json:"vendor_id,omitempty"`
-	QuotaType              int                     `json:"quota_type"`
-	ModelRatio             float64                 `json:"model_ratio"`
+	ModelName   string  `json:"model_name"`
+	Description string  `json:"description,omitempty"`
+	Icon        string  `json:"icon,omitempty"`
+	Tags        string  `json:"tags,omitempty"`
+	VendorID    int     `json:"vendor_id,omitempty"`
+	QuotaType   int     `json:"quota_type"`
+	ModelRatio  float64 `json:"model_ratio"`
 	// UnsetRatio marks a token model whose ratio is not configured, so ModelRatio
 	// carries the backend fallback (37.5) rather than a real price. Display layers
 	// should not present that fallback as a genuine selling price.
-	UnsetRatio bool `json:"unset_ratio,omitempty"`
-	ModelPrice             float64                 `json:"model_price"`
-	OwnerBy                string                  `json:"owner_by"`
-	CompletionRatio        float64                 `json:"completion_ratio"`
-	CacheRatio             *float64                `json:"cache_ratio,omitempty"`
-	CreateCacheRatio       *float64                `json:"create_cache_ratio,omitempty"`
-	ImageRatio             *float64                `json:"image_ratio,omitempty"`
+	UnsetRatio       bool     `json:"unset_ratio,omitempty"`
+	ModelPrice       float64  `json:"model_price"`
+	OwnerBy          string   `json:"owner_by"`
+	CompletionRatio  float64  `json:"completion_ratio"`
+	CacheRatio       *float64 `json:"cache_ratio,omitempty"`
+	CreateCacheRatio *float64 `json:"create_cache_ratio,omitempty"`
+	ImageRatio       *float64 `json:"image_ratio,omitempty"`
+	// ImageInputPrice 是每张输入图片的固定加价（USD），按次计费的多模态模型才有。
+	ImageInputPrice        *float64                `json:"image_input_price,omitempty"`
 	AudioRatio             *float64                `json:"audio_ratio,omitempty"`
 	AudioCompletionRatio   *float64                `json:"audio_completion_ratio,omitempty"`
 	EnableGroup            []string                `json:"enable_groups"`
@@ -428,6 +430,9 @@ func updatePricing() {
 		}
 		if imageRatio, ok := ratio_setting.GetImageRatio(model); ok {
 			pricing.ImageRatio = &imageRatio
+		}
+		if imageInputPrice, ok := ratio_setting.GetModelImageInputPrice(model); ok {
+			pricing.ImageInputPrice = &imageInputPrice
 		}
 		if ratio_setting.ContainsAudioRatio(model) {
 			audioRatio := ratio_setting.GetAudioRatio(model)

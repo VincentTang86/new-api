@@ -29,6 +29,7 @@ import { ReferencePricingCard } from './reference-pricing-card'
 
 const getModelDefaults = (settings: BillingSettings) => ({
   ModelPrice: settings.ModelPrice,
+  ModelImageInputPrice: settings.ModelImageInputPrice,
   ModelRatio: settings.ModelRatio,
   CacheRatio: settings.CacheRatio,
   CreateCacheRatio: settings.CreateCacheRatio,

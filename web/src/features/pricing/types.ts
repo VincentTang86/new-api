@@ -43,6 +43,8 @@ export type PricingModel = {
   unset_ratio?: boolean
   completion_ratio: number
   model_price?: number
+  /** Fixed USD add-on per input image, on top of the per-request price. */
+  image_input_price?: number | null
   cache_ratio?: number | null
   create_cache_ratio?: number | null
   image_ratio?: number | null

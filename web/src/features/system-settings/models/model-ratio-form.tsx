@@ -49,6 +49,7 @@ import {
 
 type ModelFormValues = {
   ModelPrice: string
+  ModelImageInputPrice: string
   ModelRatio: string
   CacheRatio: string
   CreateCacheRatio: string
@@ -71,6 +72,7 @@ type ModelRatioFormProps = {
 
 type ModelJsonFieldName =
   | 'ModelPrice'
+  | 'ModelImageInputPrice'
   | 'ModelRatio'
   | 'CacheRatio'
   | 'CreateCacheRatio'
@@ -89,6 +91,12 @@ const modelJsonFields: Array<{
     labelKey: 'Model fixed pricing',
     descriptionKey:
       'JSON map of model → USD cost per request. Takes precedence over ratio based billing.',
+  },
+  {
+    name: 'ModelImageInputPrice',
+    labelKey: 'Per-image input price',
+    descriptionKey:
+      'JSON map of model → USD cost per input image. Added on top of the per-request price, for models that bill image inputs separately.',
   },
   {
     name: 'ModelRatio',

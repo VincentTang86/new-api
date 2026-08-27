@@ -203,6 +203,8 @@ export function ModelDetailsPricingTable(props: {
   }
 
   const rateConditions = tiers.length > 0 ? tiers : [STANDARD_RATE_CONDITION]
+  // 按张计费的图片输入费是在按次价之外叠加的，与分组倍率一同缩放。
+  const imageInputPrice = model.image_input_price || 0
   const referenceRows = [
     {
       key: 'official',
@@ -302,11 +304,22 @@ export function ModelDetailsPricingTable(props: {
                   ))
                 ) : (
                   <td className={priceCellClass}>
-                    {t('{{price}} / call', {
-                      price: formatLandingPrice(
-                        (model.model_price || 0) * ratio
-                      ),
-                    })}
+                    <span className='flex flex-col items-end gap-0.5'>
+                      <span>
+                        {t('{{price}} / call', {
+                          price: formatLandingPrice(
+                            (model.model_price || 0) * ratio
+                          ),
+                        })}
+                      </span>
+                      {imageInputPrice > 0 && (
+                        <span className='text-[10px] font-normal text-(--pd-muted-2)'>
+                          {t('+ {{price}} / image', {
+                            price: formatLandingPrice(imageInputPrice * ratio),
+                          })}
+                        </span>
+                      )}
+                    </span>
                   </td>
                 )}
               </tr>

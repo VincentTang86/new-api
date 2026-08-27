@@ -26,10 +26,42 @@ type PriceData struct {
 	AudioRatio           float64
 	AudioCompletionRatio float64
 	otherRatios          map[string]float64
+	surcharge            float64
 	UsePrice             bool
 	Quota                int // 按次计费的最终额度（MJ / Task）
 	QuotaToPreConsume    int // 按量计费的预消耗额度
 	GroupRatioInfo       GroupRatioInfo
+}
+
+// MaxSurcharge bounds the absolute add-on charge one request may carry.
+// Surcharge is a USD amount on the same scale as ModelPrice and is converted
+// into quota, so an unbounded value could overflow that conversion into a
+// negative charge.
+const MaxSurcharge = 1000.0
+
+// SetSurcharge records an absolute add-on charge (USD, same scale as
+// ModelPrice) such as a per-image input fee. Unlike OtherRatios this is added
+// to the quota rather than multiplied into it. Negative, NaN, infinite and
+// out-of-range values are rejected so a bad config or upstream value cannot
+// turn a charge into a credit.
+func (p *PriceData) SetSurcharge(surcharge float64) {
+	if !isValidSurcharge(surcharge) {
+		return
+	}
+	p.surcharge = surcharge
+}
+
+func (p *PriceData) Surcharge() float64 {
+	if !isValidSurcharge(p.surcharge) {
+		return 0
+	}
+	return p.surcharge
+}
+
+// isValidSurcharge rejects NaN and +Inf implicitly: both comparisons are false
+// for those values.
+func isValidSurcharge(surcharge float64) bool {
+	return surcharge >= 0 && surcharge <= MaxSurcharge
 }
 
 func (p *PriceData) AddOtherRatio(key string, ratio float64) {
@@ -108,5 +140,5 @@ func isValidOtherRatio(ratio float64) bool {
 }
 
 func (p *PriceData) ToSetting() string {
-	return fmt.Sprintf("ModelPrice: %f, ModelRatio: %f, CompletionRatio: %f, CacheRatio: %f, GroupRatio: %f, UsePrice: %t, CacheCreationRatio: %f, CacheCreation5mRatio: %f, CacheCreation1hRatio: %f, QuotaToPreConsume: %d, ImageRatio: %f, AudioRatio: %f, AudioCompletionRatio: %f", p.ModelPrice, p.ModelRatio, p.CompletionRatio, p.CacheRatio, p.GroupRatioInfo.GroupRatio, p.UsePrice, p.CacheCreationRatio, p.CacheCreation5mRatio, p.CacheCreation1hRatio, p.QuotaToPreConsume, p.ImageRatio, p.AudioRatio, p.AudioCompletionRatio)
+	return fmt.Sprintf("ModelPrice: %f, ModelRatio: %f, CompletionRatio: %f, CacheRatio: %f, GroupRatio: %f, UsePrice: %t, CacheCreationRatio: %f, CacheCreation5mRatio: %f, CacheCreation1hRatio: %f, QuotaToPreConsume: %d, ImageRatio: %f, AudioRatio: %f, AudioCompletionRatio: %f, Surcharge: %f", p.ModelPrice, p.ModelRatio, p.CompletionRatio, p.CacheRatio, p.GroupRatioInfo.GroupRatio, p.UsePrice, p.CacheCreationRatio, p.CacheCreation5mRatio, p.CacheCreation1hRatio, p.QuotaToPreConsume, p.ImageRatio, p.AudioRatio, p.AudioCompletionRatio, p.Surcharge())
 }

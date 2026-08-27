@@ -194,9 +194,9 @@ func RelayTaskSubmit(c *gin.Context, info *relaycommon.RelayInfo) (*TaskSubmitRe
 		}
 	}
 
-	// 6. 将 OtherRatios 应用到基础额度（饱和转换，防止溢出成负数）
+	// 6. 将 OtherRatios 应用到基础额度，再叠加绝对加价项（饱和转换，防止溢出成负数）
 	if !common.StringsContains(constant.TaskPricePatches, modelName) {
-		quotaWithRatios := info.PriceData.ApplyOtherRatiosToFloat(float64(info.PriceData.Quota))
+		quotaWithRatios := info.PriceData.ApplyOtherRatiosToFloat(float64(info.PriceData.Quota)) + surchargeQuota(info)
 		quota, clamp := common.QuotaFromFloatChecked(quotaWithRatios)
 		info.PriceData.Quota = quota
 		noteTaskQuotaClamp(info, clamp)
@@ -259,17 +259,29 @@ func RelayTaskSubmit(c *gin.Context, info *relaycommon.RelayInfo) (*TaskSubmitRe
 	}, nil
 }
 
+// surchargeQuota 把绝对加价项（USD，如按张计费的图片输入费）换算成额度。
+// 与基础价一样受分组倍率影响，整单同比例打折。按次价补丁名单里的模型不做任何
+// 倍率/加价换算，这里与提交流程的步骤 6 保持一致，否则重算时会剥离一笔从未叠加过的加价。
+func surchargeQuota(info *relaycommon.RelayInfo) float64 {
+	if common.StringsContains(constant.TaskPricePatches, info.OriginModelName) {
+		return 0
+	}
+	return info.PriceData.Surcharge() * common.QuotaPerUnit * info.PriceData.GroupRatioInfo.GroupRatio
+}
+
 // recalcQuotaFromRatios 根据 adjustedRatios 重新计算 quota。
-// 公式: baseQuota × ∏(ratio) — 其中 baseQuota 是不含 OtherRatios 的基础额度。
+// 公式: baseQuota × ∏(ratio) + surcharge — 其中 baseQuota 是既不含 OtherRatios
+// 也不含加价项的基础额度。加价项是加性的，必须先从当前 quota 中剥离再反推，
+// 否则除法会把它摊进基础价里。
 func recalcQuotaFromRatios(info *relaycommon.RelayInfo, ratios map[string]float64) (int, bool) {
-	// 从 PriceData 获取不含 OtherRatios 的基础价格
-	baseQuota := info.PriceData.RemoveOtherRatiosFromFloat(float64(info.PriceData.Quota))
+	surcharge := surchargeQuota(info)
+	baseQuota := info.PriceData.RemoveOtherRatiosFromFloat(float64(info.PriceData.Quota) - surcharge)
 	priceData := info.PriceData
 	if !priceData.ReplaceOtherRatios(ratios) {
 		return 0, false
 	}
-	// 应用新的 ratios
-	result := priceData.ApplyOtherRatiosToFloat(baseQuota)
+	// 应用新的 ratios 后重新叠加加价项
+	result := priceData.ApplyOtherRatiosToFloat(baseQuota) + surcharge
 	quota, clamp := common.QuotaFromFloatChecked(result)
 	noteTaskQuotaClamp(info, clamp)
 	return quota, true

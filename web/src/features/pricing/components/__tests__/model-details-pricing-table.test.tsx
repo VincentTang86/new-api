@@ -174,4 +174,20 @@ describe('ModelDetailsPricingTable', () => {
     expect(headers(container)).toEqual(['Plan', 'Price'])
     expect(rowCells(rows[0])).toEqual(['Production', '$0.02 / call'])
   })
+
+  test('states the per-image add-on and scales it by the plan ratio', () => {
+    const { container } = renderTable(
+      model({ quota_type: 1, model_price: 0.08, image_input_price: 0.01 })
+    )
+    const rows = [...container.querySelectorAll('tbody tr')]
+
+    expect(rowCells(rows[0])).toEqual([
+      'Production',
+      '$0.08 / call+ $0.01 / image',
+    ])
+    expect(rowCells(rows[1])).toEqual([
+      'Best Effort',
+      '$0.072 / call+ $0.009 / image',
+    ])
+  })
 })

@@ -1,6 +1,7 @@
 package ratio_setting
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/QuantumNous/new-api/common"
@@ -322,6 +323,7 @@ var defaultAudioCompletionRatio = map[string]float64{
 }
 
 var modelPriceMap = types.NewRWMap[string, float64]()
+var modelImageInputPriceMap = types.NewRWMap[string, float64]()
 var modelRatioMap = types.NewRWMap[string, float64]()
 var completionRatioMap = types.NewRWMap[string, float64]()
 
@@ -368,6 +370,48 @@ func GetModelPrice(name string, printErr bool) (float64, bool) {
 		common.SysError("model price not found: " + name)
 	}
 	return -1, false
+}
+
+// MaxModelImageInputPrice 是单张输入图片加价的上限（USD）。该单价会乘以图片数量
+// 成为计费加价项，无上限的配置值可能让额度换算饱和成异常账单。
+const MaxModelImageInputPrice = 100.0
+
+func ModelImageInputPrice2JSONString() string {
+	return modelImageInputPriceMap.MarshalJSONString()
+}
+
+func UpdateModelImageInputPriceByJSONString(jsonStr string) error {
+	return types.LoadFromJsonStringWithCallback(modelImageInputPriceMap, jsonStr, InvalidateExposedDataCache)
+}
+
+// GetModelImageInputPrice 返回模型每张输入图片的固定加价（USD）。
+// 未配置或配置值越界时返回 0, false，调用方按不额外计费处理。
+func GetModelImageInputPrice(name string) (float64, bool) {
+	price, ok := modelImageInputPriceMap.Get(FormatMatchingModelName(name))
+	if !ok || !isValidModelImageInputPrice(price) {
+		return 0, false
+	}
+	return price, true
+}
+
+// ValidateModelImageInputPriceJSON 校验管理员提交的图片输入单价表。
+// 负数或超界的单价会让加价项变成负计费，必须在写库前拒绝。
+func ValidateModelImageInputPriceJSON(jsonStr string) error {
+	prices := make(map[string]float64)
+	if err := common.UnmarshalJsonStr(jsonStr, &prices); err != nil {
+		return fmt.Errorf("图片输入单价格式错误: %w", err)
+	}
+	for name, price := range prices {
+		if !isValidModelImageInputPrice(price) {
+			return fmt.Errorf("模型 %q 的图片输入单价必须是 0 到 %g 之间的数字", name, MaxModelImageInputPrice)
+		}
+	}
+	return nil
+}
+
+// isValidModelImageInputPrice 同时排除 NaN 与 ±Inf：两个比较对它们都为 false。
+func isValidModelImageInputPrice(price float64) bool {
+	return price >= 0 && price <= MaxModelImageInputPrice
 }
 
 func UpdateModelRatioByJSONString(jsonStr string) error {
