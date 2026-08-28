@@ -17,6 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { useQuery } from '@tanstack/react-query'
+import { useEffect } from 'react'
 import { Link } from '@tanstack/react-router'
 import {
   AudioLines,
@@ -723,12 +724,28 @@ export interface ModelDetailsDrawerProps {
 export function ModelDetailsDrawer(props: ModelDetailsDrawerProps) {
   const { t } = useTranslation()
 
+  // Non-modal dialogs don't lock page scroll, so hold the body still while
+  // the panel is open — same behavior the modal variant provided.
+  useEffect(() => {
+    if (!props.open) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [props.open])
+
   return (
-    <Sheet open={props.open} onOpenChange={props.onOpenChange}>
+    // `modal={false}` keeps the site navigation above the drawer interactive:
+    // a modal dialog marks everything outside inert, which made the header
+    // unclickable. Clicking a nav link both navigates and dismisses the panel.
+    <Sheet open={props.open} onOpenChange={props.onOpenChange} modal={false}>
       <SheetContent
         side='right'
         showCloseButton={false}
-        overlayClassName='bg-black/30 duration-200 supports-backdrop-filter:backdrop-blur-none'
+        // The scrim starts below the 55px sticky header so the navigation
+        // stays fully visible and clickable while the panel is open.
+        overlayClassName='top-[55px] bg-black/30 duration-200 supports-backdrop-filter:backdrop-blur-none'
         // The `sm:` prefix is load-bearing: SheetContent's right-side base
         // carries `sm:max-w-sm`, and tailwind-merge only drops it for an
         // override at the same breakpoint. 90vw at every width keeps the
