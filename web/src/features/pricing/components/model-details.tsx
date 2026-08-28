@@ -19,15 +19,20 @@ For commercial licensing, please contact support@quantumnous.com
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import {
+  AudioLines,
   CalendarClock,
   Code2,
+  File,
   FileText,
   HeartPulse,
+  Image,
   Info,
   Layers,
   Maximize2,
   Sparkles,
   Timer,
+  Type,
+  Video,
   X,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -44,6 +49,11 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { getPerfMetrics } from '@/features/performance-metrics/api'
 import {
   formatLatency,
@@ -254,17 +264,47 @@ function CatalogInfoCell(props: { label: string; children: React.ReactNode }) {
   )
 }
 
-function ModalityLabels(props: { items: string[] }) {
+const MODALITY_ICONS: Record<
+  string,
+  React.ComponentType<{ className?: string }>
+> = {
+  text: Type,
+  image: Image,
+  audio: AudioLines,
+  video: Video,
+  file: File,
+}
+
+function ModalityIcons(props: { items: string[] }) {
   const { t } = useTranslation()
   if (props.items.length === 0) return null
 
   return (
-    <span className='inline-flex items-center gap-1 align-middle'>
-      {props.items.map((item) => (
-        <span key={item} className='font-medium'>
-          {t(MODALITY_LABEL_KEYS[item] ?? item)}
-        </span>
-      ))}
+    <span className='inline-flex items-center gap-1.5 align-middle'>
+      {props.items.map((item) => {
+        const Icon = MODALITY_ICONS[item]
+        const label = t(MODALITY_LABEL_KEYS[item] ?? item)
+        // Unknown modality values stay readable as text instead of vanishing
+        if (!Icon) {
+          return (
+            <span key={item} className='font-medium'>
+              {label}
+            </span>
+          )
+        }
+        return (
+          <Tooltip key={item}>
+            <TooltipTrigger
+              render={
+                <span className='inline-flex cursor-default' aria-label={label} />
+              }
+            >
+              <Icon className='size-3.5' />
+            </TooltipTrigger>
+            <TooltipContent>{label}</TooltipContent>
+          </Tooltip>
+        )
+      })}
     </span>
   )
 }
@@ -294,12 +334,12 @@ function ModelBackendQuickStats(props: { model: PricingModel }) {
       icon: FileText,
       label: t('Modalities'),
       value: (
-        <span className='inline-flex items-center gap-1'>
-          <ModalityLabels items={inputModalities} />
+        <span className='inline-flex items-center gap-1.5'>
+          <ModalityIcons items={inputModalities} />
           {inputModalities.length > 0 && outputModalities.length > 0 && (
             <span className='text-(--pd-faint)'>→</span>
           )}
-          <ModalityLabels items={outputModalities} />
+          <ModalityIcons items={outputModalities} />
         </span>
       ),
     })
