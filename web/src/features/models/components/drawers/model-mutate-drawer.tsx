@@ -36,6 +36,7 @@ import {
 import { JsonEditor } from '@/components/json-editor'
 import { TagInput } from '@/components/tag-input'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Collapsible,
   CollapsibleContent,
@@ -71,7 +72,9 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { Switch } from '@/components/ui/switch'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
   useSystemOptions,
   getOptionValue,
@@ -80,23 +83,91 @@ import { useUpdateOption } from '@/features/system-settings/hooks/use-update-opt
 import { normalizeJsonString } from '@/features/system-settings/models/utils'
 import type { ModelSettings } from '@/features/system-settings/types'
 import { safeJsonParse } from '@/features/system-settings/utils/json-parser'
+import { INTERFACE_LANGUAGE_OPTIONS, toIntlLocale } from '@/i18n/languages'
 import { ROLE } from '@/lib/roles'
 import { useAuthStore } from '@/stores/auth-store'
 
 import { createModel, updateModel, getModel, getVendors } from '../../api'
-import { getNameRuleOptions, ENDPOINT_TEMPLATES } from '../../constants'
+import {
+  getNameRuleOptions,
+  ENDPOINT_TEMPLATES,
+  CATALOG_MODALITY_OPTIONS,
+  CATALOG_CAPABILITY_OPTIONS,
+} from '../../constants'
 import { modelsQueryKeys, vendorsQueryKeys, parseModelTags } from '../../lib'
 import type { Model } from '../../types'
+
+// Catalog metadata input helpers: token counts accept plain integers plus
+// 128k / 1m shorthand, dates are YYYY-MM or YYYY-MM-DD (backend enforces the
+// same bounds in model_meta.go).
+const TOKEN_COUNT_INPUT = /^\d+(\.\d+)?\s*[kKmM]?$/
+const CATALOG_DATE_INPUT = /^\d{4}-(0[1-9]|1[0-2])(-(0[1-9]|[12]\d|3[01]))?$/
+
+function parseTokenCountInput(value: string): number {
+  const match = /^(\d+(?:\.\d+)?)\s*([kKmM]?)$/.exec(value.trim())
+  if (!match) return 0
+  let scale = 1
+  if (match[2].toLowerCase() === 'm') scale = 1_000_000
+  else if (match[2]) scale = 1_000
+  return Math.round(Number.parseFloat(match[1]) * scale)
+}
+
+function formatTokenCountPreview(value: string): string {
+  const tokens = parseTokenCountInput(value)
+  if (tokens <= 0) return ''
+  if (tokens >= 1_000_000) return `${Math.round((tokens / 1_000_000) * 10) / 10}M`
+  if (tokens >= 1_000) return `${Math.round((tokens / 1_000) * 10) / 10}K`
+  return String(tokens)
+}
+
+function splitCatalogCsv(value?: string): string[] {
+  if (!value) return []
+  return value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
+function isTokenCountInput(value: string): boolean {
+  return value.trim() === '' || TOKEN_COUNT_INPUT.test(value.trim())
+}
+
+function isCatalogDateInput(value: string): boolean {
+  return value.trim() === '' || CATALOG_DATE_INPUT.test(value.trim())
+}
+
+// Localized description tabs: interface language list mapped onto the standard
+// locale codes the backend stores (zhCN -> zh-CN etc.).
+const DESCRIPTION_LOCALES = INTERFACE_LANGUAGE_OPTIONS.map((option) => ({
+  key: toIntlLocale(option.code) ?? option.code,
+  label: option.label,
+  short: option.short,
+}))
 
 // Extended schema for ratio configuration (internal form state only)
 const extendedModelFormSchema = z.object({
   id: z.number().optional(),
   model_name: z.string().min(1, 'Model name is required'),
   description: z.string(),
+  description_i18n: z.record(z.string(), z.string()),
   icon: z.string(),
   tags: z.array(z.string()),
   vendor_id: z.number().optional(),
   endpoints: z.string(),
+  input_modalities: z.array(z.string()),
+  output_modalities: z.array(z.string()),
+  capabilities: z.array(z.string()),
+  context_length: z
+    .string()
+    .refine(isTokenCountInput, 'Enter a token count such as 128000, 128k or 1m'),
+  max_output_tokens: z
+    .string()
+    .refine(isTokenCountInput, 'Enter a token count such as 128000, 128k or 1m'),
+  release_date: z.string().refine(isCatalogDateInput, 'Use YYYY-MM or YYYY-MM-DD'),
+  knowledge_cutoff: z
+    .string()
+    .refine(isCatalogDateInput, 'Use YYYY-MM or YYYY-MM-DD'),
+  parameter_count: z.string(),
   name_rule: z.number(),
   status: z.boolean(),
   sync_official: z.boolean(),
@@ -369,15 +440,27 @@ export function ModelMutateDrawer({
     modelSettingsRef.current = modelSettings
   })
 
+  // Active tab of the localized-description editor (storage locale code)
+  const [descriptionLocale, setDescriptionLocale] = useState('en')
+
   const form = useForm<ExtendedModelFormValues>({
     resolver: zodResolver(extendedModelFormSchema),
     defaultValues: {
       model_name: '',
       description: '',
+      description_i18n: {},
       icon: '',
       tags: [],
       vendor_id: undefined,
       endpoints: '',
+      input_modalities: [],
+      output_modalities: [],
+      capabilities: [],
+      context_length: '',
+      max_output_tokens: '',
+      release_date: '',
+      knowledge_cutoff: '',
+      parameter_count: '',
       name_rule: 0,
       status: true,
       sync_official: true,
@@ -438,14 +521,31 @@ export function ModelMutateDrawer({
       setPromptPrice(pricing.promptPrice)
       setCompletionPrice(pricing.completionPrice)
       setAdvancedOpen(pricing.advancedOpen)
+      setDescriptionLocale('en')
       form.reset({
         id: model.id,
         model_name: model.model_name,
         description: model.description || '',
+        description_i18n: safeJsonParse<Record<string, string>>(
+          model.description_i18n || '',
+          { fallback: {}, silent: true }
+        ),
         icon: model.icon || '',
         tags: parseModelTags(model.tags),
         vendor_id: model.vendor_id,
         endpoints: model.endpoints || '',
+        input_modalities: splitCatalogCsv(model.input_modalities),
+        output_modalities: splitCatalogCsv(model.output_modalities),
+        capabilities: splitCatalogCsv(model.capabilities),
+        context_length: model.context_length
+          ? String(model.context_length)
+          : '',
+        max_output_tokens: model.max_output_tokens
+          ? String(model.max_output_tokens)
+          : '',
+        release_date: model.release_date || '',
+        knowledge_cutoff: model.knowledge_cutoff || '',
+        parameter_count: model.parameter_count || '',
         name_rule: model.name_rule || 0,
         status: model.status === 1,
         sync_official: model.sync_official === 1,
@@ -464,13 +564,23 @@ export function ModelMutateDrawer({
       setPromptPrice(pricing.promptPrice)
       setCompletionPrice(pricing.completionPrice)
       setAdvancedOpen(pricing.advancedOpen)
+      setDescriptionLocale('en')
       form.reset({
         model_name: modelName,
         description: '',
+        description_i18n: {},
         icon: '',
         tags: [],
         vendor_id: undefined,
         endpoints: '',
+        input_modalities: [],
+        output_modalities: [],
+        capabilities: [],
+        context_length: '',
+        max_output_tokens: '',
+        release_date: '',
+        knowledge_cutoff: '',
+        parameter_count: '',
         name_rule: 0,
         status: true,
         sync_official: true,
@@ -483,12 +593,31 @@ export function ModelMutateDrawer({
     async (values: ExtendedModelFormValues): Promise<void> => {
       setIsSubmitting(true)
       try {
+        // Localized descriptions travel as a JSON string column; blank tabs
+        // are dropped so clearing every tab clears the field entirely.
+        const localizedDescriptions = Object.fromEntries(
+          Object.entries(values.description_i18n).filter(
+            ([, text]) => text.trim() !== ''
+          )
+        )
         const submitData = {
           ...values,
           id: isEditing ? currentModelId : undefined,
           tags: Array.isArray(values.tags) ? values.tags.join(',') : '',
           status: values.status ? 1 : 0,
           sync_official: values.sync_official ? 1 : 0,
+          description_i18n:
+            Object.keys(localizedDescriptions).length > 0
+              ? JSON.stringify(localizedDescriptions)
+              : '',
+          input_modalities: values.input_modalities.join(','),
+          output_modalities: values.output_modalities.join(','),
+          capabilities: values.capabilities.join(','),
+          context_length: parseTokenCountInput(values.context_length),
+          max_output_tokens: parseTokenCountInput(values.max_output_tokens),
+          release_date: values.release_date.trim(),
+          knowledge_cutoff: values.knowledge_cutoff.trim(),
+          parameter_count: values.parameter_count.trim(),
         }
 
         // Remove ratio fields from model data (they're stored in system settings)
@@ -800,6 +929,11 @@ export function ModelMutateDrawer({
                         {...field}
                       />
                     </FormControl>
+                    <FormDescription className='text-xs'>
+                      {t(
+                        'Default fallback description; upstream sync writes this field.'
+                      )}
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -882,6 +1016,271 @@ export function ModelMutateDrawer({
                     <FormDescription>
                       {t('Press Enter or comma to add tags')}
                     </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </SideDrawerSection>
+
+            {/* Catalog Metadata */}
+            <SideDrawerSection>
+              <h3 className='text-sm font-semibold'>{t('Catalog Metadata')}</h3>
+              <p className='text-muted-foreground text-xs'>
+                {t(
+                  'Display-only metadata shown in the model details on the pricing page.'
+                )}
+              </p>
+
+              <FormField
+                control={form.control}
+                name='description_i18n'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('Localized Descriptions')}</FormLabel>
+                    <Tabs
+                      value={descriptionLocale}
+                      onValueChange={(value) =>
+                        value && setDescriptionLocale(value)
+                      }
+                    >
+                      <TabsList className='max-w-full flex-wrap justify-start group-data-horizontal/tabs:h-auto'>
+                        {DESCRIPTION_LOCALES.map((locale) => (
+                          <TabsTrigger
+                            key={locale.key}
+                            value={locale.key}
+                            title={locale.label}
+                          >
+                            {locale.short}
+                            {(field.value[locale.key] ?? '').trim() !== '' && (
+                              <span className='bg-primary ml-1 inline-block size-1.5 rounded-full' />
+                            )}
+                          </TabsTrigger>
+                        ))}
+                      </TabsList>
+                    </Tabs>
+                    <FormControl>
+                      <Textarea
+                        placeholder={t('Describe this model...')}
+                        rows={3}
+                        value={field.value[descriptionLocale] ?? ''}
+                        onChange={(e) =>
+                          field.onChange({
+                            ...field.value,
+                            [descriptionLocale]: e.target.value,
+                          })
+                        }
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      {t(
+                        'Shown in the user interface language, falling back to English and then the default description.'
+                      )}
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name='input_modalities'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('Input Modalities')}</FormLabel>
+                    <FormControl>
+                      <ToggleGroup
+                        multiple
+                        variant='outline'
+                        size='sm'
+                        spacing={2}
+                        className='flex flex-wrap'
+                        value={field.value}
+                        onValueChange={(value) => field.onChange(value)}
+                        aria-label={t('Input Modalities')}
+                      >
+                        {CATALOG_MODALITY_OPTIONS.map((option) => (
+                          <ToggleGroupItem
+                            key={option.value}
+                            value={option.value}
+                          >
+                            {t(option.label)}
+                          </ToggleGroupItem>
+                        ))}
+                      </ToggleGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name='output_modalities'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('Output Modalities')}</FormLabel>
+                    <FormControl>
+                      <ToggleGroup
+                        multiple
+                        variant='outline'
+                        size='sm'
+                        spacing={2}
+                        className='flex flex-wrap'
+                        value={field.value}
+                        onValueChange={(value) => field.onChange(value)}
+                        aria-label={t('Output Modalities')}
+                      >
+                        {CATALOG_MODALITY_OPTIONS.map((option) => (
+                          <ToggleGroupItem
+                            key={option.value}
+                            value={option.value}
+                          >
+                            {t(option.label)}
+                          </ToggleGroupItem>
+                        ))}
+                      </ToggleGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name='capabilities'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('Capabilities')}</FormLabel>
+                    <div className='grid grid-cols-2 gap-2'>
+                      {CATALOG_CAPABILITY_OPTIONS.map((option) => (
+                        <label
+                          key={option.value}
+                          className='flex cursor-pointer items-center gap-2 text-sm font-normal'
+                        >
+                          <Checkbox
+                            checked={field.value.includes(option.value)}
+                            onCheckedChange={(checked) =>
+                              field.onChange(
+                                checked === true
+                                  ? [...field.value, option.value]
+                                  : field.value.filter(
+                                      (item) => item !== option.value
+                                    )
+                              )
+                            }
+                          />
+                          {t(option.label)}
+                        </label>
+                      ))}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className='grid grid-cols-2 gap-4'>
+                <FormField
+                  control={form.control}
+                  name='context_length'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('Context length')}</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder='128000'
+                          {...field}
+                          onBlur={(e) => {
+                            const tokens = parseTokenCountInput(e.target.value)
+                            if (tokens > 0) field.onChange(String(tokens))
+                            field.onBlur()
+                          }}
+                        />
+                      </FormControl>
+                      <FormDescription className='text-xs'>
+                        {formatTokenCountPreview(field.value)
+                          ? `= ${formatTokenCountPreview(field.value)} tokens`
+                          : t(
+                              'Token count; shorthand like 128k or 1m is accepted'
+                            )}
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name='max_output_tokens'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('Max output tokens')}</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder='8192'
+                          {...field}
+                          onBlur={(e) => {
+                            const tokens = parseTokenCountInput(e.target.value)
+                            if (tokens > 0) field.onChange(String(tokens))
+                            field.onBlur()
+                          }}
+                        />
+                      </FormControl>
+                      <FormDescription className='text-xs'>
+                        {formatTokenCountPreview(field.value)
+                          ? `= ${formatTokenCountPreview(field.value)} tokens`
+                          : t(
+                              'Token count; shorthand like 128k or 1m is accepted'
+                            )}
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className='grid grid-cols-2 gap-4'>
+                <FormField
+                  control={form.control}
+                  name='release_date'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('Release date')}</FormLabel>
+                      <FormControl>
+                        <Input placeholder='2025-06' {...field} />
+                      </FormControl>
+                      <FormDescription className='text-xs'>
+                        {t('YYYY-MM or YYYY-MM-DD')}
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name='knowledge_cutoff'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('Knowledge cutoff')}</FormLabel>
+                      <FormControl>
+                        <Input placeholder='2024-12' {...field} />
+                      </FormControl>
+                      <FormDescription className='text-xs'>
+                        {t('YYYY-MM or YYYY-MM-DD')}
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name='parameter_count'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('Parameters')}</FormLabel>
+                    <FormControl>
+                      <Input placeholder={t('e.g. 685B')} {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

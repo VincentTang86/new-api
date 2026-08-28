@@ -5491,6 +5491,19 @@
     "© 2025 Your Company. All rights reserved.": "© 2025 Ваша Компания. Все права защищены.",
     "、": ", ",
     "，": ", ",
-    "，and ": " и "
+    "，and ": " и ",
+    "Catalog Metadata": "Метаданные каталога",
+    "Display-only metadata shown in the model details on the pricing page.": "Метаданные только для отображения, показываются в деталях модели на странице цен.",
+    "Localized Descriptions": "Локализованные описания",
+    "Shown in the user interface language, falling back to English and then the default description.": "Показывается на языке интерфейса, с откатом на английский, затем на описание по умолчанию.",
+    "Input Modalities": "Входные модальности",
+    "Output Modalities": "Выходные модальности",
+    "Context length": "Длина контекста",
+    "Max output tokens": "Макс. токенов вывода",
+    "Token count; shorthand like 128k or 1m is accepted": "Число токенов; допускаются сокращения вида 128k или 1m",
+    "Release date": "Дата выпуска",
+    "YYYY-MM or YYYY-MM-DD": "YYYY-MM или YYYY-MM-DD",
+    "e.g. 685B": "напр. 685B",
+    "Default fallback description; upstream sync writes this field.": "Описание по умолчанию; синхронизация с апстримом записывает это поле."
   }
 }

@@ -5491,6 +5491,19 @@
     "© 2025 Your Company. All rights reserved.": "© 2025 您的公司。保留所有权利。",
     "、": "、",
     "，": "，",
-    "，and ": "，并"
+    "，and ": "，并",
+    "Catalog Metadata": "目录元数据",
+    "Display-only metadata shown in the model details on the pricing page.": "仅用于展示的元数据，显示在定价页的模型详情中。",
+    "Localized Descriptions": "多语言说明",
+    "Shown in the user interface language, falling back to English and then the default description.": "按用户界面语言展示，依次回退到英文和默认说明。",
+    "Input Modalities": "输入模态",
+    "Output Modalities": "输出模态",
+    "Context length": "上下文长度",
+    "Max output tokens": "最大输出 token 数",
+    "Token count; shorthand like 128k or 1m is accepted": "token 数；支持 128k、1m 之类的简写",
+    "Release date": "发布时间",
+    "YYYY-MM or YYYY-MM-DD": "YYYY-MM 或 YYYY-MM-DD",
+    "e.g. 685B": "如 685B",
+    "Default fallback description; upstream sync writes this field.": "默认兜底说明；上游同步会写入此字段。"
   }
 }

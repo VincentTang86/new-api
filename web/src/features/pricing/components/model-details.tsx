@@ -51,6 +51,7 @@ import {
   formatUptimePct,
   getSuccessRateTextClass,
 } from '@/features/performance-metrics/lib/format'
+import { normalizeInterfaceLanguage, toIntlLocale } from '@/i18n/languages'
 import { cn } from '@/lib/utils'
 
 import { parseTags } from '../lib/model-helpers'
@@ -480,9 +481,17 @@ function ModelBackendDetailsSection(props: { model: PricingModel }) {
 // ----------------------------------------------------------------------------
 
 function ModelHeader(props: { model: PricingModel }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const model = props.model
-  const description = model.description || model.vendor_description || null
+  // Locale-aware description: current interface language → English → the
+  // single default description (upstream sync writes that one) → vendor.
+  const locale = toIntlLocale(
+    normalizeInterfaceLanguage(i18n.resolvedLanguage || i18n.language)
+  )
+  const localized =
+    (locale && model.description_i18n?.[locale]) || model.description_i18n?.en
+  const description =
+    localized || model.description || model.vendor_description || null
 
   return (
     <header className='flex flex-col gap-5'>

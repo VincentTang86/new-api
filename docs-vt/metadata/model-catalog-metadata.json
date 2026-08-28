@@ -1,0 +1,477 @@
+{
+  "_meta": {
+    "generated_at": "2026-08-28",
+    "sources": [
+      "models.dev api.json (first-party provider entries preferred)",
+      "openrouter.ai /api/v1/models (descriptions, cross-check)",
+      "model-name version stamps (seedance 260128 -> 2026-01-28)"
+    ],
+    "notes": [
+      "seedance release date uses the 260128 version stamp (2026-01-28); models.dev vercel entry says 2026-04-14",
+      "gemini-3.1-flash-image context/max_output follow models.dev google entry (65536/65536); OpenRouter lists 131072/32768",
+      "grok-imagine-video-1.5 input kept text-only per models.dev; add image if the channel supports image-to-video",
+      "kimi/kimi-k3 is an alias row for kimi-k3 and shares its metadata"
+    ]
+  },
+  "models": {
+    "claude-fable-5": {
+      "vendor": "Anthropic",
+      "icon": "Claude.Color",
+      "input_modalities": "text,image,file",
+      "output_modalities": "text",
+      "context_length": 1000000,
+      "max_output_tokens": 128000,
+      "release_date": "2026-06-07",
+      "knowledge_cutoff": "",
+      "parameter_count": "",
+      "capabilities": "vision,reasoning,function_calling,tools,streaming,caching",
+      "description": {
+        "en": "Claude Fable 5 is Anthropic's Mythos-class model built for autonomous knowledge work and coding, pairing frontier reasoning with a 1M-token context window.",
+        "zh-CN": "Claude Fable 5 是 Anthropic 面向自主知识工作与编程的 Mythos 级模型，兼具前沿推理能力与 1M token 上下文窗口。",
+        "zh-TW": "Claude Fable 5 是 Anthropic 面向自主知識工作與程式開發的 Mythos 級模型，兼具前沿推理能力與 1M token 上下文視窗。",
+        "fr": "Claude Fable 5 est le modèle de classe Mythos d'Anthropic, conçu pour le travail intellectuel autonome et la programmation, alliant raisonnement de pointe et fenêtre de contexte de 1M de tokens.",
+        "ru": "Claude Fable 5 — модель класса Mythos от Anthropic для автономной интеллектуальной работы и программирования, сочетающая передовое рассуждение с контекстом в 1 млн токенов.",
+        "ja": "Claude Fable 5 は、自律的なナレッジワークとコーディングのために構築された Anthropic の Mythos クラスモデルで、最先端の推論能力と 1M トークンのコンテキストウィンドウを備えています。",
+        "vi": "Claude Fable 5 là mô hình lớp Mythos của Anthropic dành cho công việc tri thức tự chủ và lập trình, kết hợp suy luận tiên phong với cửa sổ ngữ cảnh 1M token."
+      }
+    },
+    "claude-opus-4-8": {
+      "vendor": "Anthropic",
+      "icon": "Claude.Color",
+      "input_modalities": "text,image,file",
+      "output_modalities": "text",
+      "context_length": 1000000,
+      "max_output_tokens": 128000,
+      "release_date": "2026-05-28",
+      "knowledge_cutoff": "2026-01",
+      "parameter_count": "",
+      "capabilities": "vision,reasoning,function_calling,tools,streaming,caching",
+      "description": {
+        "en": "Claude Opus 4.8 is the most capable generally available Opus-family model, tuned for complex reasoning, coding, and agentic workflows.",
+        "zh-CN": "Claude Opus 4.8 是 Opus 系列中能力最强的正式可用模型，为复杂推理、编程和智能体工作流深度调优。",
+        "zh-TW": "Claude Opus 4.8 是 Opus 系列中能力最強的正式可用模型，針對複雜推理、程式開發與 AI 代理工作流深度調校。",
+        "fr": "Claude Opus 4.8 est le modèle de la famille Opus le plus performant en disponibilité générale, optimisé pour le raisonnement complexe, la programmation et les flux agentiques.",
+        "ru": "Claude Opus 4.8 — самая мощная общедоступная модель семейства Opus, оптимизированная для сложных рассуждений, программирования и агентных рабочих процессов.",
+        "ja": "Claude Opus 4.8 は、一般提供されている Opus ファミリーで最も高性能なモデルで、複雑な推論、コーディング、エージェントワークフロー向けに調整されています。",
+        "vi": "Claude Opus 4.8 là mô hình mạnh nhất trong dòng Opus đang được cung cấp rộng rãi, được tinh chỉnh cho suy luận phức tạp, lập trình và quy trình agent."
+      }
+    },
+    "claude-opus-5": {
+      "vendor": "Anthropic",
+      "icon": "Claude.Color",
+      "input_modalities": "text,image,file",
+      "output_modalities": "text",
+      "context_length": 1000000,
+      "max_output_tokens": 128000,
+      "release_date": "2026-07-24",
+      "knowledge_cutoff": "2026-05",
+      "parameter_count": "",
+      "capabilities": "vision,reasoning,function_calling,tools,streaming,caching",
+      "description": {
+        "en": "Claude Opus 5 is Anthropic's flagship model for demanding reasoning, coding, and long-horizon agentic work, particularly strong at end-to-end software tasks.",
+        "zh-CN": "Claude Opus 5 是 Anthropic 的旗舰模型，面向高难度推理、编程与长程智能体任务，尤其擅长端到端软件工程。",
+        "zh-TW": "Claude Opus 5 是 Anthropic 的旗艦模型，面向高難度推理、程式開發與長程 AI 代理任務，尤其擅長端到端軟體工程。",
+        "fr": "Claude Opus 5 est le modèle phare d'Anthropic pour le raisonnement exigeant, la programmation et le travail agentique de longue haleine, particulièrement performant sur les tâches logicielles de bout en bout.",
+        "ru": "Claude Opus 5 — флагманская модель Anthropic для сложных рассуждений, программирования и длительной агентной работы, особенно сильная в сквозных программных задачах.",
+        "ja": "Claude Opus 5 は、高度な推論、コーディング、長期エージェント業務のための Anthropic のフラッグシップモデルで、エンドツーエンドのソフトウェアタスクに特に優れています。",
+        "vi": "Claude Opus 5 là mô hình chủ lực của Anthropic cho suy luận khắt khe, lập trình và công việc agent dài hạn, đặc biệt mạnh ở các tác vụ phần mềm đầu-cuối."
+      }
+    },
+    "claude-sonnet-5": {
+      "vendor": "Anthropic",
+      "icon": "Claude.Color",
+      "input_modalities": "text,image,file",
+      "output_modalities": "text",
+      "context_length": 1000000,
+      "max_output_tokens": 128000,
+      "release_date": "2026-06-29",
+      "knowledge_cutoff": "2026-01",
+      "parameter_count": "",
+      "capabilities": "vision,reasoning,function_calling,tools,streaming,caching",
+      "description": {
+        "en": "Claude Sonnet 5 balances frontier capability with speed, with adaptive thinking and strong performance across coding, agents, and professional work.",
+        "zh-CN": "Claude Sonnet 5 在前沿能力与速度之间取得平衡，支持自适应思考，在编程、智能体和专业工作中表现出色。",
+        "zh-TW": "Claude Sonnet 5 在前沿能力與速度之間取得平衡，支援自適應思考，在程式開發、AI 代理與專業工作中表現出色。",
+        "fr": "Claude Sonnet 5 équilibre capacités de pointe et rapidité, avec une réflexion adaptative et d'excellentes performances en programmation, agents et travail professionnel.",
+        "ru": "Claude Sonnet 5 сочетает передовые возможности со скоростью, поддерживает адаптивное мышление и силён в программировании, агентных сценариях и профессиональной работе.",
+        "ja": "Claude Sonnet 5 は最先端の能力と速度のバランスを取り、適応的思考に対応し、コーディング、エージェント、プロフェッショナル業務で高い性能を発揮します。",
+        "vi": "Claude Sonnet 5 cân bằng năng lực tiên phong với tốc độ, hỗ trợ tư duy thích ứng và hiệu năng mạnh trong lập trình, agent và công việc chuyên môn."
+      }
+    },
+    "deepseek-v4-flash": {
+      "vendor": "DeepSeek",
+      "input_modalities": "text",
+      "output_modalities": "text",
+      "context_length": 1000000,
+      "max_output_tokens": 384000,
+      "release_date": "2026-07-31",
+      "knowledge_cutoff": "2025-05",
+      "parameter_count": "284B MoE (13B act.)",
+      "capabilities": "reasoning,function_calling,tools,streaming,caching",
+      "description": {
+        "en": "DeepSeek V4 Flash is an efficiency-optimized Mixture-of-Experts model (284B total, 13B active) with a 1M-token context, built for high-throughput chat and reasoning.",
+        "zh-CN": "DeepSeek V4 Flash 是效率优先的混合专家（MoE）模型（总参数 284B、激活 13B），支持 1M token 上下文，面向高吞吐聊天与推理场景。",
+        "zh-TW": "DeepSeek V4 Flash 是效率優先的混合專家（MoE）模型（總參數 284B、啟用 13B），支援 1M token 上下文，面向高吞吐聊天與推理場景。",
+        "fr": "DeepSeek V4 Flash est un modèle Mixture-of-Experts optimisé pour l'efficacité (284B au total, 13B actifs) avec un contexte de 1M de tokens, conçu pour le chat et le raisonnement à haut débit.",
+        "ru": "DeepSeek V4 Flash — оптимизированная по эффективности MoE-модель (284B всего, 13B активных) с контекстом 1 млн токенов, созданная для высоконагруженного чата и рассуждений.",
+        "ja": "DeepSeek V4 Flash は効率最適化された Mixture-of-Experts モデル（総パラメータ 284B、アクティブ 13B）で、1M トークンのコンテキストを備え、高スループットのチャットと推論向けに構築されています。",
+        "vi": "DeepSeek V4 Flash là mô hình Mixture-of-Experts tối ưu hiệu quả (tổng 284B, kích hoạt 13B) với ngữ cảnh 1M token, dành cho chat và suy luận thông lượng cao."
+      }
+    },
+    "deepseek-v4-flash-0731": {
+      "vendor": "DeepSeek",
+      "input_modalities": "text",
+      "output_modalities": "text",
+      "context_length": 1000000,
+      "max_output_tokens": 384000,
+      "release_date": "2026-07-31",
+      "knowledge_cutoff": "2025-05",
+      "parameter_count": "284B MoE (13B act.)",
+      "capabilities": "reasoning,function_calling,tools,streaming,caching",
+      "description": {
+        "en": "DeepSeek V4 Flash 0731 is the re-post-trained July revision of V4 Flash, improving instruction following and code quality at the same efficient price point.",
+        "zh-CN": "DeepSeek V4 Flash 0731 是 V4 Flash 于 7 月重新后训练的修订版，在同样高性价比的前提下提升了指令遵循与代码质量。",
+        "zh-TW": "DeepSeek V4 Flash 0731 是 V4 Flash 於 7 月重新後訓練的修訂版，在同樣高性價比的前提下提升了指令遵循與程式碼品質。",
+        "fr": "DeepSeek V4 Flash 0731 est la révision de juillet ré-entraînée de V4 Flash, améliorant le suivi des instructions et la qualité du code au même tarif efficace.",
+        "ru": "DeepSeek V4 Flash 0731 — июльская ревизия V4 Flash с повторным пост-обучением, улучшающая следование инструкциям и качество кода при той же выгодной цене.",
+        "ja": "DeepSeek V4 Flash 0731 は V4 Flash の 7 月改訂版（再ポストトレーニング）で、同じ効率的な価格のまま指示追従性とコード品質を向上させています。",
+        "vi": "DeepSeek V4 Flash 0731 là bản sửa đổi tháng 7 được hậu huấn luyện lại của V4 Flash, cải thiện khả năng tuân thủ lệnh và chất lượng mã với cùng mức giá hiệu quả."
+      }
+    },
+    "deepseek-v4-pro": {
+      "vendor": "DeepSeek",
+      "input_modalities": "text",
+      "output_modalities": "text",
+      "context_length": 1000000,
+      "max_output_tokens": 384000,
+      "release_date": "2026-08-12",
+      "knowledge_cutoff": "",
+      "parameter_count": "1.6T MoE (49B act.)",
+      "capabilities": "reasoning,function_calling,tools,streaming,caching",
+      "description": {
+        "en": "DeepSeek V4 Pro is a large-scale MoE model (1.6T total, 49B active) with a 1M-token context, aimed at complex reasoning and agentic coding.",
+        "zh-CN": "DeepSeek V4 Pro 是大规模混合专家模型（总参数 1.6T、激活 49B），支持 1M token 上下文，面向复杂推理与智能体编程。",
+        "zh-TW": "DeepSeek V4 Pro 是大規模混合專家模型（總參數 1.6T、啟用 49B），支援 1M token 上下文，面向複雜推理與 AI 代理程式開發。",
+        "fr": "DeepSeek V4 Pro est un modèle MoE à grande échelle (1,6T au total, 49B actifs) avec un contexte de 1M de tokens, destiné au raisonnement complexe et à la programmation agentique.",
+        "ru": "DeepSeek V4 Pro — крупномасштабная MoE-модель (1,6T всего, 49B активных) с контекстом 1 млн токенов, ориентированная на сложные рассуждения и агентное программирование.",
+        "ja": "DeepSeek V4 Pro は大規模 MoE モデル（総パラメータ 1.6T、アクティブ 49B）で、1M トークンのコンテキストを備え、複雑な推論とエージェントコーディングを対象としています。",
+        "vi": "DeepSeek V4 Pro là mô hình MoE quy mô lớn (tổng 1,6T, kích hoạt 49B) với ngữ cảnh 1M token, nhắm đến suy luận phức tạp và lập trình agent."
+      }
+    },
+    "doubao-seedance-2-0-260128": {
+      "vendor": "字节跳动",
+      "icon": "Doubao.Color",
+      "input_modalities": "text,image",
+      "output_modalities": "video",
+      "context_length": 0,
+      "max_output_tokens": 0,
+      "release_date": "2026-01-28",
+      "knowledge_cutoff": "",
+      "parameter_count": "",
+      "capabilities": "",
+      "description": {
+        "en": "Seedance 2.0 is ByteDance's video generation model, producing high-fidelity multi-shot clips from text or image prompts.",
+        "zh-CN": "Seedance 2.0 是字节跳动的视频生成模型，可根据文本或图片提示生成高保真多镜头视频片段。",
+        "zh-TW": "Seedance 2.0 是字節跳動的影片生成模型，可根據文字或圖片提示生成高保真多鏡頭影片片段。",
+        "fr": "Seedance 2.0 est le modèle de génération vidéo de ByteDance, produisant des clips multi-plans haute fidélité à partir d'invites texte ou image.",
+        "ru": "Seedance 2.0 — модель генерации видео от ByteDance, создающая высококачественные многокадровые ролики по текстовым или графическим запросам.",
+        "ja": "Seedance 2.0 は ByteDance の動画生成モデルで、テキストまたは画像プロンプトから高忠実度のマルチショット動画を生成します。",
+        "vi": "Seedance 2.0 là mô hình tạo video của ByteDance, tạo các đoạn video đa cảnh độ trung thực cao từ lời nhắc văn bản hoặc hình ảnh."
+      }
+    },
+    "doubao-seedance-2-0-fast-260128": {
+      "vendor": "字节跳动",
+      "icon": "Doubao.Color",
+      "input_modalities": "text,image",
+      "output_modalities": "video",
+      "context_length": 0,
+      "max_output_tokens": 0,
+      "release_date": "2026-01-28",
+      "knowledge_cutoff": "",
+      "parameter_count": "",
+      "capabilities": "",
+      "description": {
+        "en": "Seedance 2.0 Fast is the low-latency, lower-cost variant of Seedance 2.0 for rapid video generation from text or image prompts.",
+        "zh-CN": "Seedance 2.0 Fast 是 Seedance 2.0 的低延迟低成本版本，适合根据文本或图片提示快速生成视频。",
+        "zh-TW": "Seedance 2.0 Fast 是 Seedance 2.0 的低延遲低成本版本，適合根據文字或圖片提示快速生成影片。",
+        "fr": "Seedance 2.0 Fast est la variante à faible latence et moindre coût de Seedance 2.0, pour une génération vidéo rapide à partir d'invites texte ou image.",
+        "ru": "Seedance 2.0 Fast — вариант Seedance 2.0 с низкой задержкой и меньшей стоимостью для быстрой генерации видео по текстовым или графическим запросам.",
+        "ja": "Seedance 2.0 Fast は Seedance 2.0 の低遅延・低コスト版で、テキストや画像プロンプトからの高速な動画生成に適しています。",
+        "vi": "Seedance 2.0 Fast là biến thể độ trễ thấp, chi phí thấp của Seedance 2.0, phù hợp tạo video nhanh từ lời nhắc văn bản hoặc hình ảnh."
+      }
+    },
+    "gemini-3.1-flash-image": {
+      "vendor": "Google",
+      "icon": "Gemini.Color",
+      "input_modalities": "text,image",
+      "output_modalities": "text,image",
+      "context_length": 65536,
+      "max_output_tokens": 65536,
+      "release_date": "2026-05-28",
+      "knowledge_cutoff": "2025-01",
+      "parameter_count": "",
+      "capabilities": "vision,streaming",
+      "description": {
+        "en": "Gemini 3.1 Flash Image (\"Nano Banana 2\") is Google's fast image generation and editing model, delivering Pro-level visual quality at Flash speed and cost.",
+        "zh-CN": "Gemini 3.1 Flash Image（“Nano Banana 2”）是 Google 的快速图像生成与编辑模型，以 Flash 级速度和成本提供接近 Pro 级的画质。",
+        "zh-TW": "Gemini 3.1 Flash Image（「Nano Banana 2」）是 Google 的快速圖像生成與編輯模型，以 Flash 級速度和成本提供接近 Pro 級的畫質。",
+        "fr": "Gemini 3.1 Flash Image (« Nano Banana 2 ») est le modèle rapide de génération et d'édition d'images de Google, offrant une qualité visuelle de niveau Pro à la vitesse et au coût de Flash.",
+        "ru": "Gemini 3.1 Flash Image («Nano Banana 2») — быстрая модель генерации и редактирования изображений от Google с качеством уровня Pro при скорости и цене Flash.",
+        "ja": "Gemini 3.1 Flash Image（「Nano Banana 2」）は Google の高速な画像生成・編集モデルで、Flash の速度とコストで Pro 級の画質を提供します。",
+        "vi": "Gemini 3.1 Flash Image (\"Nano Banana 2\") là mô hình tạo và chỉnh sửa ảnh nhanh của Google, mang lại chất lượng hình ảnh cấp Pro với tốc độ và chi phí của Flash."
+      }
+    },
+    "gemini-3-pro-image": {
+      "vendor": "Google",
+      "icon": "Gemini.Color",
+      "input_modalities": "text,image",
+      "output_modalities": "text,image",
+      "context_length": 131072,
+      "max_output_tokens": 32768,
+      "release_date": "2026-05-28",
+      "knowledge_cutoff": "2025-01",
+      "parameter_count": "",
+      "capabilities": "vision,streaming",
+      "description": {
+        "en": "Gemini 3 Pro Image (\"Nano Banana Pro\") is Google's most advanced image generation and editing model, built on Gemini 3 Pro with strong text rendering and instruction following.",
+        "zh-CN": "Gemini 3 Pro Image（“Nano Banana Pro”）是 Google 最先进的图像生成与编辑模型，基于 Gemini 3 Pro 构建，文字渲染与指令遵循能力突出。",
+        "zh-TW": "Gemini 3 Pro Image（「Nano Banana Pro」）是 Google 最先進的圖像生成與編輯模型，基於 Gemini 3 Pro 構建，文字渲染與指令遵循能力突出。",
+        "fr": "Gemini 3 Pro Image (« Nano Banana Pro ») est le modèle de génération et d'édition d'images le plus avancé de Google, bâti sur Gemini 3 Pro avec un excellent rendu du texte et suivi des instructions.",
+        "ru": "Gemini 3 Pro Image («Nano Banana Pro») — самая продвинутая модель генерации и редактирования изображений Google на базе Gemini 3 Pro с сильным рендерингом текста и следованием инструкциям.",
+        "ja": "Gemini 3 Pro Image（「Nano Banana Pro」）は Gemini 3 Pro を基盤とする Google の最先端画像生成・編集モデルで、テキスト描画と指示追従に優れています。",
+        "vi": "Gemini 3 Pro Image (\"Nano Banana Pro\") là mô hình tạo và chỉnh sửa ảnh tiên tiến nhất của Google, xây dựng trên Gemini 3 Pro với khả năng hiển thị chữ và tuân thủ lệnh mạnh."
+      }
+    },
+    "glm-5.2": {
+      "vendor": "智谱",
+      "icon": "Zhipu.Color",
+      "input_modalities": "text",
+      "output_modalities": "text",
+      "context_length": 1000000,
+      "max_output_tokens": 131072,
+      "release_date": "2026-06-13",
+      "knowledge_cutoff": "",
+      "parameter_count": "",
+      "capabilities": "reasoning,function_calling,tools,streaming,caching",
+      "description": {
+        "en": "GLM 5.2 is Z.ai's large-scale reasoning model with a 1M-token context window, suited for long-horizon agent workflows and advanced coding.",
+        "zh-CN": "GLM 5.2 是智谱的大规模推理模型，支持 1M token 上下文窗口，适合长程智能体工作流与高阶编程任务。",
+        "zh-TW": "GLM 5.2 是智譜的大規模推理模型，支援 1M token 上下文視窗，適合長程 AI 代理工作流與高階程式開發任務。",
+        "fr": "GLM 5.2 est le modèle de raisonnement à grande échelle de Z.ai avec une fenêtre de contexte de 1M de tokens, adapté aux flux agentiques de longue haleine et à la programmation avancée.",
+        "ru": "GLM 5.2 — крупномасштабная модель рассуждений от Z.ai с контекстом 1 млн токенов, подходящая для длительных агентных процессов и продвинутого программирования.",
+        "ja": "GLM 5.2 は Z.ai の大規模推論モデルで、1M トークンのコンテキストウィンドウを備え、長期エージェントワークフローや高度なコーディングに適しています。",
+        "vi": "GLM 5.2 là mô hình suy luận quy mô lớn của Z.ai với cửa sổ ngữ cảnh 1M token, phù hợp cho quy trình agent dài hạn và lập trình nâng cao."
+      }
+    },
+    "gpt-5.6-luna": {
+      "vendor": "OpenAI",
+      "input_modalities": "text,image,file",
+      "output_modalities": "text",
+      "context_length": 1050000,
+      "max_output_tokens": 128000,
+      "release_date": "2026-07-09",
+      "knowledge_cutoff": "2026-02",
+      "parameter_count": "",
+      "capabilities": "vision,reasoning,function_calling,tools,streaming,caching",
+      "description": {
+        "en": "GPT-5.6 Luna is the fast, cost-efficient tier of OpenAI's GPT-5.6 series, suited for high-volume, latency-sensitive chat, classification, and extraction.",
+        "zh-CN": "GPT-5.6 Luna 是 OpenAI GPT-5.6 系列中的高速高性价比档位，适合大批量、延迟敏感的聊天、分类与信息抽取任务。",
+        "zh-TW": "GPT-5.6 Luna 是 OpenAI GPT-5.6 系列中的高速高性價比檔位，適合大批量、延遲敏感的聊天、分類與資訊擷取任務。",
+        "fr": "GPT-5.6 Luna est le palier rapide et économique de la série GPT-5.6 d'OpenAI, adapté au chat, à la classification et à l'extraction à haut volume et sensibles à la latence.",
+        "ru": "GPT-5.6 Luna — быстрый и экономичный уровень серии GPT-5.6 от OpenAI для массовых, чувствительных к задержке задач чата, классификации и извлечения данных.",
+        "ja": "GPT-5.6 Luna は OpenAI GPT-5.6 シリーズの高速・低コストティアで、大量かつ低遅延が求められるチャット、分類、抽出タスクに適しています。",
+        "vi": "GPT-5.6 Luna là bậc nhanh, tiết kiệm chi phí trong dòng GPT-5.6 của OpenAI, phù hợp cho chat, phân loại và trích xuất khối lượng lớn, nhạy về độ trễ."
+      }
+    },
+    "gpt-5.6-sol": {
+      "vendor": "OpenAI",
+      "input_modalities": "text,image,file",
+      "output_modalities": "text",
+      "context_length": 1050000,
+      "max_output_tokens": 128000,
+      "release_date": "2026-07-09",
+      "knowledge_cutoff": "2026-02",
+      "parameter_count": "",
+      "capabilities": "vision,reasoning,function_calling,tools,streaming,caching",
+      "description": {
+        "en": "GPT-5.6 Sol is the flagship tier of OpenAI's GPT-5.6 series, strongest at complex reasoning, coding, and agentic workflows.",
+        "zh-CN": "GPT-5.6 Sol 是 OpenAI GPT-5.6 系列的旗舰档位，在复杂推理、编程与智能体工作流上能力最强。",
+        "zh-TW": "GPT-5.6 Sol 是 OpenAI GPT-5.6 系列的旗艦檔位，在複雜推理、程式開發與 AI 代理工作流上能力最強。",
+        "fr": "GPT-5.6 Sol est le palier phare de la série GPT-5.6 d'OpenAI, le plus performant en raisonnement complexe, programmation et flux agentiques.",
+        "ru": "GPT-5.6 Sol — флагманский уровень серии GPT-5.6 от OpenAI, сильнейший в сложных рассуждениях, программировании и агентных процессах.",
+        "ja": "GPT-5.6 Sol は OpenAI GPT-5.6 シリーズのフラッグシップティアで、複雑な推論、コーディング、エージェントワークフローに最も優れています。",
+        "vi": "GPT-5.6 Sol là bậc chủ lực trong dòng GPT-5.6 của OpenAI, mạnh nhất ở suy luận phức tạp, lập trình và quy trình agent."
+      }
+    },
+    "gpt-5.6-terra": {
+      "vendor": "OpenAI",
+      "input_modalities": "text,image,file",
+      "output_modalities": "text",
+      "context_length": 1050000,
+      "max_output_tokens": 128000,
+      "release_date": "2026-07-09",
+      "knowledge_cutoff": "2026-02",
+      "parameter_count": "",
+      "capabilities": "vision,reasoning,function_calling,tools,streaming,caching",
+      "description": {
+        "en": "GPT-5.6 Terra is the balanced tier of OpenAI's GPT-5.6 series, positioned between Sol and Luna for everyday reasoning and coding at moderate cost.",
+        "zh-CN": "GPT-5.6 Terra 是 OpenAI GPT-5.6 系列的均衡档位，定位介于 Sol 与 Luna 之间，以适中成本覆盖日常推理与编程。",
+        "zh-TW": "GPT-5.6 Terra 是 OpenAI GPT-5.6 系列的均衡檔位，定位介於 Sol 與 Luna 之間，以適中成本覆蓋日常推理與程式開發。",
+        "fr": "GPT-5.6 Terra est le palier équilibré de la série GPT-5.6 d'OpenAI, entre Sol et Luna, pour le raisonnement et la programmation du quotidien à coût modéré.",
+        "ru": "GPT-5.6 Terra — сбалансированный уровень серии GPT-5.6 от OpenAI между Sol и Luna для повседневных рассуждений и программирования по умеренной цене.",
+        "ja": "GPT-5.6 Terra は OpenAI GPT-5.6 シリーズのバランス型ティアで、Sol と Luna の中間に位置し、日常的な推論とコーディングを適度なコストでカバーします。",
+        "vi": "GPT-5.6 Terra là bậc cân bằng trong dòng GPT-5.6 của OpenAI, nằm giữa Sol và Luna, phục vụ suy luận và lập trình hằng ngày với chi phí vừa phải."
+      }
+    },
+    "gpt-image-2": {
+      "vendor": "OpenAI",
+      "icon": "OpenAI",
+      "input_modalities": "text,image",
+      "output_modalities": "image",
+      "context_length": 0,
+      "max_output_tokens": 0,
+      "release_date": "2026-04-21",
+      "knowledge_cutoff": "",
+      "parameter_count": "",
+      "capabilities": "",
+      "description": {
+        "en": "GPT Image 2 is OpenAI's image generation and editing model, turning text prompts and reference images into high-quality visuals.",
+        "zh-CN": "GPT Image 2 是 OpenAI 的图像生成与编辑模型，可将文本提示和参考图转化为高质量图像。",
+        "zh-TW": "GPT Image 2 是 OpenAI 的圖像生成與編輯模型，可將文字提示和參考圖轉化為高品質圖像。",
+        "fr": "GPT Image 2 est le modèle de génération et d'édition d'images d'OpenAI, transformant invites textuelles et images de référence en visuels de haute qualité.",
+        "ru": "GPT Image 2 — модель генерации и редактирования изображений OpenAI, превращающая текстовые запросы и референсы в качественные визуальные материалы.",
+        "ja": "GPT Image 2 は OpenAI の画像生成・編集モデルで、テキストプロンプトや参照画像から高品質なビジュアルを生成します。",
+        "vi": "GPT Image 2 là mô hình tạo và chỉnh sửa ảnh của OpenAI, biến lời nhắc văn bản và ảnh tham chiếu thành hình ảnh chất lượng cao."
+      }
+    },
+    "grok-imagine-video-1.5": {
+      "vendor": "xAI",
+      "icon": "XAI",
+      "input_modalities": "text",
+      "output_modalities": "video",
+      "context_length": 0,
+      "max_output_tokens": 0,
+      "release_date": "2026-05-30",
+      "knowledge_cutoff": "",
+      "parameter_count": "",
+      "capabilities": "",
+      "description": {
+        "en": "Grok Imagine Video 1.5 is xAI's video generation model, producing short cinematic clips from text prompts.",
+        "zh-CN": "Grok Imagine Video 1.5 是 xAI 的视频生成模型，可根据文本提示生成短篇电影感视频片段。",
+        "zh-TW": "Grok Imagine Video 1.5 是 xAI 的影片生成模型，可根據文字提示生成短篇電影感影片片段。",
+        "fr": "Grok Imagine Video 1.5 est le modèle de génération vidéo de xAI, produisant de courts clips cinématographiques à partir d'invites textuelles.",
+        "ru": "Grok Imagine Video 1.5 — модель генерации видео от xAI, создающая короткие кинематографичные ролики по текстовым запросам.",
+        "ja": "Grok Imagine Video 1.5 は xAI の動画生成モデルで、テキストプロンプトから短いシネマティックな動画を生成します。",
+        "vi": "Grok Imagine Video 1.5 là mô hình tạo video của xAI, tạo các đoạn phim ngắn mang chất điện ảnh từ lời nhắc văn bản."
+      }
+    },
+    "kimi-k2.7-code": {
+      "vendor": "Moonshot",
+      "icon": "Moonshot",
+      "input_modalities": "text,image,video",
+      "output_modalities": "text",
+      "context_length": 262144,
+      "max_output_tokens": 262144,
+      "release_date": "2026-06-12",
+      "knowledge_cutoff": "2025-01",
+      "parameter_count": "",
+      "capabilities": "vision,reasoning,function_calling,tools,streaming,caching",
+      "description": {
+        "en": "Kimi K2.7 Code is Moonshot AI's coding-focused model, built to complete end-to-end programming tasks reliably over long contexts.",
+        "zh-CN": "Kimi K2.7 Code 是月之暗面面向编程的专用模型，能在长上下文中可靠地完成端到端编程任务。",
+        "zh-TW": "Kimi K2.7 Code 是月之暗面面向程式開發的專用模型，能在長上下文中可靠地完成端到端程式任務。",
+        "fr": "Kimi K2.7 Code est le modèle de Moonshot AI dédié à la programmation, conçu pour accomplir de bout en bout des tâches de code de manière fiable sur de longs contextes.",
+        "ru": "Kimi K2.7 Code — модель Moonshot AI, ориентированная на программирование и надёжное выполнение сквозных задач разработки в длинных контекстах.",
+        "ja": "Kimi K2.7 Code は Moonshot AI のコーディング特化モデルで、長いコンテキストでもエンドツーエンドのプログラミングタスクを確実に完了できるよう構築されています。",
+        "vi": "Kimi K2.7 Code là mô hình chuyên về lập trình của Moonshot AI, được xây dựng để hoàn thành đáng tin cậy các tác vụ lập trình đầu-cuối trên ngữ cảnh dài."
+      }
+    },
+    "kimi-k3": {
+      "vendor": "Moonshot",
+      "icon": "Moonshot",
+      "input_modalities": "text,image,video",
+      "output_modalities": "text",
+      "context_length": 1048576,
+      "max_output_tokens": 131072,
+      "release_date": "2026-07-16",
+      "knowledge_cutoff": "",
+      "parameter_count": "2.8T MoE",
+      "capabilities": "vision,reasoning,function_calling,tools,streaming,caching",
+      "description": {
+        "en": "Kimi K3 is Moonshot AI's 2.8T-parameter open-weight multimodal reasoning model, suited for complex coding, knowledge work, and long-horizon agentic tasks.",
+        "zh-CN": "Kimi K3 是月之暗面的 2.8T 参数开源权重多模态推理模型，适合复杂编程、知识工作与长程智能体任务。",
+        "zh-TW": "Kimi K3 是月之暗面的 2.8T 參數開源權重多模態推理模型，適合複雜程式開發、知識工作與長程 AI 代理任務。",
+        "fr": "Kimi K3 est le modèle de raisonnement multimodal à poids ouverts de 2,8T paramètres de Moonshot AI, adapté à la programmation complexe, au travail intellectuel et aux tâches agentiques de longue haleine.",
+        "ru": "Kimi K3 — мультимодальная модель рассуждений Moonshot AI с открытыми весами на 2,8 трлн параметров для сложного программирования, интеллектуальной работы и длительных агентных задач.",
+        "ja": "Kimi K3 は Moonshot AI の 2.8T パラメータのオープンウェイト・マルチモーダル推論モデルで、複雑なコーディング、ナレッジワーク、長期エージェントタスクに適しています。",
+        "vi": "Kimi K3 là mô hình suy luận đa phương thức trọng số mở 2,8T tham số của Moonshot AI, phù hợp cho lập trình phức tạp, công việc tri thức và tác vụ agent dài hạn."
+      }
+    },
+    "kimi/kimi-k3": {
+      "alias_of": "kimi-k3"
+    },
+    "MiniMax-H3": {
+      "vendor": "MiniMax",
+      "icon": "Minimax.Color",
+      "input_modalities": "text,image",
+      "output_modalities": "video",
+      "context_length": 0,
+      "max_output_tokens": 0,
+      "release_date": "2026-07-30",
+      "knowledge_cutoff": "",
+      "parameter_count": "",
+      "capabilities": "",
+      "description": {
+        "en": "MiniMax H3 is a video generation model supporting prompt-guided creation, regeneration, and motion editing from text and image inputs.",
+        "zh-CN": "MiniMax H3 是视频生成模型，支持基于文本与图片输入的提示引导生成、重生成与运动编辑。",
+        "zh-TW": "MiniMax H3 是影片生成模型，支援基於文字與圖片輸入的提示引導生成、重新生成與動態編輯。",
+        "fr": "MiniMax H3 est un modèle de génération vidéo prenant en charge la création guidée par invite, la régénération et l'édition de mouvement à partir d'entrées texte et image.",
+        "ru": "MiniMax H3 — модель генерации видео с поддержкой создания по запросу, регенерации и редактирования движения на основе текста и изображений.",
+        "ja": "MiniMax H3 は動画生成モデルで、テキストと画像入力によるプロンプト誘導生成、再生成、モーション編集に対応しています。",
+        "vi": "MiniMax H3 là mô hình tạo video hỗ trợ tạo theo lời nhắc, tạo lại và chỉnh sửa chuyển động từ đầu vào văn bản và hình ảnh."
+      }
+    },
+    "qwen3.7-flash": {
+      "vendor": "阿里巴巴",
+      "icon": "Qwen.Color",
+      "input_modalities": "text,image,video",
+      "output_modalities": "text",
+      "context_length": 1000000,
+      "max_output_tokens": 65536,
+      "release_date": "2026-07-15",
+      "knowledge_cutoff": "",
+      "parameter_count": "",
+      "capabilities": "vision,reasoning,function_calling,tools,streaming,caching",
+      "description": {
+        "en": "Qwen3.7 Flash is Alibaba's fast vision-language reasoning model, suited for multimodal agents, visual coding, and computer use at low cost.",
+        "zh-CN": "Qwen3.7 Flash 是阿里巴巴的高速视觉语言推理模型，适合多模态智能体、视觉编程与计算机操作等低成本场景。",
+        "zh-TW": "Qwen3.7 Flash 是阿里巴巴的高速視覺語言推理模型，適合多模態 AI 代理、視覺程式開發與電腦操作等低成本場景。",
+        "fr": "Qwen3.7 Flash est le modèle rapide de raisonnement vision-langage d'Alibaba, adapté aux agents multimodaux, à la programmation visuelle et à l'usage d'ordinateur à faible coût.",
+        "ru": "Qwen3.7 Flash — быстрая визуально-языковая модель рассуждений от Alibaba для мультимодальных агентов, визуального программирования и работы с компьютером при низкой стоимости.",
+        "ja": "Qwen3.7 Flash はアリババの高速な視覚言語推論モデルで、マルチモーダルエージェント、ビジュアルコーディング、コンピュータ操作に低コストで適しています。",
+        "vi": "Qwen3.7 Flash là mô hình suy luận thị giác-ngôn ngữ nhanh của Alibaba, phù hợp cho agent đa phương thức, lập trình trực quan và thao tác máy tính với chi phí thấp."
+      }
+    },
+    "qwen3.8-max": {
+      "vendor": "阿里巴巴",
+      "icon": "Qwen.Color",
+      "input_modalities": "text,image,video,file",
+      "output_modalities": "text",
+      "context_length": 1000000,
+      "max_output_tokens": 131072,
+      "release_date": "2026-08-03",
+      "knowledge_cutoff": "",
+      "parameter_count": "",
+      "capabilities": "vision,reasoning,function_calling,tools,streaming,caching",
+      "description": {
+        "en": "Qwen3.8 Max is the flagship of Alibaba's Qwen3.8 series — a multimodal reasoning model with a 1M-token context for text, image, and video understanding.",
+        "zh-CN": "Qwen3.8 Max 是阿里巴巴 Qwen3.8 系列的旗舰模型，多模态推理能力强，支持 1M token 上下文，覆盖文本、图像与视频理解。",
+        "zh-TW": "Qwen3.8 Max 是阿里巴巴 Qwen3.8 系列的旗艦模型，多模態推理能力強，支援 1M token 上下文，涵蓋文字、圖像與影片理解。",
+        "fr": "Qwen3.8 Max est le fleuron de la série Qwen3.8 d'Alibaba — un modèle de raisonnement multimodal avec un contexte de 1M de tokens pour la compréhension du texte, de l'image et de la vidéo.",
+        "ru": "Qwen3.8 Max — флагман серии Qwen3.8 от Alibaba: мультимодальная модель рассуждений с контекстом 1 млн токенов для понимания текста, изображений и видео.",
+        "ja": "Qwen3.8 Max はアリババ Qwen3.8 シリーズのフラッグシップで、1M トークンのコンテキストを備えたマルチモーダル推論モデルとして、テキスト・画像・動画の理解をカバーします。",
+        "vi": "Qwen3.8 Max là mô hình chủ lực của dòng Qwen3.8 từ Alibaba — mô hình suy luận đa phương thức với ngữ cảnh 1M token cho hiểu văn bản, hình ảnh và video."
+      }
+    }
+  }
+}

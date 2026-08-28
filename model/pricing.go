@@ -16,13 +16,25 @@ import (
 )
 
 type Pricing struct {
-	ModelName   string  `json:"model_name"`
-	Description string  `json:"description,omitempty"`
-	Icon        string  `json:"icon,omitempty"`
-	Tags        string  `json:"tags,omitempty"`
-	VendorID    int     `json:"vendor_id,omitempty"`
-	QuotaType   int     `json:"quota_type"`
-	ModelRatio  float64 `json:"model_ratio"`
+	ModelName   string `json:"model_name"`
+	Description string `json:"description,omitempty"`
+	// DescriptionI18n 按语言的说明 {"en": "...", "zh-CN": "..."}；语言选择在客户端完成，
+	// 回退链 当前语言 → en → Description。
+	DescriptionI18n map[string]string `json:"description_i18n,omitempty"`
+	Icon            string            `json:"icon,omitempty"`
+	Tags            string            `json:"tags,omitempty"`
+	VendorID        int               `json:"vendor_id,omitempty"`
+	// 目录元数据，字段名与前端 PricingModel 对齐（web/src/features/pricing/types.ts）
+	InputModalities  []string `json:"input_modalities,omitempty"`
+	OutputModalities []string `json:"output_modalities,omitempty"`
+	ContextLength    int      `json:"context_length,omitempty"`
+	MaxOutputTokens  int      `json:"max_output_tokens,omitempty"`
+	ReleaseDate      string   `json:"release_date,omitempty"`
+	KnowledgeCutoff  string   `json:"knowledge_cutoff,omitempty"`
+	ParameterCount   string   `json:"parameter_count,omitempty"`
+	Capabilities     []string `json:"capabilities,omitempty"`
+	QuotaType        int      `json:"quota_type"`
+	ModelRatio       float64  `json:"model_ratio"`
 	// UnsetRatio marks a token model whose ratio is not configured, so ModelRatio
 	// carries the backend fallback (37.5) rather than a real price. Display layers
 	// should not present that fallback as a genuine selling price.
@@ -192,6 +204,24 @@ func appendPricingEndpoint(endpoints []string, endpoint string) []string {
 		return endpoints
 	}
 	return append(endpoints, endpoint)
+}
+
+// splitCatalogList 把逗号分隔的目录枚举串（模态/能力标签）转成 slice，空串返回 nil 以配合 omitempty
+func splitCatalogList(raw string) []string {
+	if raw == "" {
+		return nil
+	}
+	items := make([]string, 0)
+	for _, item := range strings.Split(raw, ",") {
+		item = strings.TrimSpace(item)
+		if item != "" {
+			items = append(items, item)
+		}
+	}
+	if len(items) == 0 {
+		return nil
+	}
+	return items
 }
 
 func updatePricing() {
@@ -410,6 +440,23 @@ func updatePricing() {
 			pricing.Icon = meta.Icon
 			pricing.Tags = meta.Tags
 			pricing.VendorID = meta.VendorID
+			pricing.InputModalities = splitCatalogList(meta.InputModalities)
+			pricing.OutputModalities = splitCatalogList(meta.OutputModalities)
+			pricing.ContextLength = meta.ContextLength
+			pricing.MaxOutputTokens = meta.MaxOutputTokens
+			pricing.ReleaseDate = meta.ReleaseDate
+			pricing.KnowledgeCutoff = meta.KnowledgeCutoff
+			pricing.ParameterCount = meta.ParameterCount
+			pricing.Capabilities = splitCatalogList(meta.Capabilities)
+			if meta.DescriptionI18n != "" {
+				descMap := make(map[string]string)
+				if err := common.UnmarshalJsonStr(meta.DescriptionI18n, &descMap); err != nil {
+					// 写入侧已做校验，这里只兜历史脏数据：跳过该字段，不拖垮整个 pricing 构建
+					common.SysError("invalid description_i18n for model " + model + ": " + err.Error())
+				} else if len(descMap) > 0 {
+					pricing.DescriptionI18n = descMap
+				}
+			}
 		}
 		modelPrice, findPrice := ratio_setting.GetModelPrice(model, false)
 		if findPrice {

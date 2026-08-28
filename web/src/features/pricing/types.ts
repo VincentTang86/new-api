@@ -31,6 +31,8 @@ export type PricingModel = {
   id: number
   model_name: string
   description?: string
+  /** Per-language description keyed by standard locale codes (en, zh-CN, ...). */
+  description_i18n?: Record<string, string>
   icon?: string
   vendor_id?: number
   vendor_name?: string

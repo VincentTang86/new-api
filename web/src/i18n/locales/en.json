@@ -5491,6 +5491,19 @@
     "© 2025 Your Company. All rights reserved.": "© 2025 Your Company. All rights reserved.",
     "、": ", ",
     "，": ", ",
-    "，and ": ", and "
+    "，and ": ", and ",
+    "Catalog Metadata": "Catalog Metadata",
+    "Display-only metadata shown in the model details on the pricing page.": "Display-only metadata shown in the model details on the pricing page.",
+    "Localized Descriptions": "Localized Descriptions",
+    "Shown in the user interface language, falling back to English and then the default description.": "Shown in the user interface language, falling back to English and then the default description.",
+    "Input Modalities": "Input Modalities",
+    "Output Modalities": "Output Modalities",
+    "Context length": "Context length",
+    "Max output tokens": "Max output tokens",
+    "Token count; shorthand like 128k or 1m is accepted": "Token count; shorthand like 128k or 1m is accepted",
+    "Release date": "Release date",
+    "YYYY-MM or YYYY-MM-DD": "YYYY-MM or YYYY-MM-DD",
+    "e.g. 685B": "e.g. 685B",
+    "Default fallback description; upstream sync writes this field.": "Default fallback description; upstream sync writes this field."
   }
 }

@@ -37,10 +37,21 @@ export interface Model {
   id: number
   model_name: string
   description?: string
+  /** Per-language description JSON: {"en": "...", "zh-CN": "..."} */
+  description_i18n?: string
   icon?: string
   tags?: string
   vendor_id?: number
   endpoints?: string
+  // Catalog metadata (display only, comma-separated enums / plain values)
+  input_modalities?: string
+  output_modalities?: string
+  context_length?: number
+  max_output_tokens?: number
+  release_date?: string
+  knowledge_cutoff?: string
+  parameter_count?: string
+  capabilities?: string
   status: number
   sync_official: number
   created_time: number

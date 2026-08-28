@@ -5491,6 +5491,19 @@
     "© 2025 Your Company. All rights reserved.": "© 2025 Công ty của bạn. Mọi quyền được bảo lưu.",
     "、": ", ",
     "，": ", ",
-    "，and ": " và "
+    "，and ": " và ",
+    "Catalog Metadata": "Siêu dữ liệu danh mục",
+    "Display-only metadata shown in the model details on the pricing page.": "Siêu dữ liệu chỉ để hiển thị, xuất hiện trong chi tiết mô hình trên trang giá.",
+    "Localized Descriptions": "Mô tả theo ngôn ngữ",
+    "Shown in the user interface language, falling back to English and then the default description.": "Hiển thị theo ngôn ngữ giao diện, dự phòng sang tiếng Anh rồi đến mô tả mặc định.",
+    "Input Modalities": "Phương thức đầu vào",
+    "Output Modalities": "Phương thức đầu ra",
+    "Context length": "Độ dài ngữ cảnh",
+    "Max output tokens": "Số token đầu ra tối đa",
+    "Token count; shorthand like 128k or 1m is accepted": "Số token; chấp nhận cách viết tắt như 128k hoặc 1m",
+    "Release date": "Ngày phát hành",
+    "YYYY-MM or YYYY-MM-DD": "YYYY-MM hoặc YYYY-MM-DD",
+    "e.g. 685B": "ví dụ: 685B",
+    "Default fallback description; upstream sync writes this field.": "Mô tả dự phòng mặc định; đồng bộ thượng nguồn ghi vào trường này."
   }
 }

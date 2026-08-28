@@ -5491,6 +5491,19 @@
     "© 2025 Your Company. All rights reserved.": "© 2025 Votre entreprise. Tous droits réservés.",
     "、": ", ",
     "，": ", ",
-    "，and ": " et "
+    "，and ": " et ",
+    "Catalog Metadata": "Métadonnées du catalogue",
+    "Display-only metadata shown in the model details on the pricing page.": "Métadonnées d'affichage uniquement, visibles dans les détails du modèle sur la page des tarifs.",
+    "Localized Descriptions": "Descriptions localisées",
+    "Shown in the user interface language, falling back to English and then the default description.": "Affiché dans la langue de l'interface, avec repli sur l'anglais puis sur la description par défaut.",
+    "Input Modalities": "Modalités d'entrée",
+    "Output Modalities": "Modalités de sortie",
+    "Context length": "Longueur de contexte",
+    "Max output tokens": "Tokens de sortie max",
+    "Token count; shorthand like 128k or 1m is accepted": "Nombre de tokens ; les raccourcis comme 128k ou 1m sont acceptés",
+    "Release date": "Date de sortie",
+    "YYYY-MM or YYYY-MM-DD": "YYYY-MM ou YYYY-MM-DD",
+    "e.g. 685B": "p. ex. 685B",
+    "Default fallback description; upstream sync writes this field.": "Description de secours par défaut ; la synchronisation amont écrit ce champ."
   }
 }

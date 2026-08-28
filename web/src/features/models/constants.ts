@@ -170,6 +170,36 @@ export const ENDPOINT_TEMPLATES: Record<
 }
 
 // ============================================================================
+// Catalog Metadata Enums
+// ============================================================================
+
+// Keep aligned with backend model/model_meta.go enums and the Modality /
+// ModelCapability unions in web/src/features/pricing/types.ts. Labels reuse the
+// translation keys the pricing model-details drawer already ships.
+export const CATALOG_MODALITY_OPTIONS = [
+  { value: 'text', label: 'Text' },
+  { value: 'image', label: 'Image' },
+  { value: 'audio', label: 'Audio' },
+  { value: 'video', label: 'Video' },
+  { value: 'file', label: 'File' },
+] as const
+
+export const CATALOG_CAPABILITY_OPTIONS = [
+  { value: 'function_calling', label: 'Function calling' },
+  { value: 'streaming', label: 'Streaming' },
+  { value: 'vision', label: 'Vision' },
+  { value: 'json_mode', label: 'JSON mode' },
+  { value: 'structured_output', label: 'Structured output' },
+  { value: 'reasoning', label: 'Reasoning' },
+  { value: 'tools', label: 'Tools' },
+  { value: 'system_prompt', label: 'System prompt' },
+  { value: 'web_search', label: 'Web search' },
+  { value: 'code_interpreter', label: 'Code interpreter' },
+  { value: 'caching', label: 'Prompt caching' },
+  { value: 'embeddings', label: 'Embeddings' },
+] as const
+
+// ============================================================================
 // Sync Locale Options
 // ============================================================================
 
