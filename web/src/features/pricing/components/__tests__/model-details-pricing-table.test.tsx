@@ -20,7 +20,17 @@ import { render } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
 
 import type { PricingModel } from '../../types'
-import { ModelDetailsPricingTable } from '../model-details-pricing-table'
+import {
+  ModelDetailsPricingNotes,
+  ModelDetailsPricingTable,
+} from '../model-details-pricing-table'
+
+// A base rate surcharged ×2 on weekday mornings and afternoons — the shape the
+// DeepSeek peak/off-peak configuration stores.
+const PEAK_SURCHARGE_EXPR =
+  '(tier("base", p * 0.176 + c * 0.528 + cr * 0.0176))' +
+  ' * (weekday("Asia/Shanghai") >= 1 && weekday("Asia/Shanghai") < 6 && hour("Asia/Shanghai") >= 9 && hour("Asia/Shanghai") < 12 ? 2 : 1)' +
+  ' * (weekday("Asia/Shanghai") >= 1 && weekday("Asia/Shanghai") < 6 && hour("Asia/Shanghai") >= 14 && hour("Asia/Shanghai") < 18 ? 2 : 1)'
 
 const USABLE_GROUPS = {
   Production: { desc: 'Production', ratio: 1 },
@@ -163,6 +173,105 @@ describe('ModelDetailsPricingTable', () => {
       '$15.00',
     ])
     expect(rowCells(rows[3])).toEqual(['long_context', '$5.40', '$20.25'])
+  })
+
+  test('materializes purely time-conditional multipliers as peak/off-peak rows', () => {
+    const { container } = renderTable(
+      model({
+        enable_groups: ['Production'],
+        billing_mode: 'tiered_expr',
+        billing_expr: PEAK_SURCHARGE_EXPR,
+      })
+    )
+    const rows = [...container.querySelectorAll('tbody tr')]
+
+    // The surcharged windows price above the base rate, so Peak leads and the
+    // base rate reads as the off-peak price — every column scales by the
+    // multiplier because the expression is linear in its token counts.
+    expect(rows).toHaveLength(2)
+    expect(rowCells(rows[0])).toEqual([
+      'Production',
+      'Peak Hours',
+      '$0.352',
+      '$1.056',
+      '$0.0352',
+    ])
+    expect(rowCells(rows[1])).toEqual([
+      'Off-Peak Hours',
+      '$0.176',
+      '$0.528',
+      '$0.0176',
+    ])
+    expect(rows[0].querySelector('th')?.getAttribute('rowspan')).toBe('2')
+  })
+
+  test('keeps a single Standard row when a rule also reads request params', () => {
+    const { container } = renderTable(
+      model({
+        enable_groups: ['Production'],
+        billing_mode: 'tiered_expr',
+        billing_expr:
+          '(tier("base", p * 1 + c * 2)) * (param("service_tier") == "flex" ? 0.5 : 1)',
+      })
+    )
+    const rows = [...container.querySelectorAll('tbody tr')]
+
+    // A param-conditional multiplier varies per request, so it cannot be
+    // stated as a price row.
+    expect(rows).toHaveLength(1)
+    expect(rowCells(rows[0])).toEqual([
+      'Production',
+      'Standard',
+      '$1.00',
+      '$2.00',
+    ])
+  })
+
+  test('shows every cache column a five-variable expression prices', () => {
+    const { container } = renderTable(
+      model({
+        enable_groups: ['Production'],
+        billing_mode: 'tiered_expr',
+        billing_expr:
+          'tier("base", p * 5 + c * 25 + cr * 0.5 + cc * 6.25 + cc1h * 10)',
+      })
+    )
+
+    expect(headers(container)).toEqual([
+      'Plan',
+      'Rate Conditions',
+      'Input/1M',
+      'Output/1M',
+      'Cache Read/1M',
+      'Cache Write/1M',
+      'Cache Write (1h)/1M',
+    ])
+    const rows = [...container.querySelectorAll('tbody tr')]
+    expect(rowCells(rows[0])).toEqual([
+      'Production',
+      'Standard',
+      '$5.00',
+      '$25.00',
+      '$0.50',
+      '$6.25',
+      '$10.00',
+    ])
+  })
+
+  test('states the time windows behind each rate row in the notes', () => {
+    const { container } = render(
+      <ModelDetailsPricingNotes
+        model={model({
+          billing_mode: 'tiered_expr',
+          billing_expr: PEAK_SURCHARGE_EXPR,
+        })}
+        tokenUnit='M'
+      />
+    )
+
+    expect(container.textContent).toContain(
+      'Peak Hours: Mon–Fri 09:00–12:00, Mon–Fri 14:00–18:00 (Asia/Shanghai)'
+    )
   })
 
   test('bills per-request models by the call, not by the token', () => {
