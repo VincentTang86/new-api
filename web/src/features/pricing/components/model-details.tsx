@@ -724,14 +724,22 @@ export interface ModelDetailsDrawerProps {
 export function ModelDetailsDrawer(props: ModelDetailsDrawerProps) {
   const { t } = useTranslation()
 
-  // Non-modal dialogs don't lock page scroll, so hold the body still while
-  // the panel is open — same behavior the modal variant provided.
+  // Non-modal dialogs don't lock page scroll, so freeze it while the panel is
+  // open. The lock must land on <html>: index.css sets `overflow-x: hidden` on
+  // the root, and once the root's overflow is non-visible the viewport scrolls
+  // the root — a body-level overflow:hidden no longer propagates. Pad for the
+  // vanished scrollbar so the sticky header doesn't shift.
   useEffect(() => {
     if (!props.open) return
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
+    const root = document.documentElement
+    const scrollbar = window.innerWidth - root.clientWidth
+    const prevOverflow = root.style.overflowY
+    const prevPadding = root.style.paddingRight
+    root.style.overflowY = 'hidden'
+    if (scrollbar > 0) root.style.paddingRight = `${scrollbar}px`
     return () => {
-      document.body.style.overflow = prev
+      root.style.overflowY = prevOverflow
+      root.style.paddingRight = prevPadding
     }
   }, [props.open])
 
@@ -774,7 +782,9 @@ export function ModelDetailsDrawer(props: ModelDetailsDrawerProps) {
             <X className='size-3.5' />
           </SheetClose>
         </div>
-        <div className='flex-1 overflow-y-auto px-5 pb-8'>{props.children}</div>
+        <div className='flex-1 overflow-y-auto overscroll-contain px-5 pb-8'>
+          {props.children}
+        </div>
       </SheetContent>
     </Sheet>
   )
