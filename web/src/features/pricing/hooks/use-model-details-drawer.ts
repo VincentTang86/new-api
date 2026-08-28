@@ -43,6 +43,9 @@ export function useModelDetailsDrawer() {
           ...prev,
           model: modelId,
         }),
+        // Only the drawer opens — the catalogue behind it must not jump to
+        // the top (router navigations reset scroll by default).
+        resetScroll: false,
       })
     },
     [navigate]
@@ -53,6 +56,7 @@ export function useModelDetailsDrawer() {
       to: '.',
       search: ({ model: _open, ...rest }: Record<string, unknown>) => rest,
       replace: true,
+      resetScroll: false,
     })
   }, [navigate])
 
