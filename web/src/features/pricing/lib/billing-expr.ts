@@ -83,11 +83,12 @@ export const BILLING_VARS: BillingVar[] = [
   },
   {
     // DashScope (Bailian) explicit-cache hits; implicit hits stay on `cr`.
+    // The short label states the 5-minute TTL the way the design does.
     key: 'crx',
     field: 'cacheReadExplicitPrice',
     tierField: 'cache_read_explicit_unit_cost',
     label: 'Explicit cache read price',
-    shortLabel: 'Explicit Read',
+    shortLabel: 'Cache Read (5m)',
     side: 'input',
     group: 'cache',
   },

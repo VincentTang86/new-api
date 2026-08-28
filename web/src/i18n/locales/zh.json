@@ -658,7 +658,7 @@
     "Cache Directory Info": "缓存目录信息",
     "Cache Entries": "缓存条目",
     "Cache Read": "缓存读取",
-    "Explicit Read": "显式缓存读取",
+    "Cache Read (5m)": "缓存读取 (5m)",
     "Cache Write": "缓存写入",
     "Cache Write (1h)": "缓存写入 (1h)",
     "Cache Write (5m)": "缓存写入 (5m)",

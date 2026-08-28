@@ -658,7 +658,7 @@
     "Cache Directory Info": "キャッシュディレクトリ情報",
     "Cache Entries": "キャッシュエントリ",
     "Cache Read": "キャッシュ読み取り",
-    "Explicit Read": "明示的読み取り",
+    "Cache Read (5m)": "キャッシュ読み取り (5m)",
     "Cache Write": "キャッシュ書き込み",
     "Cache Write (1h)": "キャッシュ書込 (1h)",
     "Cache Write (5m)": "キャッシュ書込 (5m)",

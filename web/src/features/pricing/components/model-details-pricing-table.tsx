@@ -96,6 +96,7 @@ const TIER_FIELD_REFERENCE_LANES: Record<string, keyof ReferencePriceLanes> = {
   inputPrice: 'input',
   outputPrice: 'output',
   cacheReadPrice: 'cached_input',
+  cacheReadExplicitPrice: 'cache_hit',
   cacheCreatePrice: 'cache_creation',
 }
 

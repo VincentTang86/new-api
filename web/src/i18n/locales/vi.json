@@ -658,7 +658,7 @@
     "Cache Directory Info": "Thông tin thư mục bộ nhớ đệm",
     "Cache Entries": "Mục bộ nhớ đệm",
     "Cache Read": "Đọc bộ nhớ đệm",
-    "Explicit Read": "Đọc tường minh",
+    "Cache Read (5m)": "Đọc cache (5m)",
     "Cache Write": "Ghi bộ nhớ đệm",
     "Cache Write (1h)": "Ghi cache (1h)",
     "Cache Write (5m)": "Ghi cache (5m)",

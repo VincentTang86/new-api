@@ -658,7 +658,7 @@
     "Cache Directory Info": "Информация о каталоге кэша",
     "Cache Entries": "Записи кэша",
     "Cache Read": "Чтение кэша",
-    "Explicit Read": "Явное чтение",
+    "Cache Read (5m)": "Чтение кэша (5m)",
     "Cache Write": "Запись в кэш",
     "Cache Write (1h)": "Запись кэша (1h)",
     "Cache Write (5m)": "Запись кэша (5m)",

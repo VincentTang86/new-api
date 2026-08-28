@@ -274,6 +274,50 @@ describe('ModelDetailsPricingTable', () => {
     )
   })
 
+  test('splits DashScope dual cache hits into their own priced columns', () => {
+    const { container } = renderTable(
+      model({
+        enable_groups: ['Production'],
+        billing_mode: 'tiered_expr',
+        // Implicit hits (cr) and explicit 5-minute cache hits (crx) bill at
+        // different rates, with explicit creation on cc.
+        billing_expr:
+          'tier("base", p * 1.6 + c * 4.8 + cr * 0.2 + crx * 0.13 + cc * 2)',
+        // The explicit-hit lane of the reference table lines up under crx.
+        official_price: { input: 2, output: 6, cache_hit: 0.16 },
+      })
+    )
+
+    expect(headers(container)).toEqual([
+      'Plan',
+      'Rate Conditions',
+      'Input/1M',
+      'Output/1M',
+      'Cache Read/1M',
+      'Cache Read (5m)/1M',
+      'Cache Write/1M',
+    ])
+    const rows = [...container.querySelectorAll('tbody tr')]
+    expect(rowCells(rows[0])).toEqual([
+      'Production',
+      'Standard',
+      '$1.60',
+      '$4.80',
+      '$0.20',
+      '$0.13',
+      '$2.00',
+    ])
+    expect(rowCells(rows[1])).toEqual([
+      'Direct First-Party APIReference',
+      'Standard',
+      '$2.00',
+      '$6.00',
+      '—',
+      '$0.16',
+      '—',
+    ])
+  })
+
   test('bills per-request models by the call, not by the token', () => {
     const { container } = renderTable(
       model({ quota_type: 1, model_price: 0.02 })

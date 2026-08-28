@@ -658,7 +658,7 @@
     "Cache Directory Info": "Infos du répertoire de cache",
     "Cache Entries": "Entrées de cache",
     "Cache Read": "Lecture du cache",
-    "Explicit Read": "Lecture explicite",
+    "Cache Read (5m)": "Lecture cache (5m)",
     "Cache Write": "Écriture du cache",
     "Cache Write (1h)": "Écriture cache (1h)",
     "Cache Write (5m)": "Écriture cache (5m)",

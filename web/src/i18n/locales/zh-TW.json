@@ -658,7 +658,7 @@
     "Cache Directory Info": "緩存目錄資訊",
     "Cache Entries": "緩存條目",
     "Cache Read": "緩存讀取",
-    "Explicit Read": "顯式緩存讀取",
+    "Cache Read (5m)": "緩存讀取 (5m)",
     "Cache Write": "緩存寫入",
     "Cache Write (1h)": "緩存寫入 (1h)",
     "Cache Write (5m)": "緩存寫入 (5m)",
