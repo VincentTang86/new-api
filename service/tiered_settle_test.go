@@ -734,6 +734,79 @@ func TestBuildTieredTokenParams_GPT_NoCacheVar(t *testing.T) {
 	}
 }
 
+// DashScope (Alibaba Bailian) reports implicit and explicit cache hits in the
+// same cached_tokens field, discriminated by the request-level
+// cache_type="ephemeral" marker. crx is opt-in relative to cr.
+func TestBuildTieredTokenParams_DashScope_ExplicitHitSplitsToCrx(t *testing.T) {
+	usage := &dto.Usage{
+		PromptTokens:     3564,
+		CompletionTokens: 34,
+		PromptTokensDetails: dto.InputTokenDetails{
+			CachedTokens: 3550,
+			CacheType:    dto.CacheTypeEphemeral,
+			TextTokens:   3564,
+		},
+	}
+	expr := `tier("base", p * 2 + c * 6 + cr * 0.25 + crx * 0.17 + cc * 2.5)`
+	params := BuildTieredTokenParams(usage, false, billingexpr.UsedVars(expr))
+	assert.Equal(t, 3550.0, params.CRX)
+	assert.Equal(t, 0.0, params.CR)
+	assert.Equal(t, 14.0, params.P)
+	assert.Equal(t, 3564.0, params.Len)
+}
+
+func TestBuildTieredTokenParams_DashScope_ExplicitCreationFeedsCc(t *testing.T) {
+	usage := &dto.Usage{
+		PromptTokens:     3564,
+		CompletionTokens: 23,
+		PromptTokensDetails: dto.InputTokenDetails{
+			CacheCreationInputTokens: 3550,
+			CacheType:                dto.CacheTypeEphemeral,
+			TextTokens:               3564,
+		},
+	}
+	expr := `tier("base", p * 2 + c * 6 + cr * 0.25 + crx * 0.17 + cc * 2.5)`
+	params := BuildTieredTokenParams(usage, false, billingexpr.UsedVars(expr))
+	assert.Equal(t, 3550.0, params.CC)
+	assert.Equal(t, 0.0, params.CRX)
+	assert.Equal(t, 14.0, params.P)
+}
+
+func TestBuildTieredTokenParams_DashScope_ImplicitHitStaysInCr(t *testing.T) {
+	usage := &dto.Usage{
+		PromptTokens:     3564,
+		CompletionTokens: 42,
+		PromptTokensDetails: dto.InputTokenDetails{
+			CachedTokens: 3072,
+			TextTokens:   3564,
+		},
+	}
+	expr := `tier("base", p * 2 + c * 6 + cr * 0.25 + crx * 0.17 + cc * 2.5)`
+	params := BuildTieredTokenParams(usage, false, billingexpr.UsedVars(expr))
+	assert.Equal(t, 3072.0, params.CR)
+	assert.Equal(t, 0.0, params.CRX)
+	assert.Equal(t, 492.0, params.P)
+}
+
+func TestBuildTieredTokenParams_DashScope_CrxUnusedKeepsCrBehavior(t *testing.T) {
+	// An expression that only prices cr must keep billing explicit hits as cr:
+	// existing single-read-price expressions stay unchanged.
+	usage := &dto.Usage{
+		PromptTokens:     3564,
+		CompletionTokens: 34,
+		PromptTokensDetails: dto.InputTokenDetails{
+			CachedTokens: 3550,
+			CacheType:    dto.CacheTypeEphemeral,
+			TextTokens:   3564,
+		},
+	}
+	expr := `tier("base", p * 2 + c * 6 + cr * 0.25)`
+	params := BuildTieredTokenParams(usage, false, billingexpr.UsedVars(expr))
+	assert.Equal(t, 3550.0, params.CR)
+	assert.Equal(t, 0.0, params.CRX)
+	assert.Equal(t, 14.0, params.P)
+}
+
 func TestBuildTieredTokenParams_GPT_WithImage(t *testing.T) {
 	usage := &dto.Usage{
 		PromptTokens:     1000,

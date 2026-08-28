@@ -1364,6 +1364,7 @@ function CostEstimator({ effectiveExpr }: EstimatorProps) {
   const [completionTokens, setCompletionTokens] = useState(0)
   const [extras, setExtras] = useState<ExtraTokenValues>({
     cacheReadTokens: 0,
+    cacheReadExplicitTokens: 0,
     cacheCreateTokens: 0,
     cacheCreate1hTokens: 0,
     imageTokens: 0,

@@ -20,6 +20,7 @@ type TokenParams struct {
 	C    float64 // completion tokens (text) — auto-excludes sub-categories priced separately
 	Len  float64 // total input context length for tier conditions (non-Claude: raw prompt_tokens; Claude: text + cache read + cache creation)
 	CR   float64 // cache read (hit) tokens
+	CRX  float64 // explicit-cache read (hit) tokens (DashScope cache_type="ephemeral"); split out of CR only when the expression uses crx
 	CC   float64 // cache creation tokens (5-min TTL for Claude, generic for others)
 	CC1h float64 // cache creation tokens — 1-hour TTL (Claude only)
 	Img  float64 // image input tokens

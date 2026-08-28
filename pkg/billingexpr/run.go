@@ -15,7 +15,7 @@ import (
 // The environment exposes:
 //   - p, c             — prompt / completion tokens (auto-excluding separately-priced sub-categories)
 //   - len              — total input context length for tier conditions (never reduced by sub-category exclusion)
-//   - cr, cc, cc1h     — cache read / creation / creation-1h tokens
+//   - cr, crx, cc, cc1h — cache read (implicit / explicit) / creation / creation-1h tokens
 //   - tier(name, value) — trace callback that records which tier matched
 //   - max, min, abs, ceil, floor — standard math helpers
 //
@@ -59,6 +59,7 @@ func runProgram(prog *vm.Program, requestRules []RequestRuleTrace, params TokenP
 		"c":     params.C,
 		"len":   params.Len,
 		"cr":    params.CR,
+		"crx":   params.CRX,
 		"cc":    params.CC,
 		"cc1h":  params.CC1h,
 		"img":   params.Img,

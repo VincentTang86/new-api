@@ -10,7 +10,7 @@ The expression is the billing contract between the administrator and the system.
 
 1. **Expression is self-contained** — The expression string alone determines billing. No external ratio tables, no implicit completion multipliers, no hidden conversion factors. Given the same token counts and request context, the same expression always produces the same cost.
 
-2. **Variables are opt-in** — `p` (prompt) and `c` (completion) are the base. Cache (`cr`, `cc`, `cc1h`), image (`img`), and audio (`ai`, `ao`) variables are optional. If omitted, those tokens are included in `p`/`c` and priced at their rate. The system automatically detects which variables the expression uses (via AST introspection) and adjusts token normalization accordingly.
+2. **Variables are opt-in** — `p` (prompt) and `c` (completion) are the base. Cache (`cr`, `crx`, `cc`, `cc1h`), image (`img`), and audio (`ai`, `ao`) variables are optional. If omitted, those tokens are included in `p`/`c` and priced at their rate. The system automatically detects which variables the expression uses (via AST introspection) and adjusts token normalization accordingly.
 
 3. **Prices are real prices** — Expression coefficients are actual $/1M tokens prices as published by providers. No ratio conversion, no `/2` convention. `p * 2.5` means $2.50 per 1M prompt tokens.
 
@@ -33,6 +33,7 @@ Powered by [expr-lang/expr](https://github.com/expr-lang/expr). Expressions are 
 | `p` | 输入 token 数（**计价用**）。**自动排除**表达式中单独计价的子类别（见下方说明） |
 | `len` | 输入上下文总长度（**条件判断用**）。不受自动排除影响，始终反映完整输入长度。非 Claude：等于原始 `prompt_tokens`；Claude：等于文本输入 + 缓存读取 + 缓存创建 |
 | `cr` | 缓存命中（读取）token 数 |
+| `crx` | 显式缓存命中 token 数（百炼/DashScope 专用，见下方"双缓存命中"说明） |
 | `cc` | 缓存创建 token 数（Claude 5分钟 TTL / 通用） |
 | `cc1h` | 缓存创建 token 数 — 1小时 TTL（Claude 专用） |
 | `img` | 图片输入 token 数 |
@@ -225,6 +226,17 @@ The system normalizes `p` to mean "tokens not separately priced" by subtracting 
 Example: `p * 2.5 + c * 15 + cr * 0.25`
 - Expression uses `cr` → cache read tokens subtracted from `p`
 - Expression doesn't use `img` → image tokens stay in `p`, priced at $2.50
+
+#### DashScope 双缓存命中（`crx`）
+
+阿里百炼（DashScope）对缓存命中有两档价：隐式缓存命中和显式缓存命中。上游把两种命中都报在 `prompt_tokens_details.cached_tokens` 里，靠请求级字段 `cache_type: "ephemeral"`（仅显式缓存请求返回）区分口径；显式缓存创建报在 `prompt_tokens_details.cache_creation_input_tokens`，归入 `cc`。
+
+`crx` 相对 `cr` 是二次 opt-in：**仅当表达式使用了 `crx` 且上游标记了 `cache_type: "ephemeral"`** 时，命中 token 才从 `cr` 移入 `crx`；否则全部留在 `cr`（表达式也没用 `cr` 时留在 `p`）。已有的只用 `cr` 的表达式行为不变。
+
+```
+# 百炼 qwen 双缓存定价（单价为 $/M）
+tier("base", p * 1.6 + c * 4.8 + cr * 0.2 + crx * 0.13 + cc * 2)
+```
 
 ### `len` — Context Length Variable
 

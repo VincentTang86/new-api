@@ -82,6 +82,16 @@ export const BILLING_VARS: BillingVar[] = [
     group: 'cache',
   },
   {
+    // DashScope (Bailian) explicit-cache hits; implicit hits stay on `cr`.
+    key: 'crx',
+    field: 'cacheReadExplicitPrice',
+    tierField: 'cache_read_explicit_unit_cost',
+    label: 'Explicit cache read price',
+    shortLabel: 'Explicit Read',
+    side: 'input',
+    group: 'cache',
+  },
+  {
     key: 'cc',
     field: 'cacheCreatePrice',
     tierField: 'cache_create_unit_cost',

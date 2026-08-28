@@ -26,6 +26,15 @@ func BuildTieredTokenParams(usage *dto.Usage, isClaudeUsageSemantic bool, usedVa
 	p := float64(usage.PromptTokens)
 	c := float64(usage.CompletionTokens)
 	cr := float64(usage.PromptTokensDetails.CachedTokens)
+	// DashScope reports implicit and explicit cache hits in the same
+	// cached_tokens field and marks explicit-cache requests with
+	// cache_type="ephemeral". crx is opt-in relative to cr: hits move out of
+	// cr only when the expression prices them separately via crx.
+	crx := float64(0)
+	if usedVars["crx"] && usage.PromptTokensDetails.CacheType == dto.CacheTypeEphemeral {
+		crx = cr
+		cr = 0
+	}
 	cc5m := float64(usage.PromptTokensDetails.CacheCreationTokensTotal())
 	cc1h := float64(0)
 
@@ -50,6 +59,9 @@ func BuildTieredTokenParams(usage *dto.Usage, isClaudeUsageSemantic bool, usedVa
 	if !isClaudeUsageSemantic {
 		if usedVars["cr"] {
 			p -= cr
+		}
+		if usedVars["crx"] {
+			p -= crx
 		}
 		if usedVars["cc"] {
 			p -= cc5m
@@ -85,6 +97,7 @@ func BuildTieredTokenParams(usage *dto.Usage, isClaudeUsageSemantic bool, usedVa
 		C:    c,
 		Len:  inputLen,
 		CR:   cr,
+		CRX:  crx,
 		CC:   cc5m,
 		CC1h: cc1h,
 		Img:  img,

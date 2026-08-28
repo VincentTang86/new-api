@@ -1062,3 +1062,30 @@ func BenchmarkExprRunCached(b *testing.B) {
 		billingexpr.RunExpr(benchComplexExpr, params)
 	}
 }
+
+// ---------------------------------------------------------------------------
+// DashScope dual cache-hit pricing: crx (explicit cache read)
+// ---------------------------------------------------------------------------
+
+func TestExplicitCacheReadVar(t *testing.T) {
+	expr := `tier("base", p * 2 + c * 6 + cr * 0.25 + crx * 0.17 + cc * 2.5)`
+
+	used := billingexpr.UsedVars(expr)
+	require.True(t, used["crx"])
+
+	cost, trace, err := billingexpr.RunExpr(expr, billingexpr.TokenParams{
+		P: 14, C: 34, CRX: 3550,
+	})
+	require.NoError(t, err)
+	assert.InDelta(t, 14*2+34*6+3550*0.17, cost, 1e-6)
+	assert.Equal(t, "base", trace.MatchedTier)
+}
+
+func TestExplicitCacheReadVarDefaultsToZero(t *testing.T) {
+	// cache-unaware expressions keep working when CRX is populated
+	cost, _, err := billingexpr.RunExpr(`tier("base", p * 2 + c * 6)`, billingexpr.TokenParams{
+		P: 1000, C: 500, CRX: 3550,
+	})
+	require.NoError(t, err)
+	assert.InDelta(t, 1000*2+500*6, cost, 1e-6)
+}

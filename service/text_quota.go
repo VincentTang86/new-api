@@ -43,6 +43,7 @@ type textQuotaSummary struct {
 	CompletionTokens       int
 	TotalTokens            int
 	CacheTokens            int
+	CacheType              string
 	CacheCreationTokens    int
 	CacheCreationTokens5m  int
 	CacheCreationTokens1h  int
@@ -258,6 +259,7 @@ func calculateTextQuotaSummary(ctx *gin.Context, relayInfo *relaycommon.RelayInf
 	summary.CompletionTokens = usage.CompletionTokens
 	summary.TotalTokens = usage.PromptTokens + usage.CompletionTokens
 	summary.CacheTokens = usage.PromptTokensDetails.CachedTokens
+	summary.CacheType = usage.PromptTokensDetails.CacheType
 	summary.CacheCreationTokens = usage.PromptTokensDetails.CacheCreationTokensTotal()
 	summary.CacheCreationTokens5m = usage.ClaudeCacheCreation5mTokens
 	summary.CacheCreationTokens1h = usage.ClaudeCacheCreation1hTokens
@@ -502,6 +504,12 @@ func PostTextConsumeQuota(ctx *gin.Context, relayInfo *relaycommon.RelayInfo, us
 	if summary.CacheCreationTokens1h > 0 {
 		other["cache_creation_tokens_1h"] = summary.CacheCreationTokens1h
 		other["cache_creation_ratio_1h"] = summary.CacheCreationRatio1h
+	}
+	if summary.CacheType != "" {
+		// cache_type: request-level cache mode from upstream (DashScope
+		// "ephemeral" = explicit cache), kept for auditing dual cache-hit
+		// pricing.
+		other["cache_type"] = summary.CacheType
 	}
 	cacheWriteTokens := cacheWriteTokensTotal(summary)
 	if cacheWriteTokens > 0 {

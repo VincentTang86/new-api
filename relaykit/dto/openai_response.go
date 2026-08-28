@@ -253,6 +253,11 @@ type OpenAIVideoResponse struct {
 	Purpose   string `json:"purpose" example:"fine-tune"`
 }
 
+// CacheTypeEphemeral is the request-level cache mode DashScope (Alibaba
+// Bailian) reports when a request used explicit cache. When set, cached_tokens
+// are explicit-cache hits rather than implicit ones.
+const CacheTypeEphemeral = "ephemeral"
+
 type InputTokenDetails struct {
 	CachedTokens         int `json:"cached_tokens"`
 	CachedCreationTokens int `json:"cached_creation_tokens,omitempty"`
@@ -261,21 +266,32 @@ type InputTokenDetails struct {
 	// input_tokens_details.cache_write_tokens (Responses). It is billed at the
 	// cache-creation price.
 	CacheWriteTokens int `json:"cache_write_tokens,omitempty"`
-	TextTokens       int `json:"text_tokens"`
-	AudioTokens      int `json:"audio_tokens"`
-	ImageTokens      int `json:"image_tokens"`
+	// CacheCreationInputTokens is DashScope's explicit-cache write count,
+	// reported as prompt_tokens_details.cache_creation_input_tokens (the nested
+	// cache_creation.ephemeral_5m_input_tokens mirror is not parsed). It is
+	// billed at the cache-creation price.
+	CacheCreationInputTokens int `json:"cache_creation_input_tokens,omitempty"`
+	// CacheType is the request-level cache mode; see CacheTypeEphemeral.
+	CacheType   string `json:"cache_type,omitempty"`
+	TextTokens  int    `json:"text_tokens"`
+	AudioTokens int    `json:"audio_tokens"`
+	ImageTokens int    `json:"image_tokens"`
 }
 
 // CacheCreationTokensTotal returns the cache-write token count regardless of
 // which field the upstream reported it in: Claude-derived conversions populate
-// CachedCreationTokens while OpenAI reports cache_write_tokens natively. Both
-// are billed at the cache-creation price; when both are present the larger
-// value wins so the same tokens are never double-counted. Negative upstream
-// values are clamped to zero so they can never lower a charge.
+// CachedCreationTokens, OpenAI reports cache_write_tokens natively, and
+// DashScope reports cache_creation_input_tokens. All are billed at the
+// cache-creation price; when several are present the largest value wins so the
+// same tokens are never double-counted. Negative upstream values are clamped
+// to zero so they can never lower a charge.
 func (d InputTokenDetails) CacheCreationTokensTotal() int {
 	total := d.CachedCreationTokens
 	if d.CacheWriteTokens > total {
 		total = d.CacheWriteTokens
+	}
+	if d.CacheCreationInputTokens > total {
+		total = d.CacheCreationInputTokens
 	}
 	if total < 0 {
 		return 0

@@ -35,6 +35,7 @@ export type VisualTier = {
   output_unit_cost: number
   cache_mode: CacheMode
   cache_read_unit_cost?: number
+  cache_read_explicit_unit_cost?: number
   cache_create_unit_cost?: number
   cache_create_1h_unit_cost?: number
   image_unit_cost?: number
@@ -69,6 +70,8 @@ export function normalizeVisualTier(
     conditions: Array.isArray(tier.conditions) ? tier.conditions : [],
     ...tier,
     cache_read_unit_cost: Number(tier.cache_read_unit_cost) || 0,
+    cache_read_explicit_unit_cost:
+      Number(tier.cache_read_explicit_unit_cost) || 0,
     cache_create_unit_cost: Number(tier.cache_create_unit_cost) || 0,
     cache_create_1h_unit_cost: Number(tier.cache_create_1h_unit_cost) || 0,
     image_unit_cost: Number(tier.image_unit_cost) || 0,
@@ -249,6 +252,7 @@ export function tryParseVisualConfig(
 
 const ESTIMATOR_VARS = [
   { var: 'cr', stateKey: 'cacheReadTokens' },
+  { var: 'crx', stateKey: 'cacheReadExplicitTokens' },
   { var: 'cc', stateKey: 'cacheCreateTokens' },
   { var: 'cc1h', stateKey: 'cacheCreate1hTokens' },
   { var: 'img', stateKey: 'imageTokens' },
@@ -284,10 +288,16 @@ export function evalExprLocally(
       return value
     }
     const cacheReadTokens = extraTokenValues.cacheReadTokens || 0
+    const cacheReadExplicitTokens =
+      extraTokenValues.cacheReadExplicitTokens || 0
     const cacheCreateTokens = extraTokenValues.cacheCreateTokens || 0
     const cacheCreate1hTokens = extraTokenValues.cacheCreate1hTokens || 0
     const len =
-      promptTokens + cacheReadTokens + cacheCreateTokens + cacheCreate1hTokens
+      promptTokens +
+      cacheReadTokens +
+      cacheReadExplicitTokens +
+      cacheCreateTokens +
+      cacheCreate1hTokens
     const env: Record<string, unknown> = {
       p: promptTokens,
       c: completionTokens,
