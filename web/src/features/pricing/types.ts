@@ -64,8 +64,8 @@ export type PricingModel = {
   /** Raw expression describing dynamic / tiered billing */
   billing_expr?: string
   /** Admin-configured external list prices (USD per 1M tokens). */
-  official_price?: ReferencePriceLanes
-  openrouter_price?: ReferencePriceLanes
+  official_price?: ReferencePrice
+  openrouter_price?: ReferencePrice
   /** Pricing version returned by backend, useful for cache busting */
   pricing_version?: string
   /**
@@ -93,6 +93,16 @@ export type ReferencePriceLanes = {
   cached_input?: number | null
   cache_creation?: number | null
   cache_hit?: number | null
+}
+
+/**
+ * A source's full reference price: the flat lanes are the default price
+ * (what the landing comparison and dashboard estimate consume); by_condition
+ * holds per-rate-condition overrides keyed by `rateConditionKey`, consumed
+ * only by the model details drawer.
+ */
+export type ReferencePrice = ReferencePriceLanes & {
+  by_condition?: Record<string, ReferencePriceLanes>
 }
 
 /** Input/output modalities supported by a model. */

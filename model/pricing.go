@@ -60,13 +60,21 @@ type Pricing struct {
 	PricingVersion         string                  `json:"pricing_version,omitempty"`
 }
 
-// ReferencePrice 外部标价（USD / 1M tokens），来自 reference_pricings 表，仅用于对比展示
-type ReferencePrice struct {
+// ReferenceLanes 一组外部标价的价位（USD / 1M tokens），仅用于对比展示
+type ReferenceLanes struct {
 	Input         *float64 `json:"input,omitempty"`
 	Output        *float64 `json:"output,omitempty"`
 	CachedInput   *float64 `json:"cached_input,omitempty"`
 	CacheCreation *float64 `json:"cache_creation,omitempty"`
 	CacheHit      *float64 `json:"cache_hit,omitempty"`
+}
+
+// ReferencePrice 外部标价，来自 reference_pricings 表。内嵌的价位是默认价，
+// 供首页对比与看板节省估算消费；ByCondition 按计价条件（高峰/错峰、档位）覆盖，
+// 键由前端 rate-conditions 模块派生，后端只透传，仅模型详情抽屉消费。
+type ReferencePrice struct {
+	ReferenceLanes
+	ByCondition map[string]ReferenceLanes `json:"by_condition,omitempty"`
 }
 
 type PricingVendor struct {
@@ -415,11 +423,14 @@ func updatePricing() {
 				referencePriceMap[row.ModelName] = bySource
 			}
 			bySource[row.Source] = &ReferencePrice{
-				Input:         row.Input,
-				Output:        row.Output,
-				CachedInput:   row.CachedInput,
-				CacheCreation: row.CacheCreation,
-				CacheHit:      row.CacheHit,
+				ReferenceLanes: ReferenceLanes{
+					Input:         row.Input,
+					Output:        row.Output,
+					CachedInput:   row.CachedInput,
+					CacheCreation: row.CacheCreation,
+					CacheHit:      row.CacheHit,
+				},
+				ByCondition: row.ConditionLanes,
 			}
 		}
 	}
@@ -507,7 +518,7 @@ func updatePricing() {
 
 	// 防止大更新后数据不通用
 	if len(pricingMap) > 0 {
-		pricingMap[0].PricingVersion = "3004b29dbd4d406dee07296878e5fea74cb7435c7ab4e56596d2aa59f65db2b1"
+		pricingMap[0].PricingVersion = "f9f3ba580b4afbb8f58937d953606111b334a0c80245075a1652552fa195ce62"
 	}
 
 	// 刷新缓存映射，供高并发快速查询

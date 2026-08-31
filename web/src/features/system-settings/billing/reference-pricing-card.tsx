@@ -17,7 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Code2, Eye, Pencil, Plus, Trash2 } from 'lucide-react'
+import { Code2, Eye, Pencil, Plus, Trash2, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -54,7 +54,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { usePricingData } from '@/features/pricing/hooks'
+import {
+  getRateConditions,
+  getReferenceLaneKeys,
+} from '@/features/pricing/lib/rate-conditions'
+import type { PricingModel } from '@/features/pricing/types'
 
 import {
   deleteReferencePricing,
@@ -62,7 +68,11 @@ import {
   saveReferencePricing,
 } from '../api'
 import { SettingsSection } from '../components/settings-section'
-import type { ReferencePricingRow, ReferencePricingSource } from '../types'
+import type {
+  ReferencePricingLanes,
+  ReferencePricingRow,
+  ReferencePricingSource,
+} from '../types'
 
 const LANES = [
   { key: 'input', labelKey: 'Input price' },
@@ -76,7 +86,8 @@ type LaneKey = (typeof LANES)[number]['key']
 
 const SOURCES: ReferencePricingSource[] = ['official', 'openrouter']
 
-const CACHE_LANES: LaneKey[] = ['cached_input', 'cache_creation', 'cache_hit']
+/** Draft key for the default (unconditioned) price row of the matrix. */
+const DEFAULT_CONDITION_KEY = ''
 
 const priceSchema = z.number().positive().max(1_000_000)
 
@@ -90,12 +101,20 @@ const laneObjectSchema = z
   })
   .strict()
 
+const sourceObjectSchema = laneObjectSchema
+  .extend({
+    conditions: z
+      .record(z.string().min(1).max(64), laneObjectSchema)
+      .optional(),
+  })
+  .strict()
+
 const jsonConfigSchema = z.record(
   z.string().trim().min(1).max(128),
   z
     .object({
-      official: laneObjectSchema.optional(),
-      openrouter: laneObjectSchema.optional(),
+      official: sourceObjectSchema.optional(),
+      openrouter: sourceObjectSchema.optional(),
     })
     .strict()
 )
@@ -105,7 +124,10 @@ type ModelRowView = {
   rows: Partial<Record<ReferencePricingSource, ReferencePricingRow>>
 }
 
-type DraftValues = Record<ReferencePricingSource, Record<LaneKey, string>>
+type LaneDraft = Record<LaneKey, string>
+
+/** Per source: condition key -> lane drafts; '' is the default price row. */
+type DraftValues = Record<ReferencePricingSource, Record<string, LaneDraft>>
 
 type DialogState = {
   modelName: string
@@ -113,7 +135,7 @@ type DialogState = {
   values: DraftValues
 }
 
-const emptyLaneDraft = (): Record<LaneKey, string> => ({
+const emptyLaneDraft = (): LaneDraft => ({
   input: '',
   output: '',
   cached_input: '',
@@ -121,18 +143,26 @@ const emptyLaneDraft = (): Record<LaneKey, string> => ({
   cache_hit: '',
 })
 
+const lanesToDraft = (lanes: ReferencePricingLanes | undefined): LaneDraft => {
+  const draft = emptyLaneDraft()
+  if (!lanes) return draft
+  for (const lane of LANES) {
+    const price = lanes[lane.key]
+    if (typeof price === 'number') draft[lane.key] = String(price)
+  }
+  return draft
+}
+
 const draftFromRows = (
   rows: Partial<Record<ReferencePricingSource, ReferencePricingRow>>
 ): DraftValues => {
-  const values = { official: emptyLaneDraft(), openrouter: emptyLaneDraft() }
+  const values: DraftValues = { official: {}, openrouter: {} }
   for (const source of SOURCES) {
     const row = rows[source]
-    if (!row) continue
-    for (const lane of LANES) {
-      const price = row[lane.key]
-      if (typeof price === 'number') {
-        values[source][lane.key] = String(price)
-      }
+    values[source][DEFAULT_CONDITION_KEY] = lanesToDraft(row)
+    for (const [conditionKey, lanes] of Object.entries(row?.conditions ?? {})) {
+      if (conditionKey === DEFAULT_CONDITION_KEY) continue
+      values[source][conditionKey] = lanesToDraft(lanes)
     }
   }
   return values
@@ -180,6 +210,28 @@ export function ReferencePricingCard() {
       .map((model) => ({ value: model.model_name, label: model.model_name }))
   }, [pricingModels, modelRows])
 
+  const dialogModel = useMemo<PricingModel | undefined>(() => {
+    if (!dialog) return undefined
+    return pricingModels.find((model) => model.model_name === dialog.modelName)
+  }, [pricingModels, dialog])
+
+  // The matrix rows: the fixed default row, then every rate condition the
+  // model's billing expression derives — the same list, labels and keys the
+  // details drawer renders, which is what keeps the two views aligned.
+  const derivedConditions = useMemo(() => {
+    if (!dialogModel) return []
+    return getRateConditions(dialogModel, t).filter(
+      (condition) => condition.key !== DEFAULT_CONDITION_KEY
+    )
+  }, [dialogModel, t])
+
+  // Columns: only the lanes this model's own pricing table renders.
+  const laneColumns = useMemo(() => {
+    if (!dialogModel) return [...LANES]
+    const keys = new Set(getReferenceLaneKeys(dialogModel))
+    return LANES.filter((lane) => keys.has(lane.key))
+  }, [dialogModel])
+
   const saveMutation = useMutation({ mutationFn: saveReferencePricing })
   const deleteMutation = useMutation({ mutationFn: deleteReferencePricing })
   const isMutating = saveMutation.isPending || deleteMutation.isPending
@@ -190,17 +242,31 @@ export function ReferencePricingCard() {
   }
 
   const buildJsonText = () => {
-    const config: Record<string, Record<string, Record<string, number>>> = {}
+    const config: Record<string, Record<string, unknown>> = {}
     for (const view of modelRows) {
-      const entry: Record<string, Record<string, number>> = {}
+      const entry: Record<string, unknown> = {}
       for (const source of SOURCES) {
         const row = view.rows[source]
         if (!row) continue
-        const lanes: Record<string, number> = {}
+        const lanes: Record<string, unknown> = {}
         for (const lane of LANES) {
           const price = row[lane.key]
           if (typeof price === 'number') lanes[lane.key] = price
         }
+        const conditions: Record<string, Record<string, number>> = {}
+        for (const [conditionKey, conditionLanes] of Object.entries(
+          row.conditions ?? {}
+        )) {
+          const entryLanes: Record<string, number> = {}
+          for (const lane of LANES) {
+            const price = conditionLanes[lane.key]
+            if (typeof price === 'number') entryLanes[lane.key] = price
+          }
+          if (Object.keys(entryLanes).length > 0) {
+            conditions[conditionKey] = entryLanes
+          }
+        }
+        if (Object.keys(conditions).length > 0) lanes.conditions = conditions
         entry[source] = lanes
       }
       config[view.modelName] = entry
@@ -222,7 +288,7 @@ export function ReferencePricingCard() {
     setDialog({
       modelName: '',
       isNew: true,
-      values: { official: emptyLaneDraft(), openrouter: emptyLaneDraft() },
+      values: draftFromRows({}),
     })
   }
 
@@ -232,6 +298,57 @@ export function ReferencePricingCard() {
       isNew: false,
       values: draftFromRows(view.rows),
     })
+  }
+
+  const setDraftValue = (
+    source: ReferencePricingSource,
+    conditionKey: string,
+    laneKey: LaneKey,
+    value: string
+  ) => {
+    setDialog((prev) => {
+      if (!prev) return prev
+      const sourceDraft = { ...prev.values[source] }
+      sourceDraft[conditionKey] = {
+        ...(sourceDraft[conditionKey] ?? emptyLaneDraft()),
+        [laneKey]: value,
+      }
+      return {
+        ...prev,
+        values: { ...prev.values, [source]: sourceDraft },
+      }
+    })
+  }
+
+  const removeDraftCondition = (
+    source: ReferencePricingSource,
+    conditionKey: string
+  ) => {
+    setDialog((prev) => {
+      if (!prev) return prev
+      const sourceDraft = { ...prev.values[source] }
+      delete sourceDraft[conditionKey]
+      return {
+        ...prev,
+        values: { ...prev.values, [source]: sourceDraft },
+      }
+    })
+  }
+
+  const parseDraftLanes = (
+    draft: LaneDraft | undefined
+  ): Partial<Record<LaneKey, number>> | null => {
+    const lanes: Partial<Record<LaneKey, number>> = {}
+    for (const lane of LANES) {
+      const raw = (draft?.[lane.key] ?? '').trim()
+      if (!raw) continue
+      const price = Number(raw)
+      if (!Number.isFinite(price) || price <= 0 || price > 1_000_000) {
+        return null
+      }
+      lanes[lane.key] = price
+    }
+    return lanes
   }
 
   const handleDialogSave = async () => {
@@ -248,22 +365,33 @@ export function ReferencePricingCard() {
     const existing = modelRows.find((row) => row.modelName === modelName)
     const rows: ReferencePricingRow[] = []
     for (const source of SOURCES) {
-      const lanes: Partial<Record<LaneKey, number>> = {}
-      let hasValue = false
-      for (const lane of LANES) {
-        const raw = dialog.values[source][lane.key].trim()
-        if (!raw) continue
-        const price = Number(raw)
-        if (!Number.isFinite(price) || price <= 0 || price > 1_000_000) {
+      const sourceDraft = dialog.values[source]
+      const defaultLanes = parseDraftLanes(sourceDraft[DEFAULT_CONDITION_KEY])
+      if (defaultLanes === null) {
+        toast.error(t('Prices must be positive numbers'))
+        return
+      }
+      const conditions: Record<string, Partial<Record<LaneKey, number>>> = {}
+      for (const [conditionKey, draft] of Object.entries(sourceDraft)) {
+        if (conditionKey === DEFAULT_CONDITION_KEY) continue
+        const lanes = parseDraftLanes(draft)
+        if (lanes === null) {
           toast.error(t('Prices must be positive numbers'))
           return
         }
-        lanes[lane.key] = price
-        hasValue = true
+        if (Object.keys(lanes).length > 0) conditions[conditionKey] = lanes
       }
+      const hasValue =
+        Object.keys(defaultLanes).length > 0 ||
+        Object.keys(conditions).length > 0
       // 清空某来源全部价格时仍要提交该行，让后端把旧值整行覆盖为空
       if (hasValue || existing?.rows[source]) {
-        rows.push({ model_name: modelName, source, ...lanes })
+        rows.push({
+          model_name: modelName,
+          source,
+          ...defaultLanes,
+          ...(Object.keys(conditions).length > 0 ? { conditions } : {}),
+        })
       }
     }
     if (rows.length === 0) {
@@ -308,8 +436,17 @@ export function ReferencePricingCard() {
     const rows: ReferencePricingRow[] = []
     for (const [modelName, sources] of Object.entries(result.data)) {
       for (const source of SOURCES) {
-        const lanes = sources[source]
-        if (lanes) rows.push({ model_name: modelName, source, ...lanes })
+        const entry = sources[source]
+        if (!entry) continue
+        const { conditions, ...lanes } = entry
+        rows.push({
+          model_name: modelName,
+          source,
+          ...lanes,
+          ...(conditions && Object.keys(conditions).length > 0
+            ? { conditions }
+            : {}),
+        })
       }
     }
     // JSON 是完整状态：先删掉被移除的模型，再整体 upsert
@@ -337,6 +474,118 @@ export function ReferencePricingCard() {
 
   const sourceLabel = (source: ReferencePricingSource) =>
     source === 'official' ? t('Official API') : 'OpenRouter'
+
+  const conditionCount = (view: ModelRowView): number => {
+    const keys = new Set<string>()
+    for (const source of SOURCES) {
+      for (const key of Object.keys(view.rows[source]?.conditions ?? {})) {
+        keys.add(key)
+      }
+    }
+    return keys.size
+  }
+
+  const renderSourceMatrix = (source: ReferencePricingSource) => {
+    if (!dialog) return null
+    const sourceDraft = dialog.values[source]
+    const derivedKeys = new Set(
+      derivedConditions.map((condition) => condition.key)
+    )
+    // Stored conditions the expression no longer derives (renamed tier,
+    // rewritten expression); kept visible so stale prices can be cleared.
+    const orphanKeys = Object.keys(sourceDraft).filter(
+      (key) => key !== DEFAULT_CONDITION_KEY && !derivedKeys.has(key)
+    )
+
+    const matrixRows: {
+      key: string
+      label: string
+      orphan: boolean
+    }[] = [
+      { key: DEFAULT_CONDITION_KEY, label: t('Default price'), orphan: false },
+      ...derivedConditions.map((condition) => ({
+        key: condition.key,
+        label: condition.label,
+        orphan: false,
+      })),
+      ...orphanKeys.map((key) => ({ key, label: key, orphan: true })),
+    ]
+
+    return (
+      <div className='overflow-x-auto rounded-md border'>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t('Rate Conditions')}</TableHead>
+              {laneColumns.map((lane) => (
+                <TableHead key={lane.key} className='min-w-28'>
+                  {t(lane.labelKey)}
+                </TableHead>
+              ))}
+              <TableHead className='w-8' />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {matrixRows.map((row) => (
+              <TableRow
+                key={row.key || 'default'}
+                className={
+                  row.orphan ? 'bg-amber-50/60 dark:bg-amber-500/10' : undefined
+                }
+              >
+                <TableCell className='text-xs whitespace-nowrap'>
+                  <span className='flex flex-col'>
+                    <span className={row.orphan ? 'font-mono' : 'font-medium'}>
+                      {row.label}
+                    </span>
+                    {row.orphan && (
+                      <span className='text-muted-foreground text-[10px]'>
+                        {t('Not derived from the current billing expression')}
+                      </span>
+                    )}
+                  </span>
+                </TableCell>
+                {laneColumns.map((lane) => (
+                  <TableCell key={lane.key}>
+                    <Input
+                      aria-label={`${row.label} · ${t(lane.labelKey)}`}
+                      type='number'
+                      min={0}
+                      step='any'
+                      inputMode='decimal'
+                      className='h-8'
+                      value={sourceDraft[row.key]?.[lane.key] ?? ''}
+                      onChange={(event) =>
+                        setDraftValue(
+                          source,
+                          row.key,
+                          lane.key,
+                          event.target.value
+                        )
+                      }
+                    />
+                  </TableCell>
+                ))}
+                <TableCell>
+                  {row.orphan && (
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='icon-sm'
+                      aria-label={t('Remove condition')}
+                      onClick={() => removeDraftCondition(source, row.key)}
+                    >
+                      <X />
+                    </Button>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    )
+  }
 
   return (
     <SettingsSection title={t('Benchmark Prices')}>
@@ -383,12 +632,19 @@ export function ReferencePricingCard() {
       </div>
 
       {editMode === 'json' && (
-        <JsonCodeEditor
-          value={jsonText}
-          onChange={setJsonText}
-          heightClassName='h-96 min-h-96 max-h-96'
-          ariaLabel={t('Benchmark Prices')}
-        />
+        <>
+          <p className='text-muted-foreground text-xs'>
+            {t(
+              'The JSON is the complete state: models or conditions omitted here are removed on save.'
+            )}
+          </p>
+          <JsonCodeEditor
+            value={jsonText}
+            onChange={setJsonText}
+            heightClassName='h-96 min-h-96 max-h-96'
+            ariaLabel={t('Benchmark Prices')}
+          />
+        </>
       )}
       {editMode === 'table' && query.isLoading && (
         <div className='space-y-2'>
@@ -409,7 +665,7 @@ export function ReferencePricingCard() {
                 <TableHead>
                   OpenRouter · {t('Input price')} / {t('Output price')}
                 </TableHead>
-                <TableHead>{t('Cache prices')}</TableHead>
+                <TableHead>{t('Rate Conditions')}</TableHead>
                 <TableHead className='w-24' />
               </TableRow>
             </TableHeader>
@@ -425,11 +681,7 @@ export function ReferencePricingCard() {
                 </TableRow>
               ) : (
                 modelRows.map((view) => {
-                  const hasCachePrices = SOURCES.some((source) =>
-                    CACHE_LANES.some(
-                      (lane) => typeof view.rows[source]?.[lane] === 'number'
-                    )
-                  )
+                  const count = conditionCount(view)
                   return (
                     <TableRow key={view.modelName}>
                       <TableCell className='font-mono text-sm'>
@@ -443,7 +695,11 @@ export function ReferencePricingCard() {
                         {formatLanePrice(view.rows.openrouter?.input)} /{' '}
                         {formatLanePrice(view.rows.openrouter?.output)}
                       </TableCell>
-                      <TableCell>{hasCachePrices ? '✓' : '—'}</TableCell>
+                      <TableCell className='text-xs'>
+                        {count > 0
+                          ? t('Default +{{count}}', { count })
+                          : t('Default only')}
+                      </TableCell>
                       <TableCell>
                         <div className='flex justify-end gap-1'>
                           <Button
@@ -481,14 +737,14 @@ export function ReferencePricingCard() {
           if (!open) setDialog(null)
         }}
       >
-        <DialogContent className='sm:max-w-2xl'>
+        <DialogContent className='sm:max-w-3xl'>
           <DialogHeader>
             <DialogTitle>
               {dialog?.isNew ? t('Add model') : t('Edit benchmark prices')}
             </DialogTitle>
           </DialogHeader>
           {dialog && (
-            <div className='flex flex-col gap-4'>
+            <div className='flex max-h-[70vh] flex-col gap-4 overflow-y-auto'>
               <div className='flex flex-col gap-2'>
                 <Label htmlFor='reference-pricing-model-name'>
                   {t('Model name')}
@@ -513,49 +769,25 @@ export function ReferencePricingCard() {
                   />
                 )}
               </div>
-              <div className='grid gap-6 sm:grid-cols-2'>
+              <Tabs defaultValue='official'>
+                <TabsList>
+                  {SOURCES.map((source) => (
+                    <TabsTrigger key={source} value={source}>
+                      {sourceLabel(source)}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
                 {SOURCES.map((source) => (
-                  <div key={source} className='flex flex-col gap-3'>
-                    <p className='text-sm font-medium'>{sourceLabel(source)}</p>
-                    {LANES.map((lane) => (
-                      <div key={lane.key} className='flex flex-col gap-1.5'>
-                        <Label
-                          htmlFor={`reference-pricing-${source}-${lane.key}`}
-                          className='text-muted-foreground text-xs'
-                        >
-                          {t(lane.labelKey)}
-                        </Label>
-                        <Input
-                          id={`reference-pricing-${source}-${lane.key}`}
-                          type='number'
-                          min={0}
-                          step='any'
-                          inputMode='decimal'
-                          value={dialog.values[source][lane.key]}
-                          onChange={(event) => {
-                            const value = event.target.value
-                            setDialog((prev) => {
-                              if (!prev) return prev
-                              return {
-                                ...prev,
-                                values: {
-                                  ...prev.values,
-                                  [source]: {
-                                    ...prev.values[source],
-                                    [lane.key]: value,
-                                  },
-                                },
-                              }
-                            })
-                          }}
-                        />
-                      </div>
-                    ))}
-                  </div>
+                  <TabsContent key={source} value={source} className='pt-2'>
+                    {renderSourceMatrix(source)}
+                  </TabsContent>
                 ))}
-              </div>
+              </Tabs>
               <p className='text-muted-foreground text-xs'>
-                {t('Leave a field empty when the source has no such price.')}
+                {t('Leave a field empty when the source has no such price.')}{' '}
+                {t(
+                  'The default price also feeds the landing page comparison and the dashboard savings estimate; a condition without its own price shows a dash in the model drawer.'
+                )}
               </p>
             </div>
           )}

@@ -144,6 +144,35 @@ describe('ModelDetailsPricingTable', () => {
     ])
   })
 
+  test('resolves per-condition reference prices and dashes unconfigured ones', () => {
+    const { container } = renderTable(
+      model({
+        enable_groups: ['Production'],
+        billing_mode: 'tiered_expr',
+        billing_expr: PEAK_SURCHARGE_EXPR,
+        // The source lists a peak rate but no off-peak one; the off-peak row
+        // must dash rather than borrow the default or the peak price.
+        official_price: {
+          input: 0.18,
+          output: 0.36,
+          by_condition: { peak: { input: 0.2, output: 0.4 } },
+        },
+      })
+    )
+    const rows = [...container.querySelectorAll('tbody tr')]
+
+    // One plan x two rate conditions, then the reference block mirroring them.
+    expect(rows).toHaveLength(4)
+    expect(rowCells(rows[2])).toEqual([
+      'Direct First-Party APIReference',
+      'Peak Hours',
+      '$0.20',
+      '$0.40',
+      '—',
+    ])
+    expect(rowCells(rows[3])).toEqual(['Off-Peak Hours', '—', '—', '—'])
+  })
+
   test('crosses each plan with every rate condition the expression defines', () => {
     const { container } = renderTable(
       model({

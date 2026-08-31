@@ -41,16 +41,21 @@ export type UpdateOptionResponse = {
 
 export type ReferencePricingSource = 'official' | 'openrouter'
 
-// 外部对比标价（USD / 1M tokens），按 (model_name, source) 一行
-export type ReferencePricingRow = {
-  id?: number
-  model_name: string
-  source: ReferencePricingSource
+export type ReferencePricingLanes = {
   input?: number | null
   output?: number | null
   cached_input?: number | null
   cache_creation?: number | null
   cache_hit?: number | null
+}
+
+// 外部对比标价（USD / 1M tokens），按 (model_name, source) 一行。
+// 顶层价位是默认价；conditions 按计价条件键（rate-conditions 模块派生）覆盖。
+export type ReferencePricingRow = ReferencePricingLanes & {
+  id?: number
+  model_name: string
+  source: ReferencePricingSource
+  conditions?: Record<string, ReferencePricingLanes>
 }
 
 export type ReferencePricingResponse = {

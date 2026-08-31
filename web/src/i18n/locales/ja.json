@@ -5508,6 +5508,12 @@
     "Default fallback description; upstream sync writes this field.": "既定のフォールバック説明。上流同期がこのフィールドに書き込みます。",
     "Vendor display name": "プロバイダー表示名",
     "e.g. ByteDance": "例: ByteDance",
-    "Shown to users instead of the vendor name when set.": "設定すると、ベンダー名の代わりにユーザーに表示されます。"
+    "Shown to users instead of the vendor name when set.": "設定すると、ベンダー名の代わりにユーザーに表示されます。",
+    "Default price": "デフォルト価格",
+    "Default only": "デフォルトのみ",
+    "Default +{{count}}": "デフォルト +{{count}}",
+    "Not derived from the current billing expression": "現在の課金式からは導出されない条件です",
+    "The JSON is the complete state: models or conditions omitted here are removed on save.": "JSON は完全な状態です：ここに含まれないモデルや条件は保存時に削除されます。",
+    "The default price also feeds the landing page comparison and the dashboard savings estimate; a condition without its own price shows a dash in the model drawer.": "デフォルト価格はトップページの比較とダッシュボードの節約見積りにも使われます。専用価格のない条件はモデル詳細ドロワーでダッシュ表示になります。"
   }
 }

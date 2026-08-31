@@ -23,8 +23,29 @@ type ReferencePricing struct {
 	CachedInput   *float64 `json:"cached_input"`
 	CacheCreation *float64 `json:"cache_creation"`
 	CacheHit      *float64 `json:"cache_hit"`
-	CreatedAt     int64    `json:"created_at"`
-	UpdatedAt     int64    `json:"updated_at"`
+	// Conditions 按计价条件的专属价，JSON 文本（如 {"peak":{"input":0.2}}）。
+	// 键由前端按模型计费表达式派生（rate-conditions 模块），后端只存取；
+	// 上面五个扁平价位是默认价，供首页对比与看板节省估算消费。
+	Conditions string `json:"-" gorm:"type:text"`
+	// ConditionLanes 是 Conditions 的 API 出入参形态，不落库。
+	ConditionLanes map[string]ReferenceLanes `json:"conditions,omitempty" gorm:"-"`
+	CreatedAt      int64                     `json:"created_at"`
+	UpdatedAt      int64                     `json:"updated_at"`
+}
+
+// NormalizeConditions 在写库前把 ConditionLanes 序列化进 Conditions 列；
+// 空 map 归一为空串，使"清空条件"与"从未配置"落库形态一致。
+func (rp *ReferencePricing) NormalizeConditions() error {
+	if len(rp.ConditionLanes) == 0 {
+		rp.Conditions = ""
+		return nil
+	}
+	data, err := common.Marshal(rp.ConditionLanes)
+	if err != nil {
+		return err
+	}
+	rp.Conditions = string(data)
+	return nil
 }
 
 func (ReferencePricing) TableName() string {
@@ -34,7 +55,20 @@ func (ReferencePricing) TableName() string {
 func GetAllReferencePricing() ([]*ReferencePricing, error) {
 	rows := make([]*ReferencePricing, 0)
 	err := DB.Order("model_name, source").Find(&rows).Error
-	return rows, err
+	if err != nil {
+		return nil, err
+	}
+	for _, row := range rows {
+		if row.Conditions == "" {
+			continue
+		}
+		if err := common.UnmarshalJsonStr(row.Conditions, &row.ConditionLanes); err != nil {
+			// 单行脏数据不应拖垮整个定价页，跳过并留痕
+			common.SysError(fmt.Sprintf("invalid reference pricing conditions for %s/%s: %s", row.ModelName, row.Source, err.Error()))
+			row.ConditionLanes = nil
+		}
+	}
+	return rows, nil
 }
 
 // UpsertReferencePricingRows 按 (model_name, source) 批量插入或更新对比价。
@@ -47,11 +81,14 @@ func UpsertReferencePricingRows(rows []ReferencePricing) error {
 		rows[i].Id = 0
 		rows[i].CreatedAt = now
 		rows[i].UpdatedAt = now
+		if err := rows[i].NormalizeConditions(); err != nil {
+			return err
+		}
 	}
 	return DB.Clauses(clause.OnConflict{
 		Columns: []clause.Column{{Name: "model_name"}, {Name: "source"}},
 		DoUpdates: clause.AssignmentColumns([]string{
-			"input", "output", "cached_input", "cache_creation", "cache_hit", "updated_at",
+			"input", "output", "cached_input", "cache_creation", "cache_hit", "conditions", "updated_at",
 		}),
 	}).Create(&rows).Error
 }

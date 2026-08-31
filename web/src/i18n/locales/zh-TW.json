@@ -5508,6 +5508,12 @@
     "Default fallback description; upstream sync writes this field.": "預設兜底說明；上游同步會寫入此欄位。",
     "Vendor display name": "供應商顯示名",
     "e.g. ByteDance": "如 ByteDance",
-    "Shown to users instead of the vendor name when set.": "設定後對使用者顯示此名稱，取代供應商名。"
+    "Shown to users instead of the vendor name when set.": "設定後對使用者顯示此名稱，取代供應商名。",
+    "Default price": "預設價",
+    "Default only": "僅預設價",
+    "Default +{{count}}": "預設 +{{count}}",
+    "Not derived from the current billing expression": "目前計費表達式已無法派生此條件",
+    "The JSON is the complete state: models or conditions omitted here are removed on save.": "JSON 為完整狀態：此處未包含的模型或條件在儲存時會被刪除。",
+    "The default price also feeds the landing page comparison and the dashboard savings estimate; a condition without its own price shows a dash in the model drawer.": "預設價同時用於首頁價格對比與看板節省估算；未配專屬價的條件在模型詳情抽屜中顯示破折號。"
   }
 }

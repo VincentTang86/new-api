@@ -13,6 +13,12 @@ import (
 // maxReferencePrice 对比价上限（USD / 1M tokens），仅用于挡住误输入的离谱数值。
 const maxReferencePrice = 1e6
 
+// 条件价的键与数量上限，防止把垃圾塞进 conditions 文本列。
+const (
+	maxReferenceConditions      = 64
+	maxReferenceConditionKeyLen = 64
+)
+
 func GetReferencePricing(c *gin.Context) {
 	rows, err := model.GetAllReferencePricing()
 	if err != nil {
@@ -56,13 +62,27 @@ func UpdateReferencePricing(c *gin.Context) {
 			return
 		}
 		seen[key] = true
-		for _, price := range []*float64{row.Input, row.Output, row.CachedInput, row.CacheCreation, row.CacheHit} {
-			if price == nil {
-				continue
-			}
-			if math.IsNaN(*price) || math.IsInf(*price, 0) || *price <= 0 || *price > maxReferencePrice {
-				common.ApiErrorMsg(c, fmt.Sprintf("模型 %s 存在无效价格：价格必须大于 0 且不超过 %.0f", row.ModelName, float64(maxReferencePrice)))
+		lanesToCheck := [][]*float64{{row.Input, row.Output, row.CachedInput, row.CacheCreation, row.CacheHit}}
+		if len(row.ConditionLanes) > maxReferenceConditions {
+			common.ApiErrorMsg(c, fmt.Sprintf("模型 %s 的计价条件数量不能超过 %d", row.ModelName, maxReferenceConditions))
+			return
+		}
+		for conditionKey, lanes := range row.ConditionLanes {
+			if conditionKey == "" || len(conditionKey) > maxReferenceConditionKeyLen {
+				common.ApiErrorMsg(c, fmt.Sprintf("模型 %s 存在无效的计价条件键：不能为空且长度不能超过 %d", row.ModelName, maxReferenceConditionKeyLen))
 				return
+			}
+			lanesToCheck = append(lanesToCheck, []*float64{lanes.Input, lanes.Output, lanes.CachedInput, lanes.CacheCreation, lanes.CacheHit})
+		}
+		for _, lanes := range lanesToCheck {
+			for _, price := range lanes {
+				if price == nil {
+					continue
+				}
+				if math.IsNaN(*price) || math.IsInf(*price, 0) || *price <= 0 || *price > maxReferencePrice {
+					common.ApiErrorMsg(c, fmt.Sprintf("模型 %s 存在无效价格：价格必须大于 0 且不超过 %.0f", row.ModelName, float64(maxReferencePrice)))
+					return
+				}
 			}
 		}
 	}

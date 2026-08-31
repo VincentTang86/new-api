@@ -5508,6 +5508,12 @@
     "Default fallback description; upstream sync writes this field.": "默认兜底说明；上游同步会写入此字段。",
     "Vendor display name": "供应商显示名",
     "e.g. ByteDance": "如 ByteDance",
-    "Shown to users instead of the vendor name when set.": "配置后对用户展示此名称，替代供应商名。"
+    "Shown to users instead of the vendor name when set.": "配置后对用户展示此名称，替代供应商名。",
+    "Default price": "默认价",
+    "Default only": "仅默认价",
+    "Default +{{count}}": "默认 +{{count}}",
+    "Not derived from the current billing expression": "当前计费表达式已派生不出此条件",
+    "The JSON is the complete state: models or conditions omitted here are removed on save.": "JSON 是完整状态：此处未包含的模型或条件在保存时会被删除。",
+    "The default price also feeds the landing page comparison and the dashboard savings estimate; a condition without its own price shows a dash in the model drawer.": "默认价同时用于首页价格对比与看板节省估算；未配专属价的条件在模型详情抽屉中显示破折号。"
   }
 }

@@ -5508,6 +5508,12 @@
     "Default fallback description; upstream sync writes this field.": "Описание по умолчанию; синхронизация с апстримом записывает это поле.",
     "Vendor display name": "Отображаемое имя поставщика",
     "e.g. ByteDance": "напр. ByteDance",
-    "Shown to users instead of the vendor name when set.": "Показывается пользователям вместо имени поставщика, если задано."
+    "Shown to users instead of the vendor name when set.": "Показывается пользователям вместо имени поставщика, если задано.",
+    "Default price": "Базовая цена",
+    "Default only": "Только базовая",
+    "Default +{{count}}": "Базовая +{{count}}",
+    "Not derived from the current billing expression": "Не выводится из текущего выражения тарификации",
+    "The JSON is the complete state: models or conditions omitted here are removed on save.": "JSON описывает полное состояние: отсутствующие здесь модели и условия будут удалены при сохранении.",
+    "The default price also feeds the landing page comparison and the dashboard savings estimate; a condition without its own price shows a dash in the model drawer.": "Базовая цена также используется в сравнении на главной странице и в оценке экономии на дашборде; условие без собственной цены отображается прочерком в панели модели."
   }
 }

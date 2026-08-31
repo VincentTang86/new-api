@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -26,7 +27,21 @@ func TestUpdateReferencePricingRejectsInvalidRows(t *testing.T) {
 		{"negative price", `{"rows":[{"model_name":"m","source":"official","output":-1}]}`},
 		{"oversized price", `{"rows":[{"model_name":"m","source":"official","cache_hit":1000001}]}`},
 		{"duplicate model and source", `{"rows":[{"model_name":"m","source":"official","input":1},{"model_name":"m","source":"official","input":2}]}`},
+		{"zero condition price", `{"rows":[{"model_name":"m","source":"official","conditions":{"peak":{"input":0}}}]}`},
+		{"oversized condition price", `{"rows":[{"model_name":"m","source":"official","conditions":{"peak":{"output":1000001}}}]}`},
+		{"blank condition key", `{"rows":[{"model_name":"m","source":"official","conditions":{"":{"input":1}}}]}`},
+		{"oversized condition key", `{"rows":[{"model_name":"m","source":"official","conditions":{"` + strings.Repeat("k", 65) + `":{"input":1}}}]}`},
 	}
+	// 条件数量上限是独立的拒绝分支，用例体积大，程序化构造
+	manyConditions := make([]string, 0, 65)
+	for i := 0; i < 65; i++ {
+		manyConditions = append(manyConditions, fmt.Sprintf(`"c%d":{"input":1}`, i))
+	}
+	cases = append(cases, struct {
+		name string
+		body string
+	}{"too many conditions", `{"rows":[{"model_name":"m","source":"official","conditions":{` + strings.Join(manyConditions, ",") + `}}]}`})
+
 	gin.SetMode(gin.TestMode)
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
