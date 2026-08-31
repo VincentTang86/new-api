@@ -4106,6 +4106,7 @@
     "Server Log Management": "Управление журналами сервера",
     "Server Token": "Токен сервера",
     "Server logging is not enabled (log directory not configured)": "Журналирование сервера не включено (каталог журналов не настроен)",
+    "Service": "Сервис",
     "Service Tier": "Уровень сервиса",
     "Service Tier *": "Уровень сервиса *",
     "Service account JSON file(s)": "JSON-файл сервисного аккаунта",

@@ -4106,6 +4106,7 @@
     "Server Log Management": "Gestion des journaux serveur",
     "Server Token": "Jeton de serveur",
     "Server logging is not enabled (log directory not configured)": "La journalisation serveur n'est pas activée (répertoire non configuré)",
+    "Service": "Service",
     "Service Tier": "Niveau de service",
     "Service Tier *": "Niveau de service *",
     "Service account JSON file(s)": "Fichier(s) JSON de compte de service",

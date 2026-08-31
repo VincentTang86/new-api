@@ -17,25 +17,23 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { useQuery } from '@tanstack/react-query'
-import { useEffect } from 'react'
 import { Link } from '@tanstack/react-router'
 import {
-  AudioLines,
-  CalendarClock,
-  Code2,
+  Activity,
+  ArrowRight,
+  AudioWaveform,
+  Clock,
+  Code,
   File,
-  FileText,
-  HeartPulse,
+  Grid3x3,
   Image,
-  Info,
-  Layers,
-  Maximize2,
-  Sparkles,
+  Play,
+  ShieldCheck,
   Timer,
   Type,
-  Video,
   X,
 } from 'lucide-react'
+import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { CopyButton } from '@/components/copy-button'
@@ -214,7 +212,7 @@ function OverviewSummaryGrid(props: { model: PricingModel }) {
   return (
     <div className='flex w-full divide-x divide-(--pd-border) border border-(--pd-border) bg-(--pd-surface) max-[480px]:flex-col max-[480px]:divide-x-0 max-[480px]:divide-y'>
       <OverviewMetric
-        icon={Timer}
+        icon={Clock}
         label='TPS'
         value={formatThroughput(avgTps)}
       />
@@ -224,7 +222,7 @@ function OverviewSummaryGrid(props: { model: PricingModel }) {
         value={formatLatency(avgLatency)}
       />
       <OverviewMetric
-        icon={HeartPulse}
+        icon={ShieldCheck}
         label={t('Success rate')}
         value={formatUptimePct(successRate)}
         valueClassName={getSuccessRateTextClass(successRate)}
@@ -271,8 +269,8 @@ const MODALITY_ICONS: Record<
 > = {
   text: Type,
   image: Image,
-  audio: AudioLines,
-  video: Video,
+  audio: AudioWaveform,
+  video: Play,
   file: File,
 }
 
@@ -281,7 +279,7 @@ function ModalityIcons(props: { items: string[] }) {
   if (props.items.length === 0) return null
 
   return (
-    <span className='inline-flex items-center gap-1.5 align-middle'>
+    <span className='inline-flex items-center gap-3 align-middle'>
       {props.items.map((item) => {
         const Icon = MODALITY_ICONS[item]
         const label = t(MODALITY_LABEL_KEYS[item] ?? item)
@@ -297,7 +295,10 @@ function ModalityIcons(props: { items: string[] }) {
           <Tooltip key={item}>
             <TooltipTrigger
               render={
-                <span className='inline-flex cursor-default' aria-label={label} />
+                <span
+                  className='inline-flex cursor-default'
+                  aria-label={label}
+                />
               }
             >
               <Icon className='size-3.5' />
@@ -322,7 +323,6 @@ function ModelBackendQuickStats(props: { model: PricingModel }) {
 
   const stats: {
     key: string
-    icon: React.ComponentType<{ className?: string }>
     label: string
     value: React.ReactNode
     hint?: string
@@ -332,13 +332,12 @@ function ModelBackendQuickStats(props: { model: PricingModel }) {
   if (inputModalities.length > 0 || outputModalities.length > 0) {
     stats.push({
       key: 'modalities',
-      icon: FileText,
       label: t('Modalities'),
       value: (
-        <span className='inline-flex items-center gap-1.5'>
+        <span className='inline-flex items-center gap-3'>
           <ModalityIcons items={inputModalities} />
           {inputModalities.length > 0 && outputModalities.length > 0 && (
-            <span className='text-(--pd-faint)'>→</span>
+            <ArrowRight className='size-3.5 shrink-0 text-(--pd-faint)' />
           )}
           <ModalityIcons items={outputModalities} />
         </span>
@@ -349,7 +348,6 @@ function ModelBackendQuickStats(props: { model: PricingModel }) {
   if (contextLength > 0) {
     stats.push({
       key: 'context',
-      icon: Layers,
       label: t('Context'),
       value: `${formatCatalogTokenCount(contextLength)} ${t('tokens')}`,
       hint: t('Maximum input window'),
@@ -359,7 +357,6 @@ function ModelBackendQuickStats(props: { model: PricingModel }) {
   if (releaseDate) {
     stats.push({
       key: 'release',
-      icon: CalendarClock,
       label: t('Released'),
       value: releaseDate,
     })
@@ -368,7 +365,6 @@ function ModelBackendQuickStats(props: { model: PricingModel }) {
   if (maxOutput > 0) {
     stats.push({
       key: 'max-output',
-      icon: Maximize2,
       label: t('Max output'),
       value: formatCatalogTokenCount(maxOutput),
       hint: t('Maximum tokens per response'),
@@ -378,7 +374,6 @@ function ModelBackendQuickStats(props: { model: PricingModel }) {
   if (knowledgeCutoff) {
     stats.push({
       key: 'knowledge',
-      icon: Sparkles,
       label: t('Knowledge cutoff'),
       value: knowledgeCutoff,
     })
@@ -389,29 +384,25 @@ function ModelBackendQuickStats(props: { model: PricingModel }) {
   if (stats.length === 0) return null
 
   return (
-    <div className='flex flex-wrap gap-3'>
-      {stats.map((stat) => {
-        const Icon = stat.icon
-        return (
-          <div
-            key={stat.key}
-            className='flex min-w-[160px] flex-1 flex-col gap-2 rounded-[10px] border border-(--pd-border) bg-(--pd-surface-muted) p-3'
-          >
-            <span className='inline-flex min-w-0 items-center gap-1'>
-              <Icon className='size-3 shrink-0 text-(--pd-faint)' />
-              <FieldLabel>{stat.label}</FieldLabel>
+    // Three equal columns, as the design lays them out: a wrapped fifth card
+    // keeps a column's width instead of stretching across the whole row.
+    <div className='grid grid-cols-2 gap-3 @lg/details:grid-cols-3'>
+      {stats.map((stat) => (
+        <div
+          key={stat.key}
+          className='flex min-w-0 flex-col gap-2 rounded-[10px] border border-(--pd-border) bg-(--pd-surface-muted) p-3'
+        >
+          <FieldLabel>{stat.label}</FieldLabel>
+          <span className='truncate text-[13px] font-medium text-(--pd-ink)'>
+            {stat.value}
+          </span>
+          {stat.hint && (
+            <span className='truncate text-[10px] text-(--pd-faint)'>
+              {stat.hint}
             </span>
-            <span className='truncate text-[13px] font-medium text-(--pd-ink)'>
-              {stat.value}
-            </span>
-            {stat.hint && (
-              <span className='truncate text-[10px] text-(--pd-faint)'>
-                {stat.hint}
-              </span>
-            )}
-          </div>
-        )
-      })}
+          )}
+        </div>
+      ))}
     </div>
   )
 }
@@ -466,7 +457,7 @@ function ModelBackendProviderSection(props: { model: PricingModel }) {
 
   if (groups.length > 0) {
     cells.push(
-      <CatalogInfoCell key='groups' label={t('Groups')}>
+      <CatalogInfoCell key='groups' label={t('Service Tier')}>
         <CatalogPillList items={groups} />
       </CatalogInfoCell>
     )
@@ -545,7 +536,7 @@ function ModelHeader(props: { model: PricingModel }) {
             <CopyButton
               value={model.model_name || ''}
               className='size-6 shrink-0'
-              iconClassName='size-3.5'
+              iconClassName='size-4'
               tooltip={t('Copy model name')}
               successTooltip={t('Copied!')}
               aria-label={t('Copy model name')}
@@ -613,9 +604,9 @@ const TAB_META: Record<
   TabValue,
   { icon: React.ComponentType<{ className?: string }>; labelKey: string }
 > = {
-  overview: { icon: Info, labelKey: 'Overview' },
-  performance: { icon: HeartPulse, labelKey: 'Performance' },
-  api: { icon: Code2, labelKey: 'API' },
+  overview: { icon: Grid3x3, labelKey: 'Overview' },
+  performance: { icon: Activity, labelKey: 'Performance' },
+  api: { icon: Code, labelKey: 'API' },
 }
 
 export interface ModelDetailsContentProps {
@@ -763,8 +754,15 @@ export function ModelDetailsDrawer(props: ModelDetailsDrawerProps) {
         // rather than nudging it 2.5rem while fading, so the translate and
         // opacity transition styles are overridden too — `ease-in-out` is
         // already the design's cubic-bezier(0.4, 0, 0.2, 1).
+        //
+        // `public-design` is load-bearing: the panel is portalled to <body>,
+        // outside the shell that defines the `--pd-*` tokens and the design's
+        // Geist/JetBrains Mono pair, and only a handful of those tokens are
+        // aliased for the console. Without the scope the rules between rate
+        // rows fall back to currentColor and the model name loses its mono
+        // face.
         className={sideDrawerContentClassName(
-          'top-[55px] bottom-0 h-auto w-[880px] max-w-[90vw] shadow-[-8px_0_24px_rgba(0,0,0,0.08)] sm:max-w-[90vw] ' +
+          'public-design top-[55px] bottom-0 h-auto w-[880px] max-w-[90vw] shadow-[-8px_0_24px_rgba(0,0,0,0.08)] sm:max-w-[90vw] ' +
             'duration-[350ms] data-starting-style:translate-x-full data-ending-style:translate-x-full data-starting-style:opacity-100 data-ending-style:opacity-100 motion-reduce:transition-none'
         )}
       >

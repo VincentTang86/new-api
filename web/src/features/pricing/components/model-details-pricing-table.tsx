@@ -277,7 +277,7 @@ export function ModelDetailsPricingTable(props: {
         <thead className='border-b border-(--pd-border) bg-(--pd-surface-muted)'>
           <tr>
             <th scope='col' className={headCellClass}>
-              {t('Plan')}
+              {t('Service')}
             </th>
             {isTokenBased && (
               <th scope='col' className={headCellClass}>

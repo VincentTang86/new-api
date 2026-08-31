@@ -100,7 +100,7 @@ describe('ModelDetailsPricingTable', () => {
     // No cache/image/audio ratios configured, so those columns would be a
     // strip of dashes rather than information.
     expect(headers(renderTable(model()).container)).toEqual([
-      'Plan',
+      'Service',
       'Rate Conditions',
       'Input/1M',
       'Output/1M',
@@ -110,7 +110,7 @@ describe('ModelDetailsPricingTable', () => {
       model({ cache_ratio: 0.1, create_cache_ratio: 1.25 })
     ).container
     expect(headers(withCache)).toEqual([
-      'Plan',
+      'Service',
       'Rate Conditions',
       'Input/1M',
       'Output/1M',
@@ -238,7 +238,7 @@ describe('ModelDetailsPricingTable', () => {
     )
 
     expect(headers(container)).toEqual([
-      'Plan',
+      'Service',
       'Rate Conditions',
       'Input/1M',
       'Output/1M',
@@ -289,7 +289,7 @@ describe('ModelDetailsPricingTable', () => {
     )
 
     expect(headers(container)).toEqual([
-      'Plan',
+      'Service',
       'Rate Conditions',
       'Input/1M',
       'Output/1M',
@@ -324,7 +324,7 @@ describe('ModelDetailsPricingTable', () => {
     )
     const rows = [...container.querySelectorAll('tbody tr')]
 
-    expect(headers(container)).toEqual(['Plan', 'Price'])
+    expect(headers(container)).toEqual(['Service', 'Price'])
     expect(rowCells(rows[0])).toEqual(['Production', '$0.02 / call'])
   })
 
