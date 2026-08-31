@@ -10,7 +10,8 @@
       "seedance release date uses the 260128 version stamp (2026-01-28); models.dev vercel entry says 2026-04-14",
       "gemini-3.1-flash-image context/max_output follow models.dev google entry (65536/65536); OpenRouter lists 131072/32768",
       "grok-imagine-video-1.5 input kept text-only per models.dev; add image if the channel supports image-to-video",
-      "kimi/kimi-k3 is an alias row for kimi-k3 and shares its metadata"
+      "kimi/kimi-k3 is an alias row for kimi-k3 and shares its metadata",
+      "vendor_display_name is a per-model override shown to users in place of the vendor name (e.g. Bailian-hosted deepseek-v4-pro displays DeepSeek)"
     ]
   },
   "models": {
@@ -140,6 +141,7 @@
     },
     "deepseek-v4-pro": {
       "vendor": "DeepSeek",
+      "vendor_display_name": "DeepSeek",
       "input_modalities": "text",
       "output_modalities": "text",
       "context_length": 1000000,
@@ -160,6 +162,7 @@
     },
     "doubao-seedance-2-0-260128": {
       "vendor": "字节跳动",
+      "vendor_display_name": "ByteDance",
       "icon": "Doubao.Color",
       "input_modalities": "text,image",
       "output_modalities": "video",
@@ -181,6 +184,7 @@
     },
     "doubao-seedance-2-0-fast-260128": {
       "vendor": "字节跳动",
+      "vendor_display_name": "ByteDance",
       "icon": "Doubao.Color",
       "input_modalities": "text,image",
       "output_modalities": "video",
@@ -244,6 +248,7 @@
     },
     "glm-5.2": {
       "vendor": "智谱",
+      "vendor_display_name": "Zhipu",
       "icon": "Zhipu.Color",
       "input_modalities": "text",
       "output_modalities": "text",
@@ -433,6 +438,7 @@
     },
     "qwen3.7-flash": {
       "vendor": "阿里巴巴",
+      "vendor_display_name": "Alibaba",
       "icon": "Qwen.Color",
       "input_modalities": "text,image,video",
       "output_modalities": "text",
@@ -454,6 +460,7 @@
     },
     "qwen3.8-max": {
       "vendor": "阿里巴巴",
+      "vendor_display_name": "Alibaba",
       "icon": "Qwen.Color",
       "input_modalities": "text,image,video,file",
       "output_modalities": "text",

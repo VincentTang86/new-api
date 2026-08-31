@@ -5505,6 +5505,9 @@
     "Release date": "Release date",
     "YYYY-MM or YYYY-MM-DD": "YYYY-MM or YYYY-MM-DD",
     "e.g. 685B": "e.g. 685B",
-    "Default fallback description; upstream sync writes this field.": "Default fallback description; upstream sync writes this field."
+    "Default fallback description; upstream sync writes this field.": "Default fallback description; upstream sync writes this field.",
+    "Vendor display name": "Vendor display name",
+    "e.g. ByteDance": "e.g. ByteDance",
+    "Shown to users instead of the vendor name when set.": "Shown to users instead of the vendor name when set."
   }
 }

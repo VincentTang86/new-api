@@ -5505,6 +5505,9 @@
     "Release date": "Date de sortie",
     "YYYY-MM or YYYY-MM-DD": "YYYY-MM ou YYYY-MM-DD",
     "e.g. 685B": "p. ex. 685B",
-    "Default fallback description; upstream sync writes this field.": "Description de secours par défaut ; la synchronisation amont écrit ce champ."
+    "Default fallback description; upstream sync writes this field.": "Description de secours par défaut ; la synchronisation amont écrit ce champ.",
+    "Vendor display name": "Nom d'affichage du fournisseur",
+    "e.g. ByteDance": "p. ex. ByteDance",
+    "Shown to users instead of the vendor name when set.": "Affiché aux utilisateurs à la place du nom du fournisseur lorsqu'il est défini."
   }
 }

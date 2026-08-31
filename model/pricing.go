@@ -24,6 +24,8 @@ type Pricing struct {
 	Icon            string            `json:"icon,omitempty"`
 	Tags            string            `json:"tags,omitempty"`
 	VendorID        int               `json:"vendor_id,omitempty"`
+	// VendorDisplayName 模型级供应商显示名，配置后前端优先于供应商名展示
+	VendorDisplayName string `json:"vendor_display_name,omitempty"`
 	// 目录元数据，字段名与前端 PricingModel 对齐（web/src/features/pricing/types.ts）
 	InputModalities  []string `json:"input_modalities,omitempty"`
 	OutputModalities []string `json:"output_modalities,omitempty"`
@@ -440,6 +442,7 @@ func updatePricing() {
 			pricing.Icon = meta.Icon
 			pricing.Tags = meta.Tags
 			pricing.VendorID = meta.VendorID
+			pricing.VendorDisplayName = meta.VendorDisplayName
 			pricing.InputModalities = splitCatalogList(meta.InputModalities)
 			pricing.OutputModalities = splitCatalogList(meta.OutputModalities)
 			pricing.ContextLength = meta.ContextLength

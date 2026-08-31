@@ -362,41 +362,55 @@ export function ModelDetailsPricingTable(props: {
           })}
 
           {isTokenBased &&
-            referenceRows.map((row) => (
-              <tr
-                key={row.key}
-                className='border-t border-(--pd-border) bg-(--pd-surface-alt)'
-              >
-                <th
-                  scope='row'
-                  className={`${cellClass} text-left font-normal`}
+            referenceRows.map((row) =>
+              // A reference list price is one flat rate, so it is restated
+              // under every rate condition the gateway rows carry: that is
+              // what makes the comparison readable line by line — at peak we
+              // may cost more than the source and at off-peak less.
+              rateRows.map((rateRow, rowIndex) => (
+                <tr
+                  key={`${row.key}-${rateRow.tier.label || rowIndex}-${rateRow.variant?.multiplier ?? 'flat'}`}
+                  className={
+                    rowIndex === 0
+                      ? 'border-t border-(--pd-border) bg-(--pd-surface-alt)'
+                      : 'border-t border-(--pd-border-soft) bg-(--pd-surface-alt)'
+                  }
                 >
-                  <span className='flex flex-col'>
-                    <span className='text-xs font-medium whitespace-nowrap text-(--pd-muted)'>
-                      {t(row.label)}
-                    </span>
-                    <span className='text-[9px] text-(--pd-faint)'>
-                      {t('Reference')}
-                    </span>
-                  </span>
-                </th>
-                <td
-                  className={`${cellClass} text-xs whitespace-nowrap text-(--pd-faint)`}
-                >
-                  {t('Standard')}
-                </td>
-                {columns.map((column) => (
+                  {rowIndex === 0 && (
+                    <th
+                      scope='row'
+                      rowSpan={rateRows.length}
+                      className={`${cellClass} text-left font-normal`}
+                    >
+                      <span className='flex flex-col'>
+                        <span className='text-xs font-medium whitespace-nowrap text-(--pd-muted)'>
+                          {t(row.label)}
+                        </span>
+                        <span className='text-[9px] text-(--pd-faint)'>
+                          {t('Reference')}
+                        </span>
+                      </span>
+                    </th>
+                  )}
                   <td
-                    key={column.id}
-                    className={`${cellClass} text-right font-mono text-xs text-(--pd-faint)`}
+                    className={`${cellClass} text-xs whitespace-nowrap text-(--pd-faint)`}
                   >
-                    {formatLandingPrice(
-                      referencePrice(row.lanes, column.referenceLane) / divisor
-                    )}
+                    {rateConditionText(rateRow)}
                   </td>
-                ))}
-              </tr>
-            ))}
+                  {columns.map((column) => (
+                    <td
+                      key={column.id}
+                      className={`${cellClass} text-right font-mono text-xs text-(--pd-faint)`}
+                    >
+                      {formatLandingPrice(
+                        referencePrice(row.lanes, column.referenceLane) /
+                          divisor
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            )}
         </tbody>
       </table>
     </div>

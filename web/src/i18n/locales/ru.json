@@ -5505,6 +5505,9 @@
     "Release date": "Дата выпуска",
     "YYYY-MM or YYYY-MM-DD": "YYYY-MM или YYYY-MM-DD",
     "e.g. 685B": "напр. 685B",
-    "Default fallback description; upstream sync writes this field.": "Описание по умолчанию; синхронизация с апстримом записывает это поле."
+    "Default fallback description; upstream sync writes this field.": "Описание по умолчанию; синхронизация с апстримом записывает это поле.",
+    "Vendor display name": "Отображаемое имя поставщика",
+    "e.g. ByteDance": "напр. ByteDance",
+    "Shown to users instead of the vendor name when set.": "Показывается пользователям вместо имени поставщика, если задано."
   }
 }

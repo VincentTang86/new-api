@@ -35,6 +35,8 @@ export type PricingModel = {
   description_i18n?: Record<string, string>
   icon?: string
   vendor_id?: number
+  /** Model-level override shown to users in place of vendor_name when set. */
+  vendor_display_name?: string
   vendor_name?: string
   vendor_icon?: string
   vendor_description?: string

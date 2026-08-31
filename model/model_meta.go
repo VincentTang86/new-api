@@ -33,7 +33,9 @@ type Model struct {
 	Icon            string `json:"icon,omitempty" gorm:"type:varchar(128)"`
 	Tags            string `json:"tags,omitempty" gorm:"type:varchar(255)"`
 	VendorID        int    `json:"vendor_id,omitempty" gorm:"index"`
-	Endpoints       string `json:"endpoints,omitempty" gorm:"type:text"`
+	// VendorDisplayName 对外展示的供应商名；留空时前端回退到供应商实体的 name
+	VendorDisplayName string `json:"vendor_display_name,omitempty" gorm:"type:varchar(64)"`
+	Endpoints         string `json:"endpoints,omitempty" gorm:"type:text"`
 	// 目录元数据（纯展示，不进计费链路）
 	InputModalities  string         `json:"input_modalities,omitempty" gorm:"type:varchar(128)"`
 	OutputModalities string         `json:"output_modalities,omitempty" gorm:"type:varchar(128)"`
@@ -92,7 +94,7 @@ func (mi *Model) Update() error {
 	mi.UpdatedTime = common.GetTimestamp()
 	// 使用 Select 强制更新所有字段，包括零值
 	return DB.Model(&Model{}).Where("id = ?", mi.Id).
-		Select("model_name", "description", "description_i18n", "icon", "tags", "vendor_id", "endpoints",
+		Select("model_name", "description", "description_i18n", "icon", "tags", "vendor_id", "vendor_display_name", "endpoints",
 			"input_modalities", "output_modalities", "context_length", "max_output_tokens",
 			"release_date", "knowledge_cutoff", "parameter_count", "capabilities",
 			"status", "sync_official", "name_rule", "updated_time").
@@ -149,6 +151,7 @@ func (mi *Model) NormalizeAndValidateCatalogMeta() error {
 		return err
 	}
 	mi.ParameterCount = strings.TrimSpace(mi.ParameterCount)
+	mi.VendorDisplayName = strings.TrimSpace(mi.VendorDisplayName)
 
 	raw := strings.TrimSpace(mi.DescriptionI18n)
 	if raw == "" {

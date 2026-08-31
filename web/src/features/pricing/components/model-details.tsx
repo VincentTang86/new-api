@@ -51,6 +51,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Tooltip,
   TooltipContent,
+  TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { getPerfMetrics } from '@/features/performance-metrics/api'
@@ -279,35 +280,40 @@ function ModalityIcons(props: { items: string[] }) {
   if (props.items.length === 0) return null
 
   return (
-    <span className='inline-flex items-center gap-3 align-middle'>
-      {props.items.map((item) => {
-        const Icon = MODALITY_ICONS[item]
-        const label = t(MODALITY_LABEL_KEYS[item] ?? item)
-        // Unknown modality values stay readable as text instead of vanishing
-        if (!Icon) {
+    // The provider is load-bearing, not decoration: without it Base UI falls
+    // back to a 600ms *rest* delay, which a pointer crossing a 14px icon
+    // practically never satisfies, so the tip never appeared.
+    <TooltipProvider delay={0}>
+      <span className='inline-flex items-center gap-3 align-middle'>
+        {props.items.map((item) => {
+          const Icon = MODALITY_ICONS[item]
+          const label = t(MODALITY_LABEL_KEYS[item] ?? item)
+          // Unknown modality values stay readable as text instead of vanishing
+          if (!Icon) {
+            return (
+              <span key={item} className='font-medium'>
+                {label}
+              </span>
+            )
+          }
           return (
-            <span key={item} className='font-medium'>
-              {label}
-            </span>
+            <Tooltip key={item}>
+              <TooltipTrigger
+                render={
+                  <span
+                    className='inline-flex cursor-default'
+                    aria-label={label}
+                  />
+                }
+              >
+                <Icon className='size-3.5' />
+              </TooltipTrigger>
+              <TooltipContent>{label}</TooltipContent>
+            </Tooltip>
           )
-        }
-        return (
-          <Tooltip key={item}>
-            <TooltipTrigger
-              render={
-                <span
-                  className='inline-flex cursor-default'
-                  aria-label={label}
-                />
-              }
-            >
-              <Icon className='size-3.5' />
-            </TooltipTrigger>
-            <TooltipContent>{label}</TooltipContent>
-          </Tooltip>
-        )
-      })}
-    </span>
+        })}
+      </span>
+    </TooltipProvider>
   )
 }
 
@@ -441,10 +447,11 @@ function ModelBackendProviderSection(props: { model: PricingModel }) {
   const tags = parseTags(model.tags)
   const cells: React.ReactNode[] = []
 
-  if (model.vendor_name) {
+  const providerName = model.vendor_display_name || model.vendor_name
+  if (providerName) {
     cells.push(
       <CatalogInfoCell key='provider' label={t('Provider')}>
-        <CatalogTextValue>{model.vendor_name}</CatalogTextValue>
+        <CatalogTextValue>{providerName}</CatalogTextValue>
       </CatalogInfoCell>
     )
   }
@@ -492,8 +499,19 @@ function ModelBackendProviderSection(props: { model: PricingModel }) {
   return (
     <section>
       <SectionTitle>{t('Model')}</SectionTitle>
+      {/* The container's border colour is what draws the hairlines between
+       * cells, so an odd cell count would leave the empty half of the last
+       * row painted as a bare block. Let that cell take the whole row. */}
       <div className='grid grid-cols-1 gap-px overflow-hidden rounded-[10px] border border-(--pd-border) bg-(--pd-border) sm:grid-cols-2'>
-        {cells}
+        {cells.map((cell, index) =>
+          index === cells.length - 1 && cells.length % 2 === 1 ? (
+            <div key='last' className='sm:col-span-2'>
+              {cell}
+            </div>
+          ) : (
+            cell
+          )
+        )}
       </div>
     </section>
   )
@@ -542,9 +560,9 @@ function ModelHeader(props: { model: PricingModel }) {
               aria-label={t('Copy model name')}
             />
           </div>
-          {model.vendor_name && (
+          {(model.vendor_display_name || model.vendor_name) && (
             <span className='w-fit rounded-full bg-(--pd-accent-bg) px-2.5 py-[3px] text-[11px] font-semibold text-(--pd-primary)'>
-              {model.vendor_name}
+              {model.vendor_display_name || model.vendor_name}
             </span>
           )}
         </div>

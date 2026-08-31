@@ -5505,6 +5505,9 @@
     "Release date": "リリース日",
     "YYYY-MM or YYYY-MM-DD": "YYYY-MM または YYYY-MM-DD",
     "e.g. 685B": "例: 685B",
-    "Default fallback description; upstream sync writes this field.": "既定のフォールバック説明。上流同期がこのフィールドに書き込みます。"
+    "Default fallback description; upstream sync writes this field.": "既定のフォールバック説明。上流同期がこのフィールドに書き込みます。",
+    "Vendor display name": "プロバイダー表示名",
+    "e.g. ByteDance": "例: ByteDance",
+    "Shown to users instead of the vendor name when set.": "設定すると、ベンダー名の代わりにユーザーに表示されます。"
   }
 }

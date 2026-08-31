@@ -115,7 +115,9 @@ function parseTokenCountInput(value: string): number {
 function formatTokenCountPreview(value: string): string {
   const tokens = parseTokenCountInput(value)
   if (tokens <= 0) return ''
-  if (tokens >= 1_000_000) return `${Math.round((tokens / 1_000_000) * 10) / 10}M`
+  if (tokens >= 1_000_000) {
+    return `${Math.round((tokens / 1_000_000) * 10) / 10}M`
+  }
   if (tokens >= 1_000) return `${Math.round((tokens / 1_000) * 10) / 10}K`
   return String(tokens)
 }
@@ -153,17 +155,26 @@ const extendedModelFormSchema = z.object({
   icon: z.string(),
   tags: z.array(z.string()),
   vendor_id: z.number().optional(),
+  vendor_display_name: z.string(),
   endpoints: z.string(),
   input_modalities: z.array(z.string()),
   output_modalities: z.array(z.string()),
   capabilities: z.array(z.string()),
   context_length: z
     .string()
-    .refine(isTokenCountInput, 'Enter a token count such as 128000, 128k or 1m'),
+    .refine(
+      isTokenCountInput,
+      'Enter a token count such as 128000, 128k or 1m'
+    ),
   max_output_tokens: z
     .string()
-    .refine(isTokenCountInput, 'Enter a token count such as 128000, 128k or 1m'),
-  release_date: z.string().refine(isCatalogDateInput, 'Use YYYY-MM or YYYY-MM-DD'),
+    .refine(
+      isTokenCountInput,
+      'Enter a token count such as 128000, 128k or 1m'
+    ),
+  release_date: z
+    .string()
+    .refine(isCatalogDateInput, 'Use YYYY-MM or YYYY-MM-DD'),
   knowledge_cutoff: z
     .string()
     .refine(isCatalogDateInput, 'Use YYYY-MM or YYYY-MM-DD'),
@@ -452,6 +463,7 @@ export function ModelMutateDrawer({
       icon: '',
       tags: [],
       vendor_id: undefined,
+      vendor_display_name: '',
       endpoints: '',
       input_modalities: [],
       output_modalities: [],
@@ -533,6 +545,7 @@ export function ModelMutateDrawer({
         icon: model.icon || '',
         tags: parseModelTags(model.tags),
         vendor_id: model.vendor_id,
+        vendor_display_name: model.vendor_display_name || '',
         endpoints: model.endpoints || '',
         input_modalities: splitCatalogCsv(model.input_modalities),
         output_modalities: splitCatalogCsv(model.output_modalities),
@@ -572,6 +585,7 @@ export function ModelMutateDrawer({
         icon: '',
         tags: [],
         vendor_id: undefined,
+        vendor_display_name: '',
         endpoints: '',
         input_modalities: [],
         output_modalities: [],
@@ -606,6 +620,7 @@ export function ModelMutateDrawer({
           tags: Array.isArray(values.tags) ? values.tags.join(',') : '',
           status: values.status ? 1 : 0,
           sync_official: values.sync_official ? 1 : 0,
+          vendor_display_name: values.vendor_display_name.trim(),
           description_i18n:
             Object.keys(localizedDescriptions).length > 0
               ? JSON.stringify(localizedDescriptions)
@@ -995,6 +1010,23 @@ export function ModelMutateDrawer({
                         </SelectGroup>
                       </SelectContent>
                     </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name='vendor_display_name'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('Vendor display name')}</FormLabel>
+                    <FormControl>
+                      <Input placeholder={t('e.g. ByteDance')} {...field} />
+                    </FormControl>
+                    <FormDescription className='text-xs'>
+                      {t('Shown to users instead of the vendor name when set.')}
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

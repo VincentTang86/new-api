@@ -5505,6 +5505,9 @@
     "Release date": "發布時間",
     "YYYY-MM or YYYY-MM-DD": "YYYY-MM 或 YYYY-MM-DD",
     "e.g. 685B": "如 685B",
-    "Default fallback description; upstream sync writes this field.": "預設兜底說明；上游同步會寫入此欄位。"
+    "Default fallback description; upstream sync writes this field.": "預設兜底說明；上游同步會寫入此欄位。",
+    "Vendor display name": "供應商顯示名",
+    "e.g. ByteDance": "如 ByteDance",
+    "Shown to users instead of the vendor name when set.": "設定後對使用者顯示此名稱，取代供應商名。"
   }
 }

@@ -683,7 +683,7 @@ function RateLimitsSection(props: { model: PricingModel }) {
         columns={[
           {
             id: 'group',
-            header: t('Group'),
+            header: t('Service Tier'),
             className: 'h-9',
             cellClassName: 'py-2 font-mono',
             cell: (limit) => limit.group,

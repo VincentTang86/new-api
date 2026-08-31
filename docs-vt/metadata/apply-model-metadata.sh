@@ -74,6 +74,7 @@ WHERE v.name = {q(vendor)} AND v.deleted_at IS NULL
     print(f"""UPDATE models SET
   description = {q(en)},
   description_i18n = {q(i18n)},
+  vendor_display_name = {q(m.get('vendor_display_name', ''))},
   {icon_set}
   input_modalities = {q(m['input_modalities'])},
   output_modalities = {q(m['output_modalities'])},

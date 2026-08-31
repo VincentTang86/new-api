@@ -42,6 +42,8 @@ export interface Model {
   icon?: string
   tags?: string
   vendor_id?: number
+  /** Shown to users instead of the vendor name when set */
+  vendor_display_name?: string
   endpoints?: string
   // Catalog metadata (display only, comma-separated enums / plain values)
   input_modalities?: string

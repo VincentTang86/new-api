@@ -75,8 +75,9 @@ func TestModelCatalogMetaPersistsThroughUpdate(t *testing.T) {
 	t.Cleanup(func() { DB.Exec("DELETE FROM models") })
 
 	m := &Model{
-		ModelName:        "catalog-meta-rt",
-		Description:      "fallback",
+		ModelName:         "catalog-meta-rt",
+		VendorDisplayName: "Byte",
+		Description:       "fallback",
 		DescriptionI18n:  `{"en":"Fast","zh-CN":"快"}`,
 		InputModalities:  "text,image",
 		OutputModalities: "text",
@@ -98,11 +99,13 @@ func TestModelCatalogMetaPersistsThroughUpdate(t *testing.T) {
 	m.KnowledgeCutoff = ""
 	m.ParameterCount = ""
 	m.DescriptionI18n = `{"en":"Faster"}`
+	m.VendorDisplayName = "ByteDance"
 	require.NoError(t, m.Update())
 
 	var got Model
 	require.NoError(t, DB.Where("model_name = ?", "catalog-meta-rt").First(&got).Error)
 	assert.Equal(t, `{"en":"Faster"}`, got.DescriptionI18n)
+	assert.Equal(t, "ByteDance", got.VendorDisplayName)
 	assert.Equal(t, "text", got.InputModalities)
 	assert.Equal(t, "text,audio", got.OutputModalities)
 	assert.Empty(t, got.Capabilities)
