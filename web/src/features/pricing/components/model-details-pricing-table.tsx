@@ -404,10 +404,7 @@ export function ModelDetailsPricingTable(props: {
  * expression actually prices by time, so it is rendered from the expression
  * rather than stated unconditionally.
  */
-export function ModelDetailsPricingNotes(props: {
-  model: PricingModel
-  tokenUnit: TokenUnit
-}) {
+export function ModelDetailsPricingNotes(props: { model: PricingModel }) {
   const { t } = useTranslation()
   const isTimeAware =
     isDynamicPricingModel(props.model) &&
@@ -415,6 +412,7 @@ export function ModelDetailsPricingNotes(props: {
   const hasReference = Boolean(
     props.model.official_price || props.model.openrouter_price
   )
+  const hasOpenRouterReference = Boolean(props.model.openrouter_price)
   // The windows behind each time-conditional rate row ("Peak Hours: Mon–Fri
   // 09:00–12:00 (Asia/Shanghai)"), stated here so the rows stay short.
   const windowVariants = getTimeRateVariants(props.model).filter(
@@ -423,15 +421,17 @@ export function ModelDetailsPricingNotes(props: {
 
   return (
     <div className='space-y-0.5 text-[11px] leading-relaxed text-(--pd-faint)'>
-      <p>
-        {t('Prices are shown in USD per {{unit}} tokens.', {
-          unit: props.tokenUnit === 'K' ? '1K' : '1M',
-        })}
-      </p>
       {hasReference && (
         <p>
           {t(
             "Reference rates come from the source's public model listings and are not billed by this gateway."
+          )}
+        </p>
+      )}
+      {hasOpenRouterReference && (
+        <p>
+          {t(
+            "OpenRouter First-Party: Pricing for calling the model developer's official API via OpenRouter."
           )}
         </p>
       )}

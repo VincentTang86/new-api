@@ -22,10 +22,12 @@ type ReferencePricing struct {
 	Output        *float64 `json:"output"`
 	CachedInput   *float64 `json:"cached_input"`
 	CacheCreation *float64 `json:"cache_creation"`
-	CacheHit      *float64 `json:"cache_hit"`
+	// GORM 的默认命名会把 CacheCreation1h 拼成 cache_creation1h，显式指定列名。
+	CacheCreation1h *float64 `json:"cache_creation_1h" gorm:"column:cache_creation_1h"`
+	CacheHit        *float64 `json:"cache_hit"`
 	// Conditions 按计价条件的专属价，JSON 文本（如 {"peak":{"input":0.2}}）。
 	// 键由前端按模型计费表达式派生（rate-conditions 模块），后端只存取；
-	// 上面五个扁平价位是默认价，供首页对比与看板节省估算消费。
+	// 上面的扁平价位是默认价，供首页对比与看板节省估算消费。
 	Conditions string `json:"-" gorm:"type:text"`
 	// ConditionLanes 是 Conditions 的 API 出入参形态，不落库。
 	ConditionLanes map[string]ReferenceLanes `json:"conditions,omitempty" gorm:"-"`
@@ -88,7 +90,7 @@ func UpsertReferencePricingRows(rows []ReferencePricing) error {
 	return DB.Clauses(clause.OnConflict{
 		Columns: []clause.Column{{Name: "model_name"}, {Name: "source"}},
 		DoUpdates: clause.AssignmentColumns([]string{
-			"input", "output", "cached_input", "cache_creation", "cache_hit", "conditions", "updated_at",
+			"input", "output", "cached_input", "cache_creation", "cache_creation_1h", "cache_hit", "conditions", "updated_at",
 		}),
 	}).Create(&rows).Error
 }

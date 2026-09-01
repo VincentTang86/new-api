@@ -22,7 +22,7 @@ func TestUpsertReferencePricingRowsInsertsAndUpdatesByModelAndSource(t *testing.
 
 	// 同 (model, source) 二次写入应更新而非新增；整行以提交值为准，未提交的价格列被清空
 	require.NoError(t, UpsertReferencePricingRows([]ReferencePricing{
-		{ModelName: "m1", Source: ReferencePricingSourceOfficial, Input: refPrice(1.8), CacheHit: refPrice(0.2)},
+		{ModelName: "m1", Source: ReferencePricingSourceOfficial, Input: refPrice(1.8), CacheHit: refPrice(0.2), CacheCreation1h: refPrice(6)},
 	}))
 
 	rows, err := GetAllReferencePricing()
@@ -36,6 +36,9 @@ func TestUpsertReferencePricingRowsInsertsAndUpdatesByModelAndSource(t *testing.
 	assert.Nil(t, official.Output)
 	require.NotNil(t, official.CacheHit)
 	assert.Equal(t, 0.2, *official.CacheHit)
+	// 1h 缓存写入价的列名由显式 gorm tag 固定，写进去读得回来才说明冲突更新列表也对得上
+	require.NotNil(t, official.CacheCreation1h)
+	assert.Equal(t, 6.0, *official.CacheCreation1h)
 
 	openrouter := rows[1]
 	require.Equal(t, ReferencePricingSourceOpenRouter, openrouter.Source)

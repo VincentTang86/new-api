@@ -62,7 +62,7 @@ func UpdateReferencePricing(c *gin.Context) {
 			return
 		}
 		seen[key] = true
-		lanesToCheck := [][]*float64{{row.Input, row.Output, row.CachedInput, row.CacheCreation, row.CacheHit}}
+		lanesToCheck := [][]*float64{{row.Input, row.Output, row.CachedInput, row.CacheCreation, row.CacheCreation1h, row.CacheHit}}
 		if len(row.ConditionLanes) > maxReferenceConditions {
 			common.ApiErrorMsg(c, fmt.Sprintf("模型 %s 的计价条件数量不能超过 %d", row.ModelName, maxReferenceConditions))
 			return
@@ -72,7 +72,7 @@ func UpdateReferencePricing(c *gin.Context) {
 				common.ApiErrorMsg(c, fmt.Sprintf("模型 %s 存在无效的计价条件键：不能为空且长度不能超过 %d", row.ModelName, maxReferenceConditionKeyLen))
 				return
 			}
-			lanesToCheck = append(lanesToCheck, []*float64{lanes.Input, lanes.Output, lanes.CachedInput, lanes.CacheCreation, lanes.CacheHit})
+			lanesToCheck = append(lanesToCheck, []*float64{lanes.Input, lanes.Output, lanes.CachedInput, lanes.CacheCreation, lanes.CacheCreation1h, lanes.CacheHit})
 		}
 		for _, lanes := range lanesToCheck {
 			for _, price := range lanes {

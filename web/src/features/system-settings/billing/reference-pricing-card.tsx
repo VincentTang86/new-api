@@ -79,6 +79,7 @@ const LANES = [
   { key: 'output', labelKey: 'Output price' },
   { key: 'cached_input', labelKey: 'Cached input price' },
   { key: 'cache_creation', labelKey: 'Explicit cache write price' },
+  { key: 'cache_creation_1h', labelKey: 'Explicit cache write price (1h)' },
   { key: 'cache_hit', labelKey: 'Explicit cache hit price' },
 ] as const
 
@@ -97,6 +98,7 @@ const laneObjectSchema = z
     output: priceSchema.optional(),
     cached_input: priceSchema.optional(),
     cache_creation: priceSchema.optional(),
+    cache_creation_1h: priceSchema.optional(),
     cache_hit: priceSchema.optional(),
   })
   .strict()
@@ -140,6 +142,7 @@ const emptyLaneDraft = (): LaneDraft => ({
   output: '',
   cached_input: '',
   cache_creation: '',
+  cache_creation_1h: '',
   cache_hit: '',
 })
 

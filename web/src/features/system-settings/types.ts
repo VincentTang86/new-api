@@ -46,6 +46,7 @@ export type ReferencePricingLanes = {
   output?: number | null
   cached_input?: number | null
   cache_creation?: number | null
+  cache_creation_1h?: number | null
   cache_hit?: number | null
 }
 

@@ -104,6 +104,7 @@ describe('getReferenceLaneKeys', () => {
       'output',
       'cached_input',
       'cache_creation',
+      'cache_creation_1h',
       'cache_hit',
     ])
   })

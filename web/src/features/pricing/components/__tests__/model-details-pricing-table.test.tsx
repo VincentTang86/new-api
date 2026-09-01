@@ -287,6 +287,53 @@ describe('ModelDetailsPricingTable', () => {
     ])
   })
 
+  test('lines the 1h cache write lane up under its reference prices', () => {
+    // Anthropic-style dual-TTL caching: the sources list a separate 1h cache
+    // write rate, which must land under the cc1h column rather than dash.
+    const { container } = renderTable(
+      model({
+        enable_groups: ['Production'],
+        billing_mode: 'tiered_expr',
+        billing_expr: 'tier("base", p * 1 + c * 5 + cc * 1.25 + cc1h * 2)',
+        official_price: {
+          input: 2,
+          output: 10,
+          cache_creation: 2.5,
+          cache_creation_1h: 4,
+        },
+      })
+    )
+    const rows = [...container.querySelectorAll('tbody tr')]
+
+    expect(rowCells(rows[1])).toEqual([
+      'Direct First-Party APIReference',
+      'Standard',
+      '$2.00',
+      '$10.00',
+      '$2.50',
+      '$4.00',
+    ])
+  })
+
+  test('explains the OpenRouter reference row only when the model has one', () => {
+    const note =
+      "OpenRouter First-Party: Pricing for calling the model developer's official API via OpenRouter."
+
+    const withoutOpenRouter = render(
+      <ModelDetailsPricingNotes
+        model={model({ official_price: { input: 3.5, output: 17.5 } })}
+      />
+    )
+    expect(withoutOpenRouter.container.textContent).not.toContain(note)
+
+    const withOpenRouter = render(
+      <ModelDetailsPricingNotes
+        model={model({ openrouter_price: { input: 4, output: 20 } })}
+      />
+    )
+    expect(withOpenRouter.container.textContent).toContain(note)
+  })
+
   test('states the time windows behind each rate row in the notes', () => {
     const { container } = render(
       <ModelDetailsPricingNotes
@@ -294,7 +341,6 @@ describe('ModelDetailsPricingTable', () => {
           billing_mode: 'tiered_expr',
           billing_expr: PEAK_SURCHARGE_EXPR,
         })}
-        tokenUnit='M'
       />
     )
 

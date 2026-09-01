@@ -66,7 +66,9 @@ type ReferenceLanes struct {
 	Output        *float64 `json:"output,omitempty"`
 	CachedInput   *float64 `json:"cached_input,omitempty"`
 	CacheCreation *float64 `json:"cache_creation,omitempty"`
-	CacheHit      *float64 `json:"cache_hit,omitempty"`
+	// CacheCreation1h 是 1 小时 TTL 的缓存写入价，Anthropic 一类双 TTL 缓存的模型才有。
+	CacheCreation1h *float64 `json:"cache_creation_1h,omitempty"`
+	CacheHit        *float64 `json:"cache_hit,omitempty"`
 }
 
 // ReferencePrice 外部标价，来自 reference_pricings 表。内嵌的价位是默认价，
@@ -424,11 +426,12 @@ func updatePricing() {
 			}
 			bySource[row.Source] = &ReferencePrice{
 				ReferenceLanes: ReferenceLanes{
-					Input:         row.Input,
-					Output:        row.Output,
-					CachedInput:   row.CachedInput,
-					CacheCreation: row.CacheCreation,
-					CacheHit:      row.CacheHit,
+					Input:           row.Input,
+					Output:          row.Output,
+					CachedInput:     row.CachedInput,
+					CacheCreation:   row.CacheCreation,
+					CacheCreation1h: row.CacheCreation1h,
+					CacheHit:        row.CacheHit,
 				},
 				ByCondition: row.ConditionLanes,
 			}

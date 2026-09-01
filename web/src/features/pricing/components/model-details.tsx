@@ -675,7 +675,9 @@ export function ModelDetailsContent(props: ModelDetailsContentProps) {
                 {t('Pricing')}
               </h2>
               <p className='text-xs text-(--pd-faint)'>
-                {t('Rates for every plan this model is available on.')}
+                {t('Prices are shown in USD per {{unit}} tokens.', {
+                  unit: props.tokenUnit === 'K' ? '1K' : '1M',
+                })}
               </p>
             </div>
             <AutoGroupChain model={props.model} autoGroups={props.autoGroups} />
@@ -685,10 +687,7 @@ export function ModelDetailsContent(props: ModelDetailsContentProps) {
               usableGroup={props.usableGroup}
               tokenUnit={props.tokenUnit}
             />
-            <ModelDetailsPricingNotes
-              model={props.model}
-              tokenUnit={props.tokenUnit}
-            />
+            <ModelDetailsPricingNotes model={props.model} />
           </section>
 
           <ModelBackendDetailsSection model={props.model} />

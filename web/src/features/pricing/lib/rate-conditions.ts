@@ -39,6 +39,7 @@ export const TIER_FIELD_REFERENCE_LANES: Record<
   cacheReadPrice: 'cached_input',
   cacheReadExplicitPrice: 'cache_hit',
   cacheCreatePrice: 'cache_creation',
+  cacheCreate1hPrice: 'cache_creation_1h',
 }
 
 const REFERENCE_LANE_ORDER: (keyof ReferencePriceLanes)[] = [
@@ -46,6 +47,7 @@ const REFERENCE_LANE_ORDER: (keyof ReferencePriceLanes)[] = [
   'output',
   'cached_input',
   'cache_creation',
+  'cache_creation_1h',
   'cache_hit',
 ]
 
