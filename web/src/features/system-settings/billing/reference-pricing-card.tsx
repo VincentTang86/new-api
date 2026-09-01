@@ -521,7 +521,10 @@ export function ReferencePricingCard() {
             <TableRow>
               <TableHead>{t('Rate Conditions')}</TableHead>
               {laneColumns.map((lane) => (
-                <TableHead key={lane.key} className='min-w-28'>
+                <TableHead
+                  key={lane.key}
+                  className='min-w-28 whitespace-normal'
+                >
                   {t(lane.labelKey)}
                 </TableHead>
               ))}
@@ -740,7 +743,7 @@ export function ReferencePricingCard() {
           if (!open) setDialog(null)
         }}
       >
-        <DialogContent className='sm:max-w-3xl'>
+        <DialogContent className='sm:max-w-6xl'>
           <DialogHeader>
             <DialogTitle>
               {dialog?.isNew ? t('Add model') : t('Edit benchmark prices')}
