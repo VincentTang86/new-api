@@ -503,12 +503,14 @@ export function ReferencePricingCard() {
     const matrixRows: {
       key: string
       label: string
+      detail?: string
       orphan: boolean
     }[] = [
       { key: DEFAULT_CONDITION_KEY, label: t('Default price'), orphan: false },
       ...derivedConditions.map((condition) => ({
         key: condition.key,
         label: condition.label,
+        detail: condition.detail,
         orphan: false,
       })),
       ...orphanKeys.map((key) => ({ key, label: key, orphan: true })),
@@ -544,6 +546,11 @@ export function ReferencePricingCard() {
                     <span className={row.orphan ? 'font-mono' : 'font-medium'}>
                       {row.label}
                     </span>
+                    {row.detail && (
+                      <span className='text-muted-foreground text-[10px]'>
+                        {row.detail}
+                      </span>
+                    )}
                     {row.orphan && (
                       <span className='text-muted-foreground text-[10px]'>
                         {t('Not derived from the current billing expression')}

@@ -2265,6 +2265,7 @@
     "Input": "输入",
     "Input / 1M": "输入价 / 1M",
     "Input Tokens": "输入 Token",
+    "Input length": "输入长度",
     "Input mode": "输入模式",
     "Input price": "输入价格",
     "Input price is required before saving dependent prices.": "保存依赖价格前必须先填写输入价格。",

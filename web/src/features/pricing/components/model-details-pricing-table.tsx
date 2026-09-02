@@ -308,7 +308,14 @@ export function ModelDetailsPricingTable(props: {
                   <td
                     className={`${cellClass} text-xs whitespace-nowrap text-(--pd-muted)`}
                   >
-                    {row.label}
+                    <span className='flex flex-col'>
+                      <span>{row.label}</span>
+                      {row.detail && (
+                        <span className='text-[10px] text-(--pd-faint)'>
+                          {row.detail}
+                        </span>
+                      )}
+                    </span>
                   </td>
                 )}
                 {isTokenBased ? (

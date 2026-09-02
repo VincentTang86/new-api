@@ -9,6 +9,7 @@
   "Enter at least one price": "Enter at least one price",
   "Explicit cache hit price": "Explicit cache hit price",
   "Explicit cache write price": "Explicit cache write price",
+  "Explicit cache write price (1h)": "Explicit cache write price (1h)",
   "External list prices per model (USD per 1M tokens), used for the pricing page comparison and the dashboard savings estimate.": "External list prices per model (USD per 1M tokens), used for the pricing page comparison and the dashboard savings estimate.",
   "Leave a field empty when the source has no such price.": "Leave a field empty when the source has no such price.",
   "No benchmark prices configured yet": "No benchmark prices configured yet",

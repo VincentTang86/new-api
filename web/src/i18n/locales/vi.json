@@ -2265,6 +2265,7 @@
     "Input": "Đầu vào",
     "Input / 1M": "FR Đầu vào / 1M",
     "Input Tokens": "Token đầu vào",
+    "Input length": "Độ dài đầu vào",
     "Input mode": "Chế độ nhập",
     "Input price": "Giá đầu vào",
     "Input price is required before saving dependent prices.": "Cần có giá đầu vào trước khi lưu các giá phụ thuộc.",

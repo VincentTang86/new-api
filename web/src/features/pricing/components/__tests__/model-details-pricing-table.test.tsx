@@ -188,20 +188,26 @@ describe('ModelDetailsPricingTable', () => {
     expect(rows).toHaveLength(4)
     expect(rows.map((row) => rowCells(row)[0])).toEqual([
       'Production',
-      'long_context',
+      'Input length > 200Klong_context',
       'Best Effort',
-      'long_context',
+      'Input length > 200Klong_context',
     ])
     // The plan name spans its condition rows rather than repeating.
     const planCell = rows[0].querySelector('th')
     expect(planCell?.getAttribute('rowspan')).toBe('2')
+    // Each row states the input length it bills under, with the tier name the
+    // expression gives it underneath.
     expect(rowCells(rows[0])).toEqual([
       'Production',
-      'standard',
+      'Input length ≤ 200Kstandard',
       '$3.00',
       '$15.00',
     ])
-    expect(rowCells(rows[3])).toEqual(['long_context', '$5.40', '$20.25'])
+    expect(rowCells(rows[3])).toEqual([
+      'Input length > 200Klong_context',
+      '$5.40',
+      '$20.25',
+    ])
   })
 
   test('materializes purely time-conditional multipliers as peak/off-peak rows', () => {
