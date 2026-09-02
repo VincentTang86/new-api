@@ -20,7 +20,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react'
 import { useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { useModelDetailsDrawer } from '@/features/pricing/hooks/use-model-details-drawer'
+import { useOpenModelDetails } from '@/features/pricing/hooks/use-model-details-drawer'
 
 import { LANDING_PRICE_PLACEHOLDER } from '../../lib/pricing'
 import type { PricingBenchmark, PricingRow } from '../../types'
@@ -40,7 +40,7 @@ interface PricingPreviewAccordionProps {
  */
 export function PricingPreviewAccordion(props: PricingPreviewAccordionProps) {
   const { t } = useTranslation()
-  const { openModel } = useModelDetailsDrawer()
+  const openModel = useOpenModelDetails()
   const panelIdPrefix = useId()
   const [openId, setOpenId] = useState<string | null>(null)
 

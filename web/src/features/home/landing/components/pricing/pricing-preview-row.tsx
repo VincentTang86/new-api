@@ -25,7 +25,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { useModelDetailsDrawer } from '@/features/pricing/hooks/use-model-details-drawer'
+import { useOpenModelDetails } from '@/features/pricing/hooks/use-model-details-drawer'
 
 import { LANDING_PRICE_PLACEHOLDER } from '../../lib/pricing'
 import type { PricingRow } from '../../types'
@@ -40,7 +40,7 @@ interface PricingPreviewRowProps {
 
 export function PricingPreviewRow(props: PricingPreviewRowProps) {
   const { t } = useTranslation()
-  const { openModel } = useModelDetailsDrawer()
+  const openModel = useOpenModelDetails()
   const row = props.row
   const nameRef = useRef<HTMLSpanElement>(null)
   // Whether the name is cut depends on the viewport the column share resolves

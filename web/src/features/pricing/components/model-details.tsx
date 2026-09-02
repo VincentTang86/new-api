@@ -770,7 +770,10 @@ export function ModelDetailsDrawer(props: ModelDetailsDrawerProps) {
         // The design slides the panel in from fully off-screen over 350ms
         // rather than nudging it 2.5rem while fading, so the translate and
         // opacity transition styles are overridden too — `ease-in-out` is
-        // already the design's cubic-bezier(0.4, 0, 0.2, 1).
+        // already the design's cubic-bezier(0.4, 0, 0.2, 1). Only the
+        // translate is transitioned, on a promoted layer, so the 880px of
+        // model detail is painted once and the slide stays on the compositor
+        // instead of repainting the panel every frame.
         //
         // `public-design` is load-bearing: the panel is portalled to <body>,
         // outside the shell that defines the `--pd-*` tokens and the design's
@@ -780,7 +783,7 @@ export function ModelDetailsDrawer(props: ModelDetailsDrawerProps) {
         // face.
         className={sideDrawerContentClassName(
           'public-design top-[55px] bottom-0 h-auto w-[880px] max-w-[90vw] shadow-[-8px_0_24px_rgba(0,0,0,0.08)] sm:max-w-[90vw] ' +
-            'duration-[350ms] data-starting-style:translate-x-full data-ending-style:translate-x-full data-starting-style:opacity-100 data-ending-style:opacity-100 motion-reduce:transition-none'
+            'transition-transform will-change-transform duration-[350ms] data-starting-style:translate-x-full data-ending-style:translate-x-full data-starting-style:opacity-100 data-ending-style:opacity-100 motion-reduce:transition-none'
         )}
       >
         <SheetHeader className='sr-only'>

@@ -41,6 +41,11 @@ const SKELETON_KEYS = ['first', 'second', 'third', 'fourth']
  * The panel stays mounted and closes by flipping `open`, because unmounting it
  * would cut the slide-out short. That is also why the last model is held on
  * screen: the body must not blank out while the panel is still sliding away.
+ *
+ * For the same reason it is mounted closed from the first render rather than
+ * appearing with the first model: a dialog that mounts already open has no
+ * closed state to transition out of, so the first click would snap the panel
+ * into place instead of sliding it in.
  */
 export function ModelDetailsDrawerHost() {
   const { t } = useTranslation()
@@ -66,13 +71,11 @@ export function ModelDetailsDrawerHost() {
   if (modelId) shown.current = { id: modelId, model }
 
   const open = modelId !== null
-  // Nothing has been opened yet, so there is no panel to animate.
-  if (!open && shown.current.id === '') return null
-
   const displayed = open ? model : shown.current.model
 
-  // Three states, flat rather than nested: the model we have, the catalogue
-  // still loading, or a URL naming a model this viewer cannot see.
+  // Four states, flat rather than nested: nothing opened yet, the model we
+  // have, the catalogue still loading, or a URL naming a model this viewer
+  // cannot see.
   let body: React.ReactNode
   if (displayed) {
     body = (
@@ -87,6 +90,9 @@ export function ModelDetailsDrawerHost() {
         tokenUnit={DEFAULT_TOKEN_UNIT}
       />
     )
+  } else if (shown.current.id === '') {
+    // Mounted only so the first open has a closed state to slide out of.
+    body = null
   } else if (isLoading) {
     body = (
       <div className='space-y-6 pt-6'>

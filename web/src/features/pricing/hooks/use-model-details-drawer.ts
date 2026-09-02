@@ -20,6 +20,35 @@ import { useNavigate, useSearch } from '@tanstack/react-router'
 import { useCallback } from 'react'
 
 /**
+ * Opens the details drawer on a model, for the catalogue rows that link into
+ * it.
+ *
+ * Split from `useModelDetailsDrawer` because it must not read the search
+ * param: every row in the table calls this, and subscribing would re-render
+ * all of them on the very click that starts the drawer's slide-in, spending
+ * the frames the animation needs.
+ */
+export function useOpenModelDetails() {
+  const navigate = useNavigate()
+
+  return useCallback(
+    (modelId: string) => {
+      void navigate({
+        to: '.',
+        search: (prev: Record<string, unknown>) => ({
+          ...prev,
+          model: modelId,
+        }),
+        // Only the drawer opens — the catalogue behind it must not jump to
+        // the top (router navigations reset scroll by default).
+        resetScroll: false,
+      })
+    },
+    [navigate]
+  )
+}
+
+/**
  * Which model the details drawer is showing, carried in the `model` search
  * param so the drawer survives a reload and can be linked to.
  *
@@ -35,22 +64,6 @@ export function useModelDetailsDrawer() {
     select: (search) => (search as { model?: string }).model,
   })
 
-  const openModel = useCallback(
-    (modelId: string) => {
-      void navigate({
-        to: '.',
-        search: (prev: Record<string, unknown>) => ({
-          ...prev,
-          model: modelId,
-        }),
-        // Only the drawer opens — the catalogue behind it must not jump to
-        // the top (router navigations reset scroll by default).
-        resetScroll: false,
-      })
-    },
-    [navigate]
-  )
-
   const closeModel = useCallback(() => {
     void navigate({
       to: '.',
@@ -62,7 +75,6 @@ export function useModelDetailsDrawer() {
 
   return {
     modelId: typeof model === 'string' && model.length > 0 ? model : null,
-    openModel,
     closeModel,
   }
 }
