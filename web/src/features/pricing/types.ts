@@ -49,7 +49,10 @@ export type PricingModel = {
   unset_ratio?: boolean
   completion_ratio: number
   model_price?: number
-  /** Fixed USD add-on per input image, on top of the per-request price. */
+  /**
+   * USD per input image: a per-call model's fixed add-on, overridden by the
+   * admin-entered gateway row of the benchmark prices when that is filled.
+   */
   image_input_price?: number | null
   cache_ratio?: number | null
   create_cache_ratio?: number | null
@@ -122,6 +125,8 @@ export type ReferencePrice = ReferencePriceLanes & {
   by_condition?: Record<string, ReferencePriceLanes>
   /** The source's per-image list prices, in display order. */
   per_image?: ImageSizePrice[]
+  /** The source's charge per input image (USD), for image-to-image models. */
+  per_image_input?: number | null
 }
 
 /** Input/output modalities supported by a model. */

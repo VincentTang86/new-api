@@ -32,6 +32,7 @@ func TestUpdateReferencePricingRejectsInvalidRows(t *testing.T) {
 		{"blank condition key", `{"rows":[{"model_name":"m","source":"official","conditions":{"":{"input":1}}}]}`},
 		{"oversized condition key", `{"rows":[{"model_name":"m","source":"official","conditions":{"` + strings.Repeat("k", 65) + `":{"input":1}}}]}`},
 		{"zero image lane price", `{"rows":[{"model_name":"m","source":"official","image_output":0}]}`},
+		{"zero per_image_input price", `{"rows":[{"model_name":"m","source":"official","per_image_input":0}]}`},
 		{"blank per_image size", `{"rows":[{"model_name":"m","source":"gateway","per_image":[{"size":" ","price":0.1}]}]}`},
 		{"zero per_image price", `{"rows":[{"model_name":"m","source":"gateway","per_image":[{"size":"1K","price":0}]}]}`},
 		{"duplicate per_image size", `{"rows":[{"model_name":"m","source":"gateway","per_image":[{"size":"1K","price":0.1},{"size":"1K","price":0.2}]}]}`},

@@ -41,6 +41,9 @@ type ReferencePricing struct {
 	PerImage string `json:"-" gorm:"type:text"`
 	// PerImageSizes 是 PerImage 的 API 出入参形态，不落库。
 	PerImageSizes []ImageSizePrice `json:"per_image,omitempty" gorm:"-"`
+	// PerImageInput 每张输入图的标价（USD / 张），图生图模型才有（如 xAI 的 media input）；
+	// 与 ImageInput（按 token）并存，两者分别对应按张、按 token 两种计价口径。
+	PerImageInput *float64 `json:"per_image_input" gorm:"column:per_image_input"`
 	// Conditions 按计价条件的专属价，JSON 文本（如 {"peak":{"input":0.2}}）。
 	// 键由前端按模型计费表达式派生（rate-conditions 模块），后端只存取；
 	// 上面的扁平价位是默认价，供首页对比与看板节省估算消费。
@@ -119,7 +122,7 @@ func UpsertReferencePricingRows(rows []ReferencePricing) error {
 		Columns: []clause.Column{{Name: "model_name"}, {Name: "source"}},
 		DoUpdates: clause.AssignmentColumns([]string{
 			"input", "output", "cached_input", "cache_creation", "cache_creation_1h", "cache_hit",
-			"image_input", "image_output", "per_image", "conditions", "updated_at",
+			"image_input", "image_output", "per_image", "per_image_input", "conditions", "updated_at",
 		}),
 	}).Create(&rows).Error
 }

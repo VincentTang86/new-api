@@ -138,11 +138,15 @@ const sourceObjectSchema = laneObjectSchema
       .record(z.string().min(1).max(64), laneObjectSchema)
       .optional(),
     per_image: perImageSchema.optional(),
+    per_image_input: priceSchema.optional(),
   })
   .strict()
 
 const gatewayObjectSchema = z
-  .object({ per_image: perImageSchema.optional() })
+  .object({
+    per_image: perImageSchema.optional(),
+    per_image_input: priceSchema.optional(),
+  })
   .strict()
 
 const jsonConfigSchema = z.record(
@@ -180,6 +184,8 @@ type PerImageColumn = {
 type PerImageDraft = {
   columns: PerImageColumn[]
   nextId: number
+  /** Each source's charge per input image as typed ('' when none). */
+  inputPrices: Record<ReferencePricingSource, string>
 }
 
 type DialogState = {
@@ -248,7 +254,27 @@ const perImageDraftFromRows = (
       column.prices[source] = String(entry.price)
     }
   }
-  return { columns, nextId: columns.length }
+  const inputPrices = { gateway: '', official: '', openrouter: '' }
+  for (const source of PER_IMAGE_SOURCES) {
+    const price = rows[source]?.per_image_input
+    if (typeof price === 'number') inputPrices[source] = String(price)
+  }
+  return { columns, nextId: columns.length, inputPrices }
+}
+
+/**
+ * A source's charge per input image: undefined when left blank, null when
+ * the text is not a positive price.
+ */
+const parsePerImageInput = (
+  draft: PerImageDraft,
+  source: ReferencePricingSource
+): number | null | undefined => {
+  const raw = draft.inputPrices[source].trim()
+  if (!raw) return undefined
+  const price = Number(raw)
+  if (!Number.isFinite(price) || price <= 0 || price > 1_000_000) return null
+  return price
 }
 
 /**
@@ -355,8 +381,18 @@ export function ReferencePricingCard() {
     for (const view of modelRows) {
       const entry: Record<string, unknown> = {}
       const gateway = view.rows.gateway
-      if (gateway?.per_image?.length) {
-        entry.gateway = { per_image: gateway.per_image }
+      if (
+        gateway?.per_image?.length ||
+        typeof gateway?.per_image_input === 'number'
+      ) {
+        entry.gateway = {
+          ...(gateway.per_image?.length
+            ? { per_image: gateway.per_image }
+            : {}),
+          ...(typeof gateway.per_image_input === 'number'
+            ? { per_image_input: gateway.per_image_input }
+            : {}),
+        }
       }
       for (const source of SOURCES) {
         const row = view.rows[source]
@@ -367,6 +403,9 @@ export function ReferencePricingCard() {
           if (typeof price === 'number') lanes[lane.key] = price
         }
         if (row.per_image?.length) lanes.per_image = row.per_image
+        if (typeof row.per_image_input === 'number') {
+          lanes.per_image_input = row.per_image_input
+        }
         const conditions: Record<string, Record<string, number>> = {}
         for (const [conditionKey, conditionLanes] of Object.entries(
           row.conditions ?? {}
@@ -424,6 +463,7 @@ export function ReferencePricingCard() {
 
   const addPerImageSize = () => {
     setPerImageDraft((prev) => ({
+      ...prev,
       columns: [
         ...prev.columns,
         {
@@ -449,6 +489,16 @@ export function ReferencePricingCard() {
       columns: prev.columns.map((column) =>
         column.id === id ? { ...column, size: value } : column
       ),
+    }))
+  }
+
+  const setPerImageInputPrice = (
+    source: ReferencePricingSource,
+    value: string
+  ) => {
+    setPerImageDraft((prev) => ({
+      ...prev,
+      inputPrices: { ...prev.inputPrices, [source]: value },
     }))
   }
 
@@ -532,15 +582,21 @@ export function ReferencePricingCard() {
       ReferencePricingSource,
       ReferencePricingImageSize[]
     >
+    const perImageInputBySource = {} as Record<
+      ReferencePricingSource,
+      number | undefined
+    >
     for (const source of PER_IMAGE_SOURCES) {
       const entries = parsePerImageDraft(dialog.perImage, source)
-      if (entries === null) {
+      const inputPrice = parsePerImageInput(dialog.perImage, source)
+      if (entries === null || inputPrice === null) {
         toast.error(
           t('Per-image prices need a unique size and a positive price')
         )
         return
       }
       perImageBySource[source] = entries
+      perImageInputBySource[source] = inputPrice
     }
     for (const source of SOURCES) {
       const sourceDraft = dialog.values[source]
@@ -560,10 +616,12 @@ export function ReferencePricingCard() {
         if (Object.keys(lanes).length > 0) conditions[conditionKey] = lanes
       }
       const perImage = perImageBySource[source]
+      const perImageInput = perImageInputBySource[source]
       const hasValue =
         Object.keys(defaultLanes).length > 0 ||
         Object.keys(conditions).length > 0 ||
-        perImage.length > 0
+        perImage.length > 0 ||
+        perImageInput !== undefined
       // 清空某来源全部价格时仍要提交该行，让后端把旧值整行覆盖为空
       if (hasValue || existing?.rows[source]) {
         rows.push({
@@ -572,15 +630,26 @@ export function ReferencePricingCard() {
           ...defaultLanes,
           ...(Object.keys(conditions).length > 0 ? { conditions } : {}),
           ...(perImage.length > 0 ? { per_image: perImage } : {}),
+          ...(perImageInput !== undefined
+            ? { per_image_input: perImageInput }
+            : {}),
         })
       }
     }
     const gatewayPerImage = perImageBySource.gateway
-    if (gatewayPerImage.length > 0 || existing?.rows.gateway) {
+    const gatewayPerImageInput = perImageInputBySource.gateway
+    if (
+      gatewayPerImage.length > 0 ||
+      gatewayPerImageInput !== undefined ||
+      existing?.rows.gateway
+    ) {
       rows.push({
         model_name: modelName,
         source: 'gateway',
         ...(gatewayPerImage.length > 0 ? { per_image: gatewayPerImage } : {}),
+        ...(gatewayPerImageInput !== undefined
+          ? { per_image_input: gatewayPerImageInput }
+          : {}),
       })
     }
     if (rows.length === 0) {
@@ -627,7 +696,7 @@ export function ReferencePricingCard() {
       for (const source of SOURCES) {
         const entry = sources[source]
         if (!entry) continue
-        const { conditions, per_image, ...lanes } = entry
+        const { conditions, per_image, per_image_input, ...lanes } = entry
         rows.push({
           model_name: modelName,
           source,
@@ -636,14 +705,23 @@ export function ReferencePricingCard() {
             ? { conditions }
             : {}),
           ...(per_image && per_image.length > 0 ? { per_image } : {}),
+          ...(per_image_input !== undefined ? { per_image_input } : {}),
         })
       }
       const gateway = sources.gateway
-      if (gateway?.per_image?.length) {
+      if (
+        gateway?.per_image?.length ||
+        gateway?.per_image_input !== undefined
+      ) {
         rows.push({
           model_name: modelName,
           source: 'gateway',
-          per_image: gateway.per_image,
+          ...(gateway.per_image?.length
+            ? { per_image: gateway.per_image }
+            : {}),
+          ...(gateway.per_image_input !== undefined
+            ? { per_image_input: gateway.per_image_input }
+            : {}),
         })
       }
     }
@@ -997,7 +1075,10 @@ export function ReferencePricingCard() {
                * /Pic view read; only image models (or a model that already
                * carries such prices) get the matrix. */}
               {((dialogModel && isImageModel(dialogModel)) ||
-                dialog.perImage.columns.length > 0) && (
+                dialog.perImage.columns.length > 0 ||
+                PER_IMAGE_SOURCES.some(
+                  (source) => dialog.perImage.inputPrices[source] !== ''
+                )) && (
                 <div className='flex flex-col gap-2'>
                   <div className='flex items-center justify-between gap-2'>
                     <div>
@@ -1005,6 +1086,9 @@ export function ReferencePricingCard() {
                       <p className='text-muted-foreground text-xs'>
                         {t(
                           'USD per image by size or quality. The gateway row is the list price at group ratio 1; each tier scales it by its ratio.'
+                        )}{' '}
+                        {t(
+                          'The input image column is the charge per image attached to an edit request.'
                         )}
                       </p>
                     </div>
@@ -1021,77 +1105,95 @@ export function ReferencePricingCard() {
                       {t('Add size')}
                     </Button>
                   </div>
-                  {dialog.perImage.columns.length > 0 && (
-                    <div className='overflow-x-auto rounded-md border'>
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead className='whitespace-nowrap'>
-                              {t('Source')}
+                  {/* The input-image column is fixed: xAI-style media input
+                   * is one charge per attached image, not a size tier. */}
+                  <div className='overflow-x-auto rounded-md border'>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className='whitespace-nowrap'>
+                            {t('Source')}
+                          </TableHead>
+                          <TableHead className='min-w-32 whitespace-nowrap'>
+                            {t('Input image')}
+                          </TableHead>
+                          {dialog.perImage.columns.map((column) => (
+                            <TableHead key={column.id} className='min-w-32'>
+                              <div className='flex items-center gap-1'>
+                                <Input
+                                  aria-label={t('Size')}
+                                  placeholder={t('Size')}
+                                  className='h-8 font-mono'
+                                  value={column.size}
+                                  onChange={(event) =>
+                                    setPerImageSize(
+                                      column.id,
+                                      event.target.value
+                                    )
+                                  }
+                                />
+                                <Button
+                                  type='button'
+                                  variant='ghost'
+                                  size='icon-sm'
+                                  aria-label={t('Remove size')}
+                                  onClick={() => removePerImageSize(column.id)}
+                                >
+                                  <X />
+                                </Button>
+                              </div>
                             </TableHead>
+                          ))}
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {PER_IMAGE_SOURCES.map((source) => (
+                          <TableRow key={source}>
+                            <TableCell className='text-xs font-medium whitespace-nowrap'>
+                              {sourceLabel(source)}
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                aria-label={`${sourceLabel(source)} · ${t('Input image')}`}
+                                type='number'
+                                min={0}
+                                step='any'
+                                inputMode='decimal'
+                                className='h-8'
+                                value={dialog.perImage.inputPrices[source]}
+                                onChange={(event) =>
+                                  setPerImageInputPrice(
+                                    source,
+                                    event.target.value
+                                  )
+                                }
+                              />
+                            </TableCell>
                             {dialog.perImage.columns.map((column) => (
-                              <TableHead key={column.id} className='min-w-32'>
-                                <div className='flex items-center gap-1'>
-                                  <Input
-                                    aria-label={t('Size')}
-                                    placeholder={t('Size')}
-                                    className='h-8 font-mono'
-                                    value={column.size}
-                                    onChange={(event) =>
-                                      setPerImageSize(
-                                        column.id,
-                                        event.target.value
-                                      )
-                                    }
-                                  />
-                                  <Button
-                                    type='button'
-                                    variant='ghost'
-                                    size='icon-sm'
-                                    aria-label={t('Remove size')}
-                                    onClick={() =>
-                                      removePerImageSize(column.id)
-                                    }
-                                  >
-                                    <X />
-                                  </Button>
-                                </div>
-                              </TableHead>
+                              <TableCell key={column.id}>
+                                <Input
+                                  aria-label={`${sourceLabel(source)} · ${column.size || t('Size')}`}
+                                  type='number'
+                                  min={0}
+                                  step='any'
+                                  inputMode='decimal'
+                                  className='h-8'
+                                  value={column.prices[source]}
+                                  onChange={(event) =>
+                                    setPerImagePrice(
+                                      source,
+                                      column.id,
+                                      event.target.value
+                                    )
+                                  }
+                                />
+                              </TableCell>
                             ))}
                           </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {PER_IMAGE_SOURCES.map((source) => (
-                            <TableRow key={source}>
-                              <TableCell className='text-xs font-medium whitespace-nowrap'>
-                                {sourceLabel(source)}
-                              </TableCell>
-                              {dialog.perImage.columns.map((column) => (
-                                <TableCell key={column.id}>
-                                  <Input
-                                    aria-label={`${sourceLabel(source)} · ${column.size || t('Size')}`}
-                                    type='number'
-                                    min={0}
-                                    step='any'
-                                    inputMode='decimal'
-                                    className='h-8'
-                                    value={column.prices[source]}
-                                    onChange={(event) =>
-                                      setPerImagePrice(
-                                        source,
-                                        column.id,
-                                        event.target.value
-                                      )
-                                    }
-                                  />
-                                </TableCell>
-                              ))}
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  )}
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
                 </div>
               )}
               <p className='text-muted-foreground text-xs'>

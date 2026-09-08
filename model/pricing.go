@@ -49,7 +49,8 @@ type Pricing struct {
 	CacheRatio       *float64 `json:"cache_ratio,omitempty"`
 	CreateCacheRatio *float64 `json:"create_cache_ratio,omitempty"`
 	ImageRatio       *float64 `json:"image_ratio,omitempty"`
-	// ImageInputPrice 是每张输入图片的固定加价（USD），按次计费的多模态模型才有。
+	// ImageInputPrice 是每张输入图片的价（USD）：按次计费的多模态模型取计费用的固定加价；
+	// 对比价后台 gateway 行填了「输入图」价时以后台值为准（与 ImagePrices 一样是展示用刊例价）。
 	ImageInputPrice        *float64                `json:"image_input_price,omitempty"`
 	AudioRatio             *float64                `json:"audio_ratio,omitempty"`
 	AudioCompletionRatio   *float64                `json:"audio_completion_ratio,omitempty"`
@@ -87,6 +88,8 @@ type ReferencePrice struct {
 	ByCondition map[string]ReferenceLanes `json:"by_condition,omitempty"`
 	// PerImage 该来源的按张标价，图片模型的定价页 /Pic 视图消费。
 	PerImage []ImageSizePrice `json:"per_image,omitempty"`
+	// PerImageInput 该来源每张输入图的标价（USD / 张），/Pic 视图的「输入图」列消费。
+	PerImageInput *float64 `json:"per_image_input,omitempty"`
 }
 
 type PricingVendor struct {
@@ -445,8 +448,9 @@ func updatePricing() {
 					ImageInput:      row.ImageInput,
 					ImageOutput:     row.ImageOutput,
 				},
-				ByCondition: row.ConditionLanes,
-				PerImage:    row.PerImageSizes,
+				ByCondition:   row.ConditionLanes,
+				PerImage:      row.PerImageSizes,
+				PerImageInput: row.PerImageInput,
 			}
 		}
 	}
@@ -535,6 +539,9 @@ func updatePricing() {
 			pricing.OpenRouterPrice = bySource[ReferencePricingSourceOpenRouter]
 			if gateway := bySource[ReferencePricingSourceGateway]; gateway != nil {
 				pricing.ImagePrices = gateway.PerImage
+				if gateway.PerImageInput != nil {
+					pricing.ImageInputPrice = gateway.PerImageInput
+				}
 			}
 		}
 		pricingMap = append(pricingMap, pricing)

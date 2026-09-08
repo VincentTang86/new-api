@@ -89,10 +89,11 @@ func TestUpsertReferencePricingRoundTripsPerImageAndImageLanes(t *testing.T) {
 
 	require.NoError(t, UpsertReferencePricingRows([]ReferencePricing{
 		{
-			ModelName:   "img-1",
-			Source:      ReferencePricingSourceOfficial,
-			Input:       refPrice(2),
-			ImageOutput: refPrice(120),
+			ModelName:     "img-1",
+			Source:        ReferencePricingSourceOfficial,
+			Input:         refPrice(2),
+			ImageOutput:   refPrice(120),
+			PerImageInput: refPrice(0.01),
 			PerImageSizes: []ImageSizePrice{
 				{Size: "1K", Price: 0.134},
 				{Size: "4K", Price: 0.24},
@@ -114,6 +115,7 @@ func TestUpsertReferencePricingRoundTripsPerImageAndImageLanes(t *testing.T) {
 	gateway := rows[0] // 按 model_name, source 排序：gateway 在 official 前
 	require.Equal(t, ReferencePricingSourceGateway, gateway.Source)
 	assert.Nil(t, gateway.Input)
+	assert.Nil(t, gateway.PerImageInput)
 	assert.Equal(t, []ImageSizePrice{{Size: "1K", Price: 0.12}}, gateway.PerImageSizes)
 
 	official := rows[1]
@@ -121,6 +123,9 @@ func TestUpsertReferencePricingRoundTripsPerImageAndImageLanes(t *testing.T) {
 	require.NotNil(t, official.ImageOutput)
 	assert.Equal(t, 120.0, *official.ImageOutput)
 	assert.Nil(t, official.ImageInput)
+	// 按张的输入图价与按 token 的 image_input 是两个独立字段
+	require.NotNil(t, official.PerImageInput)
+	assert.Equal(t, 0.01, *official.PerImageInput)
 	// 档位顺序即展示顺序，读回必须保持提交顺序
 	assert.Equal(t, []ImageSizePrice{{Size: "1K", Price: 0.134}, {Size: "4K", Price: 0.24}}, official.PerImageSizes)
 
@@ -133,6 +138,7 @@ func TestUpsertReferencePricingRoundTripsPerImageAndImageLanes(t *testing.T) {
 	require.Len(t, rows, 2)
 	assert.Empty(t, rows[1].PerImageSizes)
 	assert.Nil(t, rows[1].ImageOutput)
+	assert.Nil(t, rows[1].PerImageInput)
 }
 
 // /api/pricing 的线格式契约：默认价保持扁平（首页/看板按此消费），

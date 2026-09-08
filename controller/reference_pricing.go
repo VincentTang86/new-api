@@ -70,7 +70,7 @@ func UpdateReferencePricing(c *gin.Context) {
 			return
 		}
 		seen[key] = true
-		lanesToCheck := [][]*float64{{row.Input, row.Output, row.CachedInput, row.CacheCreation, row.CacheCreation1h, row.CacheHit, row.ImageInput, row.ImageOutput}}
+		lanesToCheck := [][]*float64{{row.Input, row.Output, row.CachedInput, row.CacheCreation, row.CacheCreation1h, row.CacheHit, row.ImageInput, row.ImageOutput, row.PerImageInput}}
 		if len(row.ConditionLanes) > maxReferenceConditions {
 			common.ApiErrorMsg(c, fmt.Sprintf("模型 %s 的计价条件数量不能超过 %d", row.ModelName, maxReferenceConditions))
 			return

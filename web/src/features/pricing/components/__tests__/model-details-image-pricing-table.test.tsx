@@ -93,8 +93,27 @@ describe('ModelDetailsImagePricingTable', () => {
     const rows = [...container.querySelectorAll('tbody tr')].map(rowCells)
     expect(rows[0]).toEqual(['Production', '$0.01', '$0.08', '$0.08'])
     expect(rows[1]).toEqual(['Best Effort', '$0.005', '$0.04', '$0.04'])
-    // The reference sources list output sizes only.
+    // A reference source without an input-image charge on file shows a dash.
     expect(rows[2].slice(1)).toEqual(['—', '$0.04', '$0.08'])
+  })
+
+  test('the admin-entered gateway and reference input charges win over the expression', () => {
+    const { container } = renderTable(
+      model({
+        billing_mode: 'tiered_expr',
+        billing_expr: GROK_EXPR,
+        image_input_price: 0.02,
+        official_price: {
+          per_image: [{ size: '1K·Low', price: 0.04 }],
+          per_image_input: 0.01,
+        },
+      })
+    )
+
+    const rows = [...container.querySelectorAll('tbody tr')].map(rowCells)
+    expect(rows[0].slice(0, 2)).toEqual(['Production', '$0.02'])
+    expect(rows[1].slice(0, 2)).toEqual(['Best Effort', '$0.01'])
+    expect(rows[2].slice(1)).toEqual(['$0.01', '$0.04', '—'])
   })
 
   test('shows no input column for a model priced per output image only', () => {

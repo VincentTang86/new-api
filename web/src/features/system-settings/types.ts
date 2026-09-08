@@ -61,13 +61,15 @@ export type ReferencePricingImageSize = {
 
 // 外部对比标价（USD / 1M tokens），按 (model_name, source) 一行。
 // 顶层价位是默认价；conditions 按计价条件键（rate-conditions 模块派生）覆盖；
-// per_image 是图片模型的按张标价，顺序即展示顺序。
+// per_image 是图片模型的按张标价，顺序即展示顺序；per_image_input 是每张输入图
+// 的价（USD / 张），图生图模型才有。
 export type ReferencePricingRow = ReferencePricingLanes & {
   id?: number
   model_name: string
   source: ReferencePricingSource
   conditions?: Record<string, ReferencePricingLanes>
   per_image?: ReferencePricingImageSize[]
+  per_image_input?: number | null
 }
 
 export type ReferencePricingResponse = {
