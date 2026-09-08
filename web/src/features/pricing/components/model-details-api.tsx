@@ -354,6 +354,8 @@ function buildEmbeddingSample(lang: Lang, ctx: SampleContext): string {
 function buildImageSample(lang: Lang, ctx: SampleContext): string {
   const url = `${ctx.baseUrl}${ctx.endpointPath}`
   const prompt = 'A serene koi pond at sunset, ukiyo-e style.'
+  // gpt-image models always return base64 (no url field).
+  const returnsBase64 = /^gpt-image/i.test(ctx.modelName)
 
   if (lang === 'curl') {
     const body = JSON.stringify(
@@ -370,6 +372,7 @@ function buildImageSample(lang: Lang, ctx: SampleContext): string {
   }
   if (lang === 'python') {
     return [
+      ...(returnsBase64 ? ['import base64'] : []),
       'from openai import OpenAI',
       '',
       `client = OpenAI(base_url="${ctx.baseUrl}/v1", api_key="<YOUR_API_KEY>")`,
@@ -381,11 +384,17 @@ function buildImageSample(lang: Lang, ctx: SampleContext): string {
       `    n=1,`,
       ')',
       '',
-      'print(response.data[0].url)',
+      ...(returnsBase64
+        ? [
+            'with open("image.png", "wb") as f:',
+            '    f.write(base64.b64decode(response.data[0].b64_json))',
+          ]
+        : ['print(response.data[0].url)']),
     ].join('\n')
   }
   if (lang === 'typescript') {
     return [
+      ...(returnsBase64 ? [`import { writeFileSync } from 'node:fs'`] : []),
       `import OpenAI from 'openai'`,
       '',
       `const client = new OpenAI({`,
@@ -400,10 +409,18 @@ function buildImageSample(lang: Lang, ctx: SampleContext): string {
       `  n: 1,`,
       `})`,
       '',
-      `console.log(response.data[0].url)`,
+      ...(returnsBase64
+        ? [
+            `writeFileSync(`,
+            `  'image.png',`,
+            `  Buffer.from(response.data[0].b64_json, 'base64')`,
+            `)`,
+          ]
+        : [`console.log(response.data[0].url)`]),
     ].join('\n')
   }
   return [
+    ...(returnsBase64 ? [`import { writeFileSync } from 'node:fs'`, ''] : []),
     `const response = await fetch('${url}', {`,
     `  method: 'POST',`,
     `  headers: {`,
@@ -419,7 +436,11 @@ function buildImageSample(lang: Lang, ctx: SampleContext): string {
     `})`,
     '',
     `const data = await response.json()`,
-    `console.log(data.data[0].url)`,
+    ...(returnsBase64
+      ? [
+          `writeFileSync('image.png', Buffer.from(data.data[0].b64_json, 'base64'))`,
+        ]
+      : [`console.log(data.data[0].url)`]),
   ].join('\n')
 }
 
