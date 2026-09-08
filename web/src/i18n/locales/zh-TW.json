@@ -5545,6 +5545,7 @@
     "Per token": "按 Token",
     "Default price ($ per request)": "預設價格（$/次）",
     "Default tier label": "預設檔位名稱",
+    "Input image": "輸入圖",
     "Input image price ($ per image)": "輸入圖片價格（$/張）",
     "Counted from the images array or a single image field on edits; leave empty to disable.": "編輯請求依 images 陣列或單一 image 欄位計數；留空則不收。",
     "Multiply by n (image count)": "乘以 n（生成張數）",

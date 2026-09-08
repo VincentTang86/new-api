@@ -5545,6 +5545,7 @@
     "Per token": "トークン単位",
     "Default price ($ per request)": "デフォルト価格（$/リクエスト）",
     "Default tier label": "デフォルト階層のラベル",
+    "Input image": "入力画像",
     "Input image price ($ per image)": "入力画像の価格（$/枚）",
     "Counted from the images array or a single image field on edits; leave empty to disable.": "編集リクエストでは images 配列または単一の image 項目から数えます。空欄で無効になります。",
     "Multiply by n (image count)": "n（生成枚数）を掛ける",

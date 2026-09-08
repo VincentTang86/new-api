@@ -5545,6 +5545,7 @@
     "Per token": "Par token",
     "Default price ($ per request)": "Prix par défaut ($ par requête)",
     "Default tier label": "Libellé du palier par défaut",
+    "Input image": "Image d'entrée",
     "Input image price ($ per image)": "Prix de l'image d'entrée ($ par image)",
     "Counted from the images array or a single image field on edits; leave empty to disable.": "Compté à partir du tableau images ou du champ image unique lors des éditions ; laisser vide pour désactiver.",
     "Multiply by n (image count)": "Multiplier par n (nombre d'images)",

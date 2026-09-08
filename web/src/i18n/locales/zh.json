@@ -5545,6 +5545,7 @@
     "Per token": "按 Token",
     "Default price ($ per request)": "默认价格（$/次）",
     "Default tier label": "默认档位名称",
+    "Input image": "输入图",
     "Input image price ($ per image)": "输入图片价格（$/张）",
     "Counted from the images array or a single image field on edits; leave empty to disable.": "编辑请求按 images 数组或单个 image 字段计数；留空则不收。",
     "Multiply by n (image count)": "乘以 n（生成张数）",

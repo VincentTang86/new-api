@@ -5545,6 +5545,7 @@
     "Per token": "Per token",
     "Default price ($ per request)": "Default price ($ per request)",
     "Default tier label": "Default tier label",
+    "Input image": "Input image",
     "Input image price ($ per image)": "Input image price ($ per image)",
     "Counted from the images array or a single image field on edits; leave empty to disable.": "Counted from the images array or a single image field on edits; leave empty to disable.",
     "Multiply by n (image count)": "Multiply by n (image count)",

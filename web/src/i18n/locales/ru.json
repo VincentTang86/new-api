@@ -5545,6 +5545,7 @@
     "Per token": "За токены",
     "Default price ($ per request)": "Цена по умолчанию ($ за запрос)",
     "Default tier label": "Название уровня по умолчанию",
+    "Input image": "Входное изображение",
     "Input image price ($ per image)": "Цена входного изображения ($ за изображение)",
     "Counted from the images array or a single image field on edits; leave empty to disable.": "Считается по массиву images или одиночному полю image при редактировании; оставьте пустым, чтобы отключить.",
     "Multiply by n (image count)": "Умножать на n (число изображений)",

@@ -5545,6 +5545,7 @@
     "Per token": "Theo token",
     "Default price ($ per request)": "Giá mặc định ($ mỗi yêu cầu)",
     "Default tier label": "Nhãn bậc mặc định",
+    "Input image": "Ảnh đầu vào",
     "Input image price ($ per image)": "Giá ảnh đầu vào ($ mỗi ảnh)",
     "Counted from the images array or a single image field on edits; leave empty to disable.": "Đếm theo mảng images hoặc trường image đơn khi chỉnh sửa; để trống để tắt.",
     "Multiply by n (image count)": "Nhân với n (số ảnh)",

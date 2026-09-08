@@ -30,6 +30,7 @@ import {
   getAvailableGroups,
   getConfiguredGroupRatio,
 } from '../lib/model-helpers'
+import { tryParsePerRequestConfig } from '../lib/per-request-expr'
 import type { ImageSizePrice, PricingModel } from '../types'
 
 /**
@@ -40,7 +41,9 @@ import type { ImageSizePrice, PricingModel } from '../types'
  * The gateway's per-image list (kept beside the benchmark prices, at ratio 1)
  * scales by each plan's group ratio, exactly like the per-token table. A
  * per-call image model without such a list states its per-call price as a
- * single "per image" column.
+ * single "per image" column. A model whose per-request expression charges
+ * for input images (xAI's "media input") opens with that per-image charge,
+ * read straight from the expression.
  */
 export function ModelDetailsImagePricingTable(props: {
   model: PricingModel
@@ -54,6 +57,18 @@ export function ModelDetailsImagePricingTable(props: {
     () => getAvailableGroups(model, props.usableGroup || {}),
     [model, props.usableGroup]
   )
+
+  // Only the canonical per-request form carries a readable input-image
+  // charge; a hand-written expression simply shows no such column.
+  const inputImageUSD = useMemo(() => {
+    if (model.billing_mode !== 'tiered_expr' || !model.billing_expr) {
+      return undefined
+    }
+    const price = Number(
+      tryParsePerRequestConfig(model.billing_expr)?.inputImagePrice
+    )
+    return Number.isFinite(price) && price > 0 ? price : undefined
+  }, [model.billing_mode, model.billing_expr])
 
   const listed = (model.image_prices ?? []).filter(
     (entry) => Number.isFinite(entry.price) && entry.price > 0
@@ -111,6 +126,11 @@ export function ModelDetailsImagePricingTable(props: {
             <th scope='col' className={headCellClass}>
               {t('Service')}
             </th>
+            {inputImageUSD !== undefined && (
+              <th scope='col' className={`${headCellClass} text-right`}>
+                {t('Input image')}
+              </th>
+            )}
             {gatewayPrices.map((entry) => (
               <th
                 key={entry.size}
@@ -137,6 +157,13 @@ export function ModelDetailsImagePricingTable(props: {
                 >
                   {known ? t(known.label) : group}
                 </th>
+                {inputImageUSD !== undefined && (
+                  <td
+                    className={`${cellClass} text-right font-mono text-xs font-medium text-(--pd-ink)`}
+                  >
+                    {formatLandingPrice(inputImageUSD * ratio)}
+                  </td>
+                )}
                 {gatewayPrices.map((entry) => (
                   <td
                     key={entry.size}
@@ -174,6 +201,15 @@ export function ModelDetailsImagePricingTable(props: {
                     </span>
                   </span>
                 </th>
+                {inputImageUSD !== undefined && (
+                  // The reference sources store output sizes only; an input
+                  // image charge has no lane to compare against yet.
+                  <td
+                    className={`${cellClass} text-right font-mono text-xs text-(--pd-faint)`}
+                  >
+                    {LANDING_PRICE_PLACEHOLDER}
+                  </td>
+                )}
                 {gatewayPrices.map((entry) => {
                   const price = bySize.get(entry.size)
                   return (
