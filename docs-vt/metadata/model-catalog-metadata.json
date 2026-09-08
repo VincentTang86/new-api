@@ -11,7 +11,8 @@
       "gemini-3.1-flash-image context/max_output follow models.dev google entry (65536/65536); OpenRouter lists 131072/32768",
       "grok-imagine-video-1.5 input kept text-only per models.dev; add image if the channel supports image-to-video",
       "kimi/kimi-k3 is an alias row for kimi-k3 and shares its metadata",
-      "vendor_display_name is a per-model override shown to users in place of the vendor name (e.g. Bailian-hosted deepseek-v4-pro displays DeepSeek)"
+      "vendor_display_name is a per-model override shown to users in place of the vendor name (e.g. Bailian-hosted deepseek-v4-pro displays DeepSeek)",
+      "gemini-3.1-flash-lite-image context/max_output copied from gemini-3.1-flash-image; release_date/knowledge_cutoff left empty pending a first-party source (added 2026-09-08)"
     ]
   },
   "models": {
@@ -223,6 +224,27 @@
         "ru": "Gemini 3.1 Flash Image («Nano Banana 2») — быстрая модель генерации и редактирования изображений от Google с качеством уровня Pro при скорости и цене Flash.",
         "ja": "Gemini 3.1 Flash Image（「Nano Banana 2」）は Google の高速な画像生成・編集モデルで、Flash の速度とコストで Pro 級の画質を提供します。",
         "vi": "Gemini 3.1 Flash Image (\"Nano Banana 2\") là mô hình tạo và chỉnh sửa ảnh nhanh của Google, mang lại chất lượng hình ảnh cấp Pro với tốc độ và chi phí của Flash."
+      }
+    },
+    "gemini-3.1-flash-lite-image": {
+      "vendor": "Google",
+      "icon": "Gemini.Color",
+      "input_modalities": "text,image",
+      "output_modalities": "text,image",
+      "context_length": 65536,
+      "max_output_tokens": 65536,
+      "release_date": "",
+      "knowledge_cutoff": "",
+      "parameter_count": "",
+      "capabilities": "vision,streaming",
+      "description": {
+        "en": "Gemini 3.1 Flash Lite Image (\"Nano Banana 2 Lite\") is Google's lowest-cost image generation and editing model, a lighter variant of Flash Image for high-volume, latency-sensitive use.",
+        "zh-CN": "Gemini 3.1 Flash Lite Image（“Nano Banana 2 Lite”）是 Google 成本最低的图像生成与编辑模型，是 Flash Image 的轻量版本，适合大批量、低延迟场景。",
+        "zh-TW": "Gemini 3.1 Flash Lite Image（「Nano Banana 2 Lite」）是 Google 成本最低的圖像生成與編輯模型，是 Flash Image 的輕量版本，適合大批量、低延遲場景。",
+        "fr": "Gemini 3.1 Flash Lite Image (« Nano Banana 2 Lite ») est le modèle de génération et d'édition d'images le moins coûteux de Google, une variante allégée de Flash Image pour les usages à fort volume et faible latence.",
+        "ru": "Gemini 3.1 Flash Lite Image («Nano Banana 2 Lite») — самая доступная модель генерации и редактирования изображений Google, облегчённый вариант Flash Image для массовых сценариев с низкой задержкой.",
+        "ja": "Gemini 3.1 Flash Lite Image（「Nano Banana 2 Lite」）は Google の最も低コストな画像生成・編集モデルで、大量処理や低遅延用途向けの Flash Image 軽量版です。",
+        "vi": "Gemini 3.1 Flash Lite Image (\"Nano Banana 2 Lite\") là mô hình tạo và chỉnh sửa ảnh chi phí thấp nhất của Google, phiên bản nhẹ của Flash Image cho các tác vụ khối lượng lớn, nhạy độ trễ."
       }
     },
     "gemini-3-pro-image": {
