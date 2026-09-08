@@ -287,11 +287,14 @@ describe('buildPricingRows', () => {
         tokenModel({ model_name: 'qwen3.10-plus' }),
         tokenModel({ model_name: 'GLM-5.2' }),
         tokenModel({ model_name: 'qwen3.6-plus' }),
-        tokenModel({ model_name: 'deepseek-v4-flash' }),
+        tokenModel({
+          model_name: 'deepseek-v4-flash',
+          // The display name wins over the model id, so the sort must follow it.
+          display_name: 'Zeta Flash',
+        }),
       ],
       language: 'en',
-      // The display name wins over the model id, so the sort must follow it.
-      catalog: { 'deepseek-v4-flash': { displayName: 'Zeta Flash' } },
+      catalog: {},
       selectedGroup: 'default',
       groupRatio: { default: 1 },
       benchmark: 'official',
@@ -305,11 +308,19 @@ describe('buildPricingRows', () => {
     ])
   })
 
-  test('prefers the catalog display name over the raw model id', () => {
-    const row = build(tokenModel(), {
-      'demo-model': { displayName: 'Demo Model' },
-    })
+  test('prefers the configured display name over the raw model id', () => {
+    const row = build(tokenModel({ display_name: 'Demo Model' }), {})
     expect(row.name).toBe('Demo Model')
     expect(row.modelId).toBe('demo-model')
+  })
+
+  // The admin may break a display name across lines; the row carries it
+  // verbatim so the Model column can lay it out as written.
+  test('keeps the line breaks a display name was configured with', () => {
+    const row = build(
+      tokenModel({ display_name: 'Demo Model\n(Codename)' }),
+      {}
+    )
+    expect(row.name).toBe('Demo Model\n(Codename)')
   })
 })

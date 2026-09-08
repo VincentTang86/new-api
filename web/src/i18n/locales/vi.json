@@ -5552,6 +5552,8 @@
     "Prices are USD per request; rules are checked top-down and the first match wins, otherwise the default price applies.": "Giá tính bằng USD mỗi yêu cầu; quy tắc được kiểm tra từ trên xuống, khớp đầu tiên sẽ áp dụng, nếu không thì dùng giá mặc định.",
     "Add rule": "Thêm quy tắc",
     "Rule label": "Nhãn quy tắc",
-    "Price ($ per request)": "Giá ($ mỗi yêu cầu)"
+    "Price ($ per request)": "Giá ($ mỗi yêu cầu)",
+    "e.g. Gemini 3.1 Flash Image": "ví dụ: Gemini 3.1 Flash Image",
+    "Shown in the models & pricing table instead of the model name. Press Enter to break the name across lines; leave empty to show the model name.": "Hiển thị trong bảng mô hình & giá thay cho tên mô hình. Nhấn Enter để tách tên thành nhiều dòng; để trống sẽ hiển thị tên mô hình."
   }
 }

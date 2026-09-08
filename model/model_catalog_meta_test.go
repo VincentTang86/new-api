@@ -1,6 +1,7 @@
 package model
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/QuantumNous/new-api/common"
@@ -29,6 +30,12 @@ func TestNormalizeAndValidateCatalogMeta(t *testing.T) {
 		assert.Equal(t, "2025-06", m.ReleaseDate)
 		assert.Equal(t, "2024-12-31", m.KnowledgeCutoff)
 		assert.Equal(t, "685B", m.ParameterCount)
+	})
+
+	t.Run("keeps display name line breaks and trims each line", func(t *testing.T) {
+		m := &Model{DisplayName: "  Gemini 3.1 Flash Image \r\n\n (Nano Banana 2)  \n"}
+		require.NoError(t, m.NormalizeAndValidateCatalogMeta())
+		assert.Equal(t, "Gemini 3.1 Flash Image\n(Nano Banana 2)", m.DisplayName)
 	})
 
 	t.Run("normalizes description_i18n and drops empty entries", func(t *testing.T) {
@@ -60,6 +67,8 @@ func TestNormalizeAndValidateCatalogMeta(t *testing.T) {
 		{"negative context length", Model{ContextLength: -1}},
 		{"context length above cap", Model{ContextLength: maxCatalogTokenCount + 1}},
 		{"max output above cap", Model{MaxOutputTokens: maxCatalogTokenCount + 1}},
+		{"display name too long", Model{DisplayName: strings.Repeat("x", maxCatalogDisplayNameLen+1)}},
+		{"display name with too many rows", Model{DisplayName: strings.Repeat("x\n", maxCatalogDisplayNameRows+1)}},
 	}
 	for _, tc := range rejected {
 		t.Run("rejects "+tc.name, func(t *testing.T) {
@@ -76,6 +85,7 @@ func TestModelCatalogMetaPersistsThroughUpdate(t *testing.T) {
 
 	m := &Model{
 		ModelName:         "catalog-meta-rt",
+		DisplayName:       "Catalog Meta",
 		VendorDisplayName: "Byte",
 		Description:       "fallback",
 		DescriptionI18n:   `{"en":"Fast","zh-CN":"快"}`,
@@ -100,12 +110,14 @@ func TestModelCatalogMetaPersistsThroughUpdate(t *testing.T) {
 	m.ParameterCount = ""
 	m.DescriptionI18n = `{"en":"Faster"}`
 	m.VendorDisplayName = "ByteDance"
+	m.DisplayName = "Catalog Meta\n(renamed)"
 	require.NoError(t, m.Update())
 
 	var got Model
 	require.NoError(t, DB.Where("model_name = ?", "catalog-meta-rt").First(&got).Error)
 	assert.Equal(t, `{"en":"Faster"}`, got.DescriptionI18n)
 	assert.Equal(t, "ByteDance", got.VendorDisplayName)
+	assert.Equal(t, "Catalog Meta\n(renamed)", got.DisplayName)
 	assert.Equal(t, "text", got.InputModalities)
 	assert.Equal(t, "text,audio", got.OutputModalities)
 	assert.Empty(t, got.Capabilities)

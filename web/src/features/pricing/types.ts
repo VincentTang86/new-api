@@ -30,6 +30,8 @@ export type PricingVendor = {
 export type PricingModel = {
   id: number
   model_name: string
+  /** Admin-configured label shown in place of model_name; may contain "\n". */
+  display_name?: string
   description?: string
   /** Per-language description keyed by standard locale codes (en, zh-CN, ...). */
   description_i18n?: Record<string, string>

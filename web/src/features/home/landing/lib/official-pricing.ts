@@ -42,9 +42,6 @@ import type {
 } from '@/features/pricing/types'
 
 export interface OfficialPricingEntry {
-  /** Friendly name; falls back to the model_name when absent. Not currently
-   * populated by the backend feed — kept for the row adapter's contract. */
-  displayName?: string
   /** Vendor list price, USD per 1M tokens (token / 按 Token models). */
   officialInput?: number
   officialOutput?: number

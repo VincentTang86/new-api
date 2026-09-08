@@ -25,6 +25,7 @@ import { useOpenModelDetails } from '@/features/pricing/hooks/use-model-details-
 import { LANDING_PRICE_PLACEHOLDER } from '../../lib/pricing'
 import type { ImagePricingRow, PricingBenchmark } from '../../types'
 import { PricingListStatus } from './pricing-model-list'
+import { ModelName } from './model-name'
 import { ProviderMark } from './provider-mark'
 
 interface ImagePricingListProps {
@@ -144,9 +145,10 @@ export function ImagePricingList(props: ImagePricingListProps) {
                         label={row.vendorLabel}
                         variant='chip'
                       />
-                      <span className='truncate font-mono text-[13px] font-bold text-(--pd-ink-strong)'>
-                        {row.name}
-                      </span>
+                      <ModelName
+                        name={row.name}
+                        className='font-mono text-[13px] font-bold text-(--pd-ink-strong)'
+                      />
                     </div>
                   </th>
                   <td className='px-6 py-3.5 font-mono text-[13px] font-bold text-(--pd-ink)'>
@@ -201,9 +203,10 @@ export function ImagePricingList(props: ImagePricingListProps) {
                     label={row.vendorLabel}
                     variant='chip'
                   />
-                  <span className='truncate font-mono text-sm font-bold text-(--pd-ink-strong)'>
-                    {row.name}
-                  </span>
+                  <ModelName
+                    name={row.name}
+                    className='font-mono text-sm font-bold text-(--pd-ink-strong)'
+                  />
                 </span>
                 <Chevron size={14} className='text-(--pd-faint)' aria-hidden />
               </button>

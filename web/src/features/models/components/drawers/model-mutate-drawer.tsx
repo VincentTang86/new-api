@@ -150,6 +150,7 @@ const DESCRIPTION_LOCALES = INTERFACE_LANGUAGE_OPTIONS.map((option) => ({
 const extendedModelFormSchema = z.object({
   id: z.number().optional(),
   model_name: z.string().min(1, 'Model name is required'),
+  display_name: z.string(),
   description: z.string(),
   description_i18n: z.record(z.string(), z.string()),
   icon: z.string(),
@@ -458,6 +459,7 @@ export function ModelMutateDrawer({
     resolver: zodResolver(extendedModelFormSchema),
     defaultValues: {
       model_name: '',
+      display_name: '',
       description: '',
       description_i18n: {},
       icon: '',
@@ -537,6 +539,7 @@ export function ModelMutateDrawer({
       form.reset({
         id: model.id,
         model_name: model.model_name,
+        display_name: model.display_name || '',
         description: model.description || '',
         description_i18n: safeJsonParse<Record<string, string>>(
           model.description_i18n || '',
@@ -580,6 +583,7 @@ export function ModelMutateDrawer({
       setDescriptionLocale('en')
       form.reset({
         model_name: modelName,
+        display_name: '',
         description: '',
         description_i18n: {},
         icon: '',
@@ -620,6 +624,7 @@ export function ModelMutateDrawer({
           tags: Array.isArray(values.tags) ? values.tags.join(',') : '',
           status: values.status ? 1 : 0,
           sync_official: values.sync_official ? 1 : 0,
+          display_name: values.display_name.trim(),
           vendor_display_name: values.vendor_display_name.trim(),
           description_i18n:
             Object.keys(localizedDescriptions).length > 0
@@ -925,6 +930,29 @@ export function ModelMutateDrawer({
                     </FormControl>
                     <FormDescription>
                       {t('The unique identifier for this model')}
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name='display_name'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('Display name')}</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder={t('e.g. Gemini 3.1 Flash Image')}
+                        rows={2}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription className='text-xs'>
+                      {t(
+                        'Shown in the models & pricing table instead of the model name. Press Enter to break the name across lines; leave empty to show the model name.'
+                      )}
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

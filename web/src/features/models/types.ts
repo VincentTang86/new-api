@@ -36,6 +36,8 @@ export interface BoundChannel {
 export interface Model {
   id: number
   model_name: string
+  /** Shown in the models & pricing table instead of model_name; may contain "\n" */
+  display_name?: string
   description?: string
   /** Per-language description JSON: {"en": "...", "zh-CN": "..."} */
   description_i18n?: string

@@ -25,6 +25,7 @@ import { useOpenModelDetails } from '@/features/pricing/hooks/use-model-details-
 import { LANDING_PRICE_PLACEHOLDER } from '../../lib/pricing'
 import type { PricingBenchmark, PricingRow } from '../../types'
 import type { PricingListVariant } from './pricing-model-list'
+import { ModelName } from './model-name'
 import { ProviderMark } from './provider-mark'
 import { SavingsBadge } from './savings-cell'
 
@@ -87,9 +88,10 @@ export function PricingPreviewAccordion(props: PricingPreviewAccordionProps) {
                   label={row.vendorLabel}
                   variant={props.variant === 'preview' ? 'dot' : 'chip'}
                 />
-                <span className='truncate font-mono text-sm font-bold text-(--pd-ink-strong)'>
-                  {row.name}
-                </span>
+                <ModelName
+                  name={row.name}
+                  className='font-mono text-sm font-bold text-(--pd-ink-strong)'
+                />
               </span>
               <Chevron size={14} className='text-(--pd-faint)' aria-hidden />
             </button>

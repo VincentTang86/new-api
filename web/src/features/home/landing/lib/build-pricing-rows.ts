@@ -146,12 +146,12 @@ export function buildPricingRows(params: BuildPricingRowsParams): PricingRow[] {
       const isPerRequest = model.quota_type === QUOTA_TYPE_VALUES.REQUEST
       const provider = resolveProviderKey(model.vendor_name, model.model_name)
 
+      const displayName = model.display_name?.trim()
       const base = {
         modelId: model.model_name,
-        name: catalog.displayName ?? model.model_name,
+        name: displayName || model.model_name,
         provider,
-        vendorLabel:
-          model.vendor_name || catalog.displayName || model.model_name,
+        vendorLabel: model.vendor_name || displayName || model.model_name,
       }
 
       if (isPerRequest) {

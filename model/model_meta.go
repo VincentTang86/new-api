@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/QuantumNous/new-api/common"
 
@@ -24,8 +25,11 @@ type BoundChannel struct {
 }
 
 type Model struct {
-	Id          int    `json:"id"`
-	ModelName   string `json:"model_name" gorm:"size:128;not null;uniqueIndex:uk_model_name_delete_at,priority:1"`
+	Id        int    `json:"id"`
+	ModelName string `json:"model_name" gorm:"size:128;not null;uniqueIndex:uk_model_name_delete_at,priority:1"`
+	// DisplayName 定价页展示的模型名；留空时回退到 ModelName。允许管理员手动换行，
+	// 前端按写入的行排版。
+	DisplayName string `json:"display_name,omitempty" gorm:"type:varchar(128)"`
 	Description string `json:"description,omitempty" gorm:"type:text"`
 	// DescriptionI18n 按语言的模型说明，JSON 对象 {"en": "...", "zh-CN": "..."}，
 	// 键限定 modelDescriptionLocales；Description 保留为兜底（上游同步写入）。
@@ -94,7 +98,7 @@ func (mi *Model) Update() error {
 	mi.UpdatedTime = common.GetTimestamp()
 	// 使用 Select 强制更新所有字段，包括零值
 	return DB.Model(&Model{}).Where("id = ?", mi.Id).
-		Select("model_name", "description", "description_i18n", "icon", "tags", "vendor_id", "vendor_display_name", "endpoints",
+		Select("model_name", "display_name", "description", "description_i18n", "icon", "tags", "vendor_id", "vendor_display_name", "endpoints",
 			"input_modalities", "output_modalities", "context_length", "max_output_tokens",
 			"release_date", "knowledge_cutoff", "parameter_count", "capabilities",
 			"status", "sync_official", "name_rule", "updated_time").
@@ -122,8 +126,13 @@ var (
 	catalogDatePattern = regexp.MustCompile(`^\d{4}-(0[1-9]|1[0-2])(-(0[1-9]|[12]\d|3[01]))?$`)
 )
 
-// maxCatalogTokenCount 上下文长度/最大输出的上限，纯展示字段的脏数据护栏
-const maxCatalogTokenCount = 100_000_000
+// 纯展示字段的脏数据护栏：上下文长度/最大输出的上限，以及显示名的长度与行数上限
+// （显示名会进公开定价表的模型列，过长或过多行会撑坏该列）。
+const (
+	maxCatalogTokenCount      = 100_000_000
+	maxCatalogDisplayNameLen  = 128
+	maxCatalogDisplayNameRows = 3
+)
 
 // NormalizeAndValidateCatalogMeta 规范化并校验目录元数据（多语言说明、模态、上下文长度、
 // 发布时间等）。这些字段仅用于展示、不进计费链路，校验只为拒绝脏数据。
@@ -152,6 +161,22 @@ func (mi *Model) NormalizeAndValidateCatalogMeta() error {
 	}
 	mi.ParameterCount = strings.TrimSpace(mi.ParameterCount)
 	mi.VendorDisplayName = strings.TrimSpace(mi.VendorDisplayName)
+
+	// 显示名保留管理员写入的换行（定价页按行排版），所以逐行去空白而不是折成一行；
+	// 空行丢弃，换行符统一成 \n，前端只需处理一种。
+	displayLines := make([]string, 0, maxCatalogDisplayNameRows)
+	for _, line := range strings.Split(strings.NewReplacer("\r\n", "\n", "\r", "\n").Replace(mi.DisplayName), "\n") {
+		if trimmed := strings.TrimSpace(line); trimmed != "" {
+			displayLines = append(displayLines, trimmed)
+		}
+	}
+	if len(displayLines) > maxCatalogDisplayNameRows {
+		return fmt.Errorf("模型显示名最多 %d 行", maxCatalogDisplayNameRows)
+	}
+	mi.DisplayName = strings.Join(displayLines, "\n")
+	if utf8.RuneCountInString(mi.DisplayName) > maxCatalogDisplayNameLen {
+		return fmt.Errorf("模型显示名超出长度限制 %d 个字符", maxCatalogDisplayNameLen)
+	}
 
 	raw := strings.TrimSpace(mi.DescriptionI18n)
 	if raw == "" {

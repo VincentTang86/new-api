@@ -115,6 +115,16 @@ describe('buildImagePricingRows', () => {
     expect(row.savings).toBe(LANDING_PRICE_PLACEHOLDER)
   })
 
+  // The Image tab labels its rows the same way the token catalogue does: an
+  // admin-configured display name replaces the model id, line breaks included.
+  test('shows the configured display name, line breaks and all', () => {
+    const [row] = build(
+      imageModel({ display_name: 'Gemini 3 Pro Image\n(Nano Banana Pro)' })
+    )
+    expect(row.name).toBe('Gemini 3 Pro Image\n(Nano Banana Pro)')
+    expect(row.modelId).toBe('gemini-3-pro-image')
+  })
+
   test('image models leave the token catalogue and only they join the image one', () => {
     const text = imageModel({
       model_name: 'gemini-3.1-pro-preview',

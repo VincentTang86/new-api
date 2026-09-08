@@ -75,11 +75,12 @@ export function buildImagePricingRows(
     .filter((model) => isImageModel(model))
     .filter((model) => isModelInGroup(model, params.selectedGroup))
     .map((model): ImagePricingRow => {
+      const displayName = model.display_name?.trim()
       const base = {
         modelId: model.model_name,
-        name: model.model_name,
+        name: displayName || model.model_name,
         provider: resolveProviderKey(model.vendor_name, model.model_name),
-        vendorLabel: model.vendor_name || model.model_name,
+        vendorLabel: model.vendor_name || displayName || model.model_name,
       }
 
       const listed = cheapest(model.image_prices)

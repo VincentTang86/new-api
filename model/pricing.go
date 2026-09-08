@@ -16,7 +16,9 @@ import (
 )
 
 type Pricing struct {
-	ModelName   string `json:"model_name"`
+	ModelName string `json:"model_name"`
+	// DisplayName 定价页模型列展示的名称，留空时前端回退到 ModelName；可含换行。
+	DisplayName string `json:"display_name,omitempty"`
 	Description string `json:"description,omitempty"`
 	// DescriptionI18n 按语言的说明 {"en": "...", "zh-CN": "..."}；语言选择在客户端完成，
 	// 回退链 当前语言 → en → Description。
@@ -462,6 +464,11 @@ func updatePricing() {
 			// 若模型被禁用(status!=1)，则直接跳过，不返回给前端
 			if meta.Status != 1 {
 				continue
+			}
+			// 显示名只跟精确匹配的元数据走：前缀/后缀/包含规则的一条元数据会命中一批
+			// 模型，同一个显示名套在它们身上会让定价表分不出是哪个模型。
+			if meta.NameRule == NameRuleExact {
+				pricing.DisplayName = meta.DisplayName
 			}
 			pricing.Description = meta.Description
 			pricing.Icon = meta.Icon

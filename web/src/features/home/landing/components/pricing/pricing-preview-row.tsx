@@ -16,19 +16,13 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
 import { useOpenModelDetails } from '@/features/pricing/hooks/use-model-details-drawer'
 
 import { LANDING_PRICE_PLACEHOLDER } from '../../lib/pricing'
 import type { PricingRow } from '../../types'
+import { ModelName } from './model-name'
 import type { PricingListVariant } from './pricing-model-list'
 import { ProviderMark } from './provider-mark'
 import { SavingsBadge } from './savings-cell'
@@ -42,12 +36,6 @@ export function PricingPreviewRow(props: PricingPreviewRowProps) {
   const { t } = useTranslation()
   const openModel = useOpenModelDetails()
   const row = props.row
-  const nameRef = useRef<HTMLSpanElement>(null)
-  // Whether the name is cut depends on the viewport the column share resolves
-  // against, so it is measured when the tooltip would open rather than once on
-  // mount: a name that only truncates on a narrow window still gets its
-  // tooltip, and a name that fits never opens one repeating what is on screen.
-  const [showFullName, setShowFullName] = useState(false)
 
   // Per-request models bill by call, so the discounted price lives in the input
   // cell as "$X / call" and the output cell has no meaning.
@@ -71,29 +59,10 @@ export function PricingPreviewRow(props: PricingPreviewRowProps) {
             label={row.vendorLabel}
             variant={props.variant === 'preview' ? 'dot' : 'chip'}
           />
-          <TooltipProvider delay={0}>
-            <Tooltip
-              open={showFullName}
-              onOpenChange={(open) => {
-                const name = nameRef.current
-                setShowFullName(
-                  open && name !== null && name.scrollWidth > name.clientWidth
-                )
-              }}
-            >
-              <TooltipTrigger
-                render={
-                  <span
-                    ref={nameRef}
-                    className='truncate font-mono text-sm font-bold text-(--pd-ink-strong)'
-                  />
-                }
-              >
-                {row.name}
-              </TooltipTrigger>
-              <TooltipContent className='font-mono'>{row.name}</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <ModelName
+            name={row.name}
+            className='font-mono text-sm font-bold text-(--pd-ink-strong)'
+          />
         </div>
       </th>
       <td className='px-6 py-4 text-right font-mono text-sm font-bold text-(--pd-ink)'>

@@ -5552,6 +5552,8 @@
     "Prices are USD per request; rules are checked top-down and the first match wins, otherwise the default price applies.": "Les prix sont en USD par requête ; les règles sont évaluées de haut en bas, la première correspondance l'emporte, sinon le prix par défaut s'applique.",
     "Add rule": "Ajouter une règle",
     "Rule label": "Libellé de la règle",
-    "Price ($ per request)": "Prix ($ par requête)"
+    "Price ($ per request)": "Prix ($ par requête)",
+    "e.g. Gemini 3.1 Flash Image": "p. ex. Gemini 3.1 Flash Image",
+    "Shown in the models & pricing table instead of the model name. Press Enter to break the name across lines; leave empty to show the model name.": "Affiché dans le tableau des modèles et tarifs à la place du nom du modèle. Appuyez sur Entrée pour répartir le nom sur plusieurs lignes ; laissez vide pour afficher le nom du modèle."
   }
 }

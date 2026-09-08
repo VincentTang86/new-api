@@ -5552,6 +5552,8 @@
     "Prices are USD per request; rules are checked top-down and the first match wins, otherwise the default price applies.": "价格单位是每次请求的美元；规则自上而下匹配，命中第一条即生效，都不命中则按默认价格。",
     "Add rule": "添加规则",
     "Rule label": "规则名称",
-    "Price ($ per request)": "价格（$/次）"
+    "Price ($ per request)": "价格（$/次）",
+    "e.g. Gemini 3.1 Flash Image": "如 Gemini 3.1 Flash Image",
+    "Shown in the models & pricing table instead of the model name. Press Enter to break the name across lines; leave empty to show the model name.": "在模型与价格表中替代模型名展示。按回车可将名称分行；留空则展示模型名。"
   }
 }

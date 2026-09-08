@@ -292,3 +292,34 @@ func TestCacheUpdateChannelSyncsAdvancedCustomConfig(t *testing.T) {
 
 	assert.Nil(t, channel2advancedCustomConfig[401])
 }
+
+// 显示名是定价表模型列的取值来源：精确元数据的显示名必须原样送到 /api/pricing，
+// 而前缀/后缀/包含规则的元数据会命中一批模型，它的显示名不能套到那些模型上。
+func TestPricingDisplayNameOnlyAppliesToExactMetadata(t *testing.T) {
+	resetPricingEndpointTestTables(t)
+
+	insertPricingEndpointChannel(t, 105, constant.ChannelTypeOpenAI, dto.ChannelOtherSettings{})
+	insertPricingEndpointAbility(t, 105, "gemini-3.1-flash-image")
+	insertPricingEndpointAbility(t, 105, "gemini-3-pro-image")
+	require.NoError(t, DB.Create(&Model{
+		ModelName:   "gemini-3.1-flash-image",
+		DisplayName: "Gemini 3.1 Flash Image\n(Nano Banana 2)",
+		Status:      1,
+		NameRule:    NameRuleExact,
+	}).Error)
+	require.NoError(t, DB.Create(&Model{
+		ModelName:   "gemini-",
+		DisplayName: "Gemini",
+		Status:      1,
+		NameRule:    NameRulePrefix,
+	}).Error)
+
+	InitChannelCache()
+	byModel := make(map[string]string)
+	for _, pricing := range GetPricing() {
+		byModel[pricing.ModelName] = pricing.DisplayName
+	}
+
+	assert.Equal(t, "Gemini 3.1 Flash Image\n(Nano Banana 2)", byModel["gemini-3.1-flash-image"])
+	assert.Empty(t, byModel["gemini-3-pro-image"])
+}
