@@ -26,17 +26,21 @@ import { cn } from '@/lib/utils'
 
 import { LANDING_CONTAINER, LANDING_SECTION_IDS } from '../../constants'
 import { useLandingPricingRows } from '../../lib/use-landing-pricing-rows'
+import { ImagePricingList } from '../pricing/image-pricing-list'
 import { PricingModelList } from '../pricing/pricing-model-list'
 import { PricingTableControls } from '../pricing/pricing-table-controls'
 
-/** How many models the home teaser shows before "View all models". */
+/** How many models the home teaser shows, on either tab, before "View all
+ * models". */
 const PREVIEW_ROW_LIMIT = 10
 
 export function LandingPricingPreview() {
   const { t } = useTranslation()
   const { systemName } = useSystemConfig()
   const table = useLandingPricingRows()
+  const isImageTab = table.modelType === 'image'
   const previewRows = table.rows.slice(0, PREVIEW_ROW_LIMIT)
+  const previewImageRows = table.imageRows.slice(0, PREVIEW_ROW_LIMIT)
 
   return (
     <section
@@ -48,14 +52,21 @@ export function LandingPricingPreview() {
           {t('Models & pricing, made clear')}
         </h2>
         <p className='text-base text-(--pd-muted)'>
-          {t(
-            'Compare {{name}} rates with the selected benchmark. Prices are shown in USD per million tokens.',
-            { name: systemName }
-          )}
+          {isImageTab
+            ? t(
+                'Compare {{name}} image rates with the vendor list price. Prices are shown in USD per image; open a model for its per-token rates.',
+                { name: systemName }
+              )
+            : t(
+                'Compare {{name}} rates with the selected benchmark. Prices are shown in USD per million tokens.',
+                { name: systemName }
+              )}
         </p>
       </div>
 
       <PricingTableControls
+        modelType={table.modelType}
+        onModelTypeChange={table.setModelType}
         groups={table.groups}
         selectedGroup={table.selectedGroup}
         onGroupChange={table.setSelectedGroup}
@@ -68,14 +79,24 @@ export function LandingPricingPreview() {
 
       <ModelDetailsDrawerHost />
 
-      <PricingModelList
-        rows={previewRows}
-        variant='preview'
-        benchmark={table.benchmark}
-        isLoading={table.isLoading}
-        isError={table.isError}
-        onRetry={table.refetch}
-      />
+      {isImageTab ? (
+        <ImagePricingList
+          rows={previewImageRows}
+          benchmark={table.benchmark}
+          isLoading={table.isLoading}
+          isError={table.isError}
+          onRetry={table.refetch}
+        />
+      ) : (
+        <PricingModelList
+          rows={previewRows}
+          variant='preview'
+          benchmark={table.benchmark}
+          isLoading={table.isLoading}
+          isError={table.isError}
+          onRetry={table.refetch}
+        />
+      )}
 
       <div className='mt-4 flex flex-wrap items-center justify-between gap-2'>
         <p className='text-[13px] text-(--pd-muted-3)'>
@@ -83,8 +104,10 @@ export function LandingPricingPreview() {
             "Comparison rates come from the selected source's public model listings. Savings are calculated against that rate."
           )}
         </p>
+        {/* The catalogue opens on the tab the visitor was reading here. */}
         <Link
           to='/pricing'
+          search={isImageTab ? { type: 'image' as const } : {}}
           className='pd-font-display flex items-center gap-1 text-base font-bold whitespace-nowrap text-(--pd-primary) underline transition-opacity hover:opacity-80'
         >
           {t('View all models')}

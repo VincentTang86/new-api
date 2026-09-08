@@ -36,8 +36,8 @@ const MODEL_TYPE_OPTIONS: { key: PricingModelType; labelKey: string }[] = [
 
 interface PricingTableControlsProps {
   /**
-   * The LLM / Image switch, from the design's models & pricing page. Absent
-   * on the home preview, which only lists language models.
+   * The LLM / Image switch, from the design's models & pricing page; the home
+   * preview offers the same two tabs.
    */
   modelType?: PricingModelType
   onModelTypeChange?: (type: PricingModelType) => void

@@ -57,6 +57,11 @@ export interface PricingProviderOption {
 
 export type PricingProviderFilter = LandingProviderKey | 'all'
 
+export interface UseLandingPricingRowsOptions {
+  /** Tab to open on; the catalogue page takes it from its URL. */
+  initialModelType?: PricingModelType
+}
+
 interface UseLandingPricingRows {
   rows: PricingRow[]
   /** Image models, catalogued per image; shown by the Image tab. */
@@ -90,12 +95,16 @@ const EXCLUDED_GROUP_KEYS = new Set(['', 'auto'])
  * Only `/api/pricing` can fail the table: a model without configured reference
  * prices simply renders dashes in the benchmark / savings columns.
  */
-export function useLandingPricingRows(): UseLandingPricingRows {
+export function useLandingPricingRows(
+  options: UseLandingPricingRowsOptions = {}
+): UseLandingPricingRows {
   const { t, i18n } = useTranslation()
   const { models, usableGroup, groupRatio, isLoading, error, refetch } =
     usePricingData()
   const [groupChoice, setGroupChoice] = useState<string | null>(null)
-  const [modelType, setModelType] = useState<PricingModelType>('llm')
+  const [modelType, setModelType] = useState<PricingModelType>(
+    options.initialModelType ?? 'llm'
+  )
   const [benchmark, setBenchmark] = useState<PricingBenchmark>('official')
   const [providerFilter, setProviderFilter] =
     useState<PricingProviderFilter>('all')

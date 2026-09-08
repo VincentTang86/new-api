@@ -16,6 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
+import { getRouteApi } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
 import { PublicLayout } from '@/components/layout'
@@ -27,10 +28,13 @@ import { useLandingPricingRows } from '@/features/home/landing/lib/use-landing-p
 import { ModelDetailsDrawerHost } from '@/features/pricing/components/model-details-drawer-host'
 import { useSystemConfig } from '@/hooks/use-system-config'
 
+const route = getRouteApi('/pricing/')
+
 export function ModelsPricing() {
   const { t } = useTranslation()
   const { systemName } = useSystemConfig()
-  const table = useLandingPricingRows()
+  const { type } = route.useSearch()
+  const table = useLandingPricingRows({ initialModelType: type })
 
   return (
     <PublicLayout showMainContainer={false}>

@@ -64,11 +64,11 @@ function mockPricing(
   })
 }
 
-function renderRows() {
+function renderRows(options?: Parameters<typeof useLandingPricingRows>[0]) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   })
-  return renderHook(() => useLandingPricingRows(), {
+  return renderHook(() => useLandingPricingRows(options), {
     wrapper: ({ children }) => (
       <QueryClientProvider client={client}>{children}</QueryClientProvider>
     ),
@@ -233,5 +233,30 @@ describe('useLandingPricingRows tier tabs', () => {
 
     await waitFor(() => expect(result.current.groups).toHaveLength(1))
     expect(result.current.groups[0].key).toBe('Production')
+  })
+})
+
+describe('useLandingPricingRows model type', () => {
+  beforeEach(() => {
+    usePricingData.mockReset()
+    mockPricing(
+      { Production: { desc: 'reliable', ratio: 1 } },
+      { Production: 1 },
+      [model('gpt-5', ['all'])]
+    )
+  })
+
+  test('opens on the token table unless asked otherwise', async () => {
+    const { result } = renderRows()
+
+    await waitFor(() => expect(result.current.groups).toHaveLength(1))
+    expect(result.current.modelType).toBe('llm')
+  })
+
+  test('opens on the tab the caller names, e.g. a /pricing?type=image link', async () => {
+    const { result } = renderRows({ initialModelType: 'image' })
+
+    await waitFor(() => expect(result.current.groups).toHaveLength(1))
+    expect(result.current.modelType).toBe('image')
   })
 })
