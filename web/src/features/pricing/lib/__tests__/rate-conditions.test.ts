@@ -19,7 +19,11 @@ For commercial licensing, please contact support@quantumnous.com
 import { describe, expect, test } from 'vitest'
 
 import type { PricingModel } from '../../types'
-import { getRateConditions, getReferenceLaneKeys } from '../rate-conditions'
+import {
+  getRateConditions,
+  getReferenceLaneKeys,
+  hasTokenPricing,
+} from '../rate-conditions'
 
 const t = (key: string) => key
 
@@ -166,5 +170,35 @@ describe('getReferenceLaneKeys', () => {
       'image_input',
       'image_output',
     ])
+  })
+})
+
+describe('hasTokenPricing', () => {
+  test('a per-request expression states no per-token rate', () => {
+    // xAI's grid: every tier is a per-image constant, so the drawer's /Token
+    // view would be a table with no price column.
+    const perImage =
+      '(param("n") == nil ? 1 : param("n")) * (param("resolution") == "2k" ? tier("2k-low", 60000) : tier("1k-low", 40000)) + (param("images.#") == nil ? 0 : param("images.#")) * 10000'
+    expect(hasTokenPricing(tiered(perImage))).toBe(false)
+  })
+
+  test('an image model billed per token keeps its per-token view', () => {
+    expect(hasTokenPricing(tiered('tier("base", c * 30 + img_o * 120)'))).toBe(
+      true
+    )
+    expect(hasTokenPricing(tiered(CONTEXT_TIER_EXPR))).toBe(true)
+  })
+
+  test('plain models follow their quota type', () => {
+    expect(hasTokenPricing(model())).toBe(true)
+    expect(hasTokenPricing(model({ quota_type: 1, model_price: 0.04 }))).toBe(
+      false
+    )
+  })
+
+  test('an expression the parser cannot read still counts as priced', () => {
+    // The drawer shows the raw expression in that case; greying the view
+    // out would hide that notice.
+    expect(hasTokenPricing(tiered('p * 3 + c * 15'))).toBe(true)
   })
 })

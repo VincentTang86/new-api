@@ -65,6 +65,7 @@ import { normalizeInterfaceLanguage, toIntlLocale } from '@/i18n/languages'
 import { cn } from '@/lib/utils'
 
 import { isImageModel, parseTags } from '../lib/model-helpers'
+import { hasTokenPricing } from '../lib/rate-conditions'
 import type { ModelCapability, PricingModel, TokenUnit } from '../types'
 import { ModelBillingModeBadge } from './model-billing-mode-badge'
 import { ModelDetailsApi } from './model-details-api'
@@ -648,8 +649,13 @@ const IMAGE_PRICE_UNITS: { key: ImagePriceUnit; label: string }[] = [
 export function ModelDetailsContent(props: ModelDetailsContentProps) {
   const { t } = useTranslation()
   const imageModel = isImageModel(props.model)
+  // A model priced per output image only has no per-token rate to show: the
+  // /Token switch stays in place but greyed out, so the unit reads as
+  // deliberately unavailable rather than missing, and the table stays /Pic.
+  const tokenPriced = hasTokenPricing(props.model)
   const [priceUnit, setPriceUnit] = useState<ImagePriceUnit>('pic')
-  const showPerImage = imageModel && priceUnit === 'pic'
+  const activeUnit: ImagePriceUnit = tokenPriced ? priceUnit : 'pic'
+  const showPerImage = imageModel && activeUnit === 'pic'
 
   let pricingBlurb = t('Prices are shown in USD per {{unit}} tokens.', {
     unit: props.tokenUnit === 'K' ? '1K' : '1M',
@@ -703,16 +709,21 @@ export function ModelDetailsContent(props: ModelDetailsContentProps) {
                   className='flex gap-px rounded-md bg-(--pd-control-bg) p-0.5'
                 >
                   {IMAGE_PRICE_UNITS.map((unit) => {
-                    const isActive = unit.key === priceUnit
+                    const isActive = unit.key === activeUnit
+                    const isUnavailable = unit.key === 'token' && !tokenPriced
                     return (
                       <button
                         key={unit.key}
                         type='button'
                         role='tab'
                         aria-selected={isActive}
+                        disabled={isUnavailable}
+                        title={
+                          isUnavailable ? t('Priced per image only') : undefined
+                        }
                         onClick={() => setPriceUnit(unit.key)}
                         className={cn(
-                          'cursor-pointer rounded-[5px] px-2.5 py-1 text-xs transition-colors',
+                          'cursor-pointer rounded-[5px] px-2.5 py-1 text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-40',
                           isActive
                             ? 'bg-(--pd-surface) font-semibold text-(--pd-primary) shadow-sm'
                             : 'font-medium text-(--pd-muted-2)'

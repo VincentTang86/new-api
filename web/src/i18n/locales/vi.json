@@ -5527,6 +5527,7 @@
     "from ~{{price}} / image": "từ ~{{price}} / ảnh",
     "Compare {{name}} image rates with the vendor list price. Prices are shown in USD per image; open a model for its per-token rates.": "So sánh giá ảnh của {{name}} với giá niêm yết của nhà cung cấp. Giá tính bằng USD trên mỗi ảnh; mở một mô hình để xem giá theo token.",
     "Price unit": "Đơn vị giá",
+    "Priced per image only": "Chỉ tính giá theo ảnh",
     "Estimated price per image at different resolutions.": "Giá ước tính cho mỗi ảnh ở các độ phân giải khác nhau.",
     "Image output pricing is approximate and varies by resolution and quality settings.": "Giá đầu ra hình ảnh chỉ là ước tính và thay đổi theo độ phân giải và thiết lập chất lượng.",
     "Per image": "Mỗi ảnh",

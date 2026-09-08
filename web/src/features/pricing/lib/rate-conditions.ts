@@ -29,6 +29,7 @@ import {
   timeRateVariantLabel,
   type TimeRateVariant,
 } from './dynamic-price'
+import { isTokenBasedModel } from './model-helpers'
 import { tokenPriceUSD } from './price'
 
 type Translate = (key: string) => string
@@ -72,13 +73,10 @@ const STATIC_TYPE_REFERENCE_LANES: {
 ]
 
 /**
- * The reference lanes worth configuring for a model: those its own pricing
- * table renders as columns. Falls back to every lane when nothing maps (no
- * expression, or one priced purely on unmapped quantities such as audio).
+ * The token lanes a model's own pricing states: the non-zero coefficients of
+ * its expression tiers, or the ratio-configured prices of a plain model.
  */
-export function getReferenceLaneKeys(
-  model: PricingModel
-): (keyof ReferencePriceLanes)[] {
+function pricedTokenLanes(model: PricingModel): Set<keyof ReferencePriceLanes> {
   const tiers = isDynamicPricingModel(model)
     ? getDynamicPricingTiers(model)
     : []
@@ -98,8 +96,33 @@ export function getReferenceLaneKeys(
       }
     }
   }
+  return relevant
+}
+
+/**
+ * The reference lanes worth configuring for a model: those its own pricing
+ * table renders as columns. Falls back to every lane when nothing maps (no
+ * expression, or one priced purely on unmapped quantities such as audio).
+ */
+export function getReferenceLaneKeys(
+  model: PricingModel
+): (keyof ReferencePriceLanes)[] {
+  const relevant = pricedTokenLanes(model)
   if (relevant.size === 0) return [...REFERENCE_LANE_ORDER]
   return REFERENCE_LANE_ORDER.filter((lane) => relevant.has(lane))
+}
+
+/**
+ * Whether the model states any per-token rate at all. A per-request
+ * expression (an image model priced per output image) has none, so a
+ * per-token view of it would be an empty table. An expression the parser
+ * cannot break into tiers still counts as priced, so the drawer can say so
+ * instead of hiding the view.
+ */
+export function hasTokenPricing(model: PricingModel): boolean {
+  if (!isDynamicPricingModel(model)) return isTokenBasedModel(model)
+  if (getDynamicPricingTiers(model).length === 0) return true
+  return pricedTokenLanes(model).size > 0
 }
 
 /**

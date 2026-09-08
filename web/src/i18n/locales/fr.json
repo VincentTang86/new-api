@@ -5527,6 +5527,7 @@
     "from ~{{price}} / image": "dès ~{{price}} / image",
     "Compare {{name}} image rates with the vendor list price. Prices are shown in USD per image; open a model for its per-token rates.": "Comparez les tarifs image de {{name}} au prix public du fournisseur. Les prix sont en USD par image ; ouvrez un modèle pour ses tarifs par token.",
     "Price unit": "Unité de prix",
+    "Priced per image only": "Tarifé à l'image uniquement",
     "Estimated price per image at different resolutions.": "Prix indicatif par image selon la résolution.",
     "Image output pricing is approximate and varies by resolution and quality settings.": "Le prix des images générées est indicatif et varie selon la résolution et les réglages de qualité.",
     "Per image": "Par image",

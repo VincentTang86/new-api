@@ -5527,6 +5527,7 @@
     "from ~{{price}} / image": "約 {{price}} / 張起",
     "Compare {{name}} image rates with the vendor list price. Prices are shown in USD per image; open a model for its per-token rates.": "比較 {{name}} 圖像模型與官方刊例價。價格以每張圖片計（美元），點開模型可查看按 Token 的價格。",
     "Price unit": "價格單位",
+    "Priced per image only": "僅按張計價",
     "Estimated price per image at different resolutions.": "不同解析度下每張圖片的預估價格。",
     "Image output pricing is approximate and varies by resolution and quality settings.": "圖像輸出價格為預估值，會依解析度與品質設定而有所不同。",
     "Per image": "每張",

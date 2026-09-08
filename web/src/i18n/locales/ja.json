@@ -5527,6 +5527,7 @@
     "from ~{{price}} / image": "1枚あたり約 {{price}} から",
     "Compare {{name}} image rates with the vendor list price. Prices are shown in USD per image; open a model for its per-token rates.": "{{name}} の画像モデル料金をベンダー公式価格と比較します。価格は 1 枚あたりの米ドルで表示され、モデルを開くとトークン単価を確認できます。",
     "Price unit": "価格の単位",
+    "Priced per image only": "画像単位の課金のみ",
     "Estimated price per image at different resolutions.": "解像度ごとの画像 1 枚あたりの概算価格です。",
     "Image output pricing is approximate and varies by resolution and quality settings.": "画像出力の料金は概算であり、解像度や品質設定により変動します。",
     "Per image": "1枚あたり",
