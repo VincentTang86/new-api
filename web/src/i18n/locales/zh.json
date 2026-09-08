@@ -5540,6 +5540,18 @@
     "Per-image prices need a unique size and a positive price": "按张价格的档位名不能为空或重复，价格必须大于 0",
     "Coefficients are USD per 1M tokens; a bare constant is USD × 1,000,000 per request (40000 = $0.04), so per-image prices can be switched on request fields with param(path).": "系数是每 100 万 token 的美元价；单独的常量表示每次请求 美元 × 1,000,000（40000 = $0.04），因此可以用 param(path) 按请求字段切换每张价格。",
     "Sample request body (JSON)": "示例请求体（JSON）",
-    "Fields read by param(path) come from this body; header() sees no headers here and time functions use the current time.": "param(path) 读取的字段来自这个请求体；此处 header() 读不到请求头，时间函数使用当前时间。"
+    "Fields read by param(path) come from this body; header() sees no headers here and time functions use the current time.": "param(path) 读取的字段来自这个请求体；此处 header() 读不到请求头，时间函数使用当前时间。",
+    "Billing dimension": "计费维度",
+    "Per token": "按 Token",
+    "Default price ($ per request)": "默认价格（$/次）",
+    "Default tier label": "默认档位名称",
+    "Input image price ($ per image)": "输入图片价格（$/张）",
+    "Counted from the images array or a single image field on edits; leave empty to disable.": "编辑请求按 images 数组或单个 image 字段计数；留空则不收。",
+    "Multiply by n (image count)": "乘以 n（生成张数）",
+    "Price rules": "价格规则",
+    "Prices are USD per request; rules are checked top-down and the first match wins, otherwise the default price applies.": "价格单位是每次请求的美元；规则自上而下匹配，命中第一条即生效，都不命中则按默认价格。",
+    "Add rule": "添加规则",
+    "Rule label": "规则名称",
+    "Price ($ per request)": "价格（$/次）"
   }
 }

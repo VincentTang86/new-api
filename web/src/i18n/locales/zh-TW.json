@@ -5540,6 +5540,18 @@
     "Per-image prices need a unique size and a positive price": "按張價格的檔位名稱不能為空或重複，價格必須大於 0",
     "Coefficients are USD per 1M tokens; a bare constant is USD × 1,000,000 per request (40000 = $0.04), so per-image prices can be switched on request fields with param(path).": "係數是每 100 萬 token 的美元價；單獨的常數表示每次請求 美元 × 1,000,000（40000 = $0.04），因此可以用 param(path) 依請求欄位切換每張價格。",
     "Sample request body (JSON)": "範例請求主體（JSON）",
-    "Fields read by param(path) come from this body; header() sees no headers here and time functions use the current time.": "param(path) 讀取的欄位來自這個請求主體；此處 header() 讀不到請求標頭，時間函數使用目前時間。"
+    "Fields read by param(path) come from this body; header() sees no headers here and time functions use the current time.": "param(path) 讀取的欄位來自這個請求主體；此處 header() 讀不到請求標頭，時間函數使用目前時間。",
+    "Billing dimension": "計費維度",
+    "Per token": "按 Token",
+    "Default price ($ per request)": "預設價格（$/次）",
+    "Default tier label": "預設檔位名稱",
+    "Input image price ($ per image)": "輸入圖片價格（$/張）",
+    "Counted from the images array or a single image field on edits; leave empty to disable.": "編輯請求依 images 陣列或單一 image 欄位計數；留空則不收。",
+    "Multiply by n (image count)": "乘以 n（生成張數）",
+    "Price rules": "價格規則",
+    "Prices are USD per request; rules are checked top-down and the first match wins, otherwise the default price applies.": "價格單位是每次請求的美元；規則由上而下比對，命中第一條即生效，都不命中則按預設價格。",
+    "Add rule": "新增規則",
+    "Rule label": "規則名稱",
+    "Price ($ per request)": "價格（$/次）"
   }
 }

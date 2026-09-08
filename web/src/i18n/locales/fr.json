@@ -5540,6 +5540,18 @@
     "Per-image prices need a unique size and a positive price": "Les prix par image exigent une taille unique et un prix positif",
     "Coefficients are USD per 1M tokens; a bare constant is USD × 1,000,000 per request (40000 = $0.04), so per-image prices can be switched on request fields with param(path).": "Les coefficients sont en USD par million de tokens ; une constante seule vaut USD × 1 000 000 par requête (40000 = 0,04 $), ce qui permet de choisir un prix par image selon les champs de la requête avec param(path).",
     "Sample request body (JSON)": "Corps de requête d'exemple (JSON)",
-    "Fields read by param(path) come from this body; header() sees no headers here and time functions use the current time.": "Les champs lus par param(path) proviennent de ce corps ; header() ne voit aucun en-tête ici et les fonctions de temps utilisent l'heure actuelle."
+    "Fields read by param(path) come from this body; header() sees no headers here and time functions use the current time.": "Les champs lus par param(path) proviennent de ce corps ; header() ne voit aucun en-tête ici et les fonctions de temps utilisent l'heure actuelle.",
+    "Billing dimension": "Dimension de facturation",
+    "Per token": "Par token",
+    "Default price ($ per request)": "Prix par défaut ($ par requête)",
+    "Default tier label": "Libellé du palier par défaut",
+    "Input image price ($ per image)": "Prix de l'image d'entrée ($ par image)",
+    "Counted from the images array or a single image field on edits; leave empty to disable.": "Compté à partir du tableau images ou du champ image unique lors des éditions ; laisser vide pour désactiver.",
+    "Multiply by n (image count)": "Multiplier par n (nombre d'images)",
+    "Price rules": "Règles de prix",
+    "Prices are USD per request; rules are checked top-down and the first match wins, otherwise the default price applies.": "Les prix sont en USD par requête ; les règles sont évaluées de haut en bas, la première correspondance l'emporte, sinon le prix par défaut s'applique.",
+    "Add rule": "Ajouter une règle",
+    "Rule label": "Libellé de la règle",
+    "Price ($ per request)": "Prix ($ par requête)"
   }
 }

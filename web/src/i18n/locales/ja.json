@@ -5540,6 +5540,18 @@
     "Per-image prices need a unique size and a positive price": "1枚あたりの価格には一意のサイズと正の価格が必要です",
     "Coefficients are USD per 1M tokens; a bare constant is USD × 1,000,000 per request (40000 = $0.04), so per-image prices can be switched on request fields with param(path).": "係数は 100 万トークンあたりの USD 価格です。単独の定数はリクエストごとの USD × 1,000,000（40000 = $0.04）を表すため、param(path) でリクエスト項目に応じて画像単価を切り替えられます。",
     "Sample request body (JSON)": "サンプルリクエストボディ（JSON）",
-    "Fields read by param(path) come from this body; header() sees no headers here and time functions use the current time.": "param(path) で読み取る項目はこのボディから取得します。ここでは header() はヘッダーを参照できず、時間関数は現在時刻を使用します。"
+    "Fields read by param(path) come from this body; header() sees no headers here and time functions use the current time.": "param(path) で読み取る項目はこのボディから取得します。ここでは header() はヘッダーを参照できず、時間関数は現在時刻を使用します。",
+    "Billing dimension": "課金の単位",
+    "Per token": "トークン単位",
+    "Default price ($ per request)": "デフォルト価格（$/リクエスト）",
+    "Default tier label": "デフォルト階層のラベル",
+    "Input image price ($ per image)": "入力画像の価格（$/枚）",
+    "Counted from the images array or a single image field on edits; leave empty to disable.": "編集リクエストでは images 配列または単一の image 項目から数えます。空欄で無効になります。",
+    "Multiply by n (image count)": "n（生成枚数）を掛ける",
+    "Price rules": "価格ルール",
+    "Prices are USD per request; rules are checked top-down and the first match wins, otherwise the default price applies.": "価格はリクエストあたりの USD です。ルールは上から順に評価され、最初に一致したものが適用され、一致しなければデフォルト価格になります。",
+    "Add rule": "ルールを追加",
+    "Rule label": "ルールのラベル",
+    "Price ($ per request)": "価格（$/リクエスト）"
   }
 }

@@ -5540,6 +5540,18 @@
     "Per-image prices need a unique size and a positive price": "Per-image prices need a unique size and a positive price",
     "Coefficients are USD per 1M tokens; a bare constant is USD × 1,000,000 per request (40000 = $0.04), so per-image prices can be switched on request fields with param(path).": "Coefficients are USD per 1M tokens; a bare constant is USD × 1,000,000 per request (40000 = $0.04), so per-image prices can be switched on request fields with param(path).",
     "Sample request body (JSON)": "Sample request body (JSON)",
-    "Fields read by param(path) come from this body; header() sees no headers here and time functions use the current time.": "Fields read by param(path) come from this body; header() sees no headers here and time functions use the current time."
+    "Fields read by param(path) come from this body; header() sees no headers here and time functions use the current time.": "Fields read by param(path) come from this body; header() sees no headers here and time functions use the current time.",
+    "Billing dimension": "Billing dimension",
+    "Per token": "Per token",
+    "Default price ($ per request)": "Default price ($ per request)",
+    "Default tier label": "Default tier label",
+    "Input image price ($ per image)": "Input image price ($ per image)",
+    "Counted from the images array or a single image field on edits; leave empty to disable.": "Counted from the images array or a single image field on edits; leave empty to disable.",
+    "Multiply by n (image count)": "Multiply by n (image count)",
+    "Price rules": "Price rules",
+    "Prices are USD per request; rules are checked top-down and the first match wins, otherwise the default price applies.": "Prices are USD per request; rules are checked top-down and the first match wins, otherwise the default price applies.",
+    "Add rule": "Add rule",
+    "Rule label": "Rule label",
+    "Price ($ per request)": "Price ($ per request)"
   }
 }

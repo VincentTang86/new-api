@@ -52,6 +52,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -84,6 +85,20 @@ import {
   type TimeFunc,
 } from '@/features/pricing/lib/billing-expr'
 import {
+  PER_REQUEST_KIND,
+  type AnyVisualConfig,
+  type PerRequestConfig,
+  type PerRequestRule,
+  type PerRequestRuleCondition,
+  createDefaultPerRequestConfig,
+  createPerRequestCondition,
+  createPerRequestRule,
+  generateExprFromAnyVisualConfig,
+  generateExprFromPerRequestConfig,
+  isPerRequestConfig,
+  tryParseAnyVisualConfig,
+} from '@/features/pricing/lib/per-request-expr'
+import {
   CACHE_MODE_GENERIC,
   CACHE_MODE_TIMED,
   type CacheMode,
@@ -95,11 +110,9 @@ import {
   evalExprLocally,
   exprUsesExtraVars,
   exprUsesRequestProbe,
-  generateExprFromVisualConfig,
   getTierCacheMode,
   normalizeVisualConfig,
   normalizeVisualTier,
-  tryParseVisualConfig,
 } from '@/features/pricing/lib/tier-expr'
 import { cn } from '@/lib/utils'
 
@@ -131,6 +144,32 @@ type Preset = {
 type PresetGroup = {
   group: string
   presets: Preset[]
+}
+
+function paramEquals(path: string, value: string): PerRequestRuleCondition {
+  return createPerRequestCondition({
+    source: 'param',
+    path,
+    mode: MATCH_EQ,
+    value,
+  })
+}
+
+function paramExists(path: string): PerRequestRuleCondition {
+  return createPerRequestCondition({
+    source: 'param',
+    path,
+    mode: MATCH_EXISTS,
+    value: '',
+  })
+}
+
+function presetRule(
+  label: string,
+  price: string,
+  conditions: PerRequestRuleCondition[]
+): PerRequestRule {
+  return createPerRequestRule({ label, price, conditions })
 }
 
 const PRESET_GROUPS: PresetGroup[] = [
@@ -206,12 +245,50 @@ const PRESET_GROUPS: PresetGroup[] = [
       {
         key: 'flat-per-image',
         label: 'Flat per image',
-        expr: '(param("n") == nil ? 1 : param("n")) * tier("image", 40000)',
+        expr: generateExprFromPerRequestConfig({
+          ...createDefaultPerRequestConfig(),
+          defaultLabel: 'image',
+          defaultPrice: '0.04',
+        }),
       },
       {
         key: 'grok-imagine-image-2.0',
         label: 'Grok Imagine Image 2.0',
-        expr: '(param("n") == nil ? 1 : param("n")) * ((param("resolution") == "2k" || param("resolution") == "2K") ? ((param("quality") == "medium" || (param("quality") == "auto" && (param("image") != nil || param("images") != nil))) ? tier("2k-medium", 80000) : tier("2k-low", 60000)) : ((param("quality") == "medium" || (param("quality") == "auto" && (param("image") != nil || param("images") != nil))) ? tier("1k-medium", 60000) : tier("1k-low", 40000))) + (param("images.#") == nil ? (param("image") != nil ? 1 : 0) : param("images.#")) * 10000',
+        // xAI official grid: output priced by resolution × quality, "auto"
+        // quality serves medium on edits, plus $0.01 per input image.
+        expr: generateExprFromPerRequestConfig({
+          kind: PER_REQUEST_KIND,
+          defaultLabel: '1k-low',
+          defaultPrice: '0.04',
+          countByN: true,
+          inputImagePrice: '0.01',
+          rules: [
+            presetRule('2k-medium', '0.08', [
+              paramEquals('resolution', '2k'),
+              paramEquals('quality', 'medium'),
+            ]),
+            presetRule('2k-medium', '0.08', [
+              paramEquals('resolution', '2k'),
+              paramEquals('quality', 'auto'),
+              paramExists('image'),
+            ]),
+            presetRule('2k-medium', '0.08', [
+              paramEquals('resolution', '2k'),
+              paramEquals('quality', 'auto'),
+              paramExists('images'),
+            ]),
+            presetRule('2k-low', '0.06', [paramEquals('resolution', '2k')]),
+            presetRule('1k-medium', '0.06', [paramEquals('quality', 'medium')]),
+            presetRule('1k-medium', '0.06', [
+              paramEquals('quality', 'auto'),
+              paramExists('image'),
+            ]),
+            presetRule('1k-medium', '0.06', [
+              paramEquals('quality', 'auto'),
+              paramExists('images'),
+            ]),
+          ],
+        }),
       },
     ],
   },
@@ -786,12 +863,256 @@ function VisualTierCard({
 // Visual editor (list of tiers)
 // ---------------------------------------------------------------------------
 
+type PerRequestEditorProps = {
+  config: PerRequestConfig
+  onChange: (next: PerRequestConfig) => void
+}
+
+function PerRequestEditor({ config, onChange }: PerRequestEditorProps) {
+  const { t } = useTranslation()
+
+  const updateRule = (index: number, next: PerRequestRule) => {
+    onChange({
+      ...config,
+      rules: config.rules.map((rule, i) => (i === index ? next : rule)),
+    })
+  }
+
+  return (
+    <div className='space-y-3'>
+      <p className='text-muted-foreground text-xs'>
+        {t(
+          'Prices are USD per request; rules are checked top-down and the first match wins, otherwise the default price applies.'
+        )}
+      </p>
+      <div className='grid gap-3 sm:grid-cols-3'>
+        <div className='space-y-0.5'>
+          <Label className='text-muted-foreground text-xs'>
+            {t('Default price ($ per request)')}
+          </Label>
+          <Input
+            type='number'
+            min={0}
+            step={0.0001}
+            value={config.defaultPrice}
+            onChange={(event) =>
+              onChange({ ...config, defaultPrice: event.target.value })
+            }
+            className='h-8'
+          />
+        </div>
+        <div className='space-y-0.5'>
+          <Label className='text-muted-foreground text-xs'>
+            {t('Default tier label')}
+          </Label>
+          <Input
+            value={config.defaultLabel}
+            onChange={(event) =>
+              onChange({ ...config, defaultLabel: event.target.value })
+            }
+            className='h-8'
+          />
+        </div>
+        <div className='space-y-0.5'>
+          <Label className='text-muted-foreground text-xs'>
+            {t('Input image price ($ per image)')}
+          </Label>
+          <Input
+            type='number'
+            min={0}
+            step={0.0001}
+            value={config.inputImagePrice}
+            placeholder='0'
+            onChange={(event) =>
+              onChange({ ...config, inputImagePrice: event.target.value })
+            }
+            className='h-8'
+          />
+          <p className='text-muted-foreground text-xs'>
+            {t(
+              'Counted from the images array or a single image field on edits; leave empty to disable.'
+            )}
+          </p>
+        </div>
+      </div>
+      <label className='flex items-center gap-2 text-xs'>
+        <Switch
+          checked={config.countByN}
+          onCheckedChange={(checked) =>
+            onChange({ ...config, countByN: checked })
+          }
+        />
+        {t('Multiply by n (image count)')}
+      </label>
+      <div className='space-y-2'>
+        <h4 className='text-sm font-medium'>{t('Price rules')}</h4>
+        {config.rules.map((rule, index) => (
+          <div key={rule.id} className='space-y-2 rounded-md border p-3'>
+            <div className='flex flex-wrap items-end gap-3'>
+              <div className='space-y-0.5'>
+                <Label className='text-muted-foreground text-xs'>
+                  {t('Rule label')}
+                </Label>
+                <Input
+                  value={rule.label}
+                  onChange={(event) =>
+                    updateRule(index, { ...rule, label: event.target.value })
+                  }
+                  className='h-8 w-36'
+                />
+              </div>
+              <div className='space-y-0.5'>
+                <Label className='text-muted-foreground text-xs'>
+                  {t('Price ($ per request)')}
+                </Label>
+                <Input
+                  type='number'
+                  min={0}
+                  step={0.0001}
+                  value={rule.price}
+                  onChange={(event) =>
+                    updateRule(index, { ...rule, price: event.target.value })
+                  }
+                  className='h-8 w-36'
+                />
+              </div>
+              <Button
+                variant='ghost'
+                size='sm'
+                className='ml-auto h-8'
+                onClick={() =>
+                  onChange({
+                    ...config,
+                    rules: config.rules.filter((_, i) => i !== index),
+                  })
+                }
+              >
+                <Trash2 className='mr-1 h-4 w-4' />
+                {t('Remove')}
+              </Button>
+            </div>
+            <div className='space-y-2'>
+              {rule.conditions.map((item, conditionIndex) => (
+                <RuleConditionRow
+                  key={item.id}
+                  condition={item.condition}
+                  onChange={(next) =>
+                    updateRule(index, {
+                      ...rule,
+                      conditions: rule.conditions.map((entry, i) =>
+                        i === conditionIndex
+                          ? { ...entry, condition: next }
+                          : entry
+                      ),
+                    })
+                  }
+                  onRemove={() =>
+                    updateRule(index, {
+                      ...rule,
+                      conditions: rule.conditions.filter(
+                        (_, i) => i !== conditionIndex
+                      ),
+                    })
+                  }
+                />
+              ))}
+              <Button
+                variant='outline'
+                size='sm'
+                className='h-7 text-xs'
+                onClick={() =>
+                  updateRule(index, {
+                    ...rule,
+                    conditions: [
+                      ...rule.conditions,
+                      createPerRequestCondition(createEmptyCondition()),
+                    ],
+                  })
+                }
+              >
+                <Plus className='mr-1 h-3 w-3' />
+                {t('Add condition')}
+              </Button>
+            </div>
+          </div>
+        ))}
+        <Button
+          variant='outline'
+          size='sm'
+          className='h-9 w-36 justify-center'
+          onClick={() =>
+            onChange({
+              ...config,
+              rules: [
+                ...config.rules,
+                createPerRequestRule({
+                  label: `rule_${config.rules.length + 1}`,
+                  conditions: [
+                    createPerRequestCondition(createEmptyCondition()),
+                  ],
+                }),
+              ],
+            })
+          }
+        >
+          <Plus className='mr-2 h-4 w-4' />
+          {t('Add rule')}
+        </Button>
+      </div>
+    </div>
+  )
+}
+
 type VisualEditorProps = {
+  visualConfig: AnyVisualConfig | null
+  onChange: (next: AnyVisualConfig) => void
+}
+
+function VisualEditor({ visualConfig, onChange }: VisualEditorProps) {
+  const { t } = useTranslation()
+  const perRequest = isPerRequestConfig(visualConfig)
+
+  const handleDimensionChange = (value: string | null) => {
+    if (value === PER_REQUEST_KIND && !perRequest) {
+      onChange(createDefaultPerRequestConfig())
+    } else if (value === 'token' && perRequest) {
+      onChange(createDefaultVisualConfig())
+    }
+  }
+
+  return (
+    <div className='space-y-3'>
+      <div className='flex flex-wrap items-center gap-3'>
+        <Label className='text-xs'>{t('Billing dimension')}</Label>
+        <Tabs
+          value={perRequest ? PER_REQUEST_KIND : 'token'}
+          onValueChange={handleDimensionChange}
+        >
+          <TabsList className='h-8'>
+            <TabsTrigger value='token' className='text-xs'>
+              {t('Per token')}
+            </TabsTrigger>
+            <TabsTrigger value={PER_REQUEST_KIND} className='text-xs'>
+              {t('Per request')}
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+      {perRequest ? (
+        <PerRequestEditor config={visualConfig} onChange={onChange} />
+      ) : (
+        <TokenTierEditor visualConfig={visualConfig} onChange={onChange} />
+      )}
+    </div>
+  )
+}
+
+type TokenTierEditorProps = {
   visualConfig: VisualConfig | null
   onChange: (next: VisualConfig) => void
 }
 
-function VisualEditor({ visualConfig, onChange }: VisualEditorProps) {
+function TokenTierEditor({ visualConfig, onChange }: TokenTierEditorProps) {
   const { t } = useTranslation()
   const config = useMemo(
     () => normalizeVisualConfig(visualConfig),
@@ -1706,11 +2027,11 @@ export const TieredPricingEditor = memo(function TieredPricingEditor({
   // start in raw mode, otherwise the first render would push a zeroed
   // placeholder back to the form and overwrite the real expression on save.
   const [editorMode, setEditorMode] = useState<EditorMode>(() =>
-    currentExpr && !tryParseVisualConfig(currentExpr) ? 'raw' : 'visual'
+    currentExpr && !tryParseAnyVisualConfig(currentExpr) ? 'raw' : 'visual'
   )
-  const [visualConfig, setVisualConfig] = useState<VisualConfig | null>(
+  const [visualConfig, setVisualConfig] = useState<AnyVisualConfig | null>(
     () =>
-      tryParseVisualConfig(currentExpr) ??
+      tryParseAnyVisualConfig(currentExpr) ??
       (currentExpr ? null : createDefaultVisualConfig())
   )
   const [rawExpr, setRawExpr] = useState(() =>
@@ -1728,7 +2049,7 @@ export const TieredPricingEditor = memo(function TieredPricingEditor({
     if (initRef.current) return
     initRef.current = true
     dirtyRef.current = false
-    const parsedConfig = tryParseVisualConfig(currentExpr)
+    const parsedConfig = tryParseAnyVisualConfig(currentExpr)
     if (parsedConfig) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setVisualConfig(parsedConfig)
@@ -1756,7 +2077,7 @@ export const TieredPricingEditor = memo(function TieredPricingEditor({
 
   const effectiveExpr = useMemo(() => {
     if (editorMode === 'visual' && visualConfig) {
-      return generateExprFromVisualConfig(visualConfig)
+      return generateExprFromAnyVisualConfig(visualConfig)
     }
     const { billingExpr } = splitBillingExprAndRequestRules(rawExpr)
     return billingExpr
@@ -1783,7 +2104,7 @@ export const TieredPricingEditor = memo(function TieredPricingEditor({
     onRequestRuleExprChange,
   ])
 
-  const handleVisualChange = useCallback((next: VisualConfig) => {
+  const handleVisualChange = useCallback((next: AnyVisualConfig) => {
     dirtyRef.current = true
     setVisualConfig(next)
   }, [])
@@ -1809,14 +2130,14 @@ export const TieredPricingEditor = memo(function TieredPricingEditor({
         // the visual pane shows a notice instead of a zeroed default that
         // would replace it on save.
         setVisualConfig(
-          tryParseVisualConfig(billingExpr) ??
+          tryParseAnyVisualConfig(billingExpr) ??
             (billingExpr ? null : createDefaultVisualConfig())
         )
         const parsedGroups = tryParseRequestRuleExpr(ruleStr)
         setRequestRuleGroups(parsedGroups || [])
         onRequestRuleExprChange(ruleStr)
       } else if (visualConfig) {
-        const expr = generateExprFromVisualConfig(visualConfig)
+        const expr = generateExprFromAnyVisualConfig(visualConfig)
         const ruleExpr = buildRequestRuleExpr(requestRuleGroups)
         setRawExpr(combineBillingExpr(expr, ruleExpr) || expr)
       }
@@ -1832,7 +2153,7 @@ export const TieredPricingEditor = memo(function TieredPricingEditor({
       const ruleExpr = buildRequestRuleExpr(presetGroups)
       const combined = combineBillingExpr(preset.expr, ruleExpr) || preset.expr
       setRawExpr(combined)
-      const parsed = tryParseVisualConfig(preset.expr)
+      const parsed = tryParseAnyVisualConfig(preset.expr)
       if (parsed) {
         setVisualConfig(parsed)
         setEditorMode('visual')

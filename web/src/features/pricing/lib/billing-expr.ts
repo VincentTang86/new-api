@@ -494,7 +494,7 @@ function tryParseRequestCondition(expr: string): RequestCondition | null {
   return null
 }
 
-function tryParseRequestConditions(
+export function tryParseRequestConditions(
   conditionStr: string
 ): RequestCondition[] | null {
   const andParts = splitTopLevelAnd(conditionStr)
@@ -561,7 +561,7 @@ function hasFullOuterParens(expr: string): boolean {
   return depth === 0
 }
 
-function unwrapOuterParens(expr: string): string {
+export function unwrapOuterParens(expr: string): string {
   let current = (expr || '').trim()
   while (hasFullOuterParens(current)) {
     current = current.slice(1, -1).trim()
@@ -758,7 +758,7 @@ function buildTimeConditionExpr(cond: TimeCondition): string {
   return `${fn} ${opMap[mode] || '=='} ${v}`
 }
 
-function buildRequestConditionExpr(cond: RequestCondition): string {
+export function buildRequestConditionExpr(cond: RequestCondition): string {
   if (cond.source === 'time') return buildTimeConditionExpr(cond)
   const normalized = normalizeCondition(cond) as ParamHeaderCondition
   const path = normalized.path.trim()

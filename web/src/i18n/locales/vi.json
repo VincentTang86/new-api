@@ -5540,6 +5540,18 @@
     "Per-image prices need a unique size and a positive price": "Giá theo ảnh cần kích thước duy nhất và giá dương",
     "Coefficients are USD per 1M tokens; a bare constant is USD × 1,000,000 per request (40000 = $0.04), so per-image prices can be switched on request fields with param(path).": "Hệ số là USD trên 1 triệu token; một hằng số đứng riêng là USD × 1.000.000 mỗi yêu cầu (40000 = $0.04), nên có thể chọn giá mỗi ảnh theo trường của yêu cầu bằng param(path).",
     "Sample request body (JSON)": "Nội dung yêu cầu mẫu (JSON)",
-    "Fields read by param(path) come from this body; header() sees no headers here and time functions use the current time.": "Các trường đọc bằng param(path) lấy từ nội dung này; header() không thấy header ở đây và các hàm thời gian dùng thời gian hiện tại."
+    "Fields read by param(path) come from this body; header() sees no headers here and time functions use the current time.": "Các trường đọc bằng param(path) lấy từ nội dung này; header() không thấy header ở đây và các hàm thời gian dùng thời gian hiện tại.",
+    "Billing dimension": "Chiều tính phí",
+    "Per token": "Theo token",
+    "Default price ($ per request)": "Giá mặc định ($ mỗi yêu cầu)",
+    "Default tier label": "Nhãn bậc mặc định",
+    "Input image price ($ per image)": "Giá ảnh đầu vào ($ mỗi ảnh)",
+    "Counted from the images array or a single image field on edits; leave empty to disable.": "Đếm theo mảng images hoặc trường image đơn khi chỉnh sửa; để trống để tắt.",
+    "Multiply by n (image count)": "Nhân với n (số ảnh)",
+    "Price rules": "Quy tắc giá",
+    "Prices are USD per request; rules are checked top-down and the first match wins, otherwise the default price applies.": "Giá tính bằng USD mỗi yêu cầu; quy tắc được kiểm tra từ trên xuống, khớp đầu tiên sẽ áp dụng, nếu không thì dùng giá mặc định.",
+    "Add rule": "Thêm quy tắc",
+    "Rule label": "Nhãn quy tắc",
+    "Price ($ per request)": "Giá ($ mỗi yêu cầu)"
   }
 }
