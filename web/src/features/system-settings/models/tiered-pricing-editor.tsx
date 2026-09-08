@@ -155,15 +155,6 @@ function paramEquals(path: string, value: string): PerRequestRuleCondition {
   })
 }
 
-function paramExists(path: string): PerRequestRuleCondition {
-  return createPerRequestCondition({
-    source: 'param',
-    path,
-    mode: MATCH_EXISTS,
-    value: '',
-  })
-}
-
 function presetRule(
   label: string,
   price: string,
@@ -254,8 +245,12 @@ const PRESET_GROUPS: PresetGroup[] = [
       {
         key: 'grok-imagine-image-2.0',
         label: 'Grok Imagine Image 2.0',
-        // xAI official grid: output priced by resolution × quality, "auto"
-        // quality serves medium on edits, plus $0.01 per input image.
+        // xAI's official grid, as published: one output price per
+        // resolution × quality cell, the same for text-to-image and edits,
+        // plus $0.01 per input image. A request that names no quality (or
+        // "auto") bills the Low cell; xAI's "auto means medium on edits"
+        // mapping is deliberately not modelled so the rule list mirrors the
+        // price table.
         expr: generateExprFromPerRequestConfig({
           kind: PER_REQUEST_KIND,
           defaultLabel: '1k-low',
@@ -267,26 +262,8 @@ const PRESET_GROUPS: PresetGroup[] = [
               paramEquals('resolution', '2k'),
               paramEquals('quality', 'medium'),
             ]),
-            presetRule('2k-medium', '0.08', [
-              paramEquals('resolution', '2k'),
-              paramEquals('quality', 'auto'),
-              paramExists('image'),
-            ]),
-            presetRule('2k-medium', '0.08', [
-              paramEquals('resolution', '2k'),
-              paramEquals('quality', 'auto'),
-              paramExists('images'),
-            ]),
             presetRule('2k-low', '0.06', [paramEquals('resolution', '2k')]),
             presetRule('1k-medium', '0.06', [paramEquals('quality', 'medium')]),
-            presetRule('1k-medium', '0.06', [
-              paramEquals('quality', 'auto'),
-              paramExists('image'),
-            ]),
-            presetRule('1k-medium', '0.06', [
-              paramEquals('quality', 'auto'),
-              paramExists('images'),
-            ]),
           ],
         }),
       },

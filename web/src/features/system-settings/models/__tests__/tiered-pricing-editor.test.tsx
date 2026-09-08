@@ -16,8 +16,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
+
+import { tryParsePerRequestConfig } from '@/features/pricing/lib/per-request-expr'
 
 import { TieredPricingEditor } from '../tiered-pricing-editor'
 
@@ -73,5 +75,38 @@ describe('TieredPricingEditor with an expression the visual editor cannot show',
       screen.getByPlaceholderText('tier("base", p * 3 + c * 15)')
     ).toHaveValue(PER_IMAGE_EXPR)
     expect(onBillingExprChange).not.toHaveBeenCalled()
+  })
+})
+
+describe('the Grok Imagine Image 2.0 preset', () => {
+  test('bills the four official resolution × quality cells plus input images', async () => {
+    const onBillingExprChange = vi.fn()
+
+    render(
+      <TieredPricingEditor
+        modelName='grok-imagine-image-2.0'
+        billingExpr=''
+        requestRuleExpr=''
+        onBillingExprChange={onBillingExprChange}
+        onRequestRuleExprChange={vi.fn()}
+      />
+    )
+    fireEvent.click(screen.getByText('More templates...'))
+    fireEvent.click(screen.getByText('Grok Imagine Image 2.0'))
+
+    // xAI's published grid: one price per cell, the same for text-to-image
+    // and edits, so no rule looks at whether an input image is attached.
+    const expected =
+      '(param("n") == nil ? 1 : param("n")) * (param("resolution") == "2k" && param("quality") == "medium" ? tier("2k-medium", 80000) : param("resolution") == "2k" ? tier("2k-low", 60000) : param("quality") == "medium" ? tier("1k-medium", 60000) : tier("1k-low", 40000)) + (param("images.#") == nil ? (param("image") != nil ? 1 : 0) : param("images.#")) * 10000'
+    await waitFor(() =>
+      expect(onBillingExprChange).toHaveBeenLastCalledWith(expected)
+    )
+    const config = tryParsePerRequestConfig(expected)
+    expect(config?.rules.map((rule) => [rule.label, rule.price])).toEqual([
+      ['2k-medium', '0.08'],
+      ['2k-low', '0.06'],
+      ['1k-medium', '0.06'],
+    ])
+    expect(config?.inputImagePrice).toBe('0.01')
   })
 })
