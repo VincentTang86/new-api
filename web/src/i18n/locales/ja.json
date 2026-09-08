@@ -5516,6 +5516,8 @@
     "Default +{{count}}": "デフォルト +{{count}}",
     "Not derived from the current billing expression": "現在の課金式からは導出されない条件です",
     "The JSON is the complete state: models or conditions omitted here are removed on save.": "JSON は完全な状態です：ここに含まれないモデルや条件は保存時に削除されます。",
-    "The default price also feeds the landing page comparison and the dashboard savings estimate; a condition without its own price shows a dash in the model drawer.": "デフォルト価格はトップページの比較とダッシュボードの節約見積りにも使われます。専用価格のない条件はモデル詳細ドロワーでダッシュ表示になります。"
+    "The default price also feeds the landing page comparison and the dashboard savings estimate; a condition without its own price shows a dash in the model drawer.": "デフォルト価格はトップページの比較とダッシュボードの節約見積りにも使われます。専用価格のない条件はモデル詳細ドロワーでダッシュ表示になります。",
+    "Image Output Tokens": "画像出力トークン",
+    "Text Output Tokens": "テキスト出力トークン"
   }
 }

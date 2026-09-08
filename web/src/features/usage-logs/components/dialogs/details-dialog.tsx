@@ -426,6 +426,18 @@ function TokenBreakdown(props: { log: UsageLog; other: LogOtherData }) {
     value: completionTokens.toLocaleString(),
   })
 
+  const imageOutputTokens = other.image_output_tokens || 0
+  if (imageOutputTokens > 0) {
+    rows.push({
+      label: t('Image Output Tokens'),
+      value: imageOutputTokens.toLocaleString(),
+    })
+    rows.push({
+      label: t('Text Output Tokens'),
+      value: Math.max(completionTokens - imageOutputTokens, 0).toLocaleString(),
+    })
+  }
+
   if (cacheRead > 0) {
     rows.push({
       label: t('Cache Read'),

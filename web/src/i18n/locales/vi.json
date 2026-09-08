@@ -5516,6 +5516,8 @@
     "Default +{{count}}": "Mặc định +{{count}}",
     "Not derived from the current billing expression": "Không còn được suy ra từ biểu thức tính phí hiện tại",
     "The JSON is the complete state: models or conditions omitted here are removed on save.": "JSON là trạng thái đầy đủ: các mô hình hoặc điều kiện không có ở đây sẽ bị xóa khi lưu.",
-    "The default price also feeds the landing page comparison and the dashboard savings estimate; a condition without its own price shows a dash in the model drawer.": "Giá mặc định cũng được dùng cho so sánh ở trang chủ và ước tính tiết kiệm trên bảng điều khiển; điều kiện không có giá riêng sẽ hiển thị dấu gạch ngang trong ngăn chi tiết mô hình."
+    "The default price also feeds the landing page comparison and the dashboard savings estimate; a condition without its own price shows a dash in the model drawer.": "Giá mặc định cũng được dùng cho so sánh ở trang chủ và ước tính tiết kiệm trên bảng điều khiển; điều kiện không có giá riêng sẽ hiển thị dấu gạch ngang trong ngăn chi tiết mô hình.",
+    "Image Output Tokens": "Token đầu ra hình ảnh",
+    "Text Output Tokens": "Token đầu ra văn bản"
   }
 }

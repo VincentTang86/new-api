@@ -5516,6 +5516,8 @@
     "Default +{{count}}": "Défaut +{{count}}",
     "Not derived from the current billing expression": "Non dérivé de l'expression de facturation actuelle",
     "The JSON is the complete state: models or conditions omitted here are removed on save.": "Le JSON représente l'état complet : les modèles ou conditions omis ici seront supprimés à l'enregistrement.",
-    "The default price also feeds the landing page comparison and the dashboard savings estimate; a condition without its own price shows a dash in the model drawer.": "Le prix par défaut alimente aussi la comparaison de la page d'accueil et l'estimation d'économies du tableau de bord ; une condition sans prix propre affiche un tiret dans le panneau du modèle."
+    "The default price also feeds the landing page comparison and the dashboard savings estimate; a condition without its own price shows a dash in the model drawer.": "Le prix par défaut alimente aussi la comparaison de la page d'accueil et l'estimation d'économies du tableau de bord ; une condition sans prix propre affiche un tiret dans le panneau du modèle.",
+    "Image Output Tokens": "Tokens de sortie image",
+    "Text Output Tokens": "Tokens de sortie texte"
   }
 }

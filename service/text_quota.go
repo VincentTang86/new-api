@@ -487,6 +487,11 @@ func PostTextConsumeQuota(ctx *gin.Context, relayInfo *relaycommon.RelayInfo, us
 		other["image_ratio"] = summary.ImageRatio
 		other["image_output"] = summary.ImageTokens
 	}
+	if billingUsage != nil && billingUsage.CompletionTokenDetails.ImageTokens > 0 {
+		// image_output_tokens: output-side image tokens (Gemini IMAGE modality /
+		// OpenAI image_tokens). image_output above is the legacy prompt-side count.
+		other["image_output_tokens"] = billingUsage.CompletionTokenDetails.ImageTokens
+	}
 	appendToolSurchargeLogInfo(other, summary.ToolSurchargeItems)
 	if summary.AudioInputPrice > 0 && summary.AudioTokens > 0 {
 		other["audio_input_seperate_price"] = true
