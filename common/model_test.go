@@ -18,6 +18,8 @@ func TestIsImageGenerationModel(t *testing.T) {
 		{"gpt-image-2", true},
 		{"dall-e-3", true},
 		{"imagen-4.0-generate-001", true},
+		{"grok-imagine-image-2.0", true},
+		{"grok-imagine-image-pro", true},
 		// Gemini image models are served through generateContent / chat, not the
 		// Images API, so they must not be routed to the image-generation endpoint.
 		{"gemini-3.1-flash-image", false},

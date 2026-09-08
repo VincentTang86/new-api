@@ -501,6 +501,27 @@
         "ja": "Qwen3.8 Max はアリババ Qwen3.8 シリーズのフラッグシップで、1M トークンのコンテキストを備えたマルチモーダル推論モデルとして、テキスト・画像・動画の理解をカバーします。",
         "vi": "Qwen3.8 Max là mô hình chủ lực của dòng Qwen3.8 từ Alibaba — mô hình suy luận đa phương thức với ngữ cảnh 1M token cho hiểu văn bản, hình ảnh và video."
       }
+    },
+    "grok-imagine-image-2.0": {
+      "vendor": "xAI",
+      "icon": "XAI",
+      "input_modalities": "text,image",
+      "output_modalities": "image",
+      "context_length": 0,
+      "max_output_tokens": 0,
+      "release_date": "",
+      "knowledge_cutoff": "",
+      "parameter_count": "",
+      "capabilities": "",
+      "description": {
+        "en": "Grok Imagine Image 2.0 is xAI's image generation and editing model with selectable quality (low/medium) and output resolution up to 2K, billed per image.",
+        "zh-CN": "Grok Imagine Image 2.0 是 xAI 的图像生成与编辑模型，支持 low/medium 两档质量和最高 2K 分辨率，按张计费。",
+        "zh-TW": "Grok Imagine Image 2.0 是 xAI 的圖像生成與編輯模型，支援 low/medium 兩檔品質與最高 2K 解析度，按張計費。",
+        "fr": "Grok Imagine Image 2.0 est le modèle de génération et d'édition d'images de xAI, avec deux niveaux de qualité (low/medium) et une résolution jusqu'à 2K, facturé à l'image.",
+        "ru": "Grok Imagine Image 2.0 — модель генерации и редактирования изображений от xAI с выбором качества (low/medium) и разрешением до 2K, оплата за изображение.",
+        "ja": "Grok Imagine Image 2.0 は xAI の画像生成・編集モデルで、low/medium の品質選択と最大 2K の解像度に対応し、画像単位で課金されます。",
+        "vi": "Grok Imagine Image 2.0 là mô hình tạo và chỉnh sửa ảnh của xAI, hỗ trợ hai mức chất lượng (low/medium) và độ phân giải tới 2K, tính phí theo ảnh."
+      }
     }
   }
 }
