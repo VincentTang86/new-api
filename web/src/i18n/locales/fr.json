@@ -5537,6 +5537,7 @@
     "Add size": "Ajouter une taille",
     "Size": "Taille",
     "Remove size": "Supprimer la taille",
-    "Per-image prices need a unique size and a positive price": "Les prix par image exigent une taille unique et un prix positif"
+    "Per-image prices need a unique size and a positive price": "Les prix par image exigent une taille unique et un prix positif",
+    "Coefficients are USD per 1M tokens; a bare constant is USD × 1,000,000 per request (40000 = $0.04), so per-image prices can be switched on request fields with param(path).": "Les coefficients sont en USD par million de tokens ; une constante seule vaut USD × 1 000 000 par requête (40000 = 0,04 $), ce qui permet de choisir un prix par image selon les champs de la requête avec param(path)."
   }
 }

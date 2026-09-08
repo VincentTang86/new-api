@@ -5537,6 +5537,7 @@
     "Add size": "Thêm kích thước",
     "Size": "Kích thước",
     "Remove size": "Xóa kích thước",
-    "Per-image prices need a unique size and a positive price": "Giá theo ảnh cần kích thước duy nhất và giá dương"
+    "Per-image prices need a unique size and a positive price": "Giá theo ảnh cần kích thước duy nhất và giá dương",
+    "Coefficients are USD per 1M tokens; a bare constant is USD × 1,000,000 per request (40000 = $0.04), so per-image prices can be switched on request fields with param(path).": "Hệ số là USD trên 1 triệu token; một hằng số đứng riêng là USD × 1.000.000 mỗi yêu cầu (40000 = $0.04), nên có thể chọn giá mỗi ảnh theo trường của yêu cầu bằng param(path)."
   }
 }

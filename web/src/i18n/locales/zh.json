@@ -5537,6 +5537,7 @@
     "Add size": "添加档位",
     "Size": "档位",
     "Remove size": "删除档位",
-    "Per-image prices need a unique size and a positive price": "按张价格的档位名不能为空或重复，价格必须大于 0"
+    "Per-image prices need a unique size and a positive price": "按张价格的档位名不能为空或重复，价格必须大于 0",
+    "Coefficients are USD per 1M tokens; a bare constant is USD × 1,000,000 per request (40000 = $0.04), so per-image prices can be switched on request fields with param(path).": "系数是每 100 万 token 的美元价；单独的常量表示每次请求 美元 × 1,000,000（40000 = $0.04），因此可以用 param(path) 按请求字段切换每张价格。"
   }
 }

@@ -28,6 +28,7 @@ import {
   type FocusEvent,
   type InputHTMLAttributes,
   type MouseEvent as ReactMouseEvent,
+  type ReactNode,
 } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -195,6 +196,21 @@ const PRESET_GROUPS: PresetGroup[] = [
         key: 'qwen3-omni-flash',
         label: 'Qwen3 Omni Flash',
         expr: 'tier("base", p * 0.43 + c * 3.06 + img * 0.78 + ai * 3.81 + ao * 15.11)',
+      },
+    ],
+  },
+  {
+    group: 'Per image',
+    presets: [
+      {
+        key: 'flat-per-image',
+        label: 'Flat per image',
+        expr: '(param("n") == nil ? 1 : param("n")) * tier("image", 40000)',
+      },
+      {
+        key: 'grok-imagine-image-2.0',
+        label: 'Grok Imagine Image 2.0',
+        expr: '(param("n") == nil ? 1 : param("n")) * ((param("resolution") == "2k" || param("resolution") == "2K") ? ((param("quality") == "medium" || (param("quality") == "auto" && (param("image") != nil || param("images") != nil))) ? tier("2k-medium", 80000) : tier("2k-low", 60000)) : ((param("quality") == "medium" || (param("quality") == "auto" && (param("image") != nil || param("images") != nil))) ? tier("1k-medium", 60000) : tier("1k-low", 40000))) + (param("images.#") == nil ? (param("image") != nil ? 1 : 0) : param("images.#")) * 10000',
       },
     ],
   },
@@ -897,6 +913,11 @@ function RawExprEditor({ exprString, onChange }: RawExprEditorProps) {
             <code>min</code>, <code>ceil</code>, <code>floor</code>,{' '}
             <code>abs</code>, <code>header(name)</code>,{' '}
             <code>param(path)</code>, <code>has(source, text)</code>
+          </div>
+          <div>
+            {t(
+              'Coefficients are USD per 1M tokens; a bare constant is USD × 1,000,000 per request (40000 = $0.04), so per-image prices can be switched on request fields with param(path).'
+            )}
           </div>
         </AlertDescription>
       </Alert>
@@ -1640,9 +1661,17 @@ export const TieredPricingEditor = memo(function TieredPricingEditor({
   onRequestRuleExprChange,
 }: TieredPricingEditorProps) {
   const { t } = useTranslation()
-  const [editorMode, setEditorMode] = useState<EditorMode>('visual')
-  const [visualConfig, setVisualConfig] = useState<VisualConfig | null>(() =>
-    tryParseVisualConfig(currentExpr)
+  // Open in the mode that can show the stored expression. One the visual
+  // editor cannot round-trip (param() conditions, per-image constants) must
+  // start in raw mode, otherwise the first render would push a zeroed
+  // placeholder back to the form and overwrite the real expression on save.
+  const [editorMode, setEditorMode] = useState<EditorMode>(() =>
+    currentExpr && !tryParseVisualConfig(currentExpr) ? 'raw' : 'visual'
+  )
+  const [visualConfig, setVisualConfig] = useState<VisualConfig | null>(
+    () =>
+      tryParseVisualConfig(currentExpr) ??
+      (currentExpr ? null : createDefaultVisualConfig())
   )
   const [rawExpr, setRawExpr] = useState(() =>
     combineBillingExpr(currentExpr || '', currentRequestRuleExpr || '')
@@ -1651,10 +1680,14 @@ export const TieredPricingEditor = memo(function TieredPricingEditor({
     RequestRuleGroup[]
   >(() => tryParseRequestRuleExpr(currentRequestRuleExpr) || [])
   const initRef = useRef(false)
+  // The editor only writes back to the form after the user changed
+  // something; syncing from props must never echo a derived value upward.
+  const dirtyRef = useRef(false)
 
   useEffect(() => {
     if (initRef.current) return
     initRef.current = true
+    dirtyRef.current = false
     const parsedConfig = tryParseVisualConfig(currentExpr)
     if (parsedConfig) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -1682,7 +1715,7 @@ export const TieredPricingEditor = memo(function TieredPricingEditor({
   }, [currentRequestRuleExpr])
 
   const effectiveExpr = useMemo(() => {
-    if (editorMode === 'visual') {
+    if (editorMode === 'visual' && visualConfig) {
       return generateExprFromVisualConfig(visualConfig)
     }
     const { billingExpr } = splitBillingExprAndRequestRules(rawExpr)
@@ -1690,30 +1723,34 @@ export const TieredPricingEditor = memo(function TieredPricingEditor({
   }, [editorMode, visualConfig, rawExpr])
 
   useEffect(() => {
+    if (!dirtyRef.current) return
     if (effectiveExpr !== currentExpr) {
       onBillingExprChange(effectiveExpr)
     }
   }, [effectiveExpr, currentExpr, onBillingExprChange])
 
   useEffect(() => {
-    if (editorMode !== 'visual') return
+    if (!dirtyRef.current || editorMode !== 'visual' || !visualConfig) return
     const ruleExpr = buildRequestRuleExpr(requestRuleGroups)
     if (ruleExpr !== currentRequestRuleExpr) {
       onRequestRuleExprChange(ruleExpr)
     }
   }, [
     editorMode,
+    visualConfig,
     requestRuleGroups,
     currentRequestRuleExpr,
     onRequestRuleExprChange,
   ])
 
   const handleVisualChange = useCallback((next: VisualConfig) => {
+    dirtyRef.current = true
     setVisualConfig(next)
   }, [])
 
   const handleRawChange = useCallback(
     (value: string) => {
+      dirtyRef.current = true
       setRawExpr(value)
       const { requestRuleExpr: ruleStr } =
         splitBillingExprAndRequestRules(value)
@@ -1724,19 +1761,21 @@ export const TieredPricingEditor = memo(function TieredPricingEditor({
 
   const handleModeChange = useCallback(
     (next: EditorMode) => {
+      dirtyRef.current = true
       if (next === 'visual') {
         const { billingExpr, requestRuleExpr: ruleStr } =
           splitBillingExprAndRequestRules(rawExpr)
-        const parsed = tryParseVisualConfig(billingExpr)
-        if (parsed) {
-          setVisualConfig(parsed)
-        } else {
-          setVisualConfig(createDefaultVisualConfig())
-        }
+        // An expression the visual editor cannot represent stays untouched:
+        // the visual pane shows a notice instead of a zeroed default that
+        // would replace it on save.
+        setVisualConfig(
+          tryParseVisualConfig(billingExpr) ??
+            (billingExpr ? null : createDefaultVisualConfig())
+        )
         const parsedGroups = tryParseRequestRuleExpr(ruleStr)
         setRequestRuleGroups(parsedGroups || [])
         onRequestRuleExprChange(ruleStr)
-      } else {
+      } else if (visualConfig) {
         const expr = generateExprFromVisualConfig(visualConfig)
         const ruleExpr = buildRequestRuleExpr(requestRuleGroups)
         setRawExpr(combineBillingExpr(expr, ruleExpr) || expr)
@@ -1748,6 +1787,7 @@ export const TieredPricingEditor = memo(function TieredPricingEditor({
 
   const applyPreset = useCallback(
     (preset: Preset) => {
+      dirtyRef.current = true
       const presetGroups = preset.requestRules || []
       const ruleExpr = buildRequestRuleExpr(presetGroups)
       const combined = combineBillingExpr(preset.expr, ruleExpr) || preset.expr
@@ -1769,6 +1809,27 @@ export const TieredPricingEditor = memo(function TieredPricingEditor({
   const handleRuleGroupsChange = useCallback((next: RequestRuleGroup[]) => {
     setRequestRuleGroups(next)
   }, [])
+
+  let editorPane: ReactNode
+  if (editorMode === 'raw') {
+    editorPane = (
+      <RawExprEditor exprString={rawExpr} onChange={handleRawChange} />
+    )
+  } else if (visualConfig) {
+    editorPane = (
+      <VisualEditor visualConfig={visualConfig} onChange={handleVisualChange} />
+    )
+  } else {
+    editorPane = (
+      <Alert>
+        <AlertDescription className='text-xs'>
+          {t(
+            'This expression is too complex for the visual editor. Please switch to expression mode to edit.'
+          )}
+        </AlertDescription>
+      </Alert>
+    )
+  }
 
   return (
     <div className='space-y-5'>
@@ -1804,16 +1865,9 @@ export const TieredPricingEditor = memo(function TieredPricingEditor({
       <PresetSection applyPreset={applyPreset} />
 
       <div className='bg-muted/30 space-y-3 rounded-md border p-3'>
-        {editorMode === 'visual' ? (
-          <VisualEditor
-            visualConfig={visualConfig}
-            onChange={handleVisualChange}
-          />
-        ) : (
-          <RawExprEditor exprString={rawExpr} onChange={handleRawChange} />
-        )}
+        {editorPane}
 
-        {editorMode === 'visual' && (
+        {editorMode === 'visual' && visualConfig && (
           <div className='space-y-3 border-t pt-3'>
             <div className='space-y-1'>
               <h4 className='text-sm font-medium'>
