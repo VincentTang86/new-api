@@ -442,11 +442,7 @@ export function ModelDetailsPricingNotes(props: { model: PricingModel }) {
         </p>
       )}
       {isImageModel(props.model) && (
-        <p>
-          {t(
-            'Image output pricing is approximate and varies by resolution and quality settings.'
-          )}
-        </p>
+        <p>{t('Actual costs are subject to final output.')}</p>
       )}
       {hasOpenRouterReference && (
         <p>

@@ -54,7 +54,7 @@ export function LandingPricingPreview() {
         <p className='text-base text-(--pd-muted)'>
           {isImageTab
             ? t(
-                'Compare {{name}} image rates with the vendor list price. Prices are shown in USD per image; open a model for its per-token rates.',
+                'Compare {{name}} image rates with the vendor list price. Prices are estimated per image and shown in USD. Open a model for its per-token rates.',
                 { name: systemName }
               )
             : t(

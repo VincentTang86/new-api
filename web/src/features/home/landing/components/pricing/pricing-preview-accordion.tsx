@@ -24,8 +24,8 @@ import { useOpenModelDetails } from '@/features/pricing/hooks/use-model-details-
 
 import { LANDING_PRICE_PLACEHOLDER } from '../../lib/pricing'
 import type { PricingBenchmark, PricingRow } from '../../types'
-import type { PricingListVariant } from './pricing-model-list'
 import { ModelName } from './model-name'
+import type { PricingListVariant } from './pricing-model-list'
 import { ProviderMark } from './provider-mark'
 import { SavingsBadge } from './savings-cell'
 

@@ -142,4 +142,28 @@ describe('LandingPricingPreview', () => {
       screen.getByRole('link', { name: /View all models/ })
     ).toHaveAttribute('href', '/pricing?type=image')
   })
+
+  test('the Image tab keeps its headers when it lists nothing', async () => {
+    // A tier or vendor with no image models used to take the column headers
+    // with it; the table now stays and carries the note in its body.
+    usePricingData.mockReturnValue({
+      models: [LLM_MODEL],
+      usableGroup: { Production: { desc: 'reliable', ratio: 1 } },
+      groupRatio: { Production: 1 },
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    })
+    await renderPreview()
+    const user = userEvent.setup()
+
+    await user.click(screen.getByRole('tab', { name: 'Image' }))
+
+    expect(
+      screen.getByRole('columnheader', { name: 'FR Price' })
+    ).toBeInTheDocument()
+    expect(
+      screen.getAllByText('No models are available right now.').length
+    ).toBeGreaterThan(0)
+  })
 })

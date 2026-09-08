@@ -136,13 +136,24 @@ export function PricingPreviewTable(props: PricingPreviewTableProps) {
             </tr>
           </thead>
           <tbody>
-            {props.rows.map((row) => (
-              <PricingPreviewRow
-                key={row.modelId}
-                row={row}
-                variant={props.variant}
-              />
-            ))}
+            {props.rows.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={columns.length}
+                  className='px-6 py-12 text-center text-sm text-(--pd-muted-3)'
+                >
+                  {t('No models are available right now.')}
+                </td>
+              </tr>
+            ) : (
+              props.rows.map((row) => (
+                <PricingPreviewRow
+                  key={row.modelId}
+                  row={row}
+                  variant={props.variant}
+                />
+              ))
+            )}
           </tbody>
         </table>
       </div>

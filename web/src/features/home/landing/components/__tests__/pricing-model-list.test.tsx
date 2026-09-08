@@ -282,10 +282,16 @@ describe('PricingModelList', () => {
     expect(router.state.location.search).toEqual({ model: 'deepseek-r1' })
   })
 
-  test('renders a fallback instead of an empty table shell', async () => {
+  test('keeps the column headers when a filter empties the table', async () => {
+    // A provider filter that matches nothing must not take the headers with
+    // it — the note goes in the body instead. Phones have no header to keep.
     const { container } = await renderList([])
 
-    expect(container.querySelector('table')).toBe(null)
+    const headers = [...container.querySelectorAll('thead th')].map(
+      (cell) => cell.textContent
+    )
+    expect(headers).toContain('Model')
+    expect(container.querySelectorAll('tbody tr')).toHaveLength(1)
     expect(container.querySelector('[data-slot="pricing-accordion"]')).toBe(
       null
     )

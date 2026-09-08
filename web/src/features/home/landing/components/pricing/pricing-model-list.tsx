@@ -45,7 +45,11 @@ const SKELETON_ROW_KEYS = ['s1', 's2', 's3', 's4', 's5', 's6']
 interface PricingListStatusProps {
   isLoading?: boolean
   isError?: boolean
-  isEmpty: boolean
+  /**
+   * Phones only. The tables keep their header and say it in the body instead,
+   * so only the accordion — which has no header to keep — falls back to this.
+   */
+  isEmpty?: boolean
   onRetry?: () => void
 }
 
@@ -109,18 +113,18 @@ export function PricingListStatus(props: PricingListStatusProps) {
  * Owns the loading / error / empty states of the live pricing feed.
  */
 export function PricingModelList(props: PricingModelListProps) {
-  const status = (
-    <PricingListStatus
-      isLoading={props.isLoading}
-      isError={props.isError}
-      isEmpty={props.rows.length === 0}
-      onRetry={props.onRetry}
-    />
-  )
-  if (props.isLoading || props.isError || props.rows.length === 0) {
-    return status
+  if (props.isLoading || props.isError) {
+    return (
+      <PricingListStatus
+        isLoading={props.isLoading}
+        isError={props.isError}
+        onRetry={props.onRetry}
+      />
+    )
   }
 
+  // A filter that narrows the catalogue to nothing must not take the column
+  // headers with it, so the table stays and carries the note in its body.
   return (
     <>
       <PricingPreviewTable
@@ -128,11 +132,17 @@ export function PricingModelList(props: PricingModelListProps) {
         variant={props.variant}
         benchmark={props.benchmark}
       />
-      <PricingPreviewAccordion
-        rows={props.rows}
-        variant={props.variant}
-        benchmark={props.benchmark}
-      />
+      {props.rows.length === 0 ? (
+        <div className='md:hidden'>
+          <PricingListStatus isEmpty />
+        </div>
+      ) : (
+        <PricingPreviewAccordion
+          rows={props.rows}
+          variant={props.variant}
+          benchmark={props.benchmark}
+        />
+      )}
     </>
   )
 }

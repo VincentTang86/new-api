@@ -24,8 +24,8 @@ import { useOpenModelDetails } from '@/features/pricing/hooks/use-model-details-
 
 import { LANDING_PRICE_PLACEHOLDER } from '../../lib/pricing'
 import type { ImagePricingRow, PricingBenchmark } from '../../types'
-import { PricingListStatus } from './pricing-model-list'
 import { ModelName } from './model-name'
+import { PricingListStatus } from './pricing-model-list'
 import { ProviderMark } from './provider-mark'
 
 interface ImagePricingListProps {
@@ -48,12 +48,11 @@ export function ImagePricingList(props: ImagePricingListProps) {
   const panelIdPrefix = useId()
   const [openId, setOpenId] = useState<string | null>(null)
 
-  if (props.isLoading || props.isError || props.rows.length === 0) {
+  if (props.isLoading || props.isError) {
     return (
       <PricingListStatus
         isLoading={props.isLoading}
         isError={props.isError}
-        isEmpty={props.rows.length === 0}
         onRetry={props.onRetry}
       />
     )
@@ -132,126 +131,150 @@ export function ImagePricingList(props: ImagePricingListProps) {
               </tr>
             </thead>
             <tbody>
-              {props.rows.map((row) => (
-                <tr
-                  key={row.modelId}
-                  onClick={() => openModel(row.modelId)}
-                  className='cursor-pointer border-b border-(--pd-border) bg-(--pd-surface) transition-colors last:border-b-0 hover:bg-(--pd-accent-bg-hover)'
-                >
-                  <th scope='row' className='px-6 py-3.5 text-left font-normal'>
-                    <div className='flex items-center gap-2.5'>
-                      <ProviderMark
-                        provider={row.provider}
-                        label={row.vendorLabel}
-                        variant='chip'
-                      />
-                      <ModelName
-                        name={row.name}
-                        className='font-mono text-[13px] font-bold text-(--pd-ink-strong)'
-                      />
-                    </div>
-                  </th>
-                  <td className='px-6 py-3.5 font-mono text-[13px] font-bold text-(--pd-ink)'>
-                    {fromPrice(row.frPrice)}
-                  </td>
-                  <td className='px-6 py-3.5 font-mono text-[13px] text-(--pd-muted)'>
-                    {fromPrice(row.benchmarkPrice)}
-                  </td>
-                  <td className='px-6 py-3.5'>{savingsBadge(row)}</td>
-                  <td className='px-6 py-3.5 text-right'>
-                    <button
-                      type='button'
-                      onClick={(event) => {
-                        event.stopPropagation()
-                        openModel(row.modelId)
-                      }}
-                      className='pd-font-ui cursor-pointer text-[13px] font-medium whitespace-nowrap text-(--pd-primary) transition-opacity hover:opacity-80'
-                    >
-                      {t('View →')}
-                    </button>
+              {props.rows.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={columns.length}
+                    className='px-6 py-12 text-center text-sm text-(--pd-muted-3)'
+                  >
+                    {t('No models are available right now.')}
                   </td>
                 </tr>
-              ))}
+              ) : (
+                props.rows.map((row) => (
+                  <tr
+                    key={row.modelId}
+                    onClick={() => openModel(row.modelId)}
+                    className='cursor-pointer border-b border-(--pd-border) bg-(--pd-surface) transition-colors last:border-b-0 hover:bg-(--pd-accent-bg-hover)'
+                  >
+                    <th
+                      scope='row'
+                      className='px-6 py-3.5 text-left font-normal'
+                    >
+                      <div className='flex items-center gap-2.5'>
+                        <ProviderMark
+                          provider={row.provider}
+                          label={row.vendorLabel}
+                          variant='chip'
+                        />
+                        <ModelName
+                          name={row.name}
+                          className='font-mono text-[13px] font-bold text-(--pd-ink-strong)'
+                        />
+                      </div>
+                    </th>
+                    <td className='px-6 py-3.5 font-mono text-[13px] font-bold text-(--pd-ink)'>
+                      {fromPrice(row.frPrice)}
+                    </td>
+                    <td className='px-6 py-3.5 font-mono text-[13px] text-(--pd-muted)'>
+                      {fromPrice(row.benchmarkPrice)}
+                    </td>
+                    <td className='px-6 py-3.5'>{savingsBadge(row)}</td>
+                    <td className='px-6 py-3.5 text-right'>
+                      <button
+                        type='button'
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          openModel(row.modelId)
+                        }}
+                        className='pd-font-ui cursor-pointer text-[13px] font-medium whitespace-nowrap text-(--pd-primary) transition-opacity hover:opacity-80'
+                      >
+                        {t('View →')}
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
       </div>
 
-      <div
-        data-slot='image-pricing-accordion'
-        className='overflow-hidden rounded-2xl border border-(--pd-border) md:hidden'
-      >
-        {props.rows.map((row) => {
-          const isOpen = openId === row.modelId
-          const panelId = `${panelIdPrefix}-${row.modelId}`
-          const Chevron = isOpen ? ChevronUp : ChevronDown
-          return (
-            <div
-              key={row.modelId}
-              className='border-b border-(--pd-border-soft) last:border-b-0'
-            >
-              <button
-                type='button'
-                aria-expanded={isOpen}
-                aria-controls={panelId}
-                onClick={() => setOpenId(isOpen ? null : row.modelId)}
-                className='flex w-full items-center justify-between px-4 py-3.5 text-left'
+      {props.rows.length === 0 ? (
+        <div className='md:hidden'>
+          <PricingListStatus isEmpty />
+        </div>
+      ) : (
+        <div
+          data-slot='image-pricing-accordion'
+          className='overflow-hidden rounded-2xl border border-(--pd-border) md:hidden'
+        >
+          {props.rows.map((row) => {
+            const isOpen = openId === row.modelId
+            const panelId = `${panelIdPrefix}-${row.modelId}`
+            const Chevron = isOpen ? ChevronUp : ChevronDown
+            return (
+              <div
+                key={row.modelId}
+                className='border-b border-(--pd-border-soft) last:border-b-0'
               >
-                <span className='flex min-w-0 items-center gap-2.5'>
-                  <ProviderMark
-                    provider={row.provider}
-                    label={row.vendorLabel}
-                    variant='chip'
-                  />
-                  <ModelName
-                    name={row.name}
-                    className='font-mono text-sm font-bold text-(--pd-ink-strong)'
-                  />
-                </span>
-                <Chevron size={14} className='text-(--pd-faint)' aria-hidden />
-              </button>
-              {isOpen && (
-                <div
-                  id={panelId}
-                  className='bg-(--pd-surface-alt) px-4 pb-4 text-sm'
+                <button
+                  type='button'
+                  aria-expanded={isOpen}
+                  aria-controls={panelId}
+                  onClick={() => setOpenId(isOpen ? null : row.modelId)}
+                  className='flex w-full items-center justify-between px-4 py-3.5 text-left'
                 >
-                  <dl className='grid grid-cols-2 gap-3'>
-                    <div>
-                      <dt className='mb-1 text-xs text-(--pd-muted-2)'>
-                        {t('FR Price')}
-                      </dt>
-                      <dd className='font-mono font-bold text-(--pd-ink)'>
-                        {fromPrice(row.frPrice)}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className='mb-1 text-xs text-(--pd-muted-2)'>
-                        {benchmarkLabel}
-                      </dt>
-                      <dd className='font-mono text-(--pd-muted)'>
-                        {fromPrice(row.benchmarkPrice)}
-                      </dd>
-                    </div>
-                    <div className='col-span-2'>
-                      <dt className='mb-1 text-xs text-(--pd-muted-2)'>
-                        {t('Savings')}
-                      </dt>
-                      <dd>{savingsBadge(row)}</dd>
-                    </div>
-                  </dl>
-                  <button
-                    type='button'
-                    onClick={() => openModel(row.modelId)}
-                    className='mt-3 inline-block cursor-pointer text-[13px] font-medium text-(--pd-primary) transition-opacity hover:opacity-80'
+                  <span className='flex min-w-0 items-center gap-2.5'>
+                    <ProviderMark
+                      provider={row.provider}
+                      label={row.vendorLabel}
+                      variant='chip'
+                    />
+                    <ModelName
+                      name={row.name}
+                      className='font-mono text-sm font-bold text-(--pd-ink-strong)'
+                    />
+                  </span>
+                  <Chevron
+                    size={14}
+                    className='text-(--pd-faint)'
+                    aria-hidden
+                  />
+                </button>
+                {isOpen && (
+                  <div
+                    id={panelId}
+                    className='bg-(--pd-surface-alt) px-4 pb-4 text-sm'
                   >
-                    {t('View →')}
-                  </button>
-                </div>
-              )}
-            </div>
-          )
-        })}
-      </div>
+                    <dl className='grid grid-cols-2 gap-3'>
+                      <div>
+                        <dt className='mb-1 text-xs text-(--pd-muted-2)'>
+                          {t('FR Price')}
+                        </dt>
+                        <dd className='font-mono font-bold text-(--pd-ink)'>
+                          {fromPrice(row.frPrice)}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className='mb-1 text-xs text-(--pd-muted-2)'>
+                          {benchmarkLabel}
+                        </dt>
+                        <dd className='font-mono text-(--pd-muted)'>
+                          {fromPrice(row.benchmarkPrice)}
+                        </dd>
+                      </div>
+                      <div className='col-span-2'>
+                        <dt className='mb-1 text-xs text-(--pd-muted-2)'>
+                          {t('Savings')}
+                        </dt>
+                        <dd>{savingsBadge(row)}</dd>
+                      </div>
+                    </dl>
+                    <button
+                      type='button'
+                      onClick={() => openModel(row.modelId)}
+                      className='mt-3 inline-block cursor-pointer text-[13px] font-medium text-(--pd-primary) transition-opacity hover:opacity-80'
+                    >
+                      {t('View →')}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
     </>
   )
 }
