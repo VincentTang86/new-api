@@ -5310,7 +5310,7 @@
     "footer.columns.related.links.oneApi": "1つのAPI",
     "footer.columns.related.title": "関連プロジェクト",
     "footer.defaultCopyright": "All rights reserved.",
-    "footer.new\u0061pi.projectAttributionSuffix": "すべての権利を留保します。プロジェクトコントリビューターにより設計・開発されています。",
+    "footer.newapi.projectAttributionSuffix": "すべての権利を留保します。プロジェクトコントリビューターにより設計・開発されています。",
     "gpt-3.5-turbo": "gpt-3.5-turbo",
     "gpt-3.5-turbo-0125": "gpt-3.5-turbo-0125",
     "gpt-4": "gpt-4",
@@ -5538,6 +5538,8 @@
     "Size": "サイズ",
     "Remove size": "サイズを削除",
     "Per-image prices need a unique size and a positive price": "1枚あたりの価格には一意のサイズと正の価格が必要です",
-    "Coefficients are USD per 1M tokens; a bare constant is USD × 1,000,000 per request (40000 = $0.04), so per-image prices can be switched on request fields with param(path).": "係数は 100 万トークンあたりの USD 価格です。単独の定数はリクエストごとの USD × 1,000,000（40000 = $0.04）を表すため、param(path) でリクエスト項目に応じて画像単価を切り替えられます。"
+    "Coefficients are USD per 1M tokens; a bare constant is USD × 1,000,000 per request (40000 = $0.04), so per-image prices can be switched on request fields with param(path).": "係数は 100 万トークンあたりの USD 価格です。単独の定数はリクエストごとの USD × 1,000,000（40000 = $0.04）を表すため、param(path) でリクエスト項目に応じて画像単価を切り替えられます。",
+    "Sample request body (JSON)": "サンプルリクエストボディ（JSON）",
+    "Fields read by param(path) come from this body; header() sees no headers here and time functions use the current time.": "param(path) で読み取る項目はこのボディから取得します。ここでは header() はヘッダーを参照できず、時間関数は現在時刻を使用します。"
   }
 }

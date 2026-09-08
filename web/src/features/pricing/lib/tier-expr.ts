@@ -272,11 +272,71 @@ export type EvalResult = {
   error: string | null
 }
 
+// Sample request the estimator feeds to param() / header(), mirroring the
+// server-side RequestInput so request-aware expressions can be previewed.
+export type EstimatorRequest = {
+  body?: unknown
+  headers?: Record<string, string>
+}
+
+const REQUEST_PROBE_FUNCS = [
+  'param',
+  'header',
+  'hour',
+  'minute',
+  'weekday',
+  'month',
+  'day',
+]
+
+export function exprUsesRequestProbe(exprStr: string): boolean {
+  if (!exprStr) return false
+  return new RegExp(`\\b(${REQUEST_PROBE_FUNCS.join('|')})\\s*\\(`).test(
+    exprStr
+  )
+}
+
+// gjson subset used by billing expressions: dotted object keys, numeric
+// array indexes and a trailing "#" for array length. Missing paths are nil.
+function lookupJsonPath(body: unknown, path: string): unknown {
+  const trimmed = path.trim()
+  if (!trimmed || body == null) return null
+  let current: unknown = body
+  for (const segment of trimmed.split('.')) {
+    if (current == null) return null
+    if (segment === '#') {
+      return Array.isArray(current) ? current.length : null
+    }
+    if (Array.isArray(current)) {
+      const index = Number(segment)
+      if (!Number.isInteger(index) || index < 0 || index >= current.length) {
+        return null
+      }
+      current = current[index]
+      continue
+    }
+    if (typeof current !== 'object') return null
+    if (!Object.hasOwn(current, segment)) return null
+    current = (current as Record<string, unknown>)[segment]
+  }
+  return current ?? null
+}
+
+function timeInZone(tz: string): Date {
+  const zone = tz.trim() || 'UTC'
+  try {
+    return new Date(new Date().toLocaleString('en-US', { timeZone: zone }))
+  } catch {
+    return new Date(new Date().toLocaleString('en-US', { timeZone: 'UTC' }))
+  }
+}
+
 export function evalExprLocally(
   exprStr: string,
   promptTokens: number,
   completionTokens: number,
-  extraTokenValues: ExtraTokenValues
+  extraTokenValues: ExtraTokenValues,
+  request: EstimatorRequest = {}
 ): EvalResult {
   try {
     if (!exprStr || !exprStr.trim()) {
@@ -298,16 +358,30 @@ export function evalExprLocally(
       cacheReadExplicitTokens +
       cacheCreateTokens +
       cacheCreate1hTokens
+    const headers: Record<string, string> = {}
+    for (const [key, value] of Object.entries(request.headers || {})) {
+      headers[key.trim().toLowerCase()] = value.trim()
+    }
     const env: Record<string, unknown> = {
       p: promptTokens,
       c: completionTokens,
       len,
+      nil: null,
       tier: tierFn,
       max: Math.max,
       min: Math.min,
       abs: Math.abs,
       ceil: Math.ceil,
       floor: Math.floor,
+      param: (path: string) => lookupJsonPath(request.body, path),
+      header: (name: string) => headers[name.trim().toLowerCase()] ?? '',
+      has: (source: unknown, substr: string) =>
+        source != null && substr !== '' && String(source).includes(substr),
+      hour: (tz: string) => timeInZone(tz).getHours(),
+      minute: (tz: string) => timeInZone(tz).getMinutes(),
+      weekday: (tz: string) => timeInZone(tz).getDay(),
+      month: (tz: string) => timeInZone(tz).getMonth() + 1,
+      day: (tz: string) => timeInZone(tz).getDate(),
     }
     for (const field of ESTIMATOR_VARS) {
       env[field.var] = extraTokenValues[field.stateKey] || 0

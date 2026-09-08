@@ -94,6 +94,7 @@ import {
   createDefaultVisualConfig,
   evalExprLocally,
   exprUsesExtraVars,
+  exprUsesRequestProbe,
   generateExprFromVisualConfig,
   getTierCacheMode,
   normalizeVisualConfig,
@@ -1394,15 +1395,34 @@ function CostEstimator({ effectiveExpr }: EstimatorProps) {
     audioOutputTokens: 0,
   })
 
+  const [requestBodyText, setRequestBodyText] = useState('{}')
+
   const usesExtras = useMemo(
     () => exprUsesExtraVars(effectiveExpr),
     [effectiveExpr]
   )
+  const usesRequest = useMemo(
+    () => exprUsesRequestProbe(effectiveExpr),
+    [effectiveExpr]
+  )
+
+  const sampleRequest = useMemo(() => {
+    if (!usesRequest || !requestBodyText.trim()) {
+      return { body: undefined, error: null }
+    }
+    try {
+      return { body: JSON.parse(requestBodyText) as unknown, error: null }
+    } catch {
+      return { body: undefined, error: t('Invalid JSON') }
+    }
+  }, [usesRequest, requestBodyText, t])
 
   const result = useMemo(
     () =>
-      evalExprLocally(effectiveExpr, promptTokens, completionTokens, extras),
-    [effectiveExpr, promptTokens, completionTokens, extras]
+      evalExprLocally(effectiveExpr, promptTokens, completionTokens, extras, {
+        body: sampleRequest.body,
+      }),
+    [effectiveExpr, promptTokens, completionTokens, extras, sampleRequest.body]
   )
 
   return (
@@ -1460,6 +1480,26 @@ function CostEstimator({ effectiveExpr }: EstimatorProps) {
               </div>
             )
           })}
+        </div>
+      )}
+      {usesRequest && (
+        <div className='space-y-1'>
+          <Label className='text-xs'>{t('Sample request body (JSON)')}</Label>
+          <Textarea
+            value={requestBodyText}
+            onChange={(event) => setRequestBodyText(event.target.value)}
+            placeholder='{"resolution": "2k", "quality": "medium", "n": 1}'
+            rows={3}
+            className='font-mono text-xs'
+            spellCheck={false}
+            aria-invalid={sampleRequest.error ? true : undefined}
+          />
+          <p className='text-muted-foreground text-xs'>
+            {sampleRequest.error ??
+              t(
+                'Fields read by param(path) come from this body; header() sees no headers here and time functions use the current time.'
+              )}
+          </p>
         </div>
       )}
       <div

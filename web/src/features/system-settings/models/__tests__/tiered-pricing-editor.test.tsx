@@ -39,7 +39,9 @@ describe('TieredPricingEditor with an expression the visual editor cannot show',
       />
     )
 
-    expect(screen.getByRole('textbox')).toHaveValue(PER_IMAGE_EXPR)
+    expect(
+      screen.getByPlaceholderText('tier("base", p * 3 + c * 15)')
+    ).toHaveValue(PER_IMAGE_EXPR)
     // The stored expression must survive open → save untouched.
     expect(onBillingExprChange).not.toHaveBeenCalled()
   })
@@ -67,7 +69,9 @@ describe('TieredPricingEditor with an expression the visual editor cannot show',
       />
     )
 
-    expect(screen.getByRole('textbox')).toHaveValue(PER_IMAGE_EXPR)
+    expect(
+      screen.getByPlaceholderText('tier("base", p * 3 + c * 15)')
+    ).toHaveValue(PER_IMAGE_EXPR)
     expect(onBillingExprChange).not.toHaveBeenCalled()
   })
 })

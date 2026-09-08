@@ -5310,7 +5310,7 @@
     "footer.columns.related.links.oneApi": "Один API",
     "footer.columns.related.title": "Связанные проекты",
     "footer.defaultCopyright": "Все права защищены.",
-    "footer.new\u0061pi.projectAttributionSuffix": "Все права защищены. Разработано участниками проекта.",
+    "footer.newapi.projectAttributionSuffix": "Все права защищены. Разработано участниками проекта.",
     "gpt-3.5-turbo": "gpt-3.5-turbo",
     "gpt-3.5-turbo-0125": "gpt-3.5-turbo-0125",
     "gpt-4": "gpt-4",
@@ -5538,6 +5538,8 @@
     "Size": "Размер",
     "Remove size": "Удалить размер",
     "Per-image prices need a unique size and a positive price": "Цены за изображение требуют уникального размера и положительной цены",
-    "Coefficients are USD per 1M tokens; a bare constant is USD × 1,000,000 per request (40000 = $0.04), so per-image prices can be switched on request fields with param(path).": "Коэффициенты — USD за 1 млн токенов; отдельная константа — USD × 1 000 000 за запрос (40000 = $0.04), поэтому цену за изображение можно выбирать по полям запроса через param(path)."
+    "Coefficients are USD per 1M tokens; a bare constant is USD × 1,000,000 per request (40000 = $0.04), so per-image prices can be switched on request fields with param(path).": "Коэффициенты — USD за 1 млн токенов; отдельная константа — USD × 1 000 000 за запрос (40000 = $0.04), поэтому цену за изображение можно выбирать по полям запроса через param(path).",
+    "Sample request body (JSON)": "Пример тела запроса (JSON)",
+    "Fields read by param(path) come from this body; header() sees no headers here and time functions use the current time.": "Поля, читаемые через param(path), берутся из этого тела; header() здесь не видит заголовков, а функции времени используют текущее время."
   }
 }

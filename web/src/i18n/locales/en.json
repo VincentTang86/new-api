@@ -5310,7 +5310,7 @@
     "footer.columns.related.links.oneApi": "One API",
     "footer.columns.related.title": "Related Projects",
     "footer.defaultCopyright": "All rights reserved.",
-    "footer.new\u0061pi.projectAttributionSuffix": "All rights reserved. Designed and developed by the project contributors.",
+    "footer.newapi.projectAttributionSuffix": "All rights reserved. Designed and developed by the project contributors.",
     "gpt-3.5-turbo": "gpt-3.5-turbo",
     "gpt-3.5-turbo-0125": "gpt-3.5-turbo-0125",
     "gpt-4": "gpt-4",
@@ -5538,6 +5538,8 @@
     "Size": "Size",
     "Remove size": "Remove size",
     "Per-image prices need a unique size and a positive price": "Per-image prices need a unique size and a positive price",
-    "Coefficients are USD per 1M tokens; a bare constant is USD × 1,000,000 per request (40000 = $0.04), so per-image prices can be switched on request fields with param(path).": "Coefficients are USD per 1M tokens; a bare constant is USD × 1,000,000 per request (40000 = $0.04), so per-image prices can be switched on request fields with param(path)."
+    "Coefficients are USD per 1M tokens; a bare constant is USD × 1,000,000 per request (40000 = $0.04), so per-image prices can be switched on request fields with param(path).": "Coefficients are USD per 1M tokens; a bare constant is USD × 1,000,000 per request (40000 = $0.04), so per-image prices can be switched on request fields with param(path).",
+    "Sample request body (JSON)": "Sample request body (JSON)",
+    "Fields read by param(path) come from this body; header() sees no headers here and time functions use the current time.": "Fields read by param(path) come from this body; header() sees no headers here and time functions use the current time."
   }
 }
