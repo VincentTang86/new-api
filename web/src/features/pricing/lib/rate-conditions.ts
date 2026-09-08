@@ -44,6 +44,8 @@ export const TIER_FIELD_REFERENCE_LANES: Record<
   cacheReadExplicitPrice: 'cache_hit',
   cacheCreatePrice: 'cache_creation',
   cacheCreate1hPrice: 'cache_creation_1h',
+  imagePrice: 'image_input',
+  imageOutputPrice: 'image_output',
 }
 
 const REFERENCE_LANE_ORDER: (keyof ReferencePriceLanes)[] = [
@@ -53,6 +55,8 @@ const REFERENCE_LANE_ORDER: (keyof ReferencePriceLanes)[] = [
   'cache_creation',
   'cache_creation_1h',
   'cache_hit',
+  'image_input',
+  'image_output',
 ]
 
 /** Ratio-configured price each lane compares against, for non-tiered models. */
@@ -64,6 +68,7 @@ const STATIC_TYPE_REFERENCE_LANES: {
   { staticType: 'output', lane: 'output' },
   { staticType: 'cache', lane: 'cached_input' },
   { staticType: 'create_cache', lane: 'cache_creation' },
+  { staticType: 'image', lane: 'image_input' },
 ]
 
 /**

@@ -19,6 +19,12 @@ const (
 	maxReferenceConditionKeyLen = 64
 )
 
+// 按张标价的档位数量与档位名长度上限（per_image 文本列）。
+const (
+	maxReferenceImageSizes      = 16
+	maxReferenceImageSizeLength = 32
+)
+
 func GetReferencePricing(c *gin.Context) {
 	rows, err := model.GetAllReferencePricing()
 	if err != nil {
@@ -50,7 +56,9 @@ func UpdateReferencePricing(c *gin.Context) {
 			common.ApiErrorMsg(c, "模型名不能为空且长度不能超过 128")
 			return
 		}
-		if row.Source != model.ReferencePricingSourceOfficial && row.Source != model.ReferencePricingSourceOpenRouter {
+		if row.Source != model.ReferencePricingSourceOfficial &&
+			row.Source != model.ReferencePricingSourceOpenRouter &&
+			row.Source != model.ReferencePricingSourceGateway {
 			common.ApiErrorMsg(c, fmt.Sprintf("无效的价格来源：%s", row.Source))
 			return
 		}
@@ -62,7 +70,7 @@ func UpdateReferencePricing(c *gin.Context) {
 			return
 		}
 		seen[key] = true
-		lanesToCheck := [][]*float64{{row.Input, row.Output, row.CachedInput, row.CacheCreation, row.CacheCreation1h, row.CacheHit}}
+		lanesToCheck := [][]*float64{{row.Input, row.Output, row.CachedInput, row.CacheCreation, row.CacheCreation1h, row.CacheHit, row.ImageInput, row.ImageOutput}}
 		if len(row.ConditionLanes) > maxReferenceConditions {
 			common.ApiErrorMsg(c, fmt.Sprintf("模型 %s 的计价条件数量不能超过 %d", row.ModelName, maxReferenceConditions))
 			return
@@ -72,7 +80,23 @@ func UpdateReferencePricing(c *gin.Context) {
 				common.ApiErrorMsg(c, fmt.Sprintf("模型 %s 存在无效的计价条件键：不能为空且长度不能超过 %d", row.ModelName, maxReferenceConditionKeyLen))
 				return
 			}
-			lanesToCheck = append(lanesToCheck, []*float64{lanes.Input, lanes.Output, lanes.CachedInput, lanes.CacheCreation, lanes.CacheCreation1h, lanes.CacheHit})
+			lanesToCheck = append(lanesToCheck, []*float64{lanes.Input, lanes.Output, lanes.CachedInput, lanes.CacheCreation, lanes.CacheCreation1h, lanes.CacheHit, lanes.ImageInput, lanes.ImageOutput})
+		}
+		if len(row.PerImageSizes) > maxReferenceImageSizes {
+			common.ApiErrorMsg(c, fmt.Sprintf("模型 %s 的按张价档位数量不能超过 %d", row.ModelName, maxReferenceImageSizes))
+			return
+		}
+		seenSizes := make(map[string]bool, len(row.PerImageSizes))
+		for i := range row.PerImageSizes {
+			entry := &row.PerImageSizes[i]
+			entry.Size = strings.TrimSpace(entry.Size)
+			if entry.Size == "" || len(entry.Size) > maxReferenceImageSizeLength || seenSizes[entry.Size] {
+				common.ApiErrorMsg(c, fmt.Sprintf("模型 %s 存在无效的按张价档位：档位名不能为空、不能重复且长度不能超过 %d", row.ModelName, maxReferenceImageSizeLength))
+				return
+			}
+			seenSizes[entry.Size] = true
+			price := entry.Price
+			lanesToCheck = append(lanesToCheck, []*float64{&price})
 		}
 		for _, lanes := range lanesToCheck {
 			for _, price := range lanes {

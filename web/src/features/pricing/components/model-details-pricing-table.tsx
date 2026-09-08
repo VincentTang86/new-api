@@ -37,6 +37,7 @@ import {
 import {
   getAvailableGroups,
   getConfiguredGroupRatio,
+  isImageModel,
   isTokenBasedModel,
 } from '../lib/model-helpers'
 import { tokenPriceUSD } from '../lib/price'
@@ -91,7 +92,12 @@ const STATIC_COLUMNS: readonly (PriceColumn & { staticType: PriceType })[] = [
     staticType: 'create_cache',
     referenceLane: 'cache_creation',
   },
-  { id: 'image', label: 'Image In', staticType: 'image' },
+  {
+    id: 'image',
+    label: 'Image In',
+    staticType: 'image',
+    referenceLane: 'image_input',
+  },
   { id: 'audio_input', label: 'Audio In', staticType: 'audio_input' },
   { id: 'audio_output', label: 'Audio Out', staticType: 'audio_output' },
 ]
@@ -432,6 +438,13 @@ export function ModelDetailsPricingNotes(props: { model: PricingModel }) {
         <p>
           {t(
             "Reference rates come from the source's public model listings and are not billed by this gateway."
+          )}
+        </p>
+      )}
+      {isImageModel(props.model) && (
+        <p>
+          {t(
+            'Image output pricing is approximate and varies by resolution and quality settings.'
           )}
         </p>
       )}

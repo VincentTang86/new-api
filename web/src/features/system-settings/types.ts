@@ -39,7 +39,9 @@ export type UpdateOptionResponse = {
   message: string
 }
 
-export type ReferencePricingSource = 'official' | 'openrouter'
+// gateway 不是外部来源：它存网关自己的按张标价（分组倍率 1 的基准价），只有
+// per_image 有意义，放在同一张表里是为了在对比价后台一处录入。
+export type ReferencePricingSource = 'official' | 'openrouter' | 'gateway'
 
 export type ReferencePricingLanes = {
   input?: number | null
@@ -48,15 +50,24 @@ export type ReferencePricingLanes = {
   cache_creation?: number | null
   cache_creation_1h?: number | null
   cache_hit?: number | null
+  image_input?: number | null
+  image_output?: number | null
+}
+
+export type ReferencePricingImageSize = {
+  size: string
+  price: number
 }
 
 // 外部对比标价（USD / 1M tokens），按 (model_name, source) 一行。
-// 顶层价位是默认价；conditions 按计价条件键（rate-conditions 模块派生）覆盖。
+// 顶层价位是默认价；conditions 按计价条件键（rate-conditions 模块派生）覆盖；
+// per_image 是图片模型的按张标价，顺序即展示顺序。
 export type ReferencePricingRow = ReferencePricingLanes & {
   id?: number
   model_name: string
   source: ReferencePricingSource
   conditions?: Record<string, ReferencePricingLanes>
+  per_image?: ReferencePricingImageSize[]
 }
 
 export type ReferencePricingResponse = {

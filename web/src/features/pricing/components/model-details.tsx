@@ -33,7 +33,7 @@ import {
   Type,
   X,
 } from 'lucide-react'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { CopyButton } from '@/components/copy-button'
@@ -64,10 +64,11 @@ import {
 import { normalizeInterfaceLanguage, toIntlLocale } from '@/i18n/languages'
 import { cn } from '@/lib/utils'
 
-import { parseTags } from '../lib/model-helpers'
+import { isImageModel, parseTags } from '../lib/model-helpers'
 import type { ModelCapability, PricingModel, TokenUnit } from '../types'
 import { ModelBillingModeBadge } from './model-billing-mode-badge'
 import { ModelDetailsApi } from './model-details-api'
+import { ModelDetailsImagePricingTable } from './model-details-image-pricing-table'
 import { ModelDetailsPerformance } from './model-details-performance'
 import {
   ModelDetailsPricingNotes,
@@ -636,8 +637,26 @@ export interface ModelDetailsContentProps {
   tokenUnit: TokenUnit
 }
 
+/** The unit an image model's prices are stated in; the design opens on /Pic. */
+type ImagePriceUnit = 'pic' | 'token'
+
+const IMAGE_PRICE_UNITS: { key: ImagePriceUnit; label: string }[] = [
+  { key: 'pic', label: '/Pic' },
+  { key: 'token', label: '/Token' },
+]
+
 export function ModelDetailsContent(props: ModelDetailsContentProps) {
   const { t } = useTranslation()
+  const imageModel = isImageModel(props.model)
+  const [priceUnit, setPriceUnit] = useState<ImagePriceUnit>('pic')
+  const showPerImage = imageModel && priceUnit === 'pic'
+
+  let pricingBlurb = t('Prices are shown in USD per {{unit}} tokens.', {
+    unit: props.tokenUnit === 'K' ? '1K' : '1M',
+  })
+  if (showPerImage) {
+    pricingBlurb = t('Estimated price per image at different resolutions.')
+  }
 
   return (
     <div className='@container/details space-y-2'>
@@ -670,23 +689,57 @@ export function ModelDetailsContent(props: ModelDetailsContentProps) {
           <OverviewSummaryGrid model={props.model} />
 
           <section className='space-y-2.5'>
-            <div>
-              <h2 className='text-base font-bold text-(--pd-ink-strong)'>
-                {t('Pricing')}
-              </h2>
-              <p className='text-xs text-(--pd-faint)'>
-                {t('Prices are shown in USD per {{unit}} tokens.', {
-                  unit: props.tokenUnit === 'K' ? '1K' : '1M',
-                })}
-              </p>
+            <h2 className='text-base font-bold text-(--pd-ink-strong)'>
+              {t('Pricing')}
+            </h2>
+            <div className='flex flex-wrap items-center justify-between gap-2'>
+              <p className='text-xs text-(--pd-faint)'>{pricingBlurb}</p>
+              {imageModel && (
+                // An image model is priced both ways: per image, the way the
+                // vendor quotes it, and per token, the way it is billed.
+                <div
+                  role='tablist'
+                  aria-label={t('Price unit')}
+                  className='flex gap-px rounded-md bg-(--pd-control-bg) p-0.5'
+                >
+                  {IMAGE_PRICE_UNITS.map((unit) => {
+                    const isActive = unit.key === priceUnit
+                    return (
+                      <button
+                        key={unit.key}
+                        type='button'
+                        role='tab'
+                        aria-selected={isActive}
+                        onClick={() => setPriceUnit(unit.key)}
+                        className={cn(
+                          'cursor-pointer rounded-[5px] px-2.5 py-1 text-xs transition-colors',
+                          isActive
+                            ? 'bg-(--pd-surface) font-semibold text-(--pd-primary) shadow-sm'
+                            : 'font-medium text-(--pd-muted-2)'
+                        )}
+                      >
+                        {unit.label}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
             </div>
             <AutoGroupChain model={props.model} autoGroups={props.autoGroups} />
-            <ModelDetailsPricingTable
-              model={props.model}
-              groupRatio={props.groupRatio}
-              usableGroup={props.usableGroup}
-              tokenUnit={props.tokenUnit}
-            />
+            {showPerImage ? (
+              <ModelDetailsImagePricingTable
+                model={props.model}
+                groupRatio={props.groupRatio}
+                usableGroup={props.usableGroup}
+              />
+            ) : (
+              <ModelDetailsPricingTable
+                model={props.model}
+                groupRatio={props.groupRatio}
+                usableGroup={props.usableGroup}
+                tokenUnit={props.tokenUnit}
+              />
+            )}
             <ModelDetailsPricingNotes model={props.model} />
           </section>
 

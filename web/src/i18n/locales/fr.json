@@ -5518,6 +5518,25 @@
     "The JSON is the complete state: models or conditions omitted here are removed on save.": "Le JSON représente l'état complet : les modèles ou conditions omis ici seront supprimés à l'enregistrement.",
     "The default price also feeds the landing page comparison and the dashboard savings estimate; a condition without its own price shows a dash in the model drawer.": "Le prix par défaut alimente aussi la comparaison de la page d'accueil et l'estimation d'économies du tableau de bord ; une condition sans prix propre affiche un tiret dans le panneau du modèle.",
     "Image Output Tokens": "Tokens de sortie image",
-    "Text Output Tokens": "Tokens de sortie texte"
+    "Text Output Tokens": "Tokens de sortie texte",
+    "LLM": "LLM",
+    "Model type": "Type de modèle",
+    "FR Price": "Prix FR",
+    "Official Price": "Prix officiel",
+    "OpenRouter Price": "Prix OpenRouter",
+    "from ~{{price}} / image": "dès ~{{price}} / image",
+    "Compare {{name}} image rates with the vendor list price. Prices are shown in USD per image; open a model for its per-token rates.": "Comparez les tarifs image de {{name}} au prix public du fournisseur. Les prix sont en USD par image ; ouvrez un modèle pour ses tarifs par token.",
+    "Price unit": "Unité de prix",
+    "Estimated price per image at different resolutions.": "Prix indicatif par image selon la résolution.",
+    "Image output pricing is approximate and varies by resolution and quality settings.": "Le prix des images générées est indicatif et varie selon la résolution et les réglages de qualité.",
+    "Per image": "Par image",
+    "No per-image prices are configured for this model.": "Aucun prix par image n'est configuré pour ce modèle.",
+    "Gateway price": "Prix de la passerelle",
+    "Per-image prices": "Prix par image",
+    "USD per image by size or quality. The gateway row is the list price at group ratio 1; each tier scales it by its ratio.": "USD par image selon la taille ou la qualité. La ligne passerelle est le prix public au ratio de groupe 1 ; chaque palier l'ajuste selon son ratio.",
+    "Add size": "Ajouter une taille",
+    "Size": "Taille",
+    "Remove size": "Supprimer la taille",
+    "Per-image prices need a unique size and a positive price": "Les prix par image exigent une taille unique et un prix positif"
   }
 }

@@ -42,12 +42,18 @@ interface PricingModelListProps {
 
 const SKELETON_ROW_KEYS = ['s1', 's2', 's3', 's4', 's5', 's6']
 
+interface PricingListStatusProps {
+  isLoading?: boolean
+  isError?: boolean
+  isEmpty: boolean
+  onRetry?: () => void
+}
+
 /**
- * One responsive presentation of the catalogue: a seven-column table from `md`
- * up, a per-model accordion below it. Shared by both pages so they never drift.
- * Owns the loading / error / empty states of the live pricing feed.
+ * The loading / error / empty states of the live pricing feed, shared by the
+ * token and the image catalogues. Null when there are rows to render.
  */
-export function PricingModelList(props: PricingModelListProps) {
+export function PricingListStatus(props: PricingListStatusProps) {
   const { t } = useTranslation()
 
   if (props.isLoading) {
@@ -86,12 +92,33 @@ export function PricingModelList(props: PricingModelListProps) {
     )
   }
 
-  if (props.rows.length === 0) {
+  if (props.isEmpty) {
     return (
       <p className='rounded-2xl border border-dashed border-(--pd-border) px-4 py-12 text-center text-sm text-(--pd-muted-3)'>
         {t('No models are available right now.')}
       </p>
     )
+  }
+
+  return null
+}
+
+/**
+ * One responsive presentation of the catalogue: a seven-column table from `md`
+ * up, a per-model accordion below it. Shared by both pages so they never drift.
+ * Owns the loading / error / empty states of the live pricing feed.
+ */
+export function PricingModelList(props: PricingModelListProps) {
+  const status = (
+    <PricingListStatus
+      isLoading={props.isLoading}
+      isError={props.isError}
+      isEmpty={props.rows.length === 0}
+      onRetry={props.onRetry}
+    />
+  )
+  if (props.isLoading || props.isError || props.rows.length === 0) {
+    return status
   }
 
   return (

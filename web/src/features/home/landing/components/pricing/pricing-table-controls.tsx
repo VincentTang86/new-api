@@ -25,9 +25,22 @@ import type {
   PricingProviderFilter,
   PricingProviderOption,
 } from '../../lib/use-landing-pricing-rows'
-import type { PricingBenchmark } from '../../types'
+import type { PricingBenchmark, PricingModelType } from '../../types'
+
+const MODEL_TYPE_OPTIONS: { key: PricingModelType; labelKey: string }[] = [
+  // "LLM" is an initialism, not a phrase; it still goes through t() so a
+  // locale that expands it can.
+  { key: 'llm', labelKey: 'LLM' },
+  { key: 'image', labelKey: 'Image' },
+]
 
 interface PricingTableControlsProps {
+  /**
+   * The LLM / Image switch, from the design's models & pricing page. Absent
+   * on the home preview, which only lists language models.
+   */
+  modelType?: PricingModelType
+  onModelTypeChange?: (type: PricingModelType) => void
   groups: readonly PricingGroupOption[]
   selectedGroup: string
   onGroupChange: (group: string) => void
@@ -39,10 +52,10 @@ interface PricingTableControlsProps {
 }
 
 /**
- * The three selectors above the pricing table, from the design: a segmented
- * group (price tier) control, the vendor filter row, and the "Compare with"
- * benchmark toggle. Pure controls — all state lives in
- * `useLandingPricingRows`.
+ * The selectors above the pricing table, from the design: the model type
+ * switch (where the page offers one), a segmented group (price tier) control,
+ * the vendor filter row, and the "Compare with" benchmark toggle. Pure
+ * controls — all state lives in `useLandingPricingRows`.
  */
 export function PricingTableControls(props: PricingTableControlsProps) {
   const { t } = useTranslation()
@@ -50,9 +63,42 @@ export function PricingTableControls(props: PricingTableControlsProps) {
   const selectedDescription = props.groups.find(
     (group) => group.key === props.selectedGroup
   )?.description
+  const onModelTypeChange = props.onModelTypeChange
+  // The Image tab compares per-image prices against the vendor's own list,
+  // so the benchmark toggle only applies to the token table.
+  const showBenchmark = props.modelType !== 'image'
 
   return (
     <div className='pd-font-ui mb-6 flex flex-col gap-4'>
+      {props.modelType && onModelTypeChange && (
+        <div
+          role='tablist'
+          aria-label={t('Model type')}
+          className='flex h-10 w-fit items-stretch gap-0.5 rounded-lg border border-(--pd-control-border) bg-(--pd-control-bg) p-[3px]'
+        >
+          {MODEL_TYPE_OPTIONS.map((option) => {
+            const isActive = option.key === props.modelType
+            return (
+              <button
+                key={option.key}
+                type='button'
+                role='tab'
+                aria-selected={isActive}
+                onClick={() => onModelTypeChange(option.key)}
+                className={cn(
+                  'cursor-pointer rounded-md px-3.5 py-[7px] text-sm whitespace-nowrap transition-colors duration-150',
+                  isActive
+                    ? 'bg-(--pd-surface) font-semibold text-(--pd-primary) shadow-[0px_1px_2px_0px_rgba(0,0,0,0.06)]'
+                    : 'font-medium text-(--pd-muted-2) hover:bg-(--pd-surface)/70'
+                )}
+              >
+                {t(option.labelKey)}
+              </button>
+            )
+          })}
+        </div>
+      )}
+
       {props.groups.length > 0 && (
         // The tier strip and the selected tier's blurb sit on one line, as in
         // the design; narrow viewports drop the blurb under the strip.
@@ -138,37 +184,39 @@ export function PricingTableControls(props: PricingTableControlsProps) {
           })}
         </div>
 
-        <div className='flex items-center gap-2'>
-          <p className='text-sm whitespace-nowrap text-(--pd-faint)'>
-            {t('Compare with:')}
-          </p>
-          <div className='flex items-start'>
-            {(
-              [
-                { key: 'official', label: t('Official API') },
-                { key: 'openrouter', label: 'OpenRouter' },
-              ] as const
-            ).map((option) => {
-              const isActive = props.benchmark === option.key
-              return (
-                <button
-                  key={option.key}
-                  type='button'
-                  aria-pressed={isActive}
-                  onClick={() => props.onBenchmarkChange(option.key)}
-                  className={cn(
-                    'cursor-pointer border-b-2 px-3.5 py-2 text-[13px] whitespace-nowrap transition-colors duration-150',
-                    isActive
-                      ? 'border-(--pd-primary) font-semibold text-(--pd-primary)'
-                      : 'border-transparent font-medium text-(--pd-faint) hover:text-(--pd-muted-2)'
-                  )}
-                >
-                  {option.label}
-                </button>
-              )
-            })}
+        {showBenchmark && (
+          <div className='flex items-center gap-2'>
+            <p className='text-sm whitespace-nowrap text-(--pd-faint)'>
+              {t('Compare with:')}
+            </p>
+            <div className='flex items-start'>
+              {(
+                [
+                  { key: 'official', label: t('Official API') },
+                  { key: 'openrouter', label: 'OpenRouter' },
+                ] as const
+              ).map((option) => {
+                const isActive = props.benchmark === option.key
+                return (
+                  <button
+                    key={option.key}
+                    type='button'
+                    aria-pressed={isActive}
+                    onClick={() => props.onBenchmarkChange(option.key)}
+                    className={cn(
+                      'cursor-pointer border-b-2 px-3.5 py-2 text-[13px] whitespace-nowrap transition-colors duration-150',
+                      isActive
+                        ? 'border-(--pd-primary) font-semibold text-(--pd-primary)'
+                        : 'border-transparent font-medium text-(--pd-faint) hover:text-(--pd-muted-2)'
+                    )}
+                  >
+                    {option.label}
+                  </button>
+                )
+              })}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   )

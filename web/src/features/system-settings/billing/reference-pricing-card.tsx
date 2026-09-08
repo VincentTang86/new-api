@@ -56,6 +56,7 @@ import {
 } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { usePricingData } from '@/features/pricing/hooks'
+import { isImageModel } from '@/features/pricing/lib/model-helpers'
 import {
   getRateConditions,
   getReferenceLaneKeys,
@@ -69,6 +70,7 @@ import {
 } from '../api'
 import { SettingsSection } from '../components/settings-section'
 import type {
+  ReferencePricingImageSize,
   ReferencePricingLanes,
   ReferencePricingRow,
   ReferencePricingSource,
@@ -81,11 +83,28 @@ const LANES = [
   { key: 'cache_creation', labelKey: 'Explicit cache write price' },
   { key: 'cache_creation_1h', labelKey: 'Explicit cache write price (1h)' },
   { key: 'cache_hit', labelKey: 'Explicit cache hit price' },
+  { key: 'image_input', labelKey: 'Image input price' },
+  { key: 'image_output', labelKey: 'Image output price' },
 ] as const
 
 type LaneKey = (typeof LANES)[number]['key']
 
-const SOURCES: ReferencePricingSource[] = ['official', 'openrouter']
+/** External sources that carry per-token lanes and rate conditions. */
+type LaneSource = Exclude<ReferencePricingSource, 'gateway'>
+
+const SOURCES: LaneSource[] = ['official', 'openrouter']
+
+/**
+ * Rows of the per-image matrix. The gateway row is this site's own list price
+ * (at group ratio 1); the drawer scales it by each tier's ratio.
+ */
+const PER_IMAGE_SOURCES: ReferencePricingSource[] = [
+  'gateway',
+  'official',
+  'openrouter',
+]
+
+const MAX_IMAGE_SIZES = 16
 
 /** Draft key for the default (unconditioned) price row of the matrix. */
 const DEFAULT_CONDITION_KEY = ''
@@ -100,15 +119,30 @@ const laneObjectSchema = z
     cache_creation: priceSchema.optional(),
     cache_creation_1h: priceSchema.optional(),
     cache_hit: priceSchema.optional(),
+    image_input: priceSchema.optional(),
+    image_output: priceSchema.optional(),
   })
   .strict()
+
+const perImageSchema = z
+  .array(
+    z
+      .object({ size: z.string().trim().min(1).max(32), price: priceSchema })
+      .strict()
+  )
+  .max(MAX_IMAGE_SIZES)
 
 const sourceObjectSchema = laneObjectSchema
   .extend({
     conditions: z
       .record(z.string().min(1).max(64), laneObjectSchema)
       .optional(),
+    per_image: perImageSchema.optional(),
   })
+  .strict()
+
+const gatewayObjectSchema = z
+  .object({ per_image: perImageSchema.optional() })
   .strict()
 
 const jsonConfigSchema = z.record(
@@ -117,6 +151,7 @@ const jsonConfigSchema = z.record(
     .object({
       official: sourceObjectSchema.optional(),
       openrouter: sourceObjectSchema.optional(),
+      gateway: gatewayObjectSchema.optional(),
     })
     .strict()
 )
@@ -129,12 +164,29 @@ type ModelRowView = {
 type LaneDraft = Record<LaneKey, string>
 
 /** Per source: condition key -> lane drafts; '' is the default price row. */
-type DraftValues = Record<ReferencePricingSource, Record<string, LaneDraft>>
+type DraftValues = Record<LaneSource, Record<string, LaneDraft>>
+
+/**
+ * One column of the per-image matrix as typed: the size label and each
+ * source's price text (empty when the source has no price for that size).
+ * The id keeps a column's identity while its label is still being typed.
+ */
+type PerImageColumn = {
+  id: number
+  size: string
+  prices: Record<ReferencePricingSource, string>
+}
+
+type PerImageDraft = {
+  columns: PerImageColumn[]
+  nextId: number
+}
 
 type DialogState = {
   modelName: string
   isNew: boolean
   values: DraftValues
+  perImage: PerImageDraft
 }
 
 const emptyLaneDraft = (): LaneDraft => ({
@@ -144,6 +196,8 @@ const emptyLaneDraft = (): LaneDraft => ({
   cache_creation: '',
   cache_creation_1h: '',
   cache_hit: '',
+  image_input: '',
+  image_output: '',
 })
 
 const lanesToDraft = (lanes: ReferencePricingLanes | undefined): LaneDraft => {
@@ -169,6 +223,58 @@ const draftFromRows = (
     }
   }
   return values
+}
+
+/**
+ * Columns are the union of every source's size labels, the gateway's order
+ * first (it is the order the drawer renders), then whatever the external
+ * sources add.
+ */
+const perImageDraftFromRows = (
+  rows: Partial<Record<ReferencePricingSource, ReferencePricingRow>>
+): PerImageDraft => {
+  const columns: PerImageColumn[] = []
+  for (const source of PER_IMAGE_SOURCES) {
+    for (const entry of rows[source]?.per_image ?? []) {
+      let column = columns.find((item) => item.size === entry.size)
+      if (!column) {
+        column = {
+          id: columns.length,
+          size: entry.size,
+          prices: { gateway: '', official: '', openrouter: '' },
+        }
+        columns.push(column)
+      }
+      column.prices[source] = String(entry.price)
+    }
+  }
+  return { columns, nextId: columns.length }
+}
+
+/**
+ * The per-image list a source submits: every column where it has a price.
+ * Null flags a price that is not a positive number, or a blank/duplicate size
+ * label that still carries a price.
+ */
+const parsePerImageDraft = (
+  draft: PerImageDraft,
+  source: ReferencePricingSource
+): ReferencePricingImageSize[] | null => {
+  const entries: ReferencePricingImageSize[] = []
+  const seen = new Set<string>()
+  for (const column of draft.columns) {
+    const raw = column.prices[source].trim()
+    if (!raw) continue
+    const size = column.size.trim()
+    if (!size || size.length > 32 || seen.has(size)) return null
+    seen.add(size)
+    const price = Number(raw)
+    if (!Number.isFinite(price) || price <= 0 || price > 1_000_000) {
+      return null
+    }
+    entries.push({ size, price })
+  }
+  return entries
 }
 
 const formatLanePrice = (price: number | null | undefined) =>
@@ -248,6 +354,10 @@ export function ReferencePricingCard() {
     const config: Record<string, Record<string, unknown>> = {}
     for (const view of modelRows) {
       const entry: Record<string, unknown> = {}
+      const gateway = view.rows.gateway
+      if (gateway?.per_image?.length) {
+        entry.gateway = { per_image: gateway.per_image }
+      }
       for (const source of SOURCES) {
         const row = view.rows[source]
         if (!row) continue
@@ -256,6 +366,7 @@ export function ReferencePricingCard() {
           const price = row[lane.key]
           if (typeof price === 'number') lanes[lane.key] = price
         }
+        if (row.per_image?.length) lanes.per_image = row.per_image
         const conditions: Record<string, Record<string, number>> = {}
         for (const [conditionKey, conditionLanes] of Object.entries(
           row.conditions ?? {}
@@ -292,6 +403,7 @@ export function ReferencePricingCard() {
       modelName: '',
       isNew: true,
       values: draftFromRows({}),
+      perImage: perImageDraftFromRows({}),
     })
   }
 
@@ -300,11 +412,63 @@ export function ReferencePricingCard() {
       modelName: view.modelName,
       isNew: false,
       values: draftFromRows(view.rows),
+      perImage: perImageDraftFromRows(view.rows),
     })
   }
 
-  const setDraftValue = (
+  const setPerImageDraft = (update: (prev: PerImageDraft) => PerImageDraft) => {
+    setDialog((prev) =>
+      prev ? { ...prev, perImage: update(prev.perImage) } : prev
+    )
+  }
+
+  const addPerImageSize = () => {
+    setPerImageDraft((prev) => ({
+      columns: [
+        ...prev.columns,
+        {
+          id: prev.nextId,
+          size: '',
+          prices: { gateway: '', official: '', openrouter: '' },
+        },
+      ],
+      nextId: prev.nextId + 1,
+    }))
+  }
+
+  const removePerImageSize = (id: number) => {
+    setPerImageDraft((prev) => ({
+      ...prev,
+      columns: prev.columns.filter((column) => column.id !== id),
+    }))
+  }
+
+  const setPerImageSize = (id: number, value: string) => {
+    setPerImageDraft((prev) => ({
+      ...prev,
+      columns: prev.columns.map((column) =>
+        column.id === id ? { ...column, size: value } : column
+      ),
+    }))
+  }
+
+  const setPerImagePrice = (
     source: ReferencePricingSource,
+    id: number,
+    value: string
+  ) => {
+    setPerImageDraft((prev) => ({
+      ...prev,
+      columns: prev.columns.map((column) =>
+        column.id === id
+          ? { ...column, prices: { ...column.prices, [source]: value } }
+          : column
+      ),
+    }))
+  }
+
+  const setDraftValue = (
+    source: LaneSource,
     conditionKey: string,
     laneKey: LaneKey,
     value: string
@@ -323,10 +487,7 @@ export function ReferencePricingCard() {
     })
   }
 
-  const removeDraftCondition = (
-    source: ReferencePricingSource,
-    conditionKey: string
-  ) => {
+  const removeDraftCondition = (source: LaneSource, conditionKey: string) => {
     setDialog((prev) => {
       if (!prev) return prev
       const sourceDraft = { ...prev.values[source] }
@@ -367,6 +528,20 @@ export function ReferencePricingCard() {
     }
     const existing = modelRows.find((row) => row.modelName === modelName)
     const rows: ReferencePricingRow[] = []
+    const perImageBySource = {} as Record<
+      ReferencePricingSource,
+      ReferencePricingImageSize[]
+    >
+    for (const source of PER_IMAGE_SOURCES) {
+      const entries = parsePerImageDraft(dialog.perImage, source)
+      if (entries === null) {
+        toast.error(
+          t('Per-image prices need a unique size and a positive price')
+        )
+        return
+      }
+      perImageBySource[source] = entries
+    }
     for (const source of SOURCES) {
       const sourceDraft = dialog.values[source]
       const defaultLanes = parseDraftLanes(sourceDraft[DEFAULT_CONDITION_KEY])
@@ -384,9 +559,11 @@ export function ReferencePricingCard() {
         }
         if (Object.keys(lanes).length > 0) conditions[conditionKey] = lanes
       }
+      const perImage = perImageBySource[source]
       const hasValue =
         Object.keys(defaultLanes).length > 0 ||
-        Object.keys(conditions).length > 0
+        Object.keys(conditions).length > 0 ||
+        perImage.length > 0
       // 清空某来源全部价格时仍要提交该行，让后端把旧值整行覆盖为空
       if (hasValue || existing?.rows[source]) {
         rows.push({
@@ -394,8 +571,17 @@ export function ReferencePricingCard() {
           source,
           ...defaultLanes,
           ...(Object.keys(conditions).length > 0 ? { conditions } : {}),
+          ...(perImage.length > 0 ? { per_image: perImage } : {}),
         })
       }
+    }
+    const gatewayPerImage = perImageBySource.gateway
+    if (gatewayPerImage.length > 0 || existing?.rows.gateway) {
+      rows.push({
+        model_name: modelName,
+        source: 'gateway',
+        ...(gatewayPerImage.length > 0 ? { per_image: gatewayPerImage } : {}),
+      })
     }
     if (rows.length === 0) {
       toast.error(t('Enter at least one price'))
@@ -441,7 +627,7 @@ export function ReferencePricingCard() {
       for (const source of SOURCES) {
         const entry = sources[source]
         if (!entry) continue
-        const { conditions, ...lanes } = entry
+        const { conditions, per_image, ...lanes } = entry
         rows.push({
           model_name: modelName,
           source,
@@ -449,6 +635,15 @@ export function ReferencePricingCard() {
           ...(conditions && Object.keys(conditions).length > 0
             ? { conditions }
             : {}),
+          ...(per_image && per_image.length > 0 ? { per_image } : {}),
+        })
+      }
+      const gateway = sources.gateway
+      if (gateway?.per_image?.length) {
+        rows.push({
+          model_name: modelName,
+          source: 'gateway',
+          per_image: gateway.per_image,
         })
       }
     }
@@ -475,8 +670,10 @@ export function ReferencePricingCard() {
     setEditMode('table')
   }
 
-  const sourceLabel = (source: ReferencePricingSource) =>
-    source === 'official' ? t('Official API') : 'OpenRouter'
+  const sourceLabel = (source: ReferencePricingSource) => {
+    if (source === 'gateway') return t('Gateway price')
+    return source === 'official' ? t('Official API') : 'OpenRouter'
+  }
 
   const conditionCount = (view: ModelRowView): number => {
     const keys = new Set<string>()
@@ -488,7 +685,7 @@ export function ReferencePricingCard() {
     return keys.size
   }
 
-  const renderSourceMatrix = (source: ReferencePricingSource) => {
+  const renderSourceMatrix = (source: LaneSource) => {
     if (!dialog) return null
     const sourceDraft = dialog.values[source]
     const derivedKeys = new Set(
@@ -796,6 +993,107 @@ export function ReferencePricingCard() {
                   </TabsContent>
                 ))}
               </Tabs>
+              {/* Per-image prices are what the Image tab and the drawer's
+               * /Pic view read; only image models (or a model that already
+               * carries such prices) get the matrix. */}
+              {((dialogModel && isImageModel(dialogModel)) ||
+                dialog.perImage.columns.length > 0) && (
+                <div className='flex flex-col gap-2'>
+                  <div className='flex items-center justify-between gap-2'>
+                    <div>
+                      <Label>{t('Per-image prices')}</Label>
+                      <p className='text-muted-foreground text-xs'>
+                        {t(
+                          'USD per image by size or quality. The gateway row is the list price at group ratio 1; each tier scales it by its ratio.'
+                        )}
+                      </p>
+                    </div>
+                    <Button
+                      type='button'
+                      variant='outline'
+                      size='sm'
+                      onClick={addPerImageSize}
+                      disabled={
+                        dialog.perImage.columns.length >= MAX_IMAGE_SIZES
+                      }
+                    >
+                      <Plus data-icon='inline-start' />
+                      {t('Add size')}
+                    </Button>
+                  </div>
+                  {dialog.perImage.columns.length > 0 && (
+                    <div className='overflow-x-auto rounded-md border'>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className='whitespace-nowrap'>
+                              {t('Source')}
+                            </TableHead>
+                            {dialog.perImage.columns.map((column) => (
+                              <TableHead key={column.id} className='min-w-32'>
+                                <div className='flex items-center gap-1'>
+                                  <Input
+                                    aria-label={t('Size')}
+                                    placeholder={t('Size')}
+                                    className='h-8 font-mono'
+                                    value={column.size}
+                                    onChange={(event) =>
+                                      setPerImageSize(
+                                        column.id,
+                                        event.target.value
+                                      )
+                                    }
+                                  />
+                                  <Button
+                                    type='button'
+                                    variant='ghost'
+                                    size='icon-sm'
+                                    aria-label={t('Remove size')}
+                                    onClick={() =>
+                                      removePerImageSize(column.id)
+                                    }
+                                  >
+                                    <X />
+                                  </Button>
+                                </div>
+                              </TableHead>
+                            ))}
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {PER_IMAGE_SOURCES.map((source) => (
+                            <TableRow key={source}>
+                              <TableCell className='text-xs font-medium whitespace-nowrap'>
+                                {sourceLabel(source)}
+                              </TableCell>
+                              {dialog.perImage.columns.map((column) => (
+                                <TableCell key={column.id}>
+                                  <Input
+                                    aria-label={`${sourceLabel(source)} · ${column.size || t('Size')}`}
+                                    type='number'
+                                    min={0}
+                                    step='any'
+                                    inputMode='decimal'
+                                    className='h-8'
+                                    value={column.prices[source]}
+                                    onChange={(event) =>
+                                      setPerImagePrice(
+                                        source,
+                                        column.id,
+                                        event.target.value
+                                      )
+                                    }
+                                  />
+                                </TableCell>
+                              ))}
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+                </div>
+              )}
               <p className='text-muted-foreground text-xs'>
                 {t('Leave a field empty when the source has no such price.')}{' '}
                 {t(

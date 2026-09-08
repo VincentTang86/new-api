@@ -57,7 +57,10 @@ type Pricing struct {
 	BillingExpr            string                  `json:"billing_expr,omitempty"`
 	OfficialPrice          *ReferencePrice         `json:"official_price,omitempty"`
 	OpenRouterPrice        *ReferencePrice         `json:"openrouter_price,omitempty"`
-	PricingVersion         string                  `json:"pricing_version,omitempty"`
+	// ImagePrices 图片模型的网关按张标价（分组倍率 1 的基准价，来自 reference_pricings 的
+	// gateway 行），仅用于定价页展示；实际计费仍走表达式/按次价。
+	ImagePrices    []ImageSizePrice `json:"image_prices,omitempty"`
+	PricingVersion string           `json:"pricing_version,omitempty"`
 }
 
 // ReferenceLanes 一组外部标价的价位（USD / 1M tokens），仅用于对比展示
@@ -69,6 +72,9 @@ type ReferenceLanes struct {
 	// CacheCreation1h 是 1 小时 TTL 的缓存写入价，Anthropic 一类双 TTL 缓存的模型才有。
 	CacheCreation1h *float64 `json:"cache_creation_1h,omitempty"`
 	CacheHit        *float64 `json:"cache_hit,omitempty"`
+	// ImageInput / ImageOutput 图片输入、图片输出的标价（USD / 1M tokens），图片模型才有。
+	ImageInput  *float64 `json:"image_input,omitempty"`
+	ImageOutput *float64 `json:"image_output,omitempty"`
 }
 
 // ReferencePrice 外部标价，来自 reference_pricings 表。内嵌的价位是默认价，
@@ -77,6 +83,8 @@ type ReferenceLanes struct {
 type ReferencePrice struct {
 	ReferenceLanes
 	ByCondition map[string]ReferenceLanes `json:"by_condition,omitempty"`
+	// PerImage 该来源的按张标价，图片模型的定价页 /Pic 视图消费。
+	PerImage []ImageSizePrice `json:"per_image,omitempty"`
 }
 
 type PricingVendor struct {
@@ -432,8 +440,11 @@ func updatePricing() {
 					CacheCreation:   row.CacheCreation,
 					CacheCreation1h: row.CacheCreation1h,
 					CacheHit:        row.CacheHit,
+					ImageInput:      row.ImageInput,
+					ImageOutput:     row.ImageOutput,
 				},
 				ByCondition: row.ConditionLanes,
+				PerImage:    row.PerImageSizes,
 			}
 		}
 	}
@@ -515,6 +526,9 @@ func updatePricing() {
 		if bySource, ok := referencePriceMap[model]; ok {
 			pricing.OfficialPrice = bySource[ReferencePricingSourceOfficial]
 			pricing.OpenRouterPrice = bySource[ReferencePricingSourceOpenRouter]
+			if gateway := bySource[ReferencePricingSourceGateway]; gateway != nil {
+				pricing.ImagePrices = gateway.PerImage
+			}
 		}
 		pricingMap = append(pricingMap, pricing)
 	}

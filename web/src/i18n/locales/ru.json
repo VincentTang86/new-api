@@ -5518,6 +5518,25 @@
     "The JSON is the complete state: models or conditions omitted here are removed on save.": "JSON описывает полное состояние: отсутствующие здесь модели и условия будут удалены при сохранении.",
     "The default price also feeds the landing page comparison and the dashboard savings estimate; a condition without its own price shows a dash in the model drawer.": "Базовая цена также используется в сравнении на главной странице и в оценке экономии на дашборде; условие без собственной цены отображается прочерком в панели модели.",
     "Image Output Tokens": "Токены вывода изображения",
-    "Text Output Tokens": "Токены вывода текста"
+    "Text Output Tokens": "Токены вывода текста",
+    "LLM": "LLM",
+    "Model type": "Тип модели",
+    "FR Price": "Цена FR",
+    "Official Price": "Официальная цена",
+    "OpenRouter Price": "Цена OpenRouter",
+    "from ~{{price}} / image": "от ~{{price}} / изображение",
+    "Compare {{name}} image rates with the vendor list price. Prices are shown in USD per image; open a model for its per-token rates.": "Сравните цены {{name}} на изображения с прайс-листом поставщика. Цены указаны в USD за изображение; откройте модель, чтобы увидеть цены за токены.",
+    "Price unit": "Единица цены",
+    "Estimated price per image at different resolutions.": "Ориентировочная цена одного изображения для разных разрешений.",
+    "Image output pricing is approximate and varies by resolution and quality settings.": "Цена генерации изображения ориентировочная и зависит от разрешения и настроек качества.",
+    "Per image": "За изображение",
+    "No per-image prices are configured for this model.": "Для этой модели не настроены цены за изображение.",
+    "Gateway price": "Цена шлюза",
+    "Per-image prices": "Цены за изображение",
+    "USD per image by size or quality. The gateway row is the list price at group ratio 1; each tier scales it by its ratio.": "USD за изображение по размеру или качеству. Строка шлюза — прайс при коэффициенте группы 1; каждый тариф масштабирует её своим коэффициентом.",
+    "Add size": "Добавить размер",
+    "Size": "Размер",
+    "Remove size": "Удалить размер",
+    "Per-image prices need a unique size and a positive price": "Цены за изображение требуют уникального размера и положительной цены"
   }
 }

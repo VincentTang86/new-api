@@ -5518,6 +5518,25 @@
     "The JSON is the complete state: models or conditions omitted here are removed on save.": "The JSON is the complete state: models or conditions omitted here are removed on save.",
     "The default price also feeds the landing page comparison and the dashboard savings estimate; a condition without its own price shows a dash in the model drawer.": "The default price also feeds the landing page comparison and the dashboard savings estimate; a condition without its own price shows a dash in the model drawer.",
     "Image Output Tokens": "Image Output Tokens",
-    "Text Output Tokens": "Text Output Tokens"
+    "Text Output Tokens": "Text Output Tokens",
+    "LLM": "LLM",
+    "Model type": "Model type",
+    "FR Price": "FR Price",
+    "Official Price": "Official Price",
+    "OpenRouter Price": "OpenRouter Price",
+    "from ~{{price}} / image": "from ~{{price}} / image",
+    "Compare {{name}} image rates with the vendor list price. Prices are shown in USD per image; open a model for its per-token rates.": "Compare {{name}} image rates with the vendor list price. Prices are shown in USD per image; open a model for its per-token rates.",
+    "Price unit": "Price unit",
+    "Estimated price per image at different resolutions.": "Estimated price per image at different resolutions.",
+    "Image output pricing is approximate and varies by resolution and quality settings.": "Image output pricing is approximate and varies by resolution and quality settings.",
+    "Per image": "Per image",
+    "No per-image prices are configured for this model.": "No per-image prices are configured for this model.",
+    "Gateway price": "Gateway price",
+    "Per-image prices": "Per-image prices",
+    "USD per image by size or quality. The gateway row is the list price at group ratio 1; each tier scales it by its ratio.": "USD per image by size or quality. The gateway row is the list price at group ratio 1; each tier scales it by its ratio.",
+    "Add size": "Add size",
+    "Size": "Size",
+    "Remove size": "Remove size",
+    "Per-image prices need a unique size and a positive price": "Per-image prices need a unique size and a positive price"
   }
 }

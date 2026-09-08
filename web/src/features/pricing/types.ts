@@ -66,6 +66,12 @@ export type PricingModel = {
   /** Admin-configured external list prices (USD per 1M tokens). */
   official_price?: ReferencePrice
   openrouter_price?: ReferencePrice
+  /**
+   * The gateway's own per-image list prices for an image model (USD per
+   * image at group ratio 1), maintained beside the benchmark prices. Display
+   * only: billing still runs on the expression or the per-call price.
+   */
+  image_prices?: ImageSizePrice[]
   /** Pricing version returned by backend, useful for cache busting */
   pricing_version?: string
   /**
@@ -94,6 +100,14 @@ export type ReferencePriceLanes = {
   cache_creation?: number | null
   cache_creation_1h?: number | null
   cache_hit?: number | null
+  image_input?: number | null
+  image_output?: number | null
+}
+
+/** One per-image price of an image model: a size/quality label and USD. */
+export type ImageSizePrice = {
+  size: string
+  price: number
 }
 
 /**
@@ -104,6 +118,8 @@ export type ReferencePriceLanes = {
  */
 export type ReferencePrice = ReferencePriceLanes & {
   by_condition?: Record<string, ReferencePriceLanes>
+  /** The source's per-image list prices, in display order. */
+  per_image?: ImageSizePrice[]
 }
 
 /** Input/output modalities supported by a model. */

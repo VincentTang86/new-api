@@ -5518,6 +5518,25 @@
     "The JSON is the complete state: models or conditions omitted here are removed on save.": "JSON は完全な状態です：ここに含まれないモデルや条件は保存時に削除されます。",
     "The default price also feeds the landing page comparison and the dashboard savings estimate; a condition without its own price shows a dash in the model drawer.": "デフォルト価格はトップページの比較とダッシュボードの節約見積りにも使われます。専用価格のない条件はモデル詳細ドロワーでダッシュ表示になります。",
     "Image Output Tokens": "画像出力トークン",
-    "Text Output Tokens": "テキスト出力トークン"
+    "Text Output Tokens": "テキスト出力トークン",
+    "LLM": "LLM",
+    "Model type": "モデル種別",
+    "FR Price": "FR 価格",
+    "Official Price": "公式価格",
+    "OpenRouter Price": "OpenRouter 価格",
+    "from ~{{price}} / image": "1枚あたり約 {{price}} から",
+    "Compare {{name}} image rates with the vendor list price. Prices are shown in USD per image; open a model for its per-token rates.": "{{name}} の画像モデル料金をベンダー公式価格と比較します。価格は 1 枚あたりの米ドルで表示され、モデルを開くとトークン単価を確認できます。",
+    "Price unit": "価格の単位",
+    "Estimated price per image at different resolutions.": "解像度ごとの画像 1 枚あたりの概算価格です。",
+    "Image output pricing is approximate and varies by resolution and quality settings.": "画像出力の料金は概算であり、解像度や品質設定により変動します。",
+    "Per image": "1枚あたり",
+    "No per-image prices are configured for this model.": "このモデルには 1 枚あたりの価格が設定されていません。",
+    "Gateway price": "本サイト価格",
+    "Per-image prices": "1枚あたりの価格",
+    "USD per image by size or quality. The gateway row is the list price at group ratio 1; each tier scales it by its ratio.": "サイズまたは品質ごとの 1 枚あたりの米ドル価格。本サイト行はグループ倍率 1 の定価で、各ティアはそれぞれの倍率で換算されます。",
+    "Add size": "サイズを追加",
+    "Size": "サイズ",
+    "Remove size": "サイズを削除",
+    "Per-image prices need a unique size and a positive price": "1枚あたりの価格には一意のサイズと正の価格が必要です"
   }
 }

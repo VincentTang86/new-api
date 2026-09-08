@@ -163,6 +163,8 @@ describe('getReferenceLaneKeys', () => {
       'cache_creation',
       'cache_creation_1h',
       'cache_hit',
+      'image_input',
+      'image_output',
     ])
   })
 })

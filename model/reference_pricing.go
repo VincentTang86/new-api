@@ -10,7 +10,16 @@ import (
 const (
 	ReferencePricingSourceOfficial   = "official"
 	ReferencePricingSourceOpenRouter = "openrouter"
+	// ReferencePricingSourceGateway 存网关自己的按张标价（分组倍率 1 的基准价），
+	// 只有 per_image 有意义。放在同一张表里是为了让对比价后台一处录入图片模型的每张价。
+	ReferencePricingSourceGateway = "gateway"
 )
+
+// ImageSizePrice 图片模型的按张标价：一档分辨率/规格（如 "1K"）对应一个每张美元价。
+type ImageSizePrice struct {
+	Size  string  `json:"size"`
+	Price float64 `json:"price"`
+}
 
 // ReferencePricing 存储用于对比展示的外部标价（模型官方 API / OpenRouter），
 // 单位为每百万 token 的美元价。仅用于定价页对比与看板节省估算，不参与计费。
@@ -25,6 +34,13 @@ type ReferencePricing struct {
 	// GORM 的默认命名会把 CacheCreation1h 拼成 cache_creation1h，显式指定列名。
 	CacheCreation1h *float64 `json:"cache_creation_1h" gorm:"column:cache_creation_1h"`
 	CacheHit        *float64 `json:"cache_hit"`
+	// ImageInput / ImageOutput 图片输入、图片输出的每百万 token 标价，图片模型才有。
+	ImageInput  *float64 `json:"image_input"`
+	ImageOutput *float64 `json:"image_output"`
+	// PerImage 按张标价，JSON 文本（如 [{"size":"1K","price":0.067}]），顺序即展示顺序。
+	PerImage string `json:"-" gorm:"type:text"`
+	// PerImageSizes 是 PerImage 的 API 出入参形态，不落库。
+	PerImageSizes []ImageSizePrice `json:"per_image,omitempty" gorm:"-"`
 	// Conditions 按计价条件的专属价，JSON 文本（如 {"peak":{"input":0.2}}）。
 	// 键由前端按模型计费表达式派生（rate-conditions 模块），后端只存取；
 	// 上面的扁平价位是默认价，供首页对比与看板节省估算消费。
@@ -35,18 +51,25 @@ type ReferencePricing struct {
 	UpdatedAt      int64                     `json:"updated_at"`
 }
 
-// NormalizeConditions 在写库前把 ConditionLanes 序列化进 Conditions 列；
-// 空 map 归一为空串，使"清空条件"与"从未配置"落库形态一致。
+// NormalizeConditions 在写库前把 ConditionLanes / PerImageSizes 序列化进对应的文本列；
+// 空值归一为空串，使"清空"与"从未配置"落库形态一致。
 func (rp *ReferencePricing) NormalizeConditions() error {
-	if len(rp.ConditionLanes) == 0 {
-		rp.Conditions = ""
-		return nil
+	rp.Conditions = ""
+	if len(rp.ConditionLanes) > 0 {
+		data, err := common.Marshal(rp.ConditionLanes)
+		if err != nil {
+			return err
+		}
+		rp.Conditions = string(data)
 	}
-	data, err := common.Marshal(rp.ConditionLanes)
-	if err != nil {
-		return err
+	rp.PerImage = ""
+	if len(rp.PerImageSizes) > 0 {
+		data, err := common.Marshal(rp.PerImageSizes)
+		if err != nil {
+			return err
+		}
+		rp.PerImage = string(data)
 	}
-	rp.Conditions = string(data)
 	return nil
 }
 
@@ -61,13 +84,18 @@ func GetAllReferencePricing() ([]*ReferencePricing, error) {
 		return nil, err
 	}
 	for _, row := range rows {
-		if row.Conditions == "" {
-			continue
+		// 单行脏数据不应拖垮整个定价页，跳过并留痕
+		if row.Conditions != "" {
+			if err := common.UnmarshalJsonStr(row.Conditions, &row.ConditionLanes); err != nil {
+				common.SysError(fmt.Sprintf("invalid reference pricing conditions for %s/%s: %s", row.ModelName, row.Source, err.Error()))
+				row.ConditionLanes = nil
+			}
 		}
-		if err := common.UnmarshalJsonStr(row.Conditions, &row.ConditionLanes); err != nil {
-			// 单行脏数据不应拖垮整个定价页，跳过并留痕
-			common.SysError(fmt.Sprintf("invalid reference pricing conditions for %s/%s: %s", row.ModelName, row.Source, err.Error()))
-			row.ConditionLanes = nil
+		if row.PerImage != "" {
+			if err := common.UnmarshalJsonStr(row.PerImage, &row.PerImageSizes); err != nil {
+				common.SysError(fmt.Sprintf("invalid reference pricing per_image for %s/%s: %s", row.ModelName, row.Source, err.Error()))
+				row.PerImageSizes = nil
+			}
 		}
 	}
 	return rows, nil
@@ -90,7 +118,8 @@ func UpsertReferencePricingRows(rows []ReferencePricing) error {
 	return DB.Clauses(clause.OnConflict{
 		Columns: []clause.Column{{Name: "model_name"}, {Name: "source"}},
 		DoUpdates: clause.AssignmentColumns([]string{
-			"input", "output", "cached_input", "cache_creation", "cache_creation_1h", "cache_hit", "conditions", "updated_at",
+			"input", "output", "cached_input", "cache_creation", "cache_creation_1h", "cache_hit",
+			"image_input", "image_output", "per_image", "conditions", "updated_at",
 		}),
 	}).Create(&rows).Error
 }

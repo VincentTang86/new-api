@@ -84,6 +84,57 @@ func TestUpsertReferencePricingRoundTripsConditionLanes(t *testing.T) {
 	assert.Empty(t, rows[0].ConditionLanes)
 }
 
+func TestUpsertReferencePricingRoundTripsPerImageAndImageLanes(t *testing.T) {
+	truncateTables(t)
+
+	require.NoError(t, UpsertReferencePricingRows([]ReferencePricing{
+		{
+			ModelName:   "img-1",
+			Source:      ReferencePricingSourceOfficial,
+			Input:       refPrice(2),
+			ImageOutput: refPrice(120),
+			PerImageSizes: []ImageSizePrice{
+				{Size: "1K", Price: 0.134},
+				{Size: "4K", Price: 0.24},
+			},
+		},
+		{
+			ModelName: "img-1",
+			Source:    ReferencePricingSourceGateway,
+			PerImageSizes: []ImageSizePrice{
+				{Size: "1K", Price: 0.12},
+			},
+		},
+	}))
+
+	rows, err := GetAllReferencePricing()
+	require.NoError(t, err)
+	require.Len(t, rows, 2)
+
+	gateway := rows[0] // 按 model_name, source 排序：gateway 在 official 前
+	require.Equal(t, ReferencePricingSourceGateway, gateway.Source)
+	assert.Nil(t, gateway.Input)
+	assert.Equal(t, []ImageSizePrice{{Size: "1K", Price: 0.12}}, gateway.PerImageSizes)
+
+	official := rows[1]
+	require.Equal(t, ReferencePricingSourceOfficial, official.Source)
+	require.NotNil(t, official.ImageOutput)
+	assert.Equal(t, 120.0, *official.ImageOutput)
+	assert.Nil(t, official.ImageInput)
+	// 档位顺序即展示顺序，读回必须保持提交顺序
+	assert.Equal(t, []ImageSizePrice{{Size: "1K", Price: 0.134}, {Size: "4K", Price: 0.24}}, official.PerImageSizes)
+
+	// 整行覆盖语义：不带 per_image 的二次提交应清空旧的按张价
+	require.NoError(t, UpsertReferencePricingRows([]ReferencePricing{
+		{ModelName: "img-1", Source: ReferencePricingSourceOfficial, Input: refPrice(2)},
+	}))
+	rows, err = GetAllReferencePricing()
+	require.NoError(t, err)
+	require.Len(t, rows, 2)
+	assert.Empty(t, rows[1].PerImageSizes)
+	assert.Nil(t, rows[1].ImageOutput)
+}
+
 // /api/pricing 的线格式契约：默认价保持扁平（首页/看板按此消费），
 // 条件价整体挂在 by_condition 下（仅模型详情抽屉消费）。
 func TestReferencePriceMarshalKeepsFlatLanesAndNestsConditions(t *testing.T) {

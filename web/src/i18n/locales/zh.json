@@ -5518,6 +5518,25 @@
     "The JSON is the complete state: models or conditions omitted here are removed on save.": "JSON 是完整状态：此处未包含的模型或条件在保存时会被删除。",
     "The default price also feeds the landing page comparison and the dashboard savings estimate; a condition without its own price shows a dash in the model drawer.": "默认价同时用于首页价格对比与看板节省估算；未配专属价的条件在模型详情抽屉中显示破折号。",
     "Image Output Tokens": "图像输出 Token",
-    "Text Output Tokens": "文字输出 Token"
+    "Text Output Tokens": "文字输出 Token",
+    "LLM": "LLM",
+    "Model type": "模型类型",
+    "FR Price": "FR 价格",
+    "Official Price": "官方价格",
+    "OpenRouter Price": "OpenRouter 价格",
+    "from ~{{price}} / image": "约 {{price}} / 张起",
+    "Compare {{name}} image rates with the vendor list price. Prices are shown in USD per image; open a model for its per-token rates.": "对比 {{name}} 图像模型与官方刊例价。价格按每张图片计（美元），点开模型可查看按 Token 的价格。",
+    "Price unit": "价格单位",
+    "Estimated price per image at different resolutions.": "不同分辨率下每张图片的预估价格。",
+    "Image output pricing is approximate and varies by resolution and quality settings.": "图像输出价格为预估值，会随分辨率和质量设置而变化。",
+    "Per image": "每张",
+    "No per-image prices are configured for this model.": "该模型尚未配置按张价格。",
+    "Gateway price": "本站价格",
+    "Per-image prices": "按张价格",
+    "USD per image by size or quality. The gateway row is the list price at group ratio 1; each tier scales it by its ratio.": "按分辨率或质量档位填写每张图片的美元价。本站行是分组倍率为 1 时的刊例价，各档位按各自倍率折算。",
+    "Add size": "添加档位",
+    "Size": "档位",
+    "Remove size": "删除档位",
+    "Per-image prices need a unique size and a positive price": "按张价格的档位名不能为空或重复，价格必须大于 0"
   }
 }

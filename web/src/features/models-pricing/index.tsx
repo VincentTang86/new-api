@@ -19,6 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 import { useTranslation } from 'react-i18next'
 
 import { PublicLayout } from '@/components/layout'
+import { ImagePricingList } from '@/features/home/landing/components/pricing/image-pricing-list'
 import { PricingModelList } from '@/features/home/landing/components/pricing/pricing-model-list'
 import { PricingTableControls } from '@/features/home/landing/components/pricing/pricing-table-controls'
 import { LANDING_CONTAINER } from '@/features/home/landing/constants'
@@ -49,15 +50,22 @@ export function ModelsPricing() {
             {t('Models & pricing, made clear')}
           </h1>
           <p className='text-base text-(--pd-muted)'>
-            {t(
-              'Compare {{name}} rates with the selected benchmark. Prices are shown in USD per million tokens.',
-              { name: systemName }
-            )}
+            {table.modelType === 'image'
+              ? t(
+                  'Compare {{name}} image rates with the vendor list price. Prices are shown in USD per image; open a model for its per-token rates.',
+                  { name: systemName }
+                )
+              : t(
+                  'Compare {{name}} rates with the selected benchmark. Prices are shown in USD per million tokens.',
+                  { name: systemName }
+                )}
           </p>
         </div>
 
         <div className={`${LANDING_CONTAINER} pb-16`}>
           <PricingTableControls
+            modelType={table.modelType}
+            onModelTypeChange={table.setModelType}
             groups={table.groups}
             selectedGroup={table.selectedGroup}
             onGroupChange={table.setSelectedGroup}
@@ -70,14 +78,24 @@ export function ModelsPricing() {
 
           <ModelDetailsDrawerHost />
 
-          <PricingModelList
-            rows={table.rows}
-            variant='catalogue'
-            benchmark={table.benchmark}
-            isLoading={table.isLoading}
-            isError={table.isError}
-            onRetry={table.refetch}
-          />
+          {table.modelType === 'image' ? (
+            <ImagePricingList
+              rows={table.imageRows}
+              benchmark={table.benchmark}
+              isLoading={table.isLoading}
+              isError={table.isError}
+              onRetry={table.refetch}
+            />
+          ) : (
+            <PricingModelList
+              rows={table.rows}
+              variant='catalogue'
+              benchmark={table.benchmark}
+              isLoading={table.isLoading}
+              isError={table.isError}
+              onRetry={table.refetch}
+            />
+          )}
 
           {/* This page's design sets the note one size smaller than the home
            * preview's 13px. */}

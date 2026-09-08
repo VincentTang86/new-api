@@ -37,6 +37,12 @@ export type LandingProviderKey =
 export type PricingBenchmark = 'official' | 'openrouter'
 
 /**
+ * Which catalogue the pricing page shows: token-priced language models, or
+ * image models priced per image. The two have different columns.
+ */
+export type PricingModelType = 'llm' | 'image'
+
+/**
  * One display row of the pricing table, fully derived from the backend
  * `/api/pricing` model (priced at the selected group's ratio) plus the
  * admin-maintained benchmark prices for the selected "Compare with" source.
@@ -67,6 +73,24 @@ export interface PricingRow {
   /** Savings vs the selected benchmark, or the placeholder dash. */
   savingsInput: string
   savingsOutput: string
+}
+
+/**
+ * One display row of the Image tab: the cheapest per-image price the gateway
+ * lists for the model at the selected group's ratio, the same size's price
+ * from the selected benchmark, and the saving between them. Pre-formatted
+ * like `PricingRow`; missing figures arrive as the placeholder dash.
+ */
+export interface ImagePricingRow {
+  modelId: string
+  name: string
+  provider: LandingProviderKey | null
+  vendorLabel: string
+  /** Size label the prices below are stated for; '' for a per-call price. */
+  size: string
+  frPrice: string
+  benchmarkPrice: string
+  savings: string
 }
 
 export type LandingCodeLanguage =

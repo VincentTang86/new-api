@@ -31,6 +31,11 @@ func TestUpdateReferencePricingRejectsInvalidRows(t *testing.T) {
 		{"oversized condition price", `{"rows":[{"model_name":"m","source":"official","conditions":{"peak":{"output":1000001}}}]}`},
 		{"blank condition key", `{"rows":[{"model_name":"m","source":"official","conditions":{"":{"input":1}}}]}`},
 		{"oversized condition key", `{"rows":[{"model_name":"m","source":"official","conditions":{"` + strings.Repeat("k", 65) + `":{"input":1}}}]}`},
+		{"zero image lane price", `{"rows":[{"model_name":"m","source":"official","image_output":0}]}`},
+		{"blank per_image size", `{"rows":[{"model_name":"m","source":"gateway","per_image":[{"size":" ","price":0.1}]}]}`},
+		{"zero per_image price", `{"rows":[{"model_name":"m","source":"gateway","per_image":[{"size":"1K","price":0}]}]}`},
+		{"duplicate per_image size", `{"rows":[{"model_name":"m","source":"gateway","per_image":[{"size":"1K","price":0.1},{"size":"1K","price":0.2}]}]}`},
+		{"oversized per_image size", `{"rows":[{"model_name":"m","source":"gateway","per_image":[{"size":"` + strings.Repeat("s", 33) + `","price":0.1}]}]}`},
 	}
 	// 条件数量上限是独立的拒绝分支，用例体积大，程序化构造
 	manyConditions := make([]string, 0, 65)
@@ -41,6 +46,14 @@ func TestUpdateReferencePricingRejectsInvalidRows(t *testing.T) {
 		name string
 		body string
 	}{"too many conditions", `{"rows":[{"model_name":"m","source":"official","conditions":{` + strings.Join(manyConditions, ",") + `}}]}`})
+	manySizes := make([]string, 0, 17)
+	for i := 0; i < 17; i++ {
+		manySizes = append(manySizes, fmt.Sprintf(`{"size":"s%d","price":0.1}`, i))
+	}
+	cases = append(cases, struct {
+		name string
+		body string
+	}{"too many per_image sizes", `{"rows":[{"model_name":"m","source":"gateway","per_image":[` + strings.Join(manySizes, ",") + `]}]}`})
 
 	gin.SetMode(gin.TestMode)
 	for _, tc := range cases {

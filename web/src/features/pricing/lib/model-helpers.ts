@@ -104,6 +104,18 @@ export function replaceModelInPath(path: string, modelName: string): string {
 /**
  * Check if model is token-based pricing
  */
+/**
+ * An image model is one that produces images: it lives on the Image tab of
+ * the catalogue and its drawer opens on per-image prices. Vision models (image
+ * in, text out) are not image models.
+ */
+export function isImageModel(model: PricingModel): boolean {
+  return (
+    Array.isArray(model.output_modalities) &&
+    model.output_modalities.includes('image')
+  )
+}
+
 export function isTokenBasedModel(model: PricingModel): boolean {
   return model.quota_type === QUOTA_TYPE_VALUES.TOKEN
 }

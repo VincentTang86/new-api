@@ -5518,6 +5518,25 @@
     "The JSON is the complete state: models or conditions omitted here are removed on save.": "JSON là trạng thái đầy đủ: các mô hình hoặc điều kiện không có ở đây sẽ bị xóa khi lưu.",
     "The default price also feeds the landing page comparison and the dashboard savings estimate; a condition without its own price shows a dash in the model drawer.": "Giá mặc định cũng được dùng cho so sánh ở trang chủ và ước tính tiết kiệm trên bảng điều khiển; điều kiện không có giá riêng sẽ hiển thị dấu gạch ngang trong ngăn chi tiết mô hình.",
     "Image Output Tokens": "Token đầu ra hình ảnh",
-    "Text Output Tokens": "Token đầu ra văn bản"
+    "Text Output Tokens": "Token đầu ra văn bản",
+    "LLM": "LLM",
+    "Model type": "Loại mô hình",
+    "FR Price": "Giá FR",
+    "Official Price": "Giá chính thức",
+    "OpenRouter Price": "Giá OpenRouter",
+    "from ~{{price}} / image": "từ ~{{price}} / ảnh",
+    "Compare {{name}} image rates with the vendor list price. Prices are shown in USD per image; open a model for its per-token rates.": "So sánh giá ảnh của {{name}} với giá niêm yết của nhà cung cấp. Giá tính bằng USD trên mỗi ảnh; mở một mô hình để xem giá theo token.",
+    "Price unit": "Đơn vị giá",
+    "Estimated price per image at different resolutions.": "Giá ước tính cho mỗi ảnh ở các độ phân giải khác nhau.",
+    "Image output pricing is approximate and varies by resolution and quality settings.": "Giá đầu ra hình ảnh chỉ là ước tính và thay đổi theo độ phân giải và thiết lập chất lượng.",
+    "Per image": "Mỗi ảnh",
+    "No per-image prices are configured for this model.": "Mô hình này chưa được cấu hình giá theo ảnh.",
+    "Gateway price": "Giá của cổng",
+    "Per-image prices": "Giá theo ảnh",
+    "USD per image by size or quality. The gateway row is the list price at group ratio 1; each tier scales it by its ratio.": "USD mỗi ảnh theo kích thước hoặc chất lượng. Hàng cổng là giá niêm yết ở hệ số nhóm 1; mỗi bậc nhân theo hệ số của mình.",
+    "Add size": "Thêm kích thước",
+    "Size": "Kích thước",
+    "Remove size": "Xóa kích thước",
+    "Per-image prices need a unique size and a positive price": "Giá theo ảnh cần kích thước duy nhất và giá dương"
   }
 }
