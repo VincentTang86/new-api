@@ -128,6 +128,42 @@ function buildTierBodyExpr(tier: VisualTier): string {
   return parts.join(' + ')
 }
 
+const TIER_BODY_VARS = [
+  'p',
+  'c',
+  ...BILLING_CACHE_VAR_MAP.map((cv) => cv.exprVar),
+]
+// Longest first so `cc1h` is not read as `cc` and `img_o` not as `img`.
+const TIER_BODY_TERM_RE = new RegExp(
+  `^\\s*(${[...TIER_BODY_VARS].sort((a, b) => b.length - a.length).join('|')})` +
+    `\\s*\\*\\s*(-?(?:\\d+\\.?\\d*|\\.\\d+)(?:[eE][+-]?\\d+)?)\\s*`
+)
+
+// A tier body is a sum of `var * price` terms, and an author may write those
+// terms in any order. Rewrite the body into the order the generator emits so
+// a hand-written expression still round-trips into the visual editor. A body
+// holding anything else (a function call, a per-request constant) is returned
+// untouched and keeps the expression in the raw editor.
+function orderTierBodyTerms(body: string): string {
+  const prices = new Map<string, number>()
+  let rest = body
+  for (;;) {
+    const term = rest.match(TIER_BODY_TERM_RE)
+    if (!term || prices.has(term[1])) return body
+    prices.set(term[1], Number(term[2]))
+    rest = rest.slice(term[0].length)
+    if (rest === '') break
+    if (!rest.startsWith('+')) return body
+    rest = rest.slice(1)
+  }
+  const terms = [`p * ${prices.get('p') ?? 0}`, `c * ${prices.get('c') ?? 0}`]
+  for (const cv of BILLING_CACHE_VAR_MAP) {
+    const price = prices.get(cv.exprVar)
+    if (price) terms.push(`${cv.exprVar} * ${price}`)
+  }
+  return terms.join(' + ')
+}
+
 export function generateExprFromVisualConfig(
   config: VisualConfig | null | undefined
 ): string {
@@ -171,6 +207,11 @@ export function tryParseVisualConfig(
     let body = exprStr
     const versionMatch = body.match(/^v\d+:([\s\S]*)$/)
     if (versionMatch) body = versionMatch[1]
+    body = body.replaceAll(
+      /tier\("([^"]*)",([^()]*)\)/g,
+      (_full, label: string, tierBody: string) =>
+        `tier("${label}", ${orderTierBodyTerms(tierBody)})`
+    )
     const cacheVarNames = BILLING_CACHE_VAR_MAP.map((cv) => cv.exprVar)
     const optCacheStr = cacheVarNames
       .map((v) => `(?:\\s*\\+\\s*${v}\\s*\\*\\s*([\\d.eE+-]+))?`)
@@ -237,7 +278,7 @@ export function tryParseVisualConfig(
 
     const cfg = normalizeVisualConfig({ tiers })
     const regenerated = generateExprFromVisualConfig(cfg)
-    if (regenerated.replace(/\s+/g, '') !== body.replace(/\s+/g, '')) {
+    if (regenerated.replaceAll(/\s+/g, '') !== body.replaceAll(/\s+/g, '')) {
       return null
     }
     return cfg
