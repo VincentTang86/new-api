@@ -12,7 +12,8 @@
       "grok-imagine-video-1.5 input kept text-only per models.dev; add image if the channel supports image-to-video",
       "kimi/kimi-k3 is an alias row for kimi-k3 and shares its metadata",
       "vendor_display_name is a per-model override shown to users in place of the vendor name (e.g. Bailian-hosted deepseek-v4-pro displays DeepSeek)",
-      "gemini-3.1-flash-lite-image context/max_output copied from gemini-3.1-flash-image; release_date/knowledge_cutoff left empty pending a first-party source (added 2026-09-08)"
+      "gemini-3.1-flash-lite-image context/max_output copied from gemini-3.1-flash-image; release_date/knowledge_cutoff left empty pending a first-party source (added 2026-09-08)",
+      "gpt-image-2.5-flare / -sunburst follow developers.openai.com model pages (added 2026-09-09): context/max_output not published so kept 0 like gpt-image-2; both priced identically ($5/$1.25 text in, $8/$2 image in, $30 image out per 1M); OpenRouter does not list them yet, so no cross-check source"
     ]
   },
   "models": {
@@ -369,6 +370,48 @@
         "ru": "GPT Image 2 — модель генерации и редактирования изображений OpenAI, превращающая текстовые запросы и референсы в качественные визуальные материалы.",
         "ja": "GPT Image 2 は OpenAI の画像生成・編集モデルで、テキストプロンプトや参照画像から高品質なビジュアルを生成します。",
         "vi": "GPT Image 2 là mô hình tạo và chỉnh sửa ảnh của OpenAI, biến lời nhắc văn bản và ảnh tham chiếu thành hình ảnh chất lượng cao."
+      }
+    },
+    "gpt-image-2.5-flare": {
+      "vendor": "OpenAI",
+      "icon": "OpenAI",
+      "input_modalities": "text,image",
+      "output_modalities": "image",
+      "context_length": 0,
+      "max_output_tokens": 0,
+      "release_date": "2026-09-08",
+      "knowledge_cutoff": "",
+      "parameter_count": "",
+      "capabilities": "vision,caching",
+      "description": {
+        "en": "GPT-Image-2.5 Flare is OpenAI's fast everyday image generation and editing model, delivering higher quality than GPT Image 2 at about half the latency.",
+        "zh-CN": "GPT-Image-2.5 Flare 是 OpenAI 面向日常场景的快速图像生成与编辑模型，画质优于 GPT Image 2，延迟约降低一半。",
+        "zh-TW": "GPT-Image-2.5 Flare 是 OpenAI 面向日常場景的快速圖像生成與編輯模型，畫質優於 GPT Image 2，延遲約降低一半。",
+        "fr": "GPT-Image-2.5 Flare est le modèle rapide de génération et d'édition d'images d'OpenAI pour l'usage quotidien, offrant une qualité supérieure à GPT Image 2 avec une latence réduite de moitié environ.",
+        "ru": "GPT-Image-2.5 Flare — быстрая модель генерации и редактирования изображений OpenAI для повседневных задач: качество выше, чем у GPT Image 2, при примерно вдвое меньшей задержке.",
+        "ja": "GPT-Image-2.5 Flare は OpenAI の日常利用向け高速画像生成・編集モデルで、GPT Image 2 を上回る画質を約半分のレイテンシで提供します。",
+        "vi": "GPT-Image-2.5 Flare là mô hình tạo và chỉnh sửa ảnh nhanh của OpenAI cho nhu cầu hằng ngày, cho chất lượng cao hơn GPT Image 2 với độ trễ thấp hơn khoảng một nửa."
+      }
+    },
+    "gpt-image-2.5-sunburst": {
+      "vendor": "OpenAI",
+      "icon": "OpenAI",
+      "input_modalities": "text,image",
+      "output_modalities": "image",
+      "context_length": 0,
+      "max_output_tokens": 0,
+      "release_date": "2026-09-08",
+      "knowledge_cutoff": "",
+      "parameter_count": "",
+      "capabilities": "vision,caching",
+      "description": {
+        "en": "GPT-Image-2.5 Sunburst is OpenAI's most capable image generation and editing model, built for workflows where editing precision and subject preservation matter most.",
+        "zh-CN": "GPT-Image-2.5 Sunburst 是 OpenAI 能力最强的图像生成与编辑模型，面向对编辑精度和主体一致性要求最高的场景。",
+        "zh-TW": "GPT-Image-2.5 Sunburst 是 OpenAI 能力最強的圖像生成與編輯模型，面向對編輯精度與主體一致性要求最高的場景。",
+        "fr": "GPT-Image-2.5 Sunburst est le modèle de génération et d'édition d'images le plus performant d'OpenAI, conçu pour les flux où la précision des retouches et la préservation du sujet priment.",
+        "ru": "GPT-Image-2.5 Sunburst — самая мощная модель генерации и редактирования изображений OpenAI, созданная для задач, где важнее всего точность правок и сохранение объекта.",
+        "ja": "GPT-Image-2.5 Sunburst は OpenAI の最も高性能な画像生成・編集モデルで、編集精度と被写体の一貫性が最も重視されるワークフロー向けです。",
+        "vi": "GPT-Image-2.5 Sunburst là mô hình tạo và chỉnh sửa ảnh mạnh nhất của OpenAI, dành cho các quy trình đòi hỏi độ chính xác khi chỉnh sửa và giữ nguyên chủ thể."
       }
     },
     "grok-imagine-video-1.5": {
