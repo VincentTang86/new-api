@@ -52,6 +52,15 @@ func normalizeChannelTestEndpoint(channel *model.Channel, endpointType string) s
 	return normalized
 }
 
+// 图像生成模型只暴露 /v1/images/generations，用 chat 端点测会被上游当成文本模型
+// （轻则报「价格未配置」，重则按 token 计价成功），所以路径和请求体都要按图片端点走。
+func usesImageGenerationEndpoint(channel *model.Channel, testModel string) bool {
+	if common.IsImageGenerationModel(testModel) {
+		return true
+	}
+	return channel != nil && channel.Type == constant.ChannelTypeVolcEngine && strings.Contains(testModel, "seedream")
+}
+
 func resolveChannelTestUserID(c *gin.Context) (int, error) {
 	if c != nil {
 		if userID := c.GetInt("id"); userID > 0 {
@@ -132,8 +141,8 @@ func testChannel(ctx context.Context, channel *model.Channel, testUserID int, te
 			requestPath = "/v1/embeddings" // 修改请求路径
 		}
 
-		// VolcEngine 图像生成模型
-		if channel.Type == constant.ChannelTypeVolcEngine && strings.Contains(testModel, "seedream") {
+		// 图像生成模型
+		if usesImageGenerationEndpoint(channel, testModel) {
 			requestPath = "/v1/images/generations"
 		}
 
@@ -800,6 +809,16 @@ func buildTestRequest(model string, endpointType string, channel *model.Channel,
 			Model:  model,
 			Input:  json.RawMessage(`[{"role":"user","content":"hi"}]`),
 			Stream: lo.ToPtr(isStream),
+		}
+	}
+
+	// 图像生成模型：请求路径已切到 /v1/images/generations，请求体必须同步
+	if usesImageGenerationEndpoint(channel, model) {
+		return &dto.ImageRequest{
+			Model:  model,
+			Prompt: "a cute cat",
+			N:      lo.ToPtr(uint(1)),
+			Size:   "1024x1024",
 		}
 	}
 
