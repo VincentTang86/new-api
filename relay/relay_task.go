@@ -194,6 +194,20 @@ func RelayTaskSubmit(c *gin.Context, info *relaycommon.RelayInfo) (*TaskSubmitRe
 		}
 	}
 
+	// 5.5 按量计费的任务：预扣基数（模型倍率的一半，见 ModelPriceHelperPerCall）
+	//      与请求规格无关，等于固定押 QuotaPerUnit/2 个 token。视频 token 随分辨率
+	//      和时长线性增长，1080p 五秒、4K 一秒多就能把它吃光，超出部分只能等结算
+	//      补扣，余额不足即透支。适配器估得出上游 token 数时改用它定押金；估不出
+	//      则维持原基数。结算始终以上游 usage 为准，这里只决定押多少。
+	if !info.PriceData.UsePrice && info.PriceData.ModelRatio > 0 {
+		if tokens := adaptor.EstimatePreConsumeTokens(c, info); tokens > 0 {
+			estimated, clamp := common.QuotaFromFloatChecked(
+				float64(tokens) * info.PriceData.ModelRatio * info.PriceData.GroupRatioInfo.GroupRatio)
+			noteTaskQuotaClamp(info, clamp)
+			info.PriceData.Quota = estimated
+		}
+	}
+
 	// 6. 将 OtherRatios 应用到基础额度，再叠加绝对加价项（饱和转换，防止溢出成负数）
 	if !common.StringsContains(constant.TaskPricePatches, modelName) {
 		quotaWithRatios := info.PriceData.ApplyOtherRatiosToFloat(float64(info.PriceData.Quota)) + surchargeQuota(info)
