@@ -112,21 +112,24 @@ var videoRateTiers = []struct {
 	{"4k", "4K"},
 }
 
-// VideoRateMatrix 返回该模型真实配了的计价档，供定价页展示。倍率逐档取自
+// VideoRateMatrix 返回该模型真实标了价的计价档，供定价页展示。倍率逐档取自
 // GetVideoInputRatio——即计费本身用的那个函数，页面因此不可能与实际扣费口径漂移。
-// 模型没有任何档位区分时返回 nil，调用方据此回退到普通的按 token 价表。
+// 模型没有「输入是否含视频」这一维时返回 nil：那是 Seedance 价表独有的维度，
+// 只有分辨率阶梯的视频模型（xAI、MiniMax）画不成这张矩阵，调用方回退到普通的
+// 按 token 价表。
 func VideoRateMatrix(modelName string) []VideoRate {
 	rates := make([]VideoRate, 0, len(videoRateTiers)*2)
-	differs := false
+	hasVideoTier := false
 	for _, tier := range videoRateTiers {
 		for _, hasVideo := range []bool{false, true} {
+			if !videoRateListed(modelName, tier.resolution, hasVideo) {
+				continue
+			}
 			ratio, ok := GetVideoInputRatio(modelName, tier.resolution, hasVideo)
 			if !ok {
 				continue
 			}
-			if ratio != 1.0 {
-				differs = true
-			}
+			hasVideoTier = hasVideoTier || hasVideo
 			rates = append(rates, VideoRate{
 				Key:        VideoRateKey(tier.resolution, hasVideo),
 				Resolution: tier.label,
@@ -135,9 +138,24 @@ func VideoRateMatrix(modelName string) []VideoRate {
 			})
 		}
 	}
-	// 全档同价的模型（没有内置价表、后台也没配）不值得画成矩阵。
-	if !differs {
+	if !hasVideoTier {
 		return nil
 	}
 	return rates
+}
+
+// videoRateListed 判断该档位是否真的有标价：后台配了，或内置价表里有这一行。
+// 计费时上游不支持的组合按基准价放行（fast 没有 1080p，上游自己会报错），但价目
+// 页不能因此列出一个买不到的档位——那等于在宣传一个不存在的价。
+func videoRateListed(modelName, resolution string, hasVideo bool) bool {
+	if _, ok := ratio_setting.GetModelResolutionRatio(modelName, VideoRateKey(resolution, hasVideo)); ok {
+		return true
+	}
+	prices, ok := videoPriceTable[modelName]
+	if !ok {
+		return false
+	}
+	res := strings.ToLower(strings.TrimSpace(resolution))
+	_, ok = prices[videoPriceKey{is1080p: res == "1080p", is4k: res == "4k", hasVideo: hasVideo}]
+	return ok
 }
