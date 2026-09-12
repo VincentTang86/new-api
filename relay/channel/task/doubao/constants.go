@@ -36,6 +36,16 @@ var videoPriceTable = map[string]map[videoPriceKey]float64{
 		{hasVideo: false}: 37.0,
 		{hasVideo: true}:  22.0,
 	},
+	// 2.5 经数眼（dataeyes，渠道 dataeyes1_doubao）转售，四档刊例与火山官方一致：
+	// 每 1M token $10.00 / $6.00 / $11.00 / $6.57，即下面的元价 ÷7。官方与数眼
+	// 都未公布 4K 专档，未配置的组合按基准价计——2.0 的 4K 是降价档，若 2.5 也有
+	// 而这里缺行，会按基准价多收，拿到单价后需补一行。
+	"doubao-seedance-2-5-oinone": {
+		{hasVideo: false}:                70.0,
+		{hasVideo: true}:                 42.0,
+		{is1080p: true, hasVideo: false}: 77.0,
+		{is1080p: true, hasVideo: true}:  46.0,
+	},
 }
 
 // GetVideoInputRatio 返回指定模型在给定输出分辨率/是否含视频输入下，相对基准价的计费倍率。

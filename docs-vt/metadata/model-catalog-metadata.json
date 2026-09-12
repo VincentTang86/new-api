@@ -654,6 +654,9 @@
         "ja": "Seedance 2.5 は ByteDance の最新動画生成モデルで、Seedance 2.0 に比べて動きの一貫性とプロンプト追従性が向上しています。",
         "vi": "Seedance 2.5 là mô hình tạo video mới nhất của ByteDance, cải thiện tính mạch lạc chuyển động và khả năng bám sát lời nhắc so với Seedance 2.0."
       }
+    },
+    "doubao-seedance-2-5-oinone": {
+      "alias_of": "seedance-2.5"
     }
   }
 }

@@ -159,3 +159,37 @@ func TestValidateVideoBoundsRejectsOversizedSpec(t *testing.T) {
 		})
 	}
 }
+
+// 价表的作用是把各档刊例还原成相对基准价的倍率：管理员只配基准价（ModelRatio），
+// 其余档位靠倍率跟随。倍率错了就是直接的错价，所以逐档钉住数眼的刊例。
+func TestGetVideoInputRatioMapsListedRates(t *testing.T) {
+	const model = "doubao-seedance-2-5-oinone"
+	// 基准档单价 = 该模型应配置的 ModelRatio(5.0) × 2。
+	const baseUSD = 10.0
+
+	cases := []struct {
+		name       string
+		resolution string
+		hasVideo   bool
+		wantUSD    float64
+	}{
+		{"base tier without reference video", "720p", false, 10.00},
+		{"base tier with reference video", "720p", true, 6.00},
+		{"1080p without reference video", "1080p", false, 11.00},
+		{"1080p with reference video", "1080p", true, 6.57},
+		{"480p shares the base tier", "480p", false, 10.00},
+		// 数眼未列 4K 档，未配置的组合按基准价计费。
+		{"4k falls back to the base rate", "4k", false, 10.00},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			ratio, ok := GetVideoInputRatio(model, tc.resolution, tc.hasVideo)
+			require.True(t, ok)
+			assert.InDelta(t, tc.wantUSD, baseUSD*ratio, 0.01)
+		})
+	}
+
+	_, ok := GetVideoInputRatio("seedance-2.5", "720p", false)
+	assert.False(t, ok, "keystone 的短名走另一套单价，不该命中数眼价表")
+}
