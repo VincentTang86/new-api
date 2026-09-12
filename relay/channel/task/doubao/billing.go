@@ -29,6 +29,11 @@ const (
 
 	// videoTokenDivisor 是火山 Ark 视频 token 公式里的常数除数。
 	videoTokenDivisor = 1024
+
+	// upstreamExtraFrames 是上游在「整秒 × 帧率」之外多出的那一帧：实测 4 秒出
+	// 97 帧、5 秒出 121 帧。补上它预估才等于上游 usage，否则押金每笔都低 1%，
+	// 每笔都要补扣一次。
+	upstreamExtraFrames = 1
 )
 
 // videoResolutionPixels 是各分辨率档的输出像素数（宽 × 高），用于预估视频 token。
@@ -47,7 +52,8 @@ var videoResolutionPixels = map[string]int{
 //
 //	token = 输出宽 × 输出高 × 总帧数 ÷ 1024
 //
-// 这是火山 Ark 的官方口径，也是上游 usage.completion_tokens 的来源。输入视频的
+// 这是火山 Ark 的官方口径，也是上游 usage.completion_tokens 的来源；480p/4s 与
+// 720p/5s 两笔真实请求的预估值与上游 usage 完全相等。输入视频的
 // 时长同样计入上游 token，但提交时只拿得到 URL、读不到时长，那部分缺口留给结算
 // 时的 usage 重算补齐。分辨率档不认识时返回 0，调用方回退到固定预扣基数。
 func EstimateVideoTokens(req *relaycommon.TaskSubmitReq) int {
@@ -87,14 +93,14 @@ func videoResolution(req *relaycommon.TaskSubmitReq) string {
 	return resolution
 }
 
-// videoFrames 是计费用的总帧数：metadata.frames 与「时长 × 帧率」取大者。两条通道
-// 都可能被指定，取大的一边押金才押得住。
+// videoFrames 是计费用的总帧数：metadata.frames 与「时长 × 帧率」取大者，再补上
+// 上游多出的那一帧。两条通道都可能被指定，取大的一边押金才押得住。
 func videoFrames(req *relaycommon.TaskSubmitReq) int {
 	frames := metadataInt(req.Metadata, "frames")
 	if byDuration := videoDurationSeconds(req) * VideoFPS; byDuration > frames {
 		frames = byDuration
 	}
-	return min(frames, MaxFrames)
+	return min(frames+upstreamExtraFrames, MaxFrames)
 }
 
 // videoDurationSeconds 是最终下发给上游的输出时长，口径与 convertToRequestPayload

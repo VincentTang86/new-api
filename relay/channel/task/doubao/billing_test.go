@@ -19,20 +19,19 @@ func TestEstimateVideoTokensScalesWithSpec(t *testing.T) {
 		want int
 	}{
 		{
-			// 实测 seedance-2.0-mini 480p/4s 上游报 40594 token（上游多出 1 帧，
-			// 97 而非 96）；预估按整秒算，差 1% 在押金上无妨。
+			// 实测 seedance-2.0-mini 480p/4s 上游报 40594 token，预估与之相等。
 			name: "480p four seconds",
 			req: relaycommon.TaskSubmitReq{
 				Seconds:  "4",
 				Metadata: map[string]interface{}{"resolution": "480p"},
 			},
-			want: 864 * 496 * 4 * VideoFPS / 1024,
+			want: 864 * 496 * (4*VideoFPS + upstreamExtraFrames) / 1024,
 		},
 		{
 			// 不传 resolution / 时长时上游出 720p、5 秒，实测 108900 token。
 			name: "defaults to 720p five seconds",
 			req:  relaycommon.TaskSubmitReq{},
-			want: 1280 * 720 * defaultDurationSeconds * VideoFPS / 1024,
+			want: 1280 * 720 * (defaultDurationSeconds*VideoFPS + upstreamExtraFrames) / 1024,
 		},
 		{
 			name: "1080p costs far more than 480p at equal length",
@@ -40,7 +39,7 @@ func TestEstimateVideoTokensScalesWithSpec(t *testing.T) {
 				Seconds:  "4",
 				Metadata: map[string]interface{}{"resolution": "1080p"},
 			},
-			want: 1920 * 1088 * 4 * VideoFPS / 1024,
+			want: 1920 * 1088 * (4*VideoFPS + upstreamExtraFrames) / 1024,
 		},
 		{
 			name: "resolution label is case-insensitive",
@@ -48,7 +47,7 @@ func TestEstimateVideoTokensScalesWithSpec(t *testing.T) {
 				Seconds:  "4",
 				Metadata: map[string]interface{}{"resolution": " 4K "},
 			},
-			want: 3840 * 2176 * 4 * VideoFPS / 1024,
+			want: 3840 * 2176 * (4*VideoFPS + upstreamExtraFrames) / 1024,
 		},
 		{
 			// metadata.duration 是顶层 seconds 之外的第二条通道。
@@ -56,7 +55,7 @@ func TestEstimateVideoTokensScalesWithSpec(t *testing.T) {
 			req: relaycommon.TaskSubmitReq{
 				Metadata: map[string]interface{}{"resolution": "480p", "duration": float64(10)},
 			},
-			want: 864 * 496 * 10 * VideoFPS / 1024,
+			want: 864 * 496 * (10*VideoFPS + upstreamExtraFrames) / 1024,
 		},
 		{
 			// frames 与「时长 × 帧率」取大者，否则只填 frames 的请求会按默认 5 秒押。
@@ -65,7 +64,7 @@ func TestEstimateVideoTokensScalesWithSpec(t *testing.T) {
 				Seconds:  "2",
 				Metadata: map[string]interface{}{"resolution": "720p", "frames": float64(600)},
 			},
-			want: 1280 * 720 * 600 / 1024,
+			want: 1280 * 720 * (600 + upstreamExtraFrames) / 1024,
 		},
 		{
 			name: "unknown resolution keeps the flat baseline",
