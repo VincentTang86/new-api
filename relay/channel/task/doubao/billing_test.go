@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	relaycommon "github.com/QuantumNous/new-api/relay/common"
+	"github.com/QuantumNous/new-api/setting/ratio_setting"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -192,4 +193,73 @@ func TestGetVideoInputRatioMapsListedRates(t *testing.T) {
 
 	_, ok := GetVideoInputRatio("seedance-2.5", "720p", false)
 	assert.False(t, ok, "keystone 的短名走另一套单价，不该命中数眼价表")
+}
+
+func setResolutionRatio(t *testing.T, jsonStr string) {
+	t.Helper()
+	require.NoError(t, ratio_setting.UpdateModelResolutionRatioByJSONString(jsonStr))
+	t.Cleanup(func() {
+		require.NoError(t, ratio_setting.UpdateModelResolutionRatioByJSONString("{}"))
+	})
+}
+
+// 上游调价时运营应当能改配置而不是等发版，所以后台的档位倍率必须压过内置价表，
+// 而没配到的档位仍要按内置比值走，不能整表失效。
+func TestGetVideoInputRatioPrefersConfiguredTiers(t *testing.T) {
+	const model = "doubao-seedance-2-5-oinone"
+	setResolutionRatio(t, `{"doubao-seedance-2-5-oinone":{"1080p":1.5,"base+video":0.4}}`)
+
+	cases := []struct {
+		name       string
+		resolution string
+		hasVideo   bool
+		want       float64
+	}{
+		{"configured 1080p overrides the built-in 1.1", "1080p", false, 1.5},
+		{"configured base+video overrides the built-in 0.6", "720p", true, 0.4},
+		// 后台没配这一档，仍走内置表的 46/70。
+		{"unconfigured tier falls back to the table", "1080p", true, 46.0 / 70.0},
+		{"base tier stays at parity", "720p", false, 1.0},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			ratio, ok := GetVideoInputRatio(model, tc.resolution, tc.hasVideo)
+			require.True(t, ok)
+			assert.InDelta(t, tc.want, ratio, 0.0001)
+		})
+	}
+}
+
+// 内置表里没有的模型也能纯靠后台定档，这是新模型接入不再需要发版的前提。
+func TestGetVideoInputRatioWorksWithoutBuiltinTable(t *testing.T) {
+	const model = "doubao-seedance-9-9-preview"
+	setResolutionRatio(t, `{"doubao-seedance-9-9-preview":{"4k":0.5}}`)
+
+	ratio, ok := GetVideoInputRatio(model, "4k", false)
+	require.True(t, ok)
+	assert.InDelta(t, 0.5, ratio, 0.0001)
+
+	// 未配置的档位在没有内置表可回落时报告「无倍率」，调用方按基准价计费。
+	_, ok = GetVideoInputRatio(model, "1080p", false)
+	assert.False(t, ok)
+}
+
+func TestVideoRateKey(t *testing.T) {
+	cases := []struct {
+		resolution string
+		hasVideo   bool
+		want       string
+	}{
+		{"720p", false, "base"},
+		{"480p", false, "base"},
+		{"", false, "base"},
+		{"720p", true, "base+video"},
+		{"1080p", false, "1080p"},
+		{" 1080P ", true, "1080p+video"},
+		{"4k", true, "4k+video"},
+	}
+	for _, tc := range cases {
+		assert.Equal(t, tc.want, VideoRateKey(tc.resolution, tc.hasVideo))
+	}
 }

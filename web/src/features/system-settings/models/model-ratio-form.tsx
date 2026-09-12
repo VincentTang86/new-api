@@ -104,7 +104,7 @@ const modelJsonFields: Array<{
     name: 'ModelResolutionRatio',
     labelKey: 'Resolution billing multipliers',
     descriptionKey:
-      'JSON map of model → resolution tier → multiplier against the base per-second price. Overrides the built-in upstream ratios when your selling tiers differ from the vendor list price.',
+      "JSON map of model → billing tier → multiplier against the model's base rate. Tier keys are adaptor-specific (e.g. 1080p, base+video). Overrides the built-in upstream ratios when your selling tiers differ from the vendor list price.",
   },
   {
     name: 'ModelRatio',

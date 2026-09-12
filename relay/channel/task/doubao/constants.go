@@ -1,6 +1,10 @@
 package doubao
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/QuantumNous/new-api/setting/ratio_setting"
+)
 
 var ModelList = []string{
 	"doubao-seedance-1-0-pro-250528",
@@ -21,6 +25,7 @@ type videoPriceKey struct {
 }
 
 // videoPriceTable 各模型在不同 (输出分辨率档, 是否含视频输入) 下的单价（元/百万 token）。
+// 它是后台 ModelResolutionRatio 未配置该档位时的回落，新接入的模型优先走后台配置。
 // 其中零值键 {480p/720p, 不含视频} 为基准价，等于管理员应配置的 ModelRatio；
 // 计费时取 实际单价/基准价 作为 OtherRatio。
 var videoPriceTable = map[string]map[videoPriceKey]float64{
@@ -48,9 +53,30 @@ var videoPriceTable = map[string]map[videoPriceKey]float64{
 	},
 }
 
+// VideoRateKey 是「输出分辨率档 × 输入是否含视频」这个计费维度在后台
+// ModelResolutionRatio 里的键：基准档（480p/720p 及未指定）写 base，其余写分辨率名，
+// 含视频输入的组合加 +video 后缀。
+func VideoRateKey(resolution string, hasVideo bool) string {
+	tier := strings.ToLower(strings.TrimSpace(resolution))
+	switch tier {
+	case "1080p", "4k":
+	default:
+		tier = "base"
+	}
+	if hasVideo {
+		return tier + "+video"
+	}
+	return tier
+}
+
 // GetVideoInputRatio 返回指定模型在给定输出分辨率/是否含视频输入下，相对基准价的计费倍率。
-// 第二个返回值表示该模型是否配置了价格表；倍率为 1.0 时调用方可忽略该 OtherRatio。
+// 后台 ModelResolutionRatio 的配置优先：上游调价时运营改配置即可，不必为一张价表发版；
+// 该档位没配则回落到下面内置的上游官方比值。
+// 第二个返回值表示该档位是否取到了倍率；取不到时调用方按基准价计费。
 func GetVideoInputRatio(modelName, resolution string, hasVideo bool) (float64, bool) {
+	if ratio, ok := ratio_setting.GetModelResolutionRatio(modelName, VideoRateKey(resolution, hasVideo)); ok {
+		return ratio, true
+	}
 	prices, ok := videoPriceTable[modelName]
 	base := prices[videoPriceKey{}] // 零值键 = {480p/720p, 不含视频} 基准价
 	if !ok || base <= 0 {
