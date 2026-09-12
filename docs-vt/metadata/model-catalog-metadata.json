@@ -13,7 +13,8 @@
       "kimi/kimi-k3 is an alias row for kimi-k3 and shares its metadata",
       "vendor_display_name is a per-model override shown to users in place of the vendor name (e.g. Bailian-hosted deepseek-v4-pro displays DeepSeek)",
       "gemini-3.1-flash-lite-image context/max_output copied from gemini-3.1-flash-image; release_date/knowledge_cutoff left empty pending a first-party source (added 2026-09-08)",
-      "gpt-image-2.5-flare / -sunburst follow developers.openai.com model pages (added 2026-09-09): context/max_output not published so kept 0 like gpt-image-2; both priced identically ($5/$1.25 text in, $8/$2 image in, $30 image out per 1M); OpenRouter does not list them yet, so no cross-check source"
+      "gpt-image-2.5-flare / -sunburst follow developers.openai.com model pages (added 2026-09-09): context/max_output not published so kept 0 like gpt-image-2; both priced identically ($5/$1.25 text in, $8/$2 image in, $30 image out per 1M); OpenRouter does not list them yet, so no cross-check source",
+      "seedance-2.0/-fast/-mini/-2.5 为 keystone（渠道 21，豆包视频类型）上的短模型名，与火山长名 doubao-seedance-2-0-260128 并存；mini/2.5 发布日期未核实，留空"
     ]
   },
   "models": {
@@ -564,6 +565,94 @@
         "ru": "Grok Imagine Image 2.0 — модель генерации и редактирования изображений от xAI с выбором качества (low/medium) и разрешением до 2K, оплата за изображение.",
         "ja": "Grok Imagine Image 2.0 は xAI の画像生成・編集モデルで、low/medium の品質選択と最大 2K の解像度に対応し、画像単位で課金されます。",
         "vi": "Grok Imagine Image 2.0 là mô hình tạo và chỉnh sửa ảnh của xAI, hỗ trợ hai mức chất lượng (low/medium) và độ phân giải tới 2K, tính phí theo ảnh."
+      }
+    },
+    "seedance-2.0": {
+      "vendor": "字节跳动",
+      "vendor_display_name": "ByteDance",
+      "icon": "Doubao.Color",
+      "input_modalities": "text,image,video",
+      "output_modalities": "video",
+      "context_length": 0,
+      "max_output_tokens": 0,
+      "release_date": "2026-01-28",
+      "knowledge_cutoff": "",
+      "parameter_count": "",
+      "capabilities": "",
+      "description": {
+        "en": "Seedance 2.0 is ByteDance's video generation model, producing high-fidelity multi-shot clips from text, image or video references.",
+        "zh-CN": "Seedance 2.0 是字节跳动的视频生成模型，可基于文本、图片或视频参考生成高保真多镜头视频片段。",
+        "zh-TW": "Seedance 2.0 是字節跳動的影片生成模型，可基於文字、圖像或影片參考生成高保真多鏡頭影片片段。",
+        "fr": "Seedance 2.0 est le modèle de génération vidéo de ByteDance, produisant des clips multi-plans haute fidélité à partir de références texte, image ou vidéo.",
+        "ru": "Seedance 2.0 — модель генерации видео от ByteDance, создающая высококачественные многокадровые ролики по текстовым, графическим или видеореференсам.",
+        "ja": "Seedance 2.0 は ByteDance の動画生成モデルで、テキスト・画像・動画のリファレンスから高忠実度のマルチショット動画を生成します。",
+        "vi": "Seedance 2.0 là mô hình tạo video của ByteDance, tạo các đoạn video đa cảnh độ trung thực cao từ tham chiếu văn bản, ảnh hoặc video."
+      }
+    },
+    "seedance-2.0-fast": {
+      "vendor": "字节跳动",
+      "vendor_display_name": "ByteDance",
+      "icon": "Doubao.Color",
+      "input_modalities": "text,image,video",
+      "output_modalities": "video",
+      "context_length": 0,
+      "max_output_tokens": 0,
+      "release_date": "2026-01-28",
+      "knowledge_cutoff": "",
+      "parameter_count": "",
+      "capabilities": "",
+      "description": {
+        "en": "Seedance 2.0 Fast is the low-latency, lower-cost variant of Seedance 2.0 for rapid video generation from text, image or video references.",
+        "zh-CN": "Seedance 2.0 Fast 是 Seedance 2.0 的低延迟低成本版本，适合基于文本、图片或视频参考快速生成视频。",
+        "zh-TW": "Seedance 2.0 Fast 是 Seedance 2.0 的低延遲低成本版本，適合基於文字、圖像或影片參考快速生成影片。",
+        "fr": "Seedance 2.0 Fast est la variante à faible latence et moindre coût de Seedance 2.0, pour une génération vidéo rapide à partir de références texte, image ou vidéo.",
+        "ru": "Seedance 2.0 Fast — вариант Seedance 2.0 с низкой задержкой и меньшей стоимостью для быстрой генерации видео по текстовым, графическим или видеореференсам.",
+        "ja": "Seedance 2.0 Fast は Seedance 2.0 の低遅延・低コスト版で、テキスト・画像・動画のリファレンスからの高速な動画生成に適しています。",
+        "vi": "Seedance 2.0 Fast là biến thể độ trễ thấp, chi phí thấp của Seedance 2.0, phù hợp tạo video nhanh từ tham chiếu văn bản, ảnh hoặc video."
+      }
+    },
+    "seedance-2.0-mini": {
+      "vendor": "字节跳动",
+      "vendor_display_name": "ByteDance",
+      "icon": "Doubao.Color",
+      "input_modalities": "text,image,video",
+      "output_modalities": "video",
+      "context_length": 0,
+      "max_output_tokens": 0,
+      "release_date": "",
+      "knowledge_cutoff": "",
+      "parameter_count": "",
+      "capabilities": "",
+      "description": {
+        "en": "Seedance 2.0 Mini is the most cost-efficient model of the Seedance 2.0 family, tuned for image-to-video and video-to-video generation at a fraction of the cost.",
+        "zh-CN": "Seedance 2.0 Mini 是 Seedance 2.0 家族中性价比最高的版本，面向图生视频与视频生视频场景，成本远低于标准版。",
+        "zh-TW": "Seedance 2.0 Mini 是 Seedance 2.0 系列中性價比最高的版本，面向圖像生成影片與影片生成影片場景，成本遠低於標準版。",
+        "fr": "Seedance 2.0 Mini est le modèle le plus économique de la famille Seedance 2.0, optimisé pour la génération image-vers-vidéo et vidéo-vers-vidéo.",
+        "ru": "Seedance 2.0 Mini — самая экономичная модель семейства Seedance 2.0, оптимизированная для генерации видео из изображений и из видео.",
+        "ja": "Seedance 2.0 Mini は Seedance 2.0 ファミリーで最もコスト効率の高いモデルで、画像から動画・動画から動画の生成に最適化されています。",
+        "vi": "Seedance 2.0 Mini là mô hình tiết kiệm chi phí nhất trong dòng Seedance 2.0, được tối ưu cho tạo video từ ảnh và từ video."
+      }
+    },
+    "seedance-2.5": {
+      "vendor": "字节跳动",
+      "vendor_display_name": "ByteDance",
+      "icon": "Doubao.Color",
+      "input_modalities": "text,image,video",
+      "output_modalities": "video",
+      "context_length": 0,
+      "max_output_tokens": 0,
+      "release_date": "",
+      "knowledge_cutoff": "",
+      "parameter_count": "",
+      "capabilities": "",
+      "description": {
+        "en": "Seedance 2.5 is ByteDance's latest video generation model, improving motion coherence and prompt following over Seedance 2.0.",
+        "zh-CN": "Seedance 2.5 是字节跳动最新的视频生成模型，相比 Seedance 2.0 在运动连贯性与指令遵循上进一步提升。",
+        "zh-TW": "Seedance 2.5 是字節跳動最新的影片生成模型，相比 Seedance 2.0 在運動連貫性與指令遵循上進一步提升。",
+        "fr": "Seedance 2.5 est le dernier modèle de génération vidéo de ByteDance, améliorant la cohérence des mouvements et le suivi des instructions par rapport à Seedance 2.0.",
+        "ru": "Seedance 2.5 — новейшая модель генерации видео от ByteDance с улучшенной связностью движения и следованием инструкциям по сравнению с Seedance 2.0.",
+        "ja": "Seedance 2.5 は ByteDance の最新動画生成モデルで、Seedance 2.0 に比べて動きの一貫性とプロンプト追従性が向上しています。",
+        "vi": "Seedance 2.5 là mô hình tạo video mới nhất của ByteDance, cải thiện tính mạch lạc chuyển động và khả năng bám sát lời nhắc so với Seedance 2.0."
       }
     }
   }
