@@ -40,6 +40,11 @@ import {
  * model id) onto one of the marketing chips. Order matters only in that the
  * first match wins; the keys are deliberately broad so `qwen2.5-72b` resolves
  * to Alibaba even when no vendor is configured.
+ *
+ * The vendor table names several vendors in Chinese, so those names are listed
+ * too. Without them a vendor is recognised only when its models happen to carry
+ * the brand in their id — which held for `qwen*` and `glm*` but not for
+ * ByteDance's `seedance-*`, whose rows fell back to a neutral initial.
  */
 const VENDOR_ALIASES: Array<[string, LandingProviderKey]> = [
   ['openai', 'openai'],
@@ -53,15 +58,20 @@ const VENDOR_ALIASES: Array<[string, LandingProviderKey]> = [
   ['meta', 'meta'],
   ['llama', 'meta'],
   ['alibaba', 'alibaba'],
+  ['阿里巴巴', 'alibaba'],
   ['qwen', 'alibaba'],
   ['tongyi', 'alibaba'],
   ['moonshot', 'kimi'],
   ['kimi', 'kimi'],
   ['zhipu', 'zhipu'],
+  ['智谱', 'zhipu'],
   ['chatglm', 'zhipu'],
   ['glm', 'zhipu'],
   ['minimax', 'minimax'],
   ['doubao', 'doubao'],
+  ['bytedance', 'doubao'],
+  ['字节跳动', 'doubao'],
+  ['seedance', 'doubao'],
   ['grok', 'xai'],
   ['xai', 'xai'],
 ]
