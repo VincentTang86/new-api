@@ -21,6 +21,7 @@ import { parseTiersFromExpr } from '@/features/pricing/lib/billing-expr'
 import {
   getConfiguredGroupRatio,
   isImageModel,
+  isVideoModel,
 } from '@/features/pricing/lib/model-helpers'
 import { tokenPriceUSD } from '@/features/pricing/lib/price'
 import type { PricingModel } from '@/features/pricing/types'
@@ -137,9 +138,9 @@ export function buildPricingRows(params: BuildPricingRowsParams): PricingRow[] {
     : 1
 
   const rows = models
-    // Image models are catalogued per image on their own tab
-    // (`build-image-pricing-rows.ts`); a per-token row would misstate them.
-    .filter((model) => !isImageModel(model))
+    // Media models are catalogued per image / per second on their own tabs
+    // (`build-media-pricing-rows.ts`); a per-token row would misstate them.
+    .filter((model) => !isImageModel(model) && !isVideoModel(model))
     .filter((model) => isModelInGroup(model, params.selectedGroup))
     .map((model) => {
       const catalog = catalogMap[model.model_name] ?? {}

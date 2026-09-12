@@ -77,6 +77,19 @@ export type PricingModel = {
    * only: billing still runs on the expression or the per-call price.
    */
   image_prices?: ImageSizePrice[]
+  /**
+   * The gateway's own per-second list prices for a video model (USD per second
+   * of video at group ratio 1), maintained the same way as `image_prices`.
+   * Display only: billing still runs on the tokens the upstream reports.
+   */
+  video_prices?: ImageSizePrice[]
+  /**
+   * The video model's billing tiers — output resolution crossed with whether
+   * the input carries a video. Each ratio multiplies the model's base rate,
+   * and is read straight off the billing lookup, so the drawer's /Token matrix
+   * states what the request would actually be charged.
+   */
+  video_rates?: VideoRate[]
   /** Pricing version returned by backend, useful for cache busting */
   pricing_version?: string
   /**
@@ -109,10 +122,28 @@ export type ReferencePriceLanes = {
   image_output?: number | null
 }
 
-/** One per-image price of an image model: a size/quality label and USD. */
+/**
+ * One listed price of a media model: a tier label and a USD price. Image
+ * models list it per image (the label is a size/quality), video models per
+ * second of video (the label is an output resolution).
+ */
 export type ImageSizePrice = {
   size: string
   price: number
+}
+
+/**
+ * One billing tier of a video model: an output resolution crossed with whether
+ * the input carries a video, and the multiplier applied to the model's base
+ * rate. `key` is the stable storage key shared with the resolution-ratio
+ * setting and with per-condition reference prices.
+ */
+export type VideoRate = {
+  key: string
+  /** Column header; a tier covering several resolutions reads "480p / 720p". */
+  resolution: string
+  with_video: boolean
+  ratio: number
 }
 
 /**
@@ -127,6 +158,8 @@ export type ReferencePrice = ReferencePriceLanes & {
   per_image?: ImageSizePrice[]
   /** The source's charge per input image (USD), for image-to-image models. */
   per_image_input?: number | null
+  /** The source's per-second list prices for a video model, in display order. */
+  per_second?: ImageSizePrice[]
 }
 
 /** Input/output modalities supported by a model. */

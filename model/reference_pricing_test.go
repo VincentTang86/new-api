@@ -141,6 +141,75 @@ func TestUpsertReferencePricingRoundTripsPerImageAndImageLanes(t *testing.T) {
 	assert.Nil(t, rows[1].PerImageInput)
 }
 
+func TestUpsertReferencePricingRoundTripsPerSecondTiers(t *testing.T) {
+	truncateTables(t)
+
+	require.NoError(t, UpsertReferencePricingRows([]ReferencePricing{
+		{
+			ModelName: "vid-1",
+			Source:    ReferencePricingSourceGateway,
+			PerSecondTiers: []ImageSizePrice{
+				{Size: "480p", Price: 0.028},
+				{Size: "720p", Price: 0.062},
+				{Size: "1080p", Price: 0.14},
+			},
+		},
+		{
+			ModelName: "vid-1",
+			Source:    ReferencePricingSourceOfficial,
+			Input:     refPrice(6.57),
+			// 按秒与按张是两条独立的档位列表，同一行可以只有其中一条
+			PerSecondTiers: []ImageSizePrice{{Size: "480p", Price: 0.05}},
+		},
+	}))
+
+	rows, err := GetAllReferencePricing()
+	require.NoError(t, err)
+	require.Len(t, rows, 2)
+
+	gateway := rows[0] // 按 model_name, source 排序：gateway 在 official 前
+	require.Equal(t, ReferencePricingSourceGateway, gateway.Source)
+	assert.Empty(t, gateway.PerImageSizes)
+	// 档位顺序即展示顺序，读回必须保持提交顺序
+	assert.Equal(t, []ImageSizePrice{
+		{Size: "480p", Price: 0.028},
+		{Size: "720p", Price: 0.062},
+		{Size: "1080p", Price: 0.14},
+	}, gateway.PerSecondTiers)
+
+	official := rows[1]
+	require.NotNil(t, official.Input)
+	assert.Equal(t, 6.57, *official.Input)
+	assert.Equal(t, []ImageSizePrice{{Size: "480p", Price: 0.05}}, official.PerSecondTiers)
+
+	// 整行覆盖语义：不带 per_second 的二次提交应清空旧的按秒价
+	require.NoError(t, UpsertReferencePricingRows([]ReferencePricing{
+		{ModelName: "vid-1", Source: ReferencePricingSourceGateway, PerImageSizes: []ImageSizePrice{{Size: "1K", Price: 0.1}}},
+	}))
+	rows, err = GetAllReferencePricing()
+	require.NoError(t, err)
+	assert.Empty(t, rows[0].PerSecondTiers)
+	assert.Equal(t, []ImageSizePrice{{Size: "1K", Price: 0.1}}, rows[0].PerImageSizes)
+}
+
+// 单行脏数据不应拖垮整个定价页：per_second 解析失败时该字段降级为 nil，其余字段照常返回。
+func TestGetAllReferencePricingDropsUnparsablePerSecond(t *testing.T) {
+	truncateTables(t)
+
+	require.NoError(t, UpsertReferencePricingRows([]ReferencePricing{
+		{ModelName: "vid-2", Source: ReferencePricingSourceGateway, PerSecondTiers: []ImageSizePrice{{Size: "720p", Price: 0.06}}},
+	}))
+	require.NoError(t, DB.Model(&ReferencePricing{}).
+		Where("model_name = ?", "vid-2").
+		Update("per_second", "{not json").Error)
+
+	rows, err := GetAllReferencePricing()
+	require.NoError(t, err)
+	require.Len(t, rows, 1)
+	assert.Nil(t, rows[0].PerSecondTiers)
+	assert.Equal(t, ReferencePricingSourceGateway, rows[0].Source)
+}
+
 // /api/pricing 的线格式契约：默认价保持扁平（首页/看板按此消费），
 // 条件价整体挂在 by_condition 下（仅模型详情抽屉消费）。
 func TestReferencePriceMarshalKeepsFlatLanesAndNestsConditions(t *testing.T) {

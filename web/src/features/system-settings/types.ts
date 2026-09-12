@@ -39,8 +39,8 @@ export type UpdateOptionResponse = {
   message: string
 }
 
-// gateway 不是外部来源：它存网关自己的按张标价（分组倍率 1 的基准价），只有
-// per_image 有意义，放在同一张表里是为了在对比价后台一处录入。
+// gateway 不是外部来源：它存网关自己的按张 / 按秒标价（分组倍率 1 的基准价），
+// 只有 per_image、per_second 有意义，放在同一张表里是为了在对比价后台一处录入。
 export type ReferencePricingSource = 'official' | 'openrouter' | 'gateway'
 
 export type ReferencePricingLanes = {
@@ -54,6 +54,8 @@ export type ReferencePricingLanes = {
   image_output?: number | null
 }
 
+// 一档规格对应一个美元价：图片模型按张（size 是分辨率/规格），视频模型按秒
+// （size 是输出分辨率档）。两种口径结构相同，共用一个类型。
 export type ReferencePricingImageSize = {
   size: string
   price: number
@@ -61,8 +63,8 @@ export type ReferencePricingImageSize = {
 
 // 外部对比标价（USD / 1M tokens），按 (model_name, source) 一行。
 // 顶层价位是默认价；conditions 按计价条件键（rate-conditions 模块派生）覆盖；
-// per_image 是图片模型的按张标价，顺序即展示顺序；per_image_input 是每张输入图
-// 的价（USD / 张），图生图模型才有。
+// per_image 是图片模型的按张标价、per_second 是视频模型的按秒标价，顺序即展示
+// 顺序；per_image_input 是每张输入图的价（USD / 张），图生图模型才有。
 export type ReferencePricingRow = ReferencePricingLanes & {
   id?: number
   model_name: string
@@ -70,6 +72,7 @@ export type ReferencePricingRow = ReferencePricingLanes & {
   conditions?: Record<string, ReferencePricingLanes>
   per_image?: ReferencePricingImageSize[]
   per_image_input?: number | null
+  per_second?: ReferencePricingImageSize[]
 }
 
 export type ReferencePricingResponse = {

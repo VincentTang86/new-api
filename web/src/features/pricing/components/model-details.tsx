@@ -64,12 +64,13 @@ import {
 import { normalizeInterfaceLanguage, toIntlLocale } from '@/i18n/languages'
 import { cn } from '@/lib/utils'
 
-import { isImageModel, parseTags } from '../lib/model-helpers'
+import { isImageModel, isVideoModel, parseTags } from '../lib/model-helpers'
 import { hasTokenPricing } from '../lib/rate-conditions'
 import type { ModelCapability, PricingModel, TokenUnit } from '../types'
 import { ModelBillingModeBadge } from './model-billing-mode-badge'
 import { ModelDetailsApi } from './model-details-api'
-import { ModelDetailsImagePricingTable } from './model-details-image-pricing-table'
+import { ModelDetailsMediaPricingTable } from './model-details-media-pricing-table'
+import { ModelDetailsVideoTokenTable } from './model-details-video-token-table'
 import { ModelDetailsPerformance } from './model-details-performance'
 import {
   ModelDetailsPricingNotes,
@@ -638,30 +639,95 @@ export interface ModelDetailsContentProps {
   tokenUnit: TokenUnit
 }
 
-/** The unit an image model's prices are stated in; the design opens on /Pic. */
-type ImagePriceUnit = 'pic' | 'token'
+/**
+ * The unit a media model's prices are stated in. The design opens an image
+ * model on /Pic and a video model on /Sec — the way each vendor quotes them —
+ * with /Token as the second view in both cases.
+ */
+type MediaPriceUnit = 'pic' | 'sec' | 'token'
 
-const IMAGE_PRICE_UNITS: { key: ImagePriceUnit; label: string }[] = [
-  { key: 'pic', label: '/Pic' },
-  { key: 'token', label: '/Token' },
-]
+/**
+ * The pricing table the drawer shows for the selected unit: the media list
+ * prices, the video resolution matrix, or the ordinary per-token table.
+ */
+function PricingTableForUnit(props: {
+  model: PricingModel
+  groupRatio: Record<string, number>
+  usableGroup: Record<string, { desc: string; ratio: number }>
+  tokenUnit: TokenUnit
+  /** Set while the drawer shows listed prices rather than token rates. */
+  listedUnit?: 'image' | 'second'
+  videoMatrix: boolean
+}) {
+  if (props.listedUnit) {
+    return (
+      <ModelDetailsMediaPricingTable
+        model={props.model}
+        groupRatio={props.groupRatio}
+        usableGroup={props.usableGroup}
+        unit={props.listedUnit}
+      />
+    )
+  }
+  if (props.videoMatrix) {
+    return (
+      <ModelDetailsVideoTokenTable
+        model={props.model}
+        groupRatio={props.groupRatio}
+        usableGroup={props.usableGroup}
+        tokenUnit={props.tokenUnit}
+      />
+    )
+  }
+  return (
+    <ModelDetailsPricingTable
+      model={props.model}
+      groupRatio={props.groupRatio}
+      usableGroup={props.usableGroup}
+      tokenUnit={props.tokenUnit}
+    />
+  )
+}
 
 export function ModelDetailsContent(props: ModelDetailsContentProps) {
   const { t } = useTranslation()
-  const imageModel = isImageModel(props.model)
-  // A model priced per output image only has no per-token rate to show: the
-  // /Token switch stays in place but greyed out, so the unit reads as
-  // deliberately unavailable rather than missing, and the table stays /Pic.
+  const videoModel = isVideoModel(props.model)
+  const imageModel = !videoModel && isImageModel(props.model)
+  const mediaModel = imageModel || videoModel
+  const listedUnit: MediaPriceUnit = videoModel ? 'sec' : 'pic'
+  // A model priced per output only has no per-token rate to show: the /Token
+  // switch stays in place but greyed out, so the unit reads as deliberately
+  // unavailable rather than missing, and the table stays on the listed unit.
   const tokenPriced = hasTokenPricing(props.model)
-  const [priceUnit, setPriceUnit] = useState<ImagePriceUnit>('pic')
-  const activeUnit: ImagePriceUnit = tokenPriced ? priceUnit : 'pic'
-  const showPerImage = imageModel && activeUnit === 'pic'
+  const [priceUnit, setPriceUnit] = useState<MediaPriceUnit>(listedUnit)
+  const activeUnit: MediaPriceUnit = tokenPriced ? priceUnit : listedUnit
+  const showListedUnit = mediaModel && activeUnit !== 'token'
+  // Only a model with real resolution tiers earns the two-row matrix; a video
+  // model billed at one flat rate reads better in the ordinary token table.
+  const showVideoMatrix =
+    videoModel && activeUnit === 'token' && Boolean(props.model.video_rates?.length)
+
+  const mediaUnit: 'image' | 'second' = videoModel ? 'second' : 'image'
+  const unavailableHint = videoModel
+    ? t('Priced per video only')
+    : t('Priced per image only')
+
+  const priceUnits: { key: MediaPriceUnit; label: string }[] = [
+    { key: listedUnit, label: videoModel ? '/Sec' : '/Pic' },
+    { key: 'token', label: '/Token' },
+  ]
 
   let pricingBlurb = t('Prices are shown in USD per {{unit}} tokens.', {
     unit: props.tokenUnit === 'K' ? '1K' : '1M',
   })
-  if (showPerImage) {
-    pricingBlurb = t('Estimated price per image at different resolutions.')
+  if (showListedUnit) {
+    pricingBlurb = videoModel
+      ? t('Estimated price per second of video at different resolutions.')
+      : t('Estimated price per image at different resolutions.')
+  } else if (showVideoMatrix) {
+    pricingBlurb = t(
+      'Estimated price per million tokens at different resolutions.'
+    )
   }
 
   return (
@@ -700,15 +766,15 @@ export function ModelDetailsContent(props: ModelDetailsContentProps) {
             </h2>
             <div className='flex flex-wrap items-center justify-between gap-2'>
               <p className='text-xs text-(--pd-faint)'>{pricingBlurb}</p>
-              {imageModel && (
-                // An image model is priced both ways: per image, the way the
-                // vendor quotes it, and per token, the way it is billed.
+              {mediaModel && (
+                // A media model is priced both ways: per output — the way the
+                // vendor quotes it — and per token, the way it is billed.
                 <div
                   role='tablist'
                   aria-label={t('Price unit')}
                   className='flex gap-px rounded-md bg-(--pd-control-bg) p-0.5'
                 >
-                  {IMAGE_PRICE_UNITS.map((unit) => {
+                  {priceUnits.map((unit) => {
                     const isActive = unit.key === activeUnit
                     const isUnavailable = unit.key === 'token' && !tokenPriced
                     return (
@@ -718,9 +784,7 @@ export function ModelDetailsContent(props: ModelDetailsContentProps) {
                         role='tab'
                         aria-selected={isActive}
                         disabled={isUnavailable}
-                        title={
-                          isUnavailable ? t('Priced per image only') : undefined
-                        }
+                        title={isUnavailable ? unavailableHint : undefined}
                         onClick={() => setPriceUnit(unit.key)}
                         className={cn(
                           'cursor-pointer rounded-[5px] px-2.5 py-1 text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-40',
@@ -737,20 +801,14 @@ export function ModelDetailsContent(props: ModelDetailsContentProps) {
               )}
             </div>
             <AutoGroupChain model={props.model} autoGroups={props.autoGroups} />
-            {showPerImage ? (
-              <ModelDetailsImagePricingTable
-                model={props.model}
-                groupRatio={props.groupRatio}
-                usableGroup={props.usableGroup}
-              />
-            ) : (
-              <ModelDetailsPricingTable
-                model={props.model}
-                groupRatio={props.groupRatio}
-                usableGroup={props.usableGroup}
-                tokenUnit={props.tokenUnit}
-              />
-            )}
+            <PricingTableForUnit
+              model={props.model}
+              groupRatio={props.groupRatio}
+              usableGroup={props.usableGroup}
+              tokenUnit={props.tokenUnit}
+              listedUnit={showListedUnit ? mediaUnit : undefined}
+              videoMatrix={showVideoMatrix}
+            />
             <ModelDetailsPricingNotes model={props.model} />
           </section>
 

@@ -20,10 +20,11 @@ import { QUOTA_TYPE_VALUES } from '@/features/pricing/constants'
 import {
   getConfiguredGroupRatio,
   isImageModel,
+  isVideoModel,
 } from '@/features/pricing/lib/model-helpers'
 import type { ImageSizePrice, PricingModel } from '@/features/pricing/types'
 
-import type { ImagePricingRow, PricingBenchmark } from '../types'
+import type { MediaPricingRow, PricingBenchmark } from '../types'
 import { isModelInGroup, resolveProviderKey } from './build-pricing-rows'
 import {
   LANDING_PRICE_PLACEHOLDER,
@@ -32,8 +33,12 @@ import {
   formatSavingsPercent,
 } from './pricing'
 
-interface BuildImagePricingRowsParams {
+/** Which media catalogue to build: the Image tab or the Video tab. */
+export type MediaPricingKind = 'image' | 'video'
+
+interface BuildMediaPricingRowsParams {
   models: readonly PricingModel[]
+  kind: MediaPricingKind
   language?: string
   /** Group tab the visitor selected; '' prices at ratio 1 with no filtering. */
   selectedGroup: string
@@ -55,26 +60,32 @@ function cheapest(
 }
 
 /**
- * The Image tab's rows: every image model the selected group can call, priced
- * "from" its cheapest listed size. The gateway's per-image list prices (kept
- * beside the benchmark prices, at ratio 1) scale by the group ratio like every
- * other price on the page; a per-call image model without such a list falls
- * back to its per-call price. The benchmark column states the same size's
+ * The Image and Video tabs' rows: every media model the selected group can
+ * call, priced "from" its cheapest listed tier. The gateway's list prices
+ * (kept beside the benchmark prices, at ratio 1) scale by the group ratio like
+ * every other price on the page; a per-call model without such a list falls
+ * back to its per-call price. The benchmark column states the same tier's
  * price from the selected source, so the saving compares like with like —
- * when the source does not list that size, its cheapest price is shown but no
+ * when the source does not list that tier, its cheapest price is shown but no
  * saving is claimed.
+ *
+ * Each row carries the unit its prices are stated in. A per-call video model
+ * (MiniMax-H3, grok-imagine-video) prices the whole clip, so its row reads
+ * "/ video": passing that figure off as a per-second price would understate it
+ * by however many seconds the clip runs.
  */
-export function buildImagePricingRows(
-  params: BuildImagePricingRowsParams
-): ImagePricingRow[] {
+export function buildMediaPricingRows(
+  params: BuildMediaPricingRowsParams
+): MediaPricingRow[] {
   const ratio = params.selectedGroup
     ? getConfiguredGroupRatio(params.groupRatio, params.selectedGroup)
     : 1
+  const isVideo = params.kind === 'video'
 
   const rows = params.models
-    .filter((model) => isImageModel(model))
+    .filter((model) => (isVideo ? isVideoModel(model) : isImageModel(model)))
     .filter((model) => isModelInGroup(model, params.selectedGroup))
-    .map((model): ImagePricingRow => {
+    .map((model): MediaPricingRow => {
       const displayName = model.display_name?.trim()
       const base = {
         modelId: model.model_name,
@@ -83,8 +94,11 @@ export function buildImagePricingRows(
         vendorLabel: model.vendor_name || displayName || model.model_name,
       }
 
-      const listed = cheapest(model.image_prices)
+      const listed = cheapest(
+        isVideo ? model.video_prices : model.image_prices
+      )
       let size = ''
+      let unit: MediaPricingRow['unit'] = isVideo ? 'second' : 'image'
       let frUSD: number | undefined
       if (listed) {
         size = listed.size
@@ -94,13 +108,15 @@ export function buildImagePricingRows(
         (model.model_price ?? 0) > 0
       ) {
         frUSD = (model.model_price ?? 0) * ratio
+        if (isVideo) unit = 'video'
       }
 
       const source =
         params.benchmark === 'official'
           ? model.official_price
           : model.openrouter_price
-      const benchmarkList = source?.per_image ?? []
+      const benchmarkList =
+        (isVideo ? source?.per_second : source?.per_image) ?? []
       const sameSize = size
         ? benchmarkList.find((entry) => entry.size === size)
         : cheapest(benchmarkList)
@@ -116,6 +132,7 @@ export function buildImagePricingRows(
 
       return {
         ...base,
+        unit,
         size,
         frPrice: formatLandingPrice(frUSD),
         benchmarkPrice: formatLandingPrice(benchmarkUSD),

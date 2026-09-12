@@ -62,8 +62,25 @@ type Pricing struct {
 	OpenRouterPrice        *ReferencePrice         `json:"openrouter_price,omitempty"`
 	// ImagePrices 图片模型的网关按张标价（分组倍率 1 的基准价，来自 reference_pricings 的
 	// gateway 行），仅用于定价页展示；实际计费仍走表达式/按次价。
-	ImagePrices    []ImageSizePrice `json:"image_prices,omitempty"`
-	PricingVersion string           `json:"pricing_version,omitempty"`
+	ImagePrices []ImageSizePrice `json:"image_prices,omitempty"`
+	// VideoPrices 视频模型的网关按秒标价，与 ImagePrices 同源同口径（gateway 行的
+	// per_second），仅用于定价页 /Sec 视图展示；实际计费按上游回传的 token 数结算。
+	VideoPrices []ImageSizePrice `json:"video_prices,omitempty"`
+	// VideoRates 视频模型的计价档矩阵（输出分辨率 × 输入是否含视频），由 controller
+	// 按渠道适配器的内置档位表填充，仅用于定价页 /Token 视图展示。
+	VideoRates     []VideoRate `json:"video_rates,omitempty"`
+	PricingVersion string      `json:"pricing_version,omitempty"`
+}
+
+// VideoRate 视频模型的一个计价档：输出分辨率档 × 输入是否含视频，
+// 值是相对模型基准价（ModelRatio）的倍率。定价页据此渲染 /Token 六格矩阵。
+type VideoRate struct {
+	// Key 是该档在 ModelResolutionRatio 与对比价条件里的存储键（base、1080p+video…）。
+	Key string `json:"key"`
+	// Resolution 是列头显示的分辨率档；基准档覆盖多个分辨率时写成 "480p / 720p"。
+	Resolution string  `json:"resolution"`
+	WithVideo  bool    `json:"with_video"`
+	Ratio      float64 `json:"ratio"`
 }
 
 // ReferenceLanes 一组外部标价的价位（USD / 1M tokens），仅用于对比展示
@@ -90,6 +107,8 @@ type ReferencePrice struct {
 	PerImage []ImageSizePrice `json:"per_image,omitempty"`
 	// PerImageInput 该来源每张输入图的标价（USD / 张），/Pic 视图的「输入图」列消费。
 	PerImageInput *float64 `json:"per_image_input,omitempty"`
+	// PerSecond 该来源的按秒标价，视频模型的定价页 /Sec 视图消费。
+	PerSecond []ImageSizePrice `json:"per_second,omitempty"`
 }
 
 type PricingVendor struct {
@@ -451,6 +470,7 @@ func updatePricing() {
 				ByCondition:   row.ConditionLanes,
 				PerImage:      row.PerImageSizes,
 				PerImageInput: row.PerImageInput,
+				PerSecond:     row.PerSecondTiers,
 			}
 		}
 	}
@@ -539,6 +559,7 @@ func updatePricing() {
 			pricing.OpenRouterPrice = bySource[ReferencePricingSourceOpenRouter]
 			if gateway := bySource[ReferencePricingSourceGateway]; gateway != nil {
 				pricing.ImagePrices = gateway.PerImage
+				pricing.VideoPrices = gateway.PerSecond
 				if gateway.PerImageInput != nil {
 					pricing.ImageInputPrice = gateway.PerImageInput
 				}

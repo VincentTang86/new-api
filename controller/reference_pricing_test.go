@@ -37,6 +37,11 @@ func TestUpdateReferencePricingRejectsInvalidRows(t *testing.T) {
 		{"zero per_image price", `{"rows":[{"model_name":"m","source":"gateway","per_image":[{"size":"1K","price":0}]}]}`},
 		{"duplicate per_image size", `{"rows":[{"model_name":"m","source":"gateway","per_image":[{"size":"1K","price":0.1},{"size":"1K","price":0.2}]}]}`},
 		{"oversized per_image size", `{"rows":[{"model_name":"m","source":"gateway","per_image":[{"size":"` + strings.Repeat("s", 33) + `","price":0.1}]}]}`},
+		{"blank per_second tier", `{"rows":[{"model_name":"m","source":"gateway","per_second":[{"size":" ","price":0.1}]}]}`},
+		{"zero per_second price", `{"rows":[{"model_name":"m","source":"gateway","per_second":[{"size":"720p","price":0}]}]}`},
+		{"negative per_second price", `{"rows":[{"model_name":"m","source":"official","per_second":[{"size":"720p","price":-0.1}]}]}`},
+		{"duplicate per_second tier", `{"rows":[{"model_name":"m","source":"gateway","per_second":[{"size":"720p","price":0.1},{"size":"720p","price":0.2}]}]}`},
+		{"oversized per_second tier", `{"rows":[{"model_name":"m","source":"gateway","per_second":[{"size":"` + strings.Repeat("s", 33) + `","price":0.1}]}]}`},
 	}
 	// 条件数量上限是独立的拒绝分支，用例体积大，程序化构造
 	manyConditions := make([]string, 0, 65)
@@ -55,6 +60,10 @@ func TestUpdateReferencePricingRejectsInvalidRows(t *testing.T) {
 		name string
 		body string
 	}{"too many per_image sizes", `{"rows":[{"model_name":"m","source":"gateway","per_image":[` + strings.Join(manySizes, ",") + `]}]}`})
+	cases = append(cases, struct {
+		name string
+		body string
+	}{"too many per_second tiers", `{"rows":[{"model_name":"m","source":"gateway","per_second":[` + strings.Join(manySizes, ",") + `]}]}`})
 
 	gin.SetMode(gin.TestMode)
 	for _, tc := range cases {

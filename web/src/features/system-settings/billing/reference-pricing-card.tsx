@@ -56,7 +56,10 @@ import {
 } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { usePricingData } from '@/features/pricing/hooks'
-import { isImageModel } from '@/features/pricing/lib/model-helpers'
+import {
+  isImageModel,
+  isVideoModel,
+} from '@/features/pricing/lib/model-helpers'
 import {
   getRateConditions,
   getReferenceLaneKeys,
@@ -95,16 +98,23 @@ type LaneSource = Exclude<ReferencePricingSource, 'gateway'>
 const SOURCES: LaneSource[] = ['official', 'openrouter']
 
 /**
- * Rows of the per-image matrix. The gateway row is this site's own list price
- * (at group ratio 1); the drawer scales it by each tier's ratio.
+ * Rows of the per-unit price matrices. The gateway row is this site's own list
+ * price (at group ratio 1); the drawer scales it by each tier's ratio.
  */
-const PER_IMAGE_SOURCES: ReferencePricingSource[] = [
+const PER_UNIT_SOURCES: ReferencePricingSource[] = [
   'gateway',
   'official',
   'openrouter',
 ]
 
-const MAX_IMAGE_SIZES = 16
+const MAX_PRICE_TIERS = 16
+
+/**
+ * Columns a video model's per-second matrix opens with. 480p and 720p bill at
+ * the same rate per token but differ 2.25x per second (they differ in pixel
+ * count), so they are separate columns; admins can add or drop tiers freely.
+ */
+const DEFAULT_PER_SECOND_TIERS = ['480P', '720P', '1080P', '4K']
 
 /** Draft key for the default (unconditioned) price row of the matrix. */
 const DEFAULT_CONDITION_KEY = ''
@@ -124,28 +134,30 @@ const laneObjectSchema = z
   })
   .strict()
 
-const perImageSchema = z
+const perUnitSchema = z
   .array(
     z
       .object({ size: z.string().trim().min(1).max(32), price: priceSchema })
       .strict()
   )
-  .max(MAX_IMAGE_SIZES)
+  .max(MAX_PRICE_TIERS)
 
 const sourceObjectSchema = laneObjectSchema
   .extend({
     conditions: z
       .record(z.string().min(1).max(64), laneObjectSchema)
       .optional(),
-    per_image: perImageSchema.optional(),
+    per_image: perUnitSchema.optional(),
     per_image_input: priceSchema.optional(),
+    per_second: perUnitSchema.optional(),
   })
   .strict()
 
 const gatewayObjectSchema = z
   .object({
-    per_image: perImageSchema.optional(),
+    per_image: perUnitSchema.optional(),
     per_image_input: priceSchema.optional(),
+    per_second: perUnitSchema.optional(),
   })
   .strict()
 
@@ -171,18 +183,18 @@ type LaneDraft = Record<LaneKey, string>
 type DraftValues = Record<LaneSource, Record<string, LaneDraft>>
 
 /**
- * One column of the per-image matrix as typed: the size label and each
- * source's price text (empty when the source has no price for that size).
+ * One column of a per-unit price matrix as typed: the tier label and each
+ * source's price text (empty when the source has no price for that tier).
  * The id keeps a column's identity while its label is still being typed.
  */
-type PerImageColumn = {
+type PerUnitColumn = {
   id: number
   size: string
   prices: Record<ReferencePricingSource, string>
 }
 
-type PerImageDraft = {
-  columns: PerImageColumn[]
+type PerUnitDraft = {
+  columns: PerUnitColumn[]
   nextId: number
   /** Each source's charge per input image as typed ('' when none). */
   inputPrices: Record<ReferencePricingSource, string>
@@ -192,7 +204,9 @@ type DialogState = {
   modelName: string
   isNew: boolean
   values: DraftValues
-  perImage: PerImageDraft
+  /** Per-image prices (image models) and per-second prices (video models). */
+  perImage: PerUnitDraft
+  perSecond: PerUnitDraft
 }
 
 const emptyLaneDraft = (): LaneDraft => ({
@@ -232,16 +246,20 @@ const draftFromRows = (
 }
 
 /**
- * Columns are the union of every source's size labels, the gateway's order
+ * Columns are the union of every source's tier labels, the gateway's order
  * first (it is the order the drawer renders), then whatever the external
- * sources add.
+ * sources add. `seedTiers` supplies the columns a model type opens with when
+ * nothing is configured yet, so an admin starts from the usual tiers rather
+ * than a blank matrix.
  */
-const perImageDraftFromRows = (
-  rows: Partial<Record<ReferencePricingSource, ReferencePricingRow>>
-): PerImageDraft => {
-  const columns: PerImageColumn[] = []
-  for (const source of PER_IMAGE_SOURCES) {
-    for (const entry of rows[source]?.per_image ?? []) {
+const perUnitDraftFromRows = (
+  rows: Partial<Record<ReferencePricingSource, ReferencePricingRow>>,
+  field: 'per_image' | 'per_second',
+  seedTiers: readonly string[] = []
+): PerUnitDraft => {
+  const columns: PerUnitColumn[] = []
+  for (const source of PER_UNIT_SOURCES) {
+    for (const entry of rows[source]?.[field] ?? []) {
       let column = columns.find((item) => item.size === entry.size)
       if (!column) {
         column = {
@@ -255,9 +273,20 @@ const perImageDraftFromRows = (
     }
   }
   const inputPrices = { gateway: '', official: '', openrouter: '' }
-  for (const source of PER_IMAGE_SOURCES) {
-    const price = rows[source]?.per_image_input
-    if (typeof price === 'number') inputPrices[source] = String(price)
+  if (field === 'per_image') {
+    for (const source of PER_UNIT_SOURCES) {
+      const price = rows[source]?.per_image_input
+      if (typeof price === 'number') inputPrices[source] = String(price)
+    }
+  }
+  if (columns.length === 0) {
+    for (const tier of seedTiers) {
+      columns.push({
+        id: columns.length,
+        size: tier,
+        prices: { gateway: '', official: '', openrouter: '' },
+      })
+    }
   }
   return { columns, nextId: columns.length, inputPrices }
 }
@@ -266,8 +295,8 @@ const perImageDraftFromRows = (
  * A source's charge per input image: undefined when left blank, null when
  * the text is not a positive price.
  */
-const parsePerImageInput = (
-  draft: PerImageDraft,
+const parsePerUnitInput = (
+  draft: PerUnitDraft,
   source: ReferencePricingSource
 ): number | null | undefined => {
   const raw = draft.inputPrices[source].trim()
@@ -278,12 +307,12 @@ const parsePerImageInput = (
 }
 
 /**
- * The per-image list a source submits: every column where it has a price.
- * Null flags a price that is not a positive number, or a blank/duplicate size
+ * The per-unit list a source submits: every column where it has a price.
+ * Null flags a price that is not a positive number, or a blank/duplicate tier
  * label that still carries a price.
  */
-const parsePerImageDraft = (
-  draft: PerImageDraft,
+const parsePerUnitDraft = (
+  draft: PerUnitDraft,
   source: ReferencePricingSource
 ): ReferencePricingImageSize[] | null => {
   const entries: ReferencePricingImageSize[] = []
@@ -301,6 +330,178 @@ const parsePerImageDraft = (
     entries.push({ size, price })
   }
   return entries
+}
+
+/**
+ * One per-unit price matrix: sources down the side, tiers across the top, and
+ * a price box in every cell. Image models price by size and add a fixed
+ * "input image" column; video models price by output resolution and have no
+ * such column. The tier labels are free text so an admin can follow whatever
+ * tiers the vendor actually publishes.
+ */
+function PerUnitPriceMatrix(props: {
+  draft: PerUnitDraft
+  onChange: (update: (prev: PerUnitDraft) => PerUnitDraft) => void
+  label: string
+  description: string
+  addLabel: string
+  tierLabel: string
+  removeLabel: string
+  showInputImage?: boolean
+  sourceLabel: (source: ReferencePricingSource) => string
+  t: (key: string) => string
+}) {
+  const { draft, onChange, sourceLabel, t } = props
+
+  const addColumn = () =>
+    onChange((prev) => ({
+      ...prev,
+      columns: [
+        ...prev.columns,
+        {
+          id: prev.nextId,
+          size: '',
+          prices: { gateway: '', official: '', openrouter: '' },
+        },
+      ],
+      nextId: prev.nextId + 1,
+    }))
+
+  const removeColumn = (id: number) =>
+    onChange((prev) => ({
+      ...prev,
+      columns: prev.columns.filter((column) => column.id !== id),
+    }))
+
+  const setColumnLabel = (id: number, value: string) =>
+    onChange((prev) => ({
+      ...prev,
+      columns: prev.columns.map((column) =>
+        column.id === id ? { ...column, size: value } : column
+      ),
+    }))
+
+  const setInputPrice = (source: ReferencePricingSource, value: string) =>
+    onChange((prev) => ({
+      ...prev,
+      inputPrices: { ...prev.inputPrices, [source]: value },
+    }))
+
+  const setPrice = (
+    source: ReferencePricingSource,
+    id: number,
+    value: string
+  ) =>
+    onChange((prev) => ({
+      ...prev,
+      columns: prev.columns.map((column) =>
+        column.id === id
+          ? { ...column, prices: { ...column.prices, [source]: value } }
+          : column
+      ),
+    }))
+
+  return (
+    <div className='flex flex-col gap-2'>
+      <div className='flex items-center justify-between gap-2'>
+        <div>
+          <Label>{props.label}</Label>
+          <p className='text-muted-foreground text-xs'>{props.description}</p>
+        </div>
+        <Button
+          type='button'
+          variant='outline'
+          size='sm'
+          onClick={addColumn}
+          disabled={draft.columns.length >= MAX_PRICE_TIERS}
+        >
+          <Plus data-icon='inline-start' />
+          {props.addLabel}
+        </Button>
+      </div>
+      <div className='overflow-x-auto rounded-md border'>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className='whitespace-nowrap'>{t('Source')}</TableHead>
+              {/* The input-image column is fixed: xAI-style media input is one
+               * charge per attached image, not a size tier. */}
+              {props.showInputImage && (
+                <TableHead className='min-w-32 whitespace-nowrap'>
+                  {t('Input image')}
+                </TableHead>
+              )}
+              {draft.columns.map((column) => (
+                <TableHead key={column.id} className='min-w-32'>
+                  <div className='flex items-center gap-1'>
+                    <Input
+                      aria-label={props.tierLabel}
+                      placeholder={props.tierLabel}
+                      className='h-8 font-mono'
+                      value={column.size}
+                      onChange={(event) =>
+                        setColumnLabel(column.id, event.target.value)
+                      }
+                    />
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='icon-sm'
+                      aria-label={props.removeLabel}
+                      onClick={() => removeColumn(column.id)}
+                    >
+                      <X />
+                    </Button>
+                  </div>
+                </TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {PER_UNIT_SOURCES.map((source) => (
+              <TableRow key={source}>
+                <TableCell className='text-xs font-medium whitespace-nowrap'>
+                  {sourceLabel(source)}
+                </TableCell>
+                {props.showInputImage && (
+                  <TableCell>
+                    <Input
+                      aria-label={`${sourceLabel(source)} · ${t('Input image')}`}
+                      type='number'
+                      min={0}
+                      step='any'
+                      inputMode='decimal'
+                      className='h-8'
+                      value={draft.inputPrices[source]}
+                      onChange={(event) =>
+                        setInputPrice(source, event.target.value)
+                      }
+                    />
+                  </TableCell>
+                )}
+                {draft.columns.map((column) => (
+                  <TableCell key={column.id}>
+                    <Input
+                      aria-label={`${sourceLabel(source)} · ${column.size || props.tierLabel}`}
+                      type='number'
+                      min={0}
+                      step='any'
+                      inputMode='decimal'
+                      className='h-8'
+                      value={column.prices[source]}
+                      onChange={(event) =>
+                        setPrice(source, column.id, event.target.value)
+                      }
+                    />
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  )
 }
 
 const formatLanePrice = (price: number | null | undefined) =>
@@ -383,11 +584,15 @@ export function ReferencePricingCard() {
       const gateway = view.rows.gateway
       if (
         gateway?.per_image?.length ||
+        gateway?.per_second?.length ||
         typeof gateway?.per_image_input === 'number'
       ) {
         entry.gateway = {
           ...(gateway.per_image?.length
             ? { per_image: gateway.per_image }
+            : {}),
+          ...(gateway.per_second?.length
+            ? { per_second: gateway.per_second }
             : {}),
           ...(typeof gateway.per_image_input === 'number'
             ? { per_image_input: gateway.per_image_input }
@@ -403,6 +608,7 @@ export function ReferencePricingCard() {
           if (typeof price === 'number') lanes[lane.key] = price
         }
         if (row.per_image?.length) lanes.per_image = row.per_image
+        if (row.per_second?.length) lanes.per_second = row.per_second
         if (typeof row.per_image_input === 'number') {
           lanes.per_image_input = row.per_image_input
         }
@@ -442,7 +648,8 @@ export function ReferencePricingCard() {
       modelName: '',
       isNew: true,
       values: draftFromRows({}),
-      perImage: perImageDraftFromRows({}),
+      perImage: perUnitDraftFromRows({}, 'per_image'),
+      perSecond: perUnitDraftFromRows({}, 'per_second'),
     })
   }
 
@@ -451,70 +658,26 @@ export function ReferencePricingCard() {
       modelName: view.modelName,
       isNew: false,
       values: draftFromRows(view.rows),
-      perImage: perImageDraftFromRows(view.rows),
+      perImage: perUnitDraftFromRows(view.rows, 'per_image'),
+      // A video model opens on the usual resolution tiers so the admin fills
+      // prices rather than first inventing column labels.
+      perSecond: perUnitDraftFromRows(
+        view.rows,
+        'per_second',
+        pricingModels.some(
+          (item) => item.model_name === view.modelName && isVideoModel(item)
+        )
+          ? DEFAULT_PER_SECOND_TIERS
+          : []
+      ),
     })
   }
 
-  const setPerImageDraft = (update: (prev: PerImageDraft) => PerImageDraft) => {
-    setDialog((prev) =>
-      prev ? { ...prev, perImage: update(prev.perImage) } : prev
-    )
-  }
-
-  const addPerImageSize = () => {
-    setPerImageDraft((prev) => ({
-      ...prev,
-      columns: [
-        ...prev.columns,
-        {
-          id: prev.nextId,
-          size: '',
-          prices: { gateway: '', official: '', openrouter: '' },
-        },
-      ],
-      nextId: prev.nextId + 1,
-    }))
-  }
-
-  const removePerImageSize = (id: number) => {
-    setPerImageDraft((prev) => ({
-      ...prev,
-      columns: prev.columns.filter((column) => column.id !== id),
-    }))
-  }
-
-  const setPerImageSize = (id: number, value: string) => {
-    setPerImageDraft((prev) => ({
-      ...prev,
-      columns: prev.columns.map((column) =>
-        column.id === id ? { ...column, size: value } : column
-      ),
-    }))
-  }
-
-  const setPerImageInputPrice = (
-    source: ReferencePricingSource,
-    value: string
+  const setPerUnitDraft = (
+    unit: 'perImage' | 'perSecond',
+    update: (prev: PerUnitDraft) => PerUnitDraft
   ) => {
-    setPerImageDraft((prev) => ({
-      ...prev,
-      inputPrices: { ...prev.inputPrices, [source]: value },
-    }))
-  }
-
-  const setPerImagePrice = (
-    source: ReferencePricingSource,
-    id: number,
-    value: string
-  ) => {
-    setPerImageDraft((prev) => ({
-      ...prev,
-      columns: prev.columns.map((column) =>
-        column.id === id
-          ? { ...column, prices: { ...column.prices, [source]: value } }
-          : column
-      ),
-    }))
+    setDialog((prev) => (prev ? { ...prev, [unit]: update(prev[unit]) } : prev))
   }
 
   const setDraftValue = (
@@ -582,20 +745,32 @@ export function ReferencePricingCard() {
       ReferencePricingSource,
       ReferencePricingImageSize[]
     >
+    const perSecondBySource = {} as Record<
+      ReferencePricingSource,
+      ReferencePricingImageSize[]
+    >
     const perImageInputBySource = {} as Record<
       ReferencePricingSource,
       number | undefined
     >
-    for (const source of PER_IMAGE_SOURCES) {
-      const entries = parsePerImageDraft(dialog.perImage, source)
-      const inputPrice = parsePerImageInput(dialog.perImage, source)
+    for (const source of PER_UNIT_SOURCES) {
+      const entries = parsePerUnitDraft(dialog.perImage, source)
+      const inputPrice = parsePerUnitInput(dialog.perImage, source)
       if (entries === null || inputPrice === null) {
         toast.error(
           t('Per-image prices need a unique size and a positive price')
         )
         return
       }
+      const seconds = parsePerUnitDraft(dialog.perSecond, source)
+      if (seconds === null) {
+        toast.error(
+          t('Per-second prices need a unique resolution and a positive price')
+        )
+        return
+      }
       perImageBySource[source] = entries
+      perSecondBySource[source] = seconds
       perImageInputBySource[source] = inputPrice
     }
     for (const source of SOURCES) {
@@ -616,11 +791,13 @@ export function ReferencePricingCard() {
         if (Object.keys(lanes).length > 0) conditions[conditionKey] = lanes
       }
       const perImage = perImageBySource[source]
+      const perSecond = perSecondBySource[source]
       const perImageInput = perImageInputBySource[source]
       const hasValue =
         Object.keys(defaultLanes).length > 0 ||
         Object.keys(conditions).length > 0 ||
         perImage.length > 0 ||
+        perSecond.length > 0 ||
         perImageInput !== undefined
       // 清空某来源全部价格时仍要提交该行，让后端把旧值整行覆盖为空
       if (hasValue || existing?.rows[source]) {
@@ -630,6 +807,7 @@ export function ReferencePricingCard() {
           ...defaultLanes,
           ...(Object.keys(conditions).length > 0 ? { conditions } : {}),
           ...(perImage.length > 0 ? { per_image: perImage } : {}),
+          ...(perSecond.length > 0 ? { per_second: perSecond } : {}),
           ...(perImageInput !== undefined
             ? { per_image_input: perImageInput }
             : {}),
@@ -637,9 +815,11 @@ export function ReferencePricingCard() {
       }
     }
     const gatewayPerImage = perImageBySource.gateway
+    const gatewayPerSecond = perSecondBySource.gateway
     const gatewayPerImageInput = perImageInputBySource.gateway
     if (
       gatewayPerImage.length > 0 ||
+      gatewayPerSecond.length > 0 ||
       gatewayPerImageInput !== undefined ||
       existing?.rows.gateway
     ) {
@@ -647,6 +827,9 @@ export function ReferencePricingCard() {
         model_name: modelName,
         source: 'gateway',
         ...(gatewayPerImage.length > 0 ? { per_image: gatewayPerImage } : {}),
+        ...(gatewayPerSecond.length > 0
+          ? { per_second: gatewayPerSecond }
+          : {}),
         ...(gatewayPerImageInput !== undefined
           ? { per_image_input: gatewayPerImageInput }
           : {}),
@@ -696,7 +879,8 @@ export function ReferencePricingCard() {
       for (const source of SOURCES) {
         const entry = sources[source]
         if (!entry) continue
-        const { conditions, per_image, per_image_input, ...lanes } = entry
+        const { conditions, per_image, per_image_input, per_second, ...lanes } =
+          entry
         rows.push({
           model_name: modelName,
           source,
@@ -705,12 +889,14 @@ export function ReferencePricingCard() {
             ? { conditions }
             : {}),
           ...(per_image && per_image.length > 0 ? { per_image } : {}),
+          ...(per_second && per_second.length > 0 ? { per_second } : {}),
           ...(per_image_input !== undefined ? { per_image_input } : {}),
         })
       }
       const gateway = sources.gateway
       if (
         gateway?.per_image?.length ||
+        gateway?.per_second?.length ||
         gateway?.per_image_input !== undefined
       ) {
         rows.push({
@@ -718,6 +904,9 @@ export function ReferencePricingCard() {
           source: 'gateway',
           ...(gateway.per_image?.length
             ? { per_image: gateway.per_image }
+            : {}),
+          ...(gateway.per_second?.length
+            ? { per_second: gateway.per_second }
             : {}),
           ...(gateway.per_image_input !== undefined
             ? { per_image_input: gateway.per_image_input }
@@ -1076,125 +1265,43 @@ export function ReferencePricingCard() {
                * carries such prices) get the matrix. */}
               {((dialogModel && isImageModel(dialogModel)) ||
                 dialog.perImage.columns.length > 0 ||
-                PER_IMAGE_SOURCES.some(
+                PER_UNIT_SOURCES.some(
                   (source) => dialog.perImage.inputPrices[source] !== ''
                 )) && (
-                <div className='flex flex-col gap-2'>
-                  <div className='flex items-center justify-between gap-2'>
-                    <div>
-                      <Label>{t('Per-image prices')}</Label>
-                      <p className='text-muted-foreground text-xs'>
-                        {t(
-                          'USD per image by size or quality. The gateway row is the list price at group ratio 1; each tier scales it by its ratio.'
-                        )}{' '}
-                        {t(
-                          'The input image column is the charge per image attached to an edit request.'
-                        )}
-                      </p>
-                    </div>
-                    <Button
-                      type='button'
-                      variant='outline'
-                      size='sm'
-                      onClick={addPerImageSize}
-                      disabled={
-                        dialog.perImage.columns.length >= MAX_IMAGE_SIZES
-                      }
-                    >
-                      <Plus data-icon='inline-start' />
-                      {t('Add size')}
-                    </Button>
-                  </div>
-                  {/* The input-image column is fixed: xAI-style media input
-                   * is one charge per attached image, not a size tier. */}
-                  <div className='overflow-x-auto rounded-md border'>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className='whitespace-nowrap'>
-                            {t('Source')}
-                          </TableHead>
-                          <TableHead className='min-w-32 whitespace-nowrap'>
-                            {t('Input image')}
-                          </TableHead>
-                          {dialog.perImage.columns.map((column) => (
-                            <TableHead key={column.id} className='min-w-32'>
-                              <div className='flex items-center gap-1'>
-                                <Input
-                                  aria-label={t('Size')}
-                                  placeholder={t('Size')}
-                                  className='h-8 font-mono'
-                                  value={column.size}
-                                  onChange={(event) =>
-                                    setPerImageSize(
-                                      column.id,
-                                      event.target.value
-                                    )
-                                  }
-                                />
-                                <Button
-                                  type='button'
-                                  variant='ghost'
-                                  size='icon-sm'
-                                  aria-label={t('Remove size')}
-                                  onClick={() => removePerImageSize(column.id)}
-                                >
-                                  <X />
-                                </Button>
-                              </div>
-                            </TableHead>
-                          ))}
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {PER_IMAGE_SOURCES.map((source) => (
-                          <TableRow key={source}>
-                            <TableCell className='text-xs font-medium whitespace-nowrap'>
-                              {sourceLabel(source)}
-                            </TableCell>
-                            <TableCell>
-                              <Input
-                                aria-label={`${sourceLabel(source)} · ${t('Input image')}`}
-                                type='number'
-                                min={0}
-                                step='any'
-                                inputMode='decimal'
-                                className='h-8'
-                                value={dialog.perImage.inputPrices[source]}
-                                onChange={(event) =>
-                                  setPerImageInputPrice(
-                                    source,
-                                    event.target.value
-                                  )
-                                }
-                              />
-                            </TableCell>
-                            {dialog.perImage.columns.map((column) => (
-                              <TableCell key={column.id}>
-                                <Input
-                                  aria-label={`${sourceLabel(source)} · ${column.size || t('Size')}`}
-                                  type='number'
-                                  min={0}
-                                  step='any'
-                                  inputMode='decimal'
-                                  className='h-8'
-                                  value={column.prices[source]}
-                                  onChange={(event) =>
-                                    setPerImagePrice(
-                                      source,
-                                      column.id,
-                                      event.target.value
-                                    )
-                                  }
-                                />
-                              </TableCell>
-                            ))}
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </div>
+                <PerUnitPriceMatrix
+                  draft={dialog.perImage}
+                  onChange={(update) => setPerUnitDraft('perImage', update)}
+                  label={t('Per-image prices')}
+                  description={`${t(
+                    'USD per image by size or quality. The gateway row is the list price at group ratio 1; each tier scales it by its ratio.'
+                  )} ${t(
+                    'The input image column is the charge per image attached to an edit request.'
+                  )}`}
+                  addLabel={t('Add size')}
+                  tierLabel={t('Size')}
+                  removeLabel={t('Remove size')}
+                  showInputImage
+                  sourceLabel={sourceLabel}
+                  t={t}
+                />
+              )}
+              {/* Per-second prices are what the Video tab and the drawer's
+               * /Sec view read. */}
+              {((dialogModel && isVideoModel(dialogModel)) ||
+                dialog.perSecond.columns.length > 0) && (
+                <PerUnitPriceMatrix
+                  draft={dialog.perSecond}
+                  onChange={(update) => setPerUnitDraft('perSecond', update)}
+                  label={t('Per-second prices')}
+                  description={t(
+                    'USD per second of video by output resolution. The gateway row is the list price at group ratio 1; each tier scales it by its ratio.'
+                  )}
+                  addLabel={t('Add resolution')}
+                  tierLabel={t('Resolution')}
+                  removeLabel={t('Remove resolution')}
+                  sourceLabel={sourceLabel}
+                  t={t}
+                />
               )}
               <p className='text-muted-foreground text-xs'>
                 {t('Leave a field empty when the source has no such price.')}{' '}

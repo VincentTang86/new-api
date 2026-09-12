@@ -90,3 +90,54 @@ func GetVideoInputRatio(modelName, resolution string, hasVideo bool) (float64, b
 	}
 	return price / base, true
 }
+
+// VideoRate 一个计价档：输出分辨率档 × 输入是否含视频，值是相对基准价的倍率。
+// 纯展示用，定价页的 /Token 矩阵按它渲染。
+type VideoRate struct {
+	Key        string
+	Resolution string
+	WithVideo  bool
+	Ratio      float64
+}
+
+// videoRateTiers 是 VideoRateMatrix 的遍历顺序：基准档 → 1080p → 4k，
+// 每档先「不含视频」后「含视频」，与定价页的列顺序一致。
+var videoRateTiers = []struct {
+	resolution string
+	label      string
+}{
+	// 基准档覆盖 480p 与 720p 两个分辨率，它们的每 token 单价相同。
+	{"", "480p / 720p"},
+	{"1080p", "1080p"},
+	{"4k", "4K"},
+}
+
+// VideoRateMatrix 返回该模型真实配了的计价档，供定价页展示。倍率逐档取自
+// GetVideoInputRatio——即计费本身用的那个函数，页面因此不可能与实际扣费口径漂移。
+// 模型没有任何档位区分时返回 nil，调用方据此回退到普通的按 token 价表。
+func VideoRateMatrix(modelName string) []VideoRate {
+	rates := make([]VideoRate, 0, len(videoRateTiers)*2)
+	differs := false
+	for _, tier := range videoRateTiers {
+		for _, hasVideo := range []bool{false, true} {
+			ratio, ok := GetVideoInputRatio(modelName, tier.resolution, hasVideo)
+			if !ok {
+				continue
+			}
+			if ratio != 1.0 {
+				differs = true
+			}
+			rates = append(rates, VideoRate{
+				Key:        VideoRateKey(tier.resolution, hasVideo),
+				Resolution: tier.label,
+				WithVideo:  hasVideo,
+				Ratio:      ratio,
+			})
+		}
+	}
+	// 全档同价的模型（没有内置价表、后台也没配）不值得画成矩阵。
+	if !differs {
+		return nil
+	}
+	return rates
+}

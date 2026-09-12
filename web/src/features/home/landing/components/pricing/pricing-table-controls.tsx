@@ -32,12 +32,13 @@ const MODEL_TYPE_OPTIONS: { key: PricingModelType; labelKey: string }[] = [
   // locale that expands it can.
   { key: 'llm', labelKey: 'LLM' },
   { key: 'image', labelKey: 'Image' },
+  { key: 'video', labelKey: 'Video' },
 ]
 
 interface PricingTableControlsProps {
   /**
-   * The LLM / Image switch, from the design's models & pricing page; the home
-   * preview offers the same two tabs.
+   * The LLM / Image / Video switch, from the design's models & pricing page;
+   * the home preview offers the same three tabs.
    */
   modelType?: PricingModelType
   onModelTypeChange?: (type: PricingModelType) => void
@@ -64,9 +65,9 @@ export function PricingTableControls(props: PricingTableControlsProps) {
     (group) => group.key === props.selectedGroup
   )?.description
   const onModelTypeChange = props.onModelTypeChange
-  // The Image tab compares per-image prices against the vendor's own list,
-  // so the benchmark toggle only applies to the token table.
-  const showBenchmark = props.modelType !== 'image'
+  // The media tabs compare per-image / per-second prices against the vendor's
+  // own list, so the benchmark toggle only applies to the token table.
+  const showBenchmark = props.modelType === 'llm'
 
   return (
     <div className='pd-font-ui mb-6 flex flex-col gap-4'>

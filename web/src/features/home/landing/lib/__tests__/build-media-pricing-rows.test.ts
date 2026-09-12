@@ -20,7 +20,7 @@ import { describe, expect, test } from 'vitest'
 
 import type { PricingModel } from '@/features/pricing/types'
 
-import { buildImagePricingRows } from '../build-image-pricing-rows'
+import { buildMediaPricingRows } from '../build-media-pricing-rows'
 import { buildPricingRows } from '../build-pricing-rows'
 import { LANDING_PRICE_PLACEHOLDER } from '../pricing'
 
@@ -54,8 +54,9 @@ function imageModel(overrides: Partial<PricingModel> = {}): PricingModel {
 }
 
 function build(model: PricingModel, groupRatio = { default: 1 }) {
-  return buildImagePricingRows({
+  return buildMediaPricingRows({
     models: [model],
+    kind: 'image',
     language: 'en',
     selectedGroup: 'default',
     groupRatio,
@@ -63,7 +64,18 @@ function build(model: PricingModel, groupRatio = { default: 1 }) {
   })
 }
 
-describe('buildImagePricingRows', () => {
+function buildVideo(model: PricingModel, groupRatio = { default: 1 }) {
+  return buildMediaPricingRows({
+    models: [model],
+    kind: 'video',
+    language: 'en',
+    selectedGroup: 'default',
+    groupRatio,
+    benchmark: 'official',
+  })
+}
+
+describe('buildMediaPricingRows', () => {
   test('prices "from" the cheapest listed size and compares the same size', () => {
     const [row] = build(imageModel())
     expect(row.size).toBe('1K')
@@ -131,8 +143,9 @@ describe('buildImagePricingRows', () => {
       output_modalities: ['text'],
     })
     const models = [imageModel(), text]
-    const imageRows = buildImagePricingRows({
+    const imageRows = buildMediaPricingRows({
       models,
+      kind: 'image',
       selectedGroup: 'default',
       groupRatio: { default: 1 },
       benchmark: 'official',
@@ -148,5 +161,93 @@ describe('buildImagePricingRows', () => {
     expect(tokenRows.map((row) => row.modelId)).toEqual([
       'gemini-3.1-pro-preview',
     ])
+  })
+
+  test('every image row states its unit as per image', () => {
+    expect(build(imageModel())[0].unit).toBe('image')
+  })
+})
+
+// Seedance shape: billed per token, listed per second of video beside the
+// benchmark prices. 480p is the cheapest listed resolution.
+function videoModel(overrides: Partial<PricingModel> = {}): PricingModel {
+  return {
+    id: 2,
+    model_name: 'seedance-2.0',
+    vendor_name: 'ByteDance',
+    quota_type: 0,
+    model_ratio: 5.95,
+    completion_ratio: 1,
+    enable_groups: ['default'],
+    output_modalities: ['video'],
+    video_prices: [
+      { size: '480p', price: 0.114 },
+      { size: '720p', price: 0.257 },
+    ],
+    official_price: {
+      per_second: [
+        { size: '480p', price: 0.2 },
+        { size: '720p', price: 0.45 },
+      ],
+    },
+    ...overrides,
+  }
+}
+
+describe('buildMediaPricingRows for video', () => {
+  test('prices "from" the cheapest listed resolution and compares the same one', () => {
+    const [row] = buildVideo(videoModel())
+    expect(row.unit).toBe('second')
+    expect(row.size).toBe('480p')
+    expect(row.frPrice).toBe('$0.114')
+    expect(row.benchmarkPrice).toBe('$0.20')
+    // (0.2 - 0.114) / 0.2 = 43%
+    expect(row.savings).toBe('43%')
+  })
+
+  test('scales the gateway price by the group ratio, the benchmark stays fixed', () => {
+    const [row] = buildVideo(videoModel(), { default: 0.5 })
+    expect(row.frPrice).toBe('$0.057')
+    expect(row.benchmarkPrice).toBe('$0.20')
+  })
+
+  // A per-call video model prices the whole clip. Quoting that as a per-second
+  // price would understate it by however many seconds the clip runs, so the
+  // row must carry the 'video' unit and no size label.
+  test('a per-call video model is priced per video, never per second', () => {
+    const [row] = buildVideo(
+      videoModel({
+        model_name: 'MiniMax-H3',
+        quota_type: 1,
+        model_ratio: 0,
+        model_price: 0.0714,
+        video_prices: undefined,
+        official_price: undefined,
+      })
+    )
+    expect(row.unit).toBe('video')
+    expect(row.size).toBe('')
+    expect(row.frPrice).toBe('$0.0714')
+    expect(row.benchmarkPrice).toBe(LANDING_PRICE_PLACEHOLDER)
+    expect(row.savings).toBe(LANDING_PRICE_PLACEHOLDER)
+  })
+
+  test('the video tab lists only models that output video', () => {
+    const rows = buildMediaPricingRows({
+      models: [videoModel(), imageModel()],
+      kind: 'video',
+      selectedGroup: 'default',
+      groupRatio: { default: 1 },
+      benchmark: 'official',
+    })
+    expect(rows.map((row) => row.modelId)).toEqual(['seedance-2.0'])
+  })
+
+  test('no per-second prices configured yields a placeholder, not a token price', () => {
+    const [row] = buildVideo(
+      videoModel({ video_prices: undefined, official_price: undefined })
+    )
+    expect(row.frPrice).toBe(LANDING_PRICE_PLACEHOLDER)
+    expect(row.savings).toBe(LANDING_PRICE_PLACEHOLDER)
   })
 })

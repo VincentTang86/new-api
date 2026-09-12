@@ -37,10 +37,11 @@ export type LandingProviderKey =
 export type PricingBenchmark = 'official' | 'openrouter'
 
 /**
- * Which catalogue the pricing page shows: token-priced language models, or
- * image models priced per image. The two have different columns.
+ * Which catalogue the pricing page shows: token-priced language models, image
+ * models priced per image, or video models priced per second. The token table
+ * has its own columns; the two media tables share one layout.
  */
-export type PricingModelType = 'llm' | 'image'
+export type PricingModelType = 'llm' | 'image' | 'video'
 
 /**
  * One display row of the pricing table, fully derived from the backend
@@ -76,17 +77,26 @@ export interface PricingRow {
 }
 
 /**
- * One display row of the Image tab: the cheapest per-image price the gateway
- * lists for the model at the selected group's ratio, the same size's price
+ * The unit a media row's prices are stated in. It travels with the row rather
+ * than the tab because a per-call model on the Video tab prices by the whole
+ * clip, not by the second — quoting it as a per-second price would understate
+ * it by however many seconds the clip runs.
+ */
+export type MediaPriceUnit = 'image' | 'second' | 'video'
+
+/**
+ * One display row of the Image or Video tab: the cheapest price the gateway
+ * lists for the model at the selected group's ratio, the same tier's price
  * from the selected benchmark, and the saving between them. Pre-formatted
  * like `PricingRow`; missing figures arrive as the placeholder dash.
  */
-export interface ImagePricingRow {
+export interface MediaPricingRow {
   modelId: string
   name: string
   provider: LandingProviderKey | null
   vendorLabel: string
-  /** Size label the prices below are stated for; '' for a per-call price. */
+  unit: MediaPriceUnit
+  /** Tier label the prices below are stated for; '' for a per-call price. */
   size: string
   frPrice: string
   benchmarkPrice: string

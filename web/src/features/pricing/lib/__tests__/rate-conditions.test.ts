@@ -23,6 +23,7 @@ import {
   getRateConditions,
   getReferenceLaneKeys,
   hasTokenPricing,
+  videoRateConditionKey,
 } from '../rate-conditions'
 
 const t = (key: string) => key
@@ -200,5 +201,78 @@ describe('hasTokenPricing', () => {
     // The drawer shows the raw expression in that case; greying the view
     // out would hide that notice.
     expect(hasTokenPricing(tiered('p * 3 + c * 15'))).toBe(true)
+  })
+})
+
+// A video model prices by output resolution crossed with whether the input
+// carries a video. The drawer's matrix and the reference-price settings both
+// read these conditions, so the keys must stay stable between them.
+describe('getRateConditions for video models', () => {
+  const seedance = model({
+    model_name: 'doubao-seedance-2-0-260128',
+    output_modalities: ['video'],
+    video_rates: [
+      { key: 'base', resolution: '480p / 720p', with_video: false, ratio: 1 },
+      {
+        key: 'base+video',
+        resolution: '480p / 720p',
+        with_video: true,
+        ratio: 0.6,
+      },
+      { key: '1080p', resolution: '1080p', with_video: false, ratio: 1.1 },
+    ],
+  })
+
+  test('one condition per tier, keyed by the backend tier key', () => {
+    expect(getRateConditions(seedance, t)).toEqual([
+      {
+        key: '',
+        label: '480p / 720p · Input without video',
+        tier: { label: '', conditions: [] },
+        variant: null,
+      },
+      {
+        key: 'video:base+video',
+        label: '480p / 720p · Input with video',
+        tier: { label: '', conditions: [] },
+        variant: null,
+      },
+      {
+        key: 'video:1080p',
+        label: '1080p · Input without video',
+        tier: { label: '', conditions: [] },
+        variant: null,
+      },
+    ])
+  })
+
+  // The base tier is the model's standard rate, so it shares the default
+  // reference price the landing savings column already compares against —
+  // an admin never has to enter the same figure twice.
+  test('the base tier maps to the default reference price key', () => {
+    expect(
+      videoRateConditionKey({
+        key: 'base',
+        resolution: '480p / 720p',
+        with_video: false,
+        ratio: 1,
+      })
+    ).toBe('')
+    expect(
+      videoRateConditionKey({
+        key: '4k+video',
+        resolution: '4K',
+        with_video: true,
+        ratio: 0.35,
+      })
+    ).toBe('video:4k+video')
+  })
+
+  test('a video model without resolution tiers keeps the generic condition', () => {
+    const flat = model({
+      model_name: 'seedance-2.5',
+      output_modalities: ['video'],
+    })
+    expect(getRateConditions(flat, t).map((row) => row.key)).toEqual([''])
   })
 })

@@ -3,6 +3,7 @@ package controller
 import (
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/model"
+	"github.com/QuantumNous/new-api/relay/channel/task/doubao"
 	"github.com/QuantumNous/new-api/service"
 	"github.com/QuantumNous/new-api/setting/ratio_setting"
 
@@ -33,6 +34,29 @@ func filterPricingByUsableGroups(pricing []model.Pricing, usableGroup map[string
 	return filtered
 }
 
+// attachVideoRates 给视频模型挂上「输出分辨率 × 输入是否含视频」的计价档矩阵，
+// 供定价页的 /Token 视图渲染。档位表由渠道适配器持有，而 model 包不能反向依赖它
+// （doubao 适配器 import 了 model），所以在这里组装——响应本来就在这一层加工。
+// 倍率取自适配器计费时用的同一个查询函数，展示与扣费口径天然一致。
+func attachVideoRates(pricing []model.Pricing) {
+	for i := range pricing {
+		rates := doubao.VideoRateMatrix(pricing[i].ModelName)
+		if len(rates) == 0 {
+			continue
+		}
+		converted := make([]model.VideoRate, 0, len(rates))
+		for _, rate := range rates {
+			converted = append(converted, model.VideoRate{
+				Key:        rate.Key,
+				Resolution: rate.Resolution,
+				WithVideo:  rate.WithVideo,
+				Ratio:      rate.Ratio,
+			})
+		}
+		pricing[i].VideoRates = converted
+	}
+}
+
 func GetPricing(c *gin.Context) {
 	pricing := model.GetPricing()
 	userId, exists := c.Get("id")
@@ -57,6 +81,7 @@ func GetPricing(c *gin.Context) {
 
 	usableGroup = service.GetUserUsableGroups(group)
 	pricing = filterPricingByUsableGroups(pricing, usableGroup)
+	attachVideoRates(pricing)
 	// check groupRatio contains usableGroup
 	for group := range ratio_setting.GetGroupRatioCopy() {
 		if _, ok := usableGroup[group]; !ok {

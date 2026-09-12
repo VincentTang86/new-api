@@ -23,13 +23,17 @@ import { useTranslation } from 'react-i18next'
 import { useOpenModelDetails } from '@/features/pricing/hooks/use-model-details-drawer'
 
 import { LANDING_PRICE_PLACEHOLDER } from '../../lib/pricing'
-import type { ImagePricingRow, PricingBenchmark } from '../../types'
+import type {
+  MediaPriceUnit,
+  MediaPricingRow,
+  PricingBenchmark,
+} from '../../types'
 import { ModelName } from './model-name'
 import { PricingListStatus } from './pricing-model-list'
 import { ProviderMark } from './provider-mark'
 
-interface ImagePricingListProps {
-  rows: readonly ImagePricingRow[]
+interface MediaPricingListProps {
+  rows: readonly MediaPricingRow[]
   /** Which benchmark the comparison column shows; names its header. */
   benchmark: PricingBenchmark
   isLoading?: boolean
@@ -38,11 +42,11 @@ interface ImagePricingListProps {
 }
 
 /**
- * The Image tab's catalogue, from the design: model, the gateway's "from"
- * price per image, the vendor's list price for the same size, and the saving.
+ * The Image and Video tabs' catalogue, from the design: model, the gateway's
+ * "from" price, the vendor's list price for the same tier, and the saving.
  * A five-column table from `md` up, a per-model accordion below it.
  */
-export function ImagePricingList(props: ImagePricingListProps) {
+export function MediaPricingList(props: MediaPricingListProps) {
   const { t } = useTranslation()
   const openModel = useOpenModelDetails()
   const panelIdPrefix = useId()
@@ -61,14 +65,18 @@ export function ImagePricingList(props: ImagePricingListProps) {
   const benchmarkLabel =
     props.benchmark === 'official' ? t('Official Price') : t('OpenRouter Price')
 
-  // "from" prices: the cheapest listed size, stated as such so a larger
-  // image is never mistaken for that figure.
-  const fromPrice = (price: string) =>
-    price === LANDING_PRICE_PLACEHOLDER
-      ? price
-      : t('from ~{{price}} / image', { price })
+  // "from" prices: the cheapest listed tier, stated as such so a larger
+  // output is never mistaken for that figure. The unit comes from the row,
+  // not the tab, because a per-call model prices the whole output.
+  const unitTemplates: Record<MediaPriceUnit, string> = {
+    image: 'from ~{{price}} / image',
+    second: 'from ~{{price}} / sec',
+    video: 'from ~{{price}} / video',
+  }
+  const fromPrice = (price: string, unit: MediaPriceUnit) =>
+    price === LANDING_PRICE_PLACEHOLDER ? price : t(unitTemplates[unit], { price })
 
-  const savingsBadge = (row: ImagePricingRow) =>
+  const savingsBadge = (row: MediaPricingRow) =>
     row.savings === LANDING_PRICE_PLACEHOLDER ? (
       <span className='text-(--pd-faint)'>{LANDING_PRICE_PLACEHOLDER}</span>
     ) : (
@@ -103,7 +111,7 @@ export function ImagePricingList(props: ImagePricingListProps) {
   return (
     <>
       <div
-        data-slot='image-pricing-table'
+        data-slot='media-pricing-table'
         className='hidden overflow-hidden rounded-2xl border border-(--pd-border) shadow-[0px_10px_24px_0px_rgba(0,0,0,0.04)] md:block'
       >
         <div
@@ -164,10 +172,10 @@ export function ImagePricingList(props: ImagePricingListProps) {
                       </div>
                     </th>
                     <td className='px-6 py-3.5 font-mono text-[13px] font-bold text-(--pd-ink)'>
-                      {fromPrice(row.frPrice)}
+                      {fromPrice(row.frPrice, row.unit)}
                     </td>
                     <td className='px-6 py-3.5 font-mono text-[13px] text-(--pd-muted)'>
-                      {fromPrice(row.benchmarkPrice)}
+                      {fromPrice(row.benchmarkPrice, row.unit)}
                     </td>
                     <td className='px-6 py-3.5'>{savingsBadge(row)}</td>
                     <td className='px-6 py-3.5 text-right'>
@@ -196,7 +204,7 @@ export function ImagePricingList(props: ImagePricingListProps) {
         </div>
       ) : (
         <div
-          data-slot='image-pricing-accordion'
+          data-slot='media-pricing-accordion'
           className='overflow-hidden rounded-2xl border border-(--pd-border) md:hidden'
         >
           {props.rows.map((row) => {
@@ -243,7 +251,7 @@ export function ImagePricingList(props: ImagePricingListProps) {
                           {t('FR Price')}
                         </dt>
                         <dd className='font-mono font-bold text-(--pd-ink)'>
-                          {fromPrice(row.frPrice)}
+                          {fromPrice(row.frPrice, row.unit)}
                         </dd>
                       </div>
                       <div>
@@ -251,7 +259,7 @@ export function ImagePricingList(props: ImagePricingListProps) {
                           {benchmarkLabel}
                         </dt>
                         <dd className='font-mono text-(--pd-muted)'>
-                          {fromPrice(row.benchmarkPrice)}
+                          {fromPrice(row.benchmarkPrice, row.unit)}
                         </dd>
                       </div>
                       <div className='col-span-2'>

@@ -34,25 +34,29 @@ import { tryParsePerRequestConfig } from '../lib/per-request-expr'
 import type { ImageSizePrice, PricingModel } from '../types'
 
 /**
- * The /Pic view of an image model's prices, as the design lays it out: one
- * column per listed size, one row per plan the viewer can use, closed by the
- * external list prices for the same sizes.
+ * The /Pic and /Sec views of a media model's prices, as the design lays them
+ * out: one column per listed tier, one row per plan the viewer can use, closed
+ * by the external list prices for the same tiers.
  *
- * The gateway's per-image list (kept beside the benchmark prices, at ratio 1)
- * scales by each plan's group ratio, exactly like the per-token table. A
- * per-call image model without such a list states its per-call price as a
- * single "per image" column. A model that charges for input images (xAI's
- * "media input") opens with that per-image charge: the gateway's from its
- * admin-maintained row, else straight from its per-request expression; the
- * reference sources' from their rows.
+ * The gateway's list (kept beside the benchmark prices, at ratio 1) scales by
+ * each plan's group ratio, exactly like the per-token table. A per-call model
+ * without such a list states its per-call price as a single column — "per
+ * image" or "per video", since a clip's per-call price is not a per-second
+ * price. A model that charges for input images (xAI's "media input") opens
+ * with that per-image charge: the gateway's from its admin-maintained row,
+ * else straight from its per-request expression; the reference sources' from
+ * their rows. Video models have no such concept, so that column stays hidden.
  */
-export function ModelDetailsImagePricingTable(props: {
+export function ModelDetailsMediaPricingTable(props: {
   model: PricingModel
   groupRatio: Record<string, number>
   usableGroup: Record<string, { desc: string; ratio: number }>
+  /** Which listed prices to render: per image, or per second of video. */
+  unit: 'image' | 'second'
 }) {
   const { t } = useTranslation()
   const model = props.model
+  const isVideo = props.unit === 'second'
 
   const groups = useMemo(
     () => getAvailableGroups(model, props.usableGroup || {}),
@@ -74,21 +78,27 @@ export function ModelDetailsImagePricingTable(props: {
     return Number.isFinite(price) && price > 0 ? price : undefined
   }, [model.image_input_price, model.billing_mode, model.billing_expr])
 
-  const listed = (model.image_prices ?? []).filter(
-    (entry) => Number.isFinite(entry.price) && entry.price > 0
-  )
+  const listed = ((isVideo ? model.video_prices : model.image_prices) ?? []
+  ).filter((entry) => Number.isFinite(entry.price) && entry.price > 0)
   const isPerCall =
     model.quota_type === QUOTA_TYPE_VALUES.REQUEST &&
     (model.model_price ?? 0) > 0
   const gatewayPrices: ImageSizePrice[] =
     listed.length > 0 || !isPerCall
       ? listed
-      : [{ size: t('Per image'), price: model.model_price ?? 0 }]
+      : [
+          {
+            size: isVideo ? t('Per video') : t('Per image'),
+            price: model.model_price ?? 0,
+          },
+        ]
 
   if (gatewayPrices.length === 0) {
     return (
       <p className='text-sm text-(--pd-muted-2)'>
-        {t('No per-image prices are configured for this model.')}
+        {isVideo
+          ? t('No per-second prices are configured for this model.')
+          : t('No per-image prices are configured for this model.')}
       </p>
     )
   }
@@ -107,23 +117,28 @@ export function ModelDetailsImagePricingTable(props: {
     {
       key: 'official',
       label: 'Direct First-Party API',
-      prices: model.official_price?.per_image,
+      prices: isVideo
+        ? model.official_price?.per_second
+        : model.official_price?.per_image,
       inputPrice: model.official_price?.per_image_input,
     },
     {
       key: 'openrouter',
       label: 'OpenRouter First-Party',
-      prices: model.openrouter_price?.per_image,
+      prices: isVideo
+        ? model.openrouter_price?.per_second
+        : model.openrouter_price?.per_image,
       inputPrice: model.openrouter_price?.per_image_input,
     },
   ].flatMap((row) =>
     row.prices && row.prices.length > 0 ? [{ ...row, prices: row.prices }] : []
   )
   const showInputImage =
-    inputImageUSD !== undefined ||
-    referenceRows.some(
-      (row) => typeof row.inputPrice === 'number' && row.inputPrice > 0
-    )
+    !isVideo &&
+    (inputImageUSD !== undefined ||
+      referenceRows.some(
+        (row) => typeof row.inputPrice === 'number' && row.inputPrice > 0
+      ))
 
   const headCellClass =
     'px-2.5 py-3 text-[11px] font-semibold whitespace-nowrap text-(--pd-muted-2)'

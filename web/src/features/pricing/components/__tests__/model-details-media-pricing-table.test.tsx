@@ -20,7 +20,7 @@ import { render } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
 
 import type { PricingModel } from '../../types'
-import { ModelDetailsImagePricingTable } from '../model-details-image-pricing-table'
+import { ModelDetailsMediaPricingTable } from '../model-details-media-pricing-table'
 
 // xAI's grid as the per-request preset writes it: four output cells plus
 // $0.01 per input image.
@@ -56,12 +56,16 @@ function model(overrides: Partial<PricingModel> = {}): PricingModel {
   } as PricingModel
 }
 
-function renderTable(target: PricingModel) {
+function renderTable(
+  target: PricingModel,
+  unit: 'image' | 'second' = 'image'
+) {
   return render(
-    <ModelDetailsImagePricingTable
+    <ModelDetailsMediaPricingTable
       model={target}
       groupRatio={GROUP_RATIO}
       usableGroup={USABLE_GROUPS}
+      unit={unit}
     />
   )
 }
@@ -78,7 +82,7 @@ function rowCells(row: Element): string[] {
   )
 }
 
-describe('ModelDetailsImagePricingTable', () => {
+describe('ModelDetailsMediaPricingTable', () => {
   test('states the per-input-image charge the expression carries, at each plan ratio', () => {
     const { container } = renderTable(
       model({ billing_mode: 'tiered_expr', billing_expr: GROK_EXPR })
@@ -122,5 +126,75 @@ describe('ModelDetailsImagePricingTable', () => {
     expect(headers(container)).toEqual(['Service', '1K·Low', '2K·Medium'])
     const rows = [...container.querySelectorAll('tbody tr')].map(rowCells)
     expect(rows[0]).toEqual(['Production', '$0.08', '$0.08'])
+  })
+})
+
+describe('ModelDetailsMediaPricingTable in per-second mode', () => {
+  function videoModel(overrides: Partial<PricingModel> = {}): PricingModel {
+    return {
+      id: 2,
+      model_name: 'seedance-2.0',
+      quota_type: 0,
+      model_ratio: 5.95,
+      completion_ratio: 1,
+      enable_groups: ['Production', 'Best Effort'],
+      output_modalities: ['video'],
+      video_prices: [
+        { size: '480P', price: 0.114 },
+        { size: '720P', price: 0.257 },
+      ],
+      official_price: {
+        per_second: [{ size: '480P', price: 0.2 }],
+      },
+      ...overrides,
+    } as PricingModel
+  }
+
+  test('reads per-second prices and scales them by the group ratio', () => {
+    const { container } = renderTable(videoModel(), 'second')
+    expect(headers(container)).toEqual(['Service', '480P', '720P'])
+    const rows = [...container.querySelectorAll('tbody tr')]
+    expect(rowCells(rows[0])).toEqual(['Production', '$0.114', '$0.257'])
+    expect(rowCells(rows[1])).toEqual(['Best Effort', '$0.057', '$0.1285'])
+  })
+
+  // The "input image" column is an image-model concept; a video model must not
+  // grow an empty one.
+  test('omits the input image column', () => {
+    const { container } = renderTable(
+      videoModel({ image_input_price: 0.01 }),
+      'second'
+    )
+    expect(headers(container)).not.toContain('Input image')
+  })
+
+  // A tier the source does not list must dash rather than borrow a neighbour's
+  // price, or the savings claim would compare unlike resolutions.
+  test('dashes a resolution the reference source does not list', () => {
+    const { container } = renderTable(videoModel(), 'second')
+    // Two plan rows, then the single reference row.
+    const rows = [...container.querySelectorAll('tbody tr')]
+    expect(rowCells(rows[2])).toEqual([
+      'Direct First-Party APIReference',
+      '$0.20',
+      '—',
+    ])
+  })
+
+  // A per-call video model prices the whole clip, so the single column must
+  // say so instead of implying a per-second rate.
+  test('a per-call video model gets a single per video column', () => {
+    const { container } = renderTable(
+      videoModel({
+        model_name: 'MiniMax-H3',
+        quota_type: 1,
+        model_ratio: 0,
+        model_price: 0.0714,
+        video_prices: undefined,
+        official_price: undefined,
+      }),
+      'second'
+    )
+    expect(headers(container)).toEqual(['Service', 'Per video'])
   })
 })

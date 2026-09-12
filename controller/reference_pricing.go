@@ -19,10 +19,10 @@ const (
 	maxReferenceConditionKeyLen = 64
 )
 
-// 按张标价的档位数量与档位名长度上限（per_image 文本列）。
+// 按单位标价的档位数量与档位名长度上限，按张（per_image）与按秒（per_second）共用。
 const (
-	maxReferenceImageSizes      = 16
-	maxReferenceImageSizeLength = 32
+	maxReferenceTierCount       = 16
+	maxReferenceTierLabelLength = 32
 )
 
 func GetReferencePricing(c *gin.Context) {
@@ -82,21 +82,29 @@ func UpdateReferencePricing(c *gin.Context) {
 			}
 			lanesToCheck = append(lanesToCheck, []*float64{lanes.Input, lanes.Output, lanes.CachedInput, lanes.CacheCreation, lanes.CacheCreation1h, lanes.CacheHit, lanes.ImageInput, lanes.ImageOutput})
 		}
-		if len(row.PerImageSizes) > maxReferenceImageSizes {
-			common.ApiErrorMsg(c, fmt.Sprintf("模型 %s 的按张价档位数量不能超过 %d", row.ModelName, maxReferenceImageSizes))
-			return
-		}
-		seenSizes := make(map[string]bool, len(row.PerImageSizes))
-		for i := range row.PerImageSizes {
-			entry := &row.PerImageSizes[i]
-			entry.Size = strings.TrimSpace(entry.Size)
-			if entry.Size == "" || len(entry.Size) > maxReferenceImageSizeLength || seenSizes[entry.Size] {
-				common.ApiErrorMsg(c, fmt.Sprintf("模型 %s 存在无效的按张价档位：档位名不能为空、不能重复且长度不能超过 %d", row.ModelName, maxReferenceImageSizeLength))
+		for _, tiers := range []struct {
+			label   string
+			entries []model.ImageSizePrice
+		}{
+			{"按张价", row.PerImageSizes},
+			{"按秒价", row.PerSecondTiers},
+		} {
+			if len(tiers.entries) > maxReferenceTierCount {
+				common.ApiErrorMsg(c, fmt.Sprintf("模型 %s 的%s档位数量不能超过 %d", row.ModelName, tiers.label, maxReferenceTierCount))
 				return
 			}
-			seenSizes[entry.Size] = true
-			price := entry.Price
-			lanesToCheck = append(lanesToCheck, []*float64{&price})
+			seenTiers := make(map[string]bool, len(tiers.entries))
+			for i := range tiers.entries {
+				entry := &tiers.entries[i]
+				entry.Size = strings.TrimSpace(entry.Size)
+				if entry.Size == "" || len(entry.Size) > maxReferenceTierLabelLength || seenTiers[entry.Size] {
+					common.ApiErrorMsg(c, fmt.Sprintf("模型 %s 存在无效的%s档位：档位名不能为空、不能重复且长度不能超过 %d", row.ModelName, tiers.label, maxReferenceTierLabelLength))
+					return
+				}
+				seenTiers[entry.Size] = true
+				price := entry.Price
+				lanesToCheck = append(lanesToCheck, []*float64{&price})
+			}
 		}
 		for _, lanes := range lanesToCheck {
 			for _, price := range lanes {

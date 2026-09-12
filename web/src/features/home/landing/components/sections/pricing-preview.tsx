@@ -24,13 +24,17 @@ import { ModelDetailsDrawerHost } from '@/features/pricing/components/model-deta
 import { useSystemConfig } from '@/hooks/use-system-config'
 import { cn } from '@/lib/utils'
 
-import { LANDING_CONTAINER, LANDING_SECTION_IDS } from '../../constants'
+import {
+  LANDING_CONTAINER,
+  LANDING_SECTION_IDS,
+  PRICING_SUBTITLE_KEYS,
+} from '../../constants'
 import { useLandingPricingRows } from '../../lib/use-landing-pricing-rows'
-import { ImagePricingList } from '../pricing/image-pricing-list'
+import { MediaPricingList } from '../pricing/media-pricing-list'
 import { PricingModelList } from '../pricing/pricing-model-list'
 import { PricingTableControls } from '../pricing/pricing-table-controls'
 
-/** How many models the home teaser shows, on either tab, before "View all
+/** How many models the home teaser shows, on any tab, before "View all
  * models". */
 const PREVIEW_ROW_LIMIT = 10
 
@@ -39,8 +43,11 @@ export function LandingPricingPreview() {
   const { systemName } = useSystemConfig()
   const table = useLandingPricingRows()
   const isImageTab = table.modelType === 'image'
+  const isVideoTab = table.modelType === 'video'
   const previewRows = table.rows.slice(0, PREVIEW_ROW_LIMIT)
-  const previewImageRows = table.imageRows.slice(0, PREVIEW_ROW_LIMIT)
+  const previewMediaRows = (
+    isVideoTab ? table.videoRows : table.imageRows
+  ).slice(0, PREVIEW_ROW_LIMIT)
 
   return (
     <section
@@ -52,15 +59,7 @@ export function LandingPricingPreview() {
           {t('Models & pricing, made clear')}
         </h2>
         <p className='text-base text-(--pd-muted)'>
-          {isImageTab
-            ? t(
-                'Compare {{name}} image rates with the vendor list price. Prices are estimated per image and shown in USD. Open a model for its per-token rates.',
-                { name: systemName }
-              )
-            : t(
-                'Compare {{name}} rates with the selected benchmark. Prices are shown in USD per million tokens.',
-                { name: systemName }
-              )}
+          {t(PRICING_SUBTITLE_KEYS[table.modelType], { name: systemName })}
         </p>
       </div>
 
@@ -79,9 +78,9 @@ export function LandingPricingPreview() {
 
       <ModelDetailsDrawerHost />
 
-      {isImageTab ? (
-        <ImagePricingList
-          rows={previewImageRows}
+      {isImageTab || isVideoTab ? (
+        <MediaPricingList
+          rows={previewMediaRows}
           benchmark={table.benchmark}
           isLoading={table.isLoading}
           isError={table.isError}
@@ -107,7 +106,7 @@ export function LandingPricingPreview() {
         {/* The catalogue opens on the tab the visitor was reading here. */}
         <Link
           to='/pricing'
-          search={isImageTab ? { type: 'image' as const } : {}}
+          search={table.modelType === 'llm' ? {} : { type: table.modelType }}
           className='pd-font-display flex items-center gap-1 text-base font-bold whitespace-nowrap text-(--pd-primary) underline transition-opacity hover:opacity-80'
         >
           {t('View all models')}
