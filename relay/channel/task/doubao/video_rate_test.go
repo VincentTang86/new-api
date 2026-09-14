@@ -44,7 +44,7 @@ func TestVideoRateMatrixMirrorsListedRates(t *testing.T) {
 			model: "doubao-seedance-2-5-oinone",
 			want: []VideoRate{
 				{Key: "base", Resolution: "480p / 720p", WithVideo: false, Ratio: 1},
-				{Key: "base+video", Resolution: "480p / 720p", WithVideo: true, Ratio: 42.0 / 70.0},
+				{Key: "base+video", Resolution: "480p / 720p", WithVideo: true, Ratio: 4.98 / 8.30},
 				{Key: "1080p", Resolution: "1080p", WithVideo: false, Ratio: 77.0 / 70.0},
 				{Key: "1080p+video", Resolution: "1080p", WithVideo: true, Ratio: 46.0 / 70.0},
 			},

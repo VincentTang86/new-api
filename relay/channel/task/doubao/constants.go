@@ -24,10 +24,11 @@ type videoPriceKey struct {
 	hasVideo bool
 }
 
-// videoPriceTable 各模型在不同 (输出分辨率档, 是否含视频输入) 下的单价（元/百万 token）。
+// videoPriceTable 各模型在不同 (输出分辨率档, 是否含视频输入) 下的每百万 token 单价。
 // 它是后台 ModelResolutionRatio 未配置该档位时的回落，新接入的模型优先走后台配置。
 // 其中零值键 {480p/720p, 不含视频} 为基准价，等于管理员应配置的 ModelRatio；
-// 计费时取 实际单价/基准价 作为 OtherRatio。
+// 计费时取 实际单价/基准价 作为 OtherRatio——只有同一模型内的比值参与计算，
+// 所以各模型的单价用哪种货币记并不影响结果（2.0 两行记的是元价，2.5 记的是实测美元价）。
 var videoPriceTable = map[string]map[videoPriceKey]float64{
 	"doubao-seedance-2-0-260128": {
 		{hasVideo: false}:                46.0,
@@ -41,15 +42,20 @@ var videoPriceTable = map[string]map[videoPriceKey]float64{
 		{hasVideo: false}: 37.0,
 		{hasVideo: true}:  22.0,
 	},
-	// 2.5 经数眼（dataeyes，渠道 dataeyes1_doubao）转售，四档刊例与火山官方一致：
-	// 每 1M token $10.00 / $6.00 / $11.00 / $6.57，即下面的元价 ÷7。官方与数眼
-	// 都未公布 4K 专档，未配置的组合按基准价计——2.0 的 4K 是降价档，若 2.5 也有
-	// 而这里缺行，会按基准价多收，拿到单价后需补一行。
+	// 2.5 经数眼（dataeyes，渠道 dataeyes1_doubao）转售。基准两档取自 2026-09-14 的
+	// dev 实测对账：480p/4s 两笔（含视频的一笔输入也计 token）上游净扣 $0.322288 /
+	// $0.384754，除以回传的 38830 / 77260 token 正是每 1M $8.30 与 $4.98。此前按
+	// 「火山刊例 ÷7」推出的 $10.00 / $6.00 高了两成，作废——比值 0.6 倒是推对了。
+	//
+	// 1080p 两档未实测，沿用火山刊例内部的比值（77/70、46/70）乘到实测基准价上；
+	// 数眼若不照这个比例分档就是错价，跑一笔 1080p 即可钉死。官方与数眼都未公布
+	// 4K 专档，未配置的组合按基准价计——2.0 的 4K 是降价档，若 2.5 也有而这里缺行，
+	// 会按基准价多收，拿到单价后需补一行。
 	"doubao-seedance-2-5-oinone": {
-		{hasVideo: false}:                70.0,
-		{hasVideo: true}:                 42.0,
-		{is1080p: true, hasVideo: false}: 77.0,
-		{is1080p: true, hasVideo: true}:  46.0,
+		{hasVideo: false}:                8.30,
+		{hasVideo: true}:                 4.98,
+		{is1080p: true, hasVideo: false}: 8.30 * 77 / 70,
+		{is1080p: true, hasVideo: true}:  8.30 * 46 / 70,
 	},
 }
 
