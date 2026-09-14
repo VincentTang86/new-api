@@ -165,8 +165,8 @@ func TestValidateVideoBoundsRejectsOversizedSpec(t *testing.T) {
 // 其余档位靠倍率跟随。倍率错了就是直接的错价，所以逐档钉住数眼的刊例。
 func TestGetVideoInputRatioMapsListedRates(t *testing.T) {
 	const model = "doubao-seedance-2-5-oinone"
-	// 基准档单价 = 该模型应配置的 ModelRatio(5.0) × 2。
-	const baseUSD = 10.0
+	// 基准档单价 = 实测的数眼上游单价，对应应配置的 ModelRatio 4.15（× 2 得每 1M 美元价）。
+	const baseUSD = 8.30
 
 	cases := []struct {
 		name       string
@@ -174,13 +174,15 @@ func TestGetVideoInputRatioMapsListedRates(t *testing.T) {
 		hasVideo   bool
 		wantUSD    float64
 	}{
-		{"base tier without reference video", "720p", false, 10.00},
-		{"base tier with reference video", "720p", true, 6.00},
-		{"1080p without reference video", "1080p", false, 11.00},
-		{"1080p with reference video", "1080p", true, 6.57},
-		{"480p shares the base tier", "480p", false, 10.00},
+		// 这两档是 2026-09-14 dev 实测对上的上游实收单价。
+		{"base tier without reference video", "720p", false, 8.30},
+		{"base tier with reference video", "720p", true, 4.98},
+		// 1080p 未实测，按火山刊例的档位比值（77/70、46/70）推出。
+		{"1080p without reference video", "1080p", false, 9.13},
+		{"1080p with reference video", "1080p", true, 5.4543},
+		{"480p shares the base tier", "480p", false, 8.30},
 		// 数眼未列 4K 档，未配置的组合按基准价计费。
-		{"4k falls back to the base rate", "4k", false, 10.00},
+		{"4k falls back to the base rate", "4k", false, 8.30},
 	}
 
 	for _, tc := range cases {
@@ -261,5 +263,93 @@ func TestVideoRateKey(t *testing.T) {
 	}
 	for _, tc := range cases {
 		assert.Equal(t, tc.want, VideoRateKey(tc.resolution, tc.hasVideo))
+	}
+}
+
+// 带参考视频时上游把输入的帧也计进 total_tokens，押金必须跟着翻倍：不翻就只押住
+// 一半，差额要等任务跑完才补扣，中途把余额花在别处的用户会被扣成负数。
+func TestEstimateVideoTokensCoversTheReferenceVideoInput(t *testing.T) {
+	spec := map[string]interface{}{"resolution": "480p"}
+	withVideo := map[string]interface{}{
+		"resolution": "480p",
+		"content": []interface{}{
+			map[string]interface{}{
+				"type":      "video_url",
+				"video_url": map[string]interface{}{"url": "https://example.com/ref.mp4"},
+				"role":      "reference_video",
+			},
+		},
+	}
+
+	plain := EstimateVideoTokens(&relaycommon.TaskSubmitReq{Seconds: "4", Metadata: spec})
+	referenced := EstimateVideoTokens(&relaycommon.TaskSubmitReq{Seconds: "4", Metadata: withVideo})
+
+	assert.Equal(t, plain*videoInputHoldMultiplier, referenced)
+	// 2026-09-14 实测：480p/4s 带参考视频的一笔上游报 77260 token（输出 38830 +
+	// 输入 38430）。押金必须押得住它，否则结算又要补扣。
+	assert.GreaterOrEqual(t, referenced, 77260)
+}
+
+// hasVideoInMetadata 决定走 +video 档（基准价六成）还是基准档，判错就是四成的
+// 错价且不会报错，所以把上游真正认的那几种 content 形状钉住。
+func TestHasVideoInMetadata(t *testing.T) {
+	cases := []struct {
+		name     string
+		metadata map[string]interface{}
+		want     bool
+	}{
+		{"nil metadata", nil, false},
+		{"no content key", map[string]interface{}{"resolution": "480p"}, false},
+		{
+			// 2026-09-14 dev 实测命中 +video 档的形状。
+			name: "typed video_url entry",
+			metadata: map[string]interface{}{"content": []interface{}{
+				map[string]interface{}{"type": "text", "text": "push in slowly"},
+				map[string]interface{}{
+					"type":      "video_url",
+					"video_url": map[string]interface{}{"url": "https://example.com/ref.mp4"},
+					"role":      "reference_video",
+				},
+			}},
+			want: true,
+		},
+		{
+			// 火山接受省略 type 的写法，计费也必须认，否则这类请求按基准价多收。
+			name: "video_url key without a type field",
+			metadata: map[string]interface{}{"content": []interface{}{
+				map[string]interface{}{"video_url": map[string]interface{}{"url": "https://example.com/ref.mp4"}},
+			}},
+			want: true,
+		},
+		{
+			name: "image reference is not a video reference",
+			metadata: map[string]interface{}{"content": []interface{}{
+				map[string]interface{}{"type": "image_url", "image_url": map[string]interface{}{"url": "https://example.com/a.png"}},
+				map[string]interface{}{"type": "text", "text": "animate this"},
+			}},
+			want: false,
+		},
+		{
+			// content 来自客户端 JSON，形状不受控；认错或 panic 都比多收更糟。
+			name:     "content is not an array",
+			metadata: map[string]interface{}{"content": "video_url"},
+			want:     false,
+		},
+		{
+			name:     "content holds non-object entries",
+			metadata: map[string]interface{}{"content": []interface{}{"video_url", 42, nil}},
+			want:     false,
+		},
+		{
+			name:     "empty content",
+			metadata: map[string]interface{}{"content": []interface{}{}},
+			want:     false,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, hasVideoInMetadata(tc.metadata))
+		})
 	}
 }

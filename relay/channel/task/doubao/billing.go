@@ -34,6 +34,15 @@ const (
 	// 97 帧、5 秒出 121 帧。补上它预估才等于上游 usage，否则押金每笔都低 1%，
 	// 每笔都要补扣一次。
 	upstreamExtraFrames = 1
+
+	// videoInputHoldMultiplier 是带参考视频时押金要翻的倍数。上游把输入视频的帧
+	// 也算进 total_tokens：2026-09-14 实测一笔 480p/4s 的参考视频生成，上游报
+	// 77260 token，其中输出 38830、输入 38430——两者几乎相等（输入没有输出多出
+	// 的那一帧）。不翻倍就只押住一半，差额要等任务跑完（实测 366 秒）才补扣，
+	// 期间把余额花在别处的用户会被扣成负数。输入视频的真实时长在提交时读不到
+	// ——手里只有一个 URL——所以按「与输出同规格」近似；押多的部分结算时以上游
+	// usage 为准退回。
+	videoInputHoldMultiplier = 2
 )
 
 // videoResolutionPixels 是各分辨率档的输出像素数（宽 × 高），用于预估视频 token。
@@ -53,9 +62,9 @@ var videoResolutionPixels = map[string]int{
 //	token = 输出宽 × 输出高 × 总帧数 ÷ 1024
 //
 // 这是火山 Ark 的官方口径，也是上游 usage.completion_tokens 的来源；480p/4s 与
-// 720p/5s 两笔真实请求的预估值与上游 usage 完全相等。输入视频的
-// 时长同样计入上游 token，但提交时只拿得到 URL、读不到时长，那部分缺口留给结算
-// 时的 usage 重算补齐。分辨率档不认识时返回 0，调用方回退到固定预扣基数。
+// 720p/5s 两笔真实请求的预估值与上游 usage 完全相等。带参考视频的请求上游还会
+// 把输入视频的帧计进 total_tokens，按同规格近似翻倍——见 videoInputHoldMultiplier。
+// 分辨率档不认识时返回 0，调用方回退到固定预扣基数。
 func EstimateVideoTokens(req *relaycommon.TaskSubmitReq) int {
 	pixels, ok := videoResolutionPixels[videoResolution(req)]
 	if !ok {
@@ -63,7 +72,11 @@ func EstimateVideoTokens(req *relaycommon.TaskSubmitReq) int {
 	}
 	// 中间积最大约 1.2e10（4K × MaxFrames），在 32 位 int 上会溢出成负数，
 	// 而负的预扣额度等于白送，所以乘法走 int64 再收回。
-	return int(int64(pixels) * int64(videoFrames(req)) / videoTokenDivisor)
+	tokens := int64(pixels) * int64(videoFrames(req)) / videoTokenDivisor
+	if hasVideoInMetadata(req.Metadata) {
+		tokens *= videoInputHoldMultiplier
+	}
+	return int(tokens)
 }
 
 // ValidateVideoBounds 给真正下发给上游的时长 / 帧数补上边界校验。顶层 seconds 已由
