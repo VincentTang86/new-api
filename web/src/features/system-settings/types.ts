@@ -389,6 +389,14 @@ export type BillingSettings = {
   // section (saved via /api/option/waffo-pancake/save).
   WaffoPancakeStoreID: string
   WaffoPancakeProductID: string
+  NowPaymentsEnabled: boolean
+  NowPaymentsApiKey: string
+  NowPaymentsIpnSecret: string
+  NowPaymentsSandbox: boolean
+  NowPaymentsUnitPrice: number
+  NowPaymentsMinTopUp: number
+  NowPaymentsFeePaidByUser: boolean
+  NowPaymentsFixedRate: boolean
   'checkin_setting.enabled': boolean
   'checkin_setting.min_quota': number
   'checkin_setting.max_quota': number

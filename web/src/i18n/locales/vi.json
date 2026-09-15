@@ -5579,6 +5579,23 @@
     "Rule label": "Nhãn quy tắc",
     "Price ($ per request)": "Giá ($ mỗi yêu cầu)",
     "e.g. Gemini 3.1 Flash Image": "ví dụ: Gemini 3.1 Flash Image",
-    "Shown in the models & pricing table instead of the model name. Press Enter to break the name across lines; leave empty to show the model name.": "Hiển thị trong bảng mô hình & giá thay cho tên mô hình. Nhấn Enter để tách tên thành nhiều dòng; để trống sẽ hiển thị tên mô hình."
+    "Shown in the models & pricing table instead of the model name. Press Enter to break the name across lines; leave empty to show the model name.": "Hiển thị trong bảng mô hình & giá thay cho tên mô hình. Nhấn Enter để tách tên thành nhiều dòng; để trống sẽ hiển thị tên mô hình.",
+    "NOWPayments Gateway": "Cổng NOWPayments",
+    "Accept cryptocurrency top-ups through the NOWPayments hosted invoice page. Prices are quoted in USD.": "Chấp nhận nạp tiền bằng tiền mã hóa qua trang hóa đơn do NOWPayments lưu trữ. Giá được tính bằng USD.",
+    "IPN Configuration:": "Cấu hình IPN:",
+    "IPN callback URL:": "URL callback IPN:",
+    "Generate the IPN secret under Settings → Payments in the NOWPayments dashboard and make sure your firewall lets NOWPayments reach the callback URL.": "Tạo IPN secret trong Settings → Payments trên bảng điều khiển NOWPayments và đảm bảo tường lửa cho phép NOWPayments truy cập URL callback.",
+    "NOWPayments Dashboard": "Bảng điều khiển NOWPayments",
+    "Enable NOWPayments": "Bật NOWPayments",
+    "Uses api-sandbox.nowpayments.io with the keys entered below. The sandbox is no longer kept in sync with production.": "Dùng api-sandbox.nowpayments.io với các khóa nhập bên dưới. Sandbox không còn được đồng bộ với môi trường production.",
+    "Leave blank unless rotating the key": "Để trống trừ khi thay khóa",
+    "IPN Secret": "IPN Secret",
+    "USD charged per credit unit": "USD tính cho mỗi đơn vị tín dụng",
+    "Minimum top-up": "Nạp tối thiểu",
+    "Crypto networks enforce their own minimums; keep this high enough to clear them after fees.": "Các mạng crypto có mức tối thiểu riêng; hãy đặt đủ cao để vượt qua sau khi trừ phí.",
+    "Fees paid by customer": "Phí do khách hàng trả",
+    "The customer covers network and service fees so the full USD amount settles. NOWPayments forces a fixed rate when this is on.": "Khách hàng chịu phí mạng và phí dịch vụ nên toàn bộ số tiền USD được thanh toán. Khi bật, NOWPayments buộc dùng tỷ giá cố định.",
+    "Fixed exchange rate": "Tỷ giá cố định",
+    "Locks the crypto amount for 10 minutes after the customer picks a coin; unpaid invoices then expire.": "Khóa số tiền crypto trong 10 phút sau khi khách chọn coin; hóa đơn chưa thanh toán sẽ hết hạn."
   }
 }

@@ -5579,6 +5579,23 @@
     "Rule label": "Rule label",
     "Price ($ per request)": "Price ($ per request)",
     "e.g. Gemini 3.1 Flash Image": "e.g. Gemini 3.1 Flash Image",
-    "Shown in the models & pricing table instead of the model name. Press Enter to break the name across lines; leave empty to show the model name.": "Shown in the models & pricing table instead of the model name. Press Enter to break the name across lines; leave empty to show the model name."
+    "Shown in the models & pricing table instead of the model name. Press Enter to break the name across lines; leave empty to show the model name.": "Shown in the models & pricing table instead of the model name. Press Enter to break the name across lines; leave empty to show the model name.",
+    "NOWPayments Gateway": "NOWPayments Gateway",
+    "Accept cryptocurrency top-ups through the NOWPayments hosted invoice page. Prices are quoted in USD.": "Accept cryptocurrency top-ups through the NOWPayments hosted invoice page. Prices are quoted in USD.",
+    "IPN Configuration:": "IPN Configuration:",
+    "IPN callback URL:": "IPN callback URL:",
+    "Generate the IPN secret under Settings → Payments in the NOWPayments dashboard and make sure your firewall lets NOWPayments reach the callback URL.": "Generate the IPN secret under Settings → Payments in the NOWPayments dashboard and make sure your firewall lets NOWPayments reach the callback URL.",
+    "NOWPayments Dashboard": "NOWPayments Dashboard",
+    "Enable NOWPayments": "Enable NOWPayments",
+    "Uses api-sandbox.nowpayments.io with the keys entered below. The sandbox is no longer kept in sync with production.": "Uses api-sandbox.nowpayments.io with the keys entered below. The sandbox is no longer kept in sync with production.",
+    "Leave blank unless rotating the key": "Leave blank unless rotating the key",
+    "IPN Secret": "IPN Secret",
+    "USD charged per credit unit": "USD charged per credit unit",
+    "Minimum top-up": "Minimum top-up",
+    "Crypto networks enforce their own minimums; keep this high enough to clear them after fees.": "Crypto networks enforce their own minimums; keep this high enough to clear them after fees.",
+    "Fees paid by customer": "Fees paid by customer",
+    "The customer covers network and service fees so the full USD amount settles. NOWPayments forces a fixed rate when this is on.": "The customer covers network and service fees so the full USD amount settles. NOWPayments forces a fixed rate when this is on.",
+    "Fixed exchange rate": "Fixed exchange rate",
+    "Locks the crypto amount for 10 minutes after the customer picks a coin; unpaid invoices then expire.": "Locks the crypto amount for 10 minutes after the customer picks a coin; unpaid invoices then expire."
   }
 }

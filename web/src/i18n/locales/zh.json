@@ -5579,6 +5579,23 @@
     "Rule label": "规则名称",
     "Price ($ per request)": "价格（$/次）",
     "e.g. Gemini 3.1 Flash Image": "如 Gemini 3.1 Flash Image",
-    "Shown in the models & pricing table instead of the model name. Press Enter to break the name across lines; leave empty to show the model name.": "在模型与价格表中替代模型名展示。按回车可将名称分行；留空则展示模型名。"
+    "Shown in the models & pricing table instead of the model name. Press Enter to break the name across lines; leave empty to show the model name.": "在模型与价格表中替代模型名展示。按回车可将名称分行；留空则展示模型名。",
+    "NOWPayments Gateway": "NOWPayments 网关",
+    "Accept cryptocurrency top-ups through the NOWPayments hosted invoice page. Prices are quoted in USD.": "通过 NOWPayments 托管收银台接受加密货币充值，价格以美元计价。",
+    "IPN Configuration:": "IPN 回调配置：",
+    "IPN callback URL:": "IPN 回调地址：",
+    "Generate the IPN secret under Settings → Payments in the NOWPayments dashboard and make sure your firewall lets NOWPayments reach the callback URL.": "在 NOWPayments 后台「Settings → Payments」生成 IPN Secret，并确保防火墙允许 NOWPayments 访问回调地址。",
+    "NOWPayments Dashboard": "NOWPayments 后台",
+    "Enable NOWPayments": "启用 NOWPayments",
+    "Uses api-sandbox.nowpayments.io with the keys entered below. The sandbox is no longer kept in sync with production.": "使用 api-sandbox.nowpayments.io 并沿用下方填写的密钥。沙箱环境已不再与生产环境保持同步。",
+    "Leave blank unless rotating the key": "除非更换密钥，否则留空",
+    "IPN Secret": "IPN 密钥",
+    "USD charged per credit unit": "每 1 单位额度收取的美元金额",
+    "Minimum top-up": "最低充值数量",
+    "Crypto networks enforce their own minimums; keep this high enough to clear them after fees.": "各加密网络有自己的最低入金限额，请把此值设得足够高，扣除手续费后仍能满足。",
+    "Fees paid by customer": "手续费由用户承担",
+    "The customer covers network and service fees so the full USD amount settles. NOWPayments forces a fixed rate when this is on.": "网络费与服务费由用户承担，我方按全额美元结算。开启后 NOWPayments 会强制使用固定汇率。",
+    "Fixed exchange rate": "固定汇率",
+    "Locks the crypto amount for 10 minutes after the customer picks a coin; unpaid invoices then expire.": "用户选币后锁定应付币量 10 分钟，超时未付款的发票将过期。"
   }
 }

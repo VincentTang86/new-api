@@ -5579,6 +5579,23 @@
     "Rule label": "Libellé de la règle",
     "Price ($ per request)": "Prix ($ par requête)",
     "e.g. Gemini 3.1 Flash Image": "p. ex. Gemini 3.1 Flash Image",
-    "Shown in the models & pricing table instead of the model name. Press Enter to break the name across lines; leave empty to show the model name.": "Affiché dans le tableau des modèles et tarifs à la place du nom du modèle. Appuyez sur Entrée pour répartir le nom sur plusieurs lignes ; laissez vide pour afficher le nom du modèle."
+    "Shown in the models & pricing table instead of the model name. Press Enter to break the name across lines; leave empty to show the model name.": "Affiché dans le tableau des modèles et tarifs à la place du nom du modèle. Appuyez sur Entrée pour répartir le nom sur plusieurs lignes ; laissez vide pour afficher le nom du modèle.",
+    "NOWPayments Gateway": "Passerelle NOWPayments",
+    "Accept cryptocurrency top-ups through the NOWPayments hosted invoice page. Prices are quoted in USD.": "Acceptez les recharges en cryptomonnaie via la page de facture hébergée par NOWPayments. Les prix sont exprimés en USD.",
+    "IPN Configuration:": "Configuration IPN :",
+    "IPN callback URL:": "URL de rappel IPN :",
+    "Generate the IPN secret under Settings → Payments in the NOWPayments dashboard and make sure your firewall lets NOWPayments reach the callback URL.": "Générez le secret IPN dans Settings → Payments du tableau de bord NOWPayments et vérifiez que votre pare-feu laisse NOWPayments atteindre l'URL de rappel.",
+    "NOWPayments Dashboard": "Tableau de bord NOWPayments",
+    "Enable NOWPayments": "Activer NOWPayments",
+    "Uses api-sandbox.nowpayments.io with the keys entered below. The sandbox is no longer kept in sync with production.": "Utilise api-sandbox.nowpayments.io avec les clés saisies ci-dessous. Le bac à sable n'est plus synchronisé avec la production.",
+    "Leave blank unless rotating the key": "Laissez vide sauf pour changer la clé",
+    "IPN Secret": "Secret IPN",
+    "USD charged per credit unit": "USD facturés par unité de crédit",
+    "Minimum top-up": "Recharge minimale",
+    "Crypto networks enforce their own minimums; keep this high enough to clear them after fees.": "Les réseaux crypto imposent leurs propres minimums ; fixez une valeur suffisante pour les dépasser une fois les frais déduits.",
+    "Fees paid by customer": "Frais payés par le client",
+    "The customer covers network and service fees so the full USD amount settles. NOWPayments forces a fixed rate when this is on.": "Le client prend en charge les frais de réseau et de service afin que le montant USD complet soit réglé. NOWPayments impose alors un taux fixe.",
+    "Fixed exchange rate": "Taux de change fixe",
+    "Locks the crypto amount for 10 minutes after the customer picks a coin; unpaid invoices then expire.": "Fige le montant en crypto pendant 10 minutes après le choix de la monnaie ; les factures impayées expirent ensuite."
   }
 }

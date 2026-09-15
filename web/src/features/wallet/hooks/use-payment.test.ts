@@ -41,9 +41,42 @@ describe('payment amount routing', () => {
         calls.push('pancake')
         return { success: true, data: '4' }
       },
+      nowPayments: async () => {
+        calls.push('nowpayments')
+        return { success: true, data: '5' }
+      },
     })
 
     expect(amount).toBe(18.75)
     expect(calls).toEqual(['waffo:120'])
+  })
+
+  test('uses the dedicated NOWPayments amount calculator', async () => {
+    const calls: string[] = []
+    const amount = await requestPaymentAmount(50, PAYMENT_TYPES.NOWPAYMENTS, {
+      regular: async () => {
+        calls.push('regular')
+        return { success: true, data: '1' }
+      },
+      stripe: async () => {
+        calls.push('stripe')
+        return { success: true, data: '2' }
+      },
+      waffo: async () => {
+        calls.push('waffo')
+        return { success: true, data: '3' }
+      },
+      waffoPancake: async () => {
+        calls.push('pancake')
+        return { success: true, data: '4' }
+      },
+      nowPayments: async (request) => {
+        calls.push(`nowpayments:${request.amount}`)
+        return { message: 'success', data: '50.00' }
+      },
+    })
+
+    expect(amount).toBe(50)
+    expect(calls).toEqual(['nowpayments:50'])
   })
 })

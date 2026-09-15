@@ -5579,6 +5579,23 @@
     "Rule label": "規則名稱",
     "Price ($ per request)": "價格（$/次）",
     "e.g. Gemini 3.1 Flash Image": "如 Gemini 3.1 Flash Image",
-    "Shown in the models & pricing table instead of the model name. Press Enter to break the name across lines; leave empty to show the model name.": "在模型與價格表中替代模型名展示。按 Enter 可將名稱分行；留空則顯示模型名。"
+    "Shown in the models & pricing table instead of the model name. Press Enter to break the name across lines; leave empty to show the model name.": "在模型與價格表中替代模型名展示。按 Enter 可將名稱分行；留空則顯示模型名。",
+    "NOWPayments Gateway": "NOWPayments 閘道",
+    "Accept cryptocurrency top-ups through the NOWPayments hosted invoice page. Prices are quoted in USD.": "透過 NOWPayments 託管收銀頁面接受加密貨幣儲值，價格以美元計價。",
+    "IPN Configuration:": "IPN 回呼設定：",
+    "IPN callback URL:": "IPN 回呼網址：",
+    "Generate the IPN secret under Settings → Payments in the NOWPayments dashboard and make sure your firewall lets NOWPayments reach the callback URL.": "在 NOWPayments 後台「Settings → Payments」產生 IPN Secret，並確認防火牆允許 NOWPayments 存取回呼網址。",
+    "NOWPayments Dashboard": "NOWPayments 後台",
+    "Enable NOWPayments": "啟用 NOWPayments",
+    "Uses api-sandbox.nowpayments.io with the keys entered below. The sandbox is no longer kept in sync with production.": "使用 api-sandbox.nowpayments.io 並沿用下方填寫的金鑰。沙箱環境已不再與正式環境同步。",
+    "Leave blank unless rotating the key": "除非更換金鑰，否則留空",
+    "IPN Secret": "IPN 密鑰",
+    "USD charged per credit unit": "每 1 單位額度收取的美元金額",
+    "Minimum top-up": "最低儲值數量",
+    "Crypto networks enforce their own minimums; keep this high enough to clear them after fees.": "各加密網路有自己的最低入金限額，請將此值設得足夠高，扣除手續費後仍能滿足。",
+    "Fees paid by customer": "手續費由使用者承擔",
+    "The customer covers network and service fees so the full USD amount settles. NOWPayments forces a fixed rate when this is on.": "網路費與服務費由使用者承擔，我方按全額美元結算。開啟後 NOWPayments 會強制使用固定匯率。",
+    "Fixed exchange rate": "固定匯率",
+    "Locks the crypto amount for 10 minutes after the customer picks a coin; unpaid invoices then expire.": "使用者選幣後鎖定應付幣量 10 分鐘，逾時未付款的發票將過期。"
   }
 }

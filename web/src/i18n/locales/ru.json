@@ -5579,6 +5579,23 @@
     "Rule label": "Название правила",
     "Price ($ per request)": "Цена ($ за запрос)",
     "e.g. Gemini 3.1 Flash Image": "напр. Gemini 3.1 Flash Image",
-    "Shown in the models & pricing table instead of the model name. Press Enter to break the name across lines; leave empty to show the model name.": "Показывается в таблице моделей и цен вместо имени модели. Нажмите Enter, чтобы разбить название на строки; оставьте пустым, чтобы показывалось имя модели."
+    "Shown in the models & pricing table instead of the model name. Press Enter to break the name across lines; leave empty to show the model name.": "Показывается в таблице моделей и цен вместо имени модели. Нажмите Enter, чтобы разбить название на строки; оставьте пустым, чтобы показывалось имя модели.",
+    "NOWPayments Gateway": "Шлюз NOWPayments",
+    "Accept cryptocurrency top-ups through the NOWPayments hosted invoice page. Prices are quoted in USD.": "Принимайте пополнения в криптовалюте через хостинговую страницу счёта NOWPayments. Цены указаны в USD.",
+    "IPN Configuration:": "Настройка IPN:",
+    "IPN callback URL:": "URL обратного вызова IPN:",
+    "Generate the IPN secret under Settings → Payments in the NOWPayments dashboard and make sure your firewall lets NOWPayments reach the callback URL.": "Сгенерируйте секрет IPN в разделе Settings → Payments панели NOWPayments и убедитесь, что брандмауэр пропускает запросы NOWPayments к URL обратного вызова.",
+    "NOWPayments Dashboard": "Панель NOWPayments",
+    "Enable NOWPayments": "Включить NOWPayments",
+    "Uses api-sandbox.nowpayments.io with the keys entered below. The sandbox is no longer kept in sync with production.": "Использует api-sandbox.nowpayments.io с ключами, введёнными ниже. Песочница больше не синхронизируется с продакшеном.",
+    "Leave blank unless rotating the key": "Оставьте пустым, если не меняете ключ",
+    "IPN Secret": "Секрет IPN",
+    "USD charged per credit unit": "USD за единицу кредита",
+    "Minimum top-up": "Минимальное пополнение",
+    "Crypto networks enforce their own minimums; keep this high enough to clear them after fees.": "Криптосети задают собственные минимумы; установите значение достаточно высоким, чтобы покрыть их после комиссий.",
+    "Fees paid by customer": "Комиссии оплачивает клиент",
+    "The customer covers network and service fees so the full USD amount settles. NOWPayments forces a fixed rate when this is on.": "Клиент оплачивает сетевые и сервисные комиссии, поэтому зачисляется полная сумма в USD. При включении NOWPayments принудительно использует фиксированный курс.",
+    "Fixed exchange rate": "Фиксированный курс",
+    "Locks the crypto amount for 10 minutes after the customer picks a coin; unpaid invoices then expire.": "Фиксирует сумму в криптовалюте на 10 минут после выбора монеты; неоплаченные счета затем истекают."
   }
 }
