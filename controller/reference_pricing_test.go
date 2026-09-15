@@ -42,6 +42,17 @@ func TestUpdateReferencePricingRejectsInvalidRows(t *testing.T) {
 		{"negative per_second price", `{"rows":[{"model_name":"m","source":"official","per_second":[{"size":"720p","price":-0.1}]}]}`},
 		{"duplicate per_second tier", `{"rows":[{"model_name":"m","source":"gateway","per_second":[{"size":"720p","price":0.1},{"size":"720p","price":0.2}]}]}`},
 		{"oversized per_second tier", `{"rows":[{"model_name":"m","source":"gateway","per_second":[{"size":"` + strings.Repeat("s", 33) + `","price":0.1}]}]}`},
+		{"unknown per_second condition", `{"rows":[{"model_name":"m","source":"gateway","per_second":[{"size":"720p","condition":"peak","price":0.1}]}]}`},
+		{"duplicate per_second cell", `{"rows":[{"model_name":"m","source":"gateway","per_second":[{"size":"720p","condition":"with_video","price":0.1},{"size":"720p","condition":"with_video","price":0.2}]}]}`},
+		{"zero per_token price", `{"rows":[{"model_name":"m","source":"gateway","per_token":[{"size":"720p","price":0}]}]}`},
+		{"unknown per_token condition", `{"rows":[{"model_name":"m","source":"official","per_token":[{"size":"720p","condition":"video:1080p","price":0.1}]}]}`},
+		{"video_grid on a non-gateway row", `{"rows":[{"model_name":"m","source":"official","video_grid":{"conditions":[],"resolutions":["720p"]}}]}`},
+		{"blank video_grid resolution", `{"rows":[{"model_name":"m","source":"gateway","video_grid":{"conditions":[],"resolutions":[" "]}}]}`},
+		{"duplicate video_grid resolution", `{"rows":[{"model_name":"m","source":"gateway","video_grid":{"conditions":[],"resolutions":["720p","720p"]}}]}`},
+		{"oversized video_grid resolution", `{"rows":[{"model_name":"m","source":"gateway","video_grid":{"conditions":[],"resolutions":["` + strings.Repeat("r", 33) + `"]}}]}`},
+		{"unknown video_grid condition", `{"rows":[{"model_name":"m","source":"gateway","video_grid":{"conditions":["none"],"resolutions":["720p"]}}]}`},
+		{"blank video_grid condition", `{"rows":[{"model_name":"m","source":"gateway","video_grid":{"conditions":[""],"resolutions":["720p"]}}]}`},
+		{"duplicate video_grid condition", `{"rows":[{"model_name":"m","source":"gateway","video_grid":{"conditions":["with_video","with_video"],"resolutions":["720p"]}}]}`},
 	}
 	// 条件数量上限是独立的拒绝分支，用例体积大，程序化构造
 	manyConditions := make([]string, 0, 65)
@@ -64,6 +75,18 @@ func TestUpdateReferencePricingRejectsInvalidRows(t *testing.T) {
 		name string
 		body string
 	}{"too many per_second tiers", `{"rows":[{"model_name":"m","source":"gateway","per_second":[` + strings.Join(manySizes, ",") + `]}]}`})
+	cases = append(cases, struct {
+		name string
+		body string
+	}{"too many per_token tiers", `{"rows":[{"model_name":"m","source":"gateway","per_token":[` + strings.Join(manySizes, ",") + `]}]}`})
+	manyResolutions := make([]string, 0, 17)
+	for i := 0; i < 17; i++ {
+		manyResolutions = append(manyResolutions, fmt.Sprintf(`"r%d"`, i))
+	}
+	cases = append(cases, struct {
+		name string
+		body string
+	}{"too many video_grid resolutions", `{"rows":[{"model_name":"m","source":"gateway","video_grid":{"conditions":[],"resolutions":[` + strings.Join(manyResolutions, ",") + `]}}]}`})
 
 	gin.SetMode(gin.TestMode)
 	for _, tc := range cases {

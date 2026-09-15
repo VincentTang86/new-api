@@ -66,8 +66,13 @@ type Pricing struct {
 	// VideoPrices 视频模型的网关按秒标价，与 ImagePrices 同源同口径（gateway 行的
 	// per_second），仅用于定价页 /Sec 视图展示；实际计费按上游回传的 token 数结算。
 	VideoPrices []ImageSizePrice `json:"video_prices,omitempty"`
-	// VideoRates 视频模型的计价档矩阵（输出分辨率 × 输入是否含视频），由 controller
-	// 按渠道适配器的内置档位表填充，仅用于定价页 /Token 视图展示。
+	// VideoTokenPrices 视频模型的网关每百万 token 标价（gateway 行的 per_token），
+	// 仅用于定价页 /Token 视图展示，管理员手填，不参与计费。
+	VideoTokenPrices []ImageSizePrice `json:"video_token_prices,omitempty"`
+	// VideoGrid 视频定价表的行列定义（gateway 行的 video_grid），/Sec 与 /Token 共用。
+	VideoGrid *VideoGrid `json:"video_grid,omitempty"`
+	// VideoRates 视频模型的计费档矩阵（输出分辨率 × 输入是否含视频），由 controller
+	// 按渠道适配器的内置档位表填充；对比价后台据此预填网关的每 token 价。
 	VideoRates     []VideoRate `json:"video_rates,omitempty"`
 	PricingVersion string      `json:"pricing_version,omitempty"`
 }
@@ -109,6 +114,8 @@ type ReferencePrice struct {
 	PerImageInput *float64 `json:"per_image_input,omitempty"`
 	// PerSecond 该来源的按秒标价，视频模型的定价页 /Sec 视图消费。
 	PerSecond []ImageSizePrice `json:"per_second,omitempty"`
+	// PerToken 该来源的每百万 token 标价，视频模型的定价页 /Token 视图消费。
+	PerToken []ImageSizePrice `json:"per_token,omitempty"`
 }
 
 type PricingVendor struct {
@@ -445,8 +452,9 @@ func updatePricing() {
 		}
 	}
 
-	// 外部对比价：模型名 -> 来源 -> 价格
+	// 外部对比价：模型名 -> 来源 -> 价格；视频网格定义只存在 gateway 行上，单独拎出
 	referencePriceMap := make(map[string]map[string]*ReferencePrice)
+	videoGridByModel := make(map[string]*VideoGrid)
 	if referenceRows, err := GetAllReferencePricing(); err != nil {
 		common.SysError("failed to load reference pricing: " + err.Error())
 	} else {
@@ -471,6 +479,10 @@ func updatePricing() {
 				PerImage:      row.PerImageSizes,
 				PerImageInput: row.PerImageInput,
 				PerSecond:     row.PerSecondTiers,
+				PerToken:      row.PerTokenTiers,
+			}
+			if row.Source == ReferencePricingSourceGateway {
+				videoGridByModel[row.ModelName] = row.VideoGridDef
 			}
 		}
 	}
@@ -560,6 +572,8 @@ func updatePricing() {
 			if gateway := bySource[ReferencePricingSourceGateway]; gateway != nil {
 				pricing.ImagePrices = gateway.PerImage
 				pricing.VideoPrices = gateway.PerSecond
+				pricing.VideoTokenPrices = gateway.PerToken
+				pricing.VideoGrid = videoGridByModel[model]
 				if gateway.PerImageInput != nil {
 					pricing.ImageInputPrice = gateway.PerImageInput
 				}

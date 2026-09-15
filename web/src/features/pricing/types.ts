@@ -84,10 +84,17 @@ export type PricingModel = {
    */
   video_prices?: ImageSizePrice[]
   /**
+   * The gateway's own per-token list prices for a video model (USD per 1M
+   * tokens at group ratio 1), entered beside `video_prices`. Display only.
+   */
+  video_token_prices?: ImageSizePrice[]
+  /** The admin-defined layout the video model's /Sec and /Token grids share. */
+  video_grid?: VideoGrid
+  /**
    * The video model's billing tiers — output resolution crossed with whether
    * the input carries a video. Each ratio multiplies the model's base rate,
-   * and is read straight off the billing lookup, so the drawer's /Token matrix
-   * states what the request would actually be charged.
+   * and is read straight off the billing lookup; the benchmark-price settings
+   * offer them as a starting point for the gateway's per-token prices.
    */
   video_rates?: VideoRate[]
   /** Pricing version returned by backend, useful for cache busting */
@@ -125,11 +132,27 @@ export type ReferencePriceLanes = {
 /**
  * One listed price of a media model: a tier label and a USD price. Image
  * models list it per image (the label is a size/quality), video models per
- * second of video (the label is an output resolution).
+ * second of video or per 1M tokens (the label is an output resolution), each
+ * optionally stated under a rate condition.
  */
 export type ImageSizePrice = {
   size: string
   price: number
+  /** The rate condition the price is stated under; absent or '' when none. */
+  condition?: string
+}
+
+/** The conditions a video model's listed prices may split on. */
+export type VideoRateCondition = 'without_video' | 'with_video'
+
+/**
+ * The admin-defined layout of a video model's pricing grid: which rate
+ * conditions each service splits into (none hides the column) and the
+ * resolution columns, shared by the /Sec and /Token views and all sources.
+ */
+export type VideoGrid = {
+  conditions: VideoRateCondition[]
+  resolutions: string[]
 }
 
 /**
@@ -160,6 +183,8 @@ export type ReferencePrice = ReferencePriceLanes & {
   per_image_input?: number | null
   /** The source's per-second list prices for a video model, in display order. */
   per_second?: ImageSizePrice[]
+  /** The source's per-1M-token list prices for a video model, in display order. */
+  per_token?: ImageSizePrice[]
 }
 
 /** Input/output modalities supported by a model. */

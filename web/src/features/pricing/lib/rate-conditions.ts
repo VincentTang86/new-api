@@ -16,12 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import type {
-  PriceType,
-  PricingModel,
-  ReferencePriceLanes,
-  VideoRate,
-} from '../types'
+import type { PriceType, PricingModel, ReferencePriceLanes } from '../types'
 import {
   normalizeTierLabel,
   type ParsedTier,
@@ -321,28 +316,12 @@ export function rateConditionKey(
   return tierPart || variantPart
 }
 
-/** The tier key the backend gives a video model's base rate. */
-const VIDEO_BASE_RATE_KEY = 'base'
-
-/**
- * Storage key for one video billing tier's reference price. The base tier
- * (lowest resolutions, no video input) is the model's standard rate, so it
- * maps to the generic key — the same default reference price the landing
- * savings column compares against — and only the surcharged tiers get their
- * own keys. The `video:` prefix keeps them from colliding with an expression
- * tier's label.
- */
-export function videoRateConditionKey(rate: VideoRate): string {
-  if (rate.key === VIDEO_BASE_RATE_KEY) return ''
-  return `video:${rate.key}`
-}
-
 /**
  * Every rate condition the model prices under, in the order the pricing table
- * renders them. A video model's conditions are its resolution × video-input
- * tiers; every other model's come from its billing expression. A model with
- * neither yields the single generic condition (key ''), which reference
- * pricing resolves to the default price.
+ * renders them, derived from its billing expression. A model without tiers
+ * yields the single generic condition (key ''), which reference pricing
+ * resolves to the default price. A video model's listed prices split by its
+ * admin-defined grid instead (see lib/video-grid), not by conditions here.
  */
 export function getRateConditions(
   model: PricingModel,
@@ -351,19 +330,6 @@ export function getRateConditions(
   const tiers = isDynamicPricingModel(model)
     ? getDynamicPricingTiers(model)
     : []
-  // Seedance and friends price by resolution, not by a billing expression, so
-  // the two never coexist today; should a video model ever also carry tiers,
-  // its expression wins and the resolution matrix is not offered.
-  if (tiers.length === 0 && model.video_rates?.length) {
-    return model.video_rates.map((rate) => ({
-      key: videoRateConditionKey(rate),
-      label: `${rate.resolution} · ${
-        rate.with_video ? t('Input with video') : t('Input without video')
-      }`,
-      tier: STANDARD_RATE_CONDITION,
-      variant: null,
-    }))
-  }
   const timeVariants = getTimeRateVariants(model)
   const baseTiers = tiers.length > 0 ? tiers : [STANDARD_RATE_CONDITION]
   // The condition a tier bills under states more than its name does, so it

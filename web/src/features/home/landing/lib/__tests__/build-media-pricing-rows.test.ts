@@ -211,6 +211,33 @@ describe('buildMediaPricingRows for video', () => {
     expect(row.benchmarkPrice).toBe('$0.20')
   })
 
+  // A grid split by rate condition is read under its first condition on both
+  // sides: the benchmark must be the same cell, not merely the same size.
+  test('a grid split by condition compares the same condition, not just the same size', () => {
+    const [row] = buildVideo(
+      videoModel({
+        video_grid: {
+          conditions: ['without_video', 'with_video'],
+          resolutions: ['480p'],
+        },
+        video_prices: [
+          { size: '480p', condition: 'without_video', price: 0.04 },
+          { size: '480p', condition: 'with_video', price: 0.08 },
+        ],
+        official_price: {
+          per_second: [
+            { size: '480p', condition: 'with_video', price: 0.1 },
+            { size: '480p', condition: 'without_video', price: 0.05 },
+          ],
+        },
+      })
+    )
+    expect(row.size).toBe('480p')
+    expect(row.frPrice).toBe('$0.04')
+    expect(row.benchmarkPrice).toBe('$0.05')
+    expect(row.savings).toBe('20%')
+  })
+
   // A per-call video model prices the whole clip. Quoting that as a per-second
   // price would understate it by however many seconds the clip runs, so the
   // row must carry the 'video' unit and no size label.

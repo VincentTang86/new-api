@@ -66,11 +66,12 @@ import { cn } from '@/lib/utils'
 
 import { isImageModel, isVideoModel, parseTags } from '../lib/model-helpers'
 import { hasTokenPricing } from '../lib/rate-conditions'
+import { hasVideoTokenPrices } from '../lib/video-grid'
 import type { ModelCapability, PricingModel, TokenUnit } from '../types'
 import { ModelBillingModeBadge } from './model-billing-mode-badge'
 import { ModelDetailsApi } from './model-details-api'
 import { ModelDetailsMediaPricingTable } from './model-details-media-pricing-table'
-import { ModelDetailsVideoTokenTable } from './model-details-video-token-table'
+import { ModelDetailsVideoPricingTable } from './model-details-video-pricing-table'
 import { ModelDetailsPerformance } from './model-details-performance'
 import {
   ModelDetailsPricingNotes,
@@ -647,8 +648,9 @@ export interface ModelDetailsContentProps {
 type MediaPriceUnit = 'pic' | 'sec' | 'token'
 
 /**
- * The pricing table the drawer shows for the selected unit: the media list
- * prices, the video resolution matrix, or the ordinary per-token table.
+ * The pricing table the drawer shows for the selected unit: the image list
+ * prices, the video grid (per second or per token), or the ordinary per-token
+ * table.
  */
 function PricingTableForUnit(props: {
   model: PricingModel
@@ -659,22 +661,32 @@ function PricingTableForUnit(props: {
   listedUnit?: 'image' | 'second'
   videoMatrix: boolean
 }) {
-  if (props.listedUnit) {
+  if (props.listedUnit === 'second') {
+    return (
+      <ModelDetailsVideoPricingTable
+        model={props.model}
+        groupRatio={props.groupRatio}
+        usableGroup={props.usableGroup}
+        unit='second'
+      />
+    )
+  }
+  if (props.listedUnit === 'image') {
     return (
       <ModelDetailsMediaPricingTable
         model={props.model}
         groupRatio={props.groupRatio}
         usableGroup={props.usableGroup}
-        unit={props.listedUnit}
       />
     )
   }
   if (props.videoMatrix) {
     return (
-      <ModelDetailsVideoTokenTable
+      <ModelDetailsVideoPricingTable
         model={props.model}
         groupRatio={props.groupRatio}
         usableGroup={props.usableGroup}
+        unit='token'
         tokenUnit={props.tokenUnit}
       />
     )
@@ -698,14 +710,17 @@ export function ModelDetailsContent(props: ModelDetailsContentProps) {
   // A model priced per output only has no per-token rate to show: the /Token
   // switch stays in place but greyed out, so the unit reads as deliberately
   // unavailable rather than missing, and the table stays on the listed unit.
-  const tokenPriced = hasTokenPricing(props.model)
+  const tokenPriced =
+    hasTokenPricing(props.model) ||
+    (videoModel && hasVideoTokenPrices(props.model))
   const [priceUnit, setPriceUnit] = useState<MediaPriceUnit>(listedUnit)
   const activeUnit: MediaPriceUnit = tokenPriced ? priceUnit : listedUnit
   const showListedUnit = mediaModel && activeUnit !== 'token'
-  // Only a model with real resolution tiers earns the two-row matrix; a video
-  // model billed at one flat rate reads better in the ordinary token table.
+  // Only a video model with admin-entered per-token prices (or at least a
+  // grid layout) earns the grid; without them the ordinary token table reads
+  // better than an empty one.
   const showVideoMatrix =
-    videoModel && activeUnit === 'token' && Boolean(props.model.video_rates?.length)
+    videoModel && activeUnit === 'token' && hasVideoTokenPrices(props.model)
 
   const mediaUnit: 'image' | 'second' = videoModel ? 'second' : 'image'
   const unavailableHint = videoModel

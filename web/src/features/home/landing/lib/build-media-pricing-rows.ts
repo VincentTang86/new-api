@@ -22,6 +22,10 @@ import {
   isImageModel,
   isVideoModel,
 } from '@/features/pricing/lib/model-helpers'
+import {
+  pricesUnder,
+  resolveVideoGrid,
+} from '@/features/pricing/lib/video-grid'
 import type { ImageSizePrice, PricingModel } from '@/features/pricing/types'
 
 import type { MediaPricingRow, PricingBenchmark } from '../types'
@@ -67,7 +71,8 @@ function cheapest(
  * back to its per-call price. The benchmark column states the same tier's
  * price from the selected source, so the saving compares like with like —
  * when the source does not list that tier, its cheapest price is shown but no
- * saving is claimed.
+ * saving is claimed. A video model whose grid splits by rate condition is
+ * read under its first condition on both sides, for the same reason.
  *
  * Each row carries the unit its prices are stated in. A per-call video model
  * (MiniMax-H3, grok-imagine-video) prices the whole clip, so its row reads
@@ -94,8 +99,14 @@ export function buildMediaPricingRows(
         vendorLabel: model.vendor_name || displayName || model.model_name,
       }
 
+      const condition = isVideo
+        ? (resolveVideoGrid(model).conditions[0] ?? '')
+        : ''
       const listed = cheapest(
-        isVideo ? model.video_prices : model.image_prices
+        pricesUnder(
+          isVideo ? model.video_prices : model.image_prices,
+          condition
+        )
       )
       let size = ''
       let unit: MediaPricingRow['unit'] = isVideo ? 'second' : 'image'
@@ -115,8 +126,10 @@ export function buildMediaPricingRows(
         params.benchmark === 'official'
           ? model.official_price
           : model.openrouter_price
-      const benchmarkList =
-        (isVideo ? source?.per_second : source?.per_image) ?? []
+      const benchmarkList = pricesUnder(
+        isVideo ? source?.per_second : source?.per_image,
+        condition
+      )
       const sameSize = size
         ? benchmarkList.find((entry) => entry.size === size)
         : cheapest(benchmarkList)

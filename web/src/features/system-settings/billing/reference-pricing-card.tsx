@@ -18,7 +18,7 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Code2, Eye, Pencil, Plus, Trash2, X } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import * as z from 'zod'
@@ -55,16 +55,26 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { usePricingData } from '@/features/pricing/hooks'
 import {
   isImageModel,
   isVideoModel,
 } from '@/features/pricing/lib/model-helpers'
+import { tokenPriceUSD } from '@/features/pricing/lib/price'
 import {
   getRateConditions,
   getReferenceLaneKeys,
 } from '@/features/pricing/lib/rate-conditions'
-import type { PricingModel } from '@/features/pricing/types'
+import {
+  isVideoRateCondition,
+  VIDEO_RATE_CONDITION_LABELS,
+  VIDEO_RATE_CONDITIONS,
+} from '@/features/pricing/lib/video-grid'
+import type {
+  PricingModel,
+  VideoRateCondition,
+} from '@/features/pricing/types'
 
 import {
   deleteReferencePricing,
@@ -110,14 +120,18 @@ const PER_UNIT_SOURCES: ReferencePricingSource[] = [
 const MAX_PRICE_TIERS = 16
 
 /**
- * Columns a video model's per-second matrix opens with. 480p and 720p bill at
- * the same rate per token but differ 2.25x per second (they differ in pixel
- * count), so they are separate columns; admins can add or drop tiers freely.
+ * Columns a video model's grid opens with, as the design lays them out. 480p
+ * and 720p bill alike per token but differ 2.25x per second (they differ in
+ * pixel count), so an admin who wants exact per-second figures splits them
+ * into two columns; the labels are free text either way.
  */
-const DEFAULT_PER_SECOND_TIERS = ['480P', '720P', '1080P', '4K']
+const DEFAULT_VIDEO_RESOLUTIONS = ['480p / 720p', '1080p', '4K']
 
 /** Draft key for the default (unconditioned) price row of the matrix. */
 const DEFAULT_CONDITION_KEY = ''
+
+/** Toggle value that stands for "no rate condition" in the video grid. */
+const NO_CONDITION_TOGGLE = 'none'
 
 const priceSchema = z.number().positive().max(1_000_000)
 
@@ -134,13 +148,30 @@ const laneObjectSchema = z
   })
   .strict()
 
+// A video grid prices every column under each condition, so the list may hold
+// up to columns × conditions entries.
 const perUnitSchema = z
   .array(
     z
-      .object({ size: z.string().trim().min(1).max(32), price: priceSchema })
+      .object({
+        size: z.string().trim().min(1).max(32),
+        price: priceSchema,
+        condition: z.enum(VIDEO_RATE_CONDITIONS).optional(),
+      })
       .strict()
   )
-  .max(MAX_PRICE_TIERS)
+  .max(MAX_PRICE_TIERS * VIDEO_RATE_CONDITIONS.length)
+
+const videoGridSchema = z
+  .object({
+    conditions: z
+      .array(z.enum(VIDEO_RATE_CONDITIONS))
+      .max(VIDEO_RATE_CONDITIONS.length),
+    resolutions: z
+      .array(z.string().trim().min(1).max(32))
+      .max(MAX_PRICE_TIERS),
+  })
+  .strict()
 
 const sourceObjectSchema = laneObjectSchema
   .extend({
@@ -150,6 +181,7 @@ const sourceObjectSchema = laneObjectSchema
     per_image: perUnitSchema.optional(),
     per_image_input: priceSchema.optional(),
     per_second: perUnitSchema.optional(),
+    per_token: perUnitSchema.optional(),
   })
   .strict()
 
@@ -158,6 +190,8 @@ const gatewayObjectSchema = z
     per_image: perUnitSchema.optional(),
     per_image_input: priceSchema.optional(),
     per_second: perUnitSchema.optional(),
+    per_token: perUnitSchema.optional(),
+    video_grid: videoGridSchema.optional(),
   })
   .strict()
 
@@ -183,31 +217,74 @@ type LaneDraft = Record<LaneKey, string>
 type DraftValues = Record<LaneSource, Record<string, LaneDraft>>
 
 /**
- * One column of a per-unit price matrix as typed: the tier label and each
- * source's price text (empty when the source has no price for that tier).
- * The id keeps a column's identity while its label is still being typed.
+ * One column of a per-unit price matrix as typed: the tier label. The id
+ * keeps a column's identity while its label is still being typed.
  */
 type PerUnitColumn = {
   id: number
   size: string
-  prices: Record<ReferencePricingSource, string>
 }
 
-type PerUnitDraft = {
+/** Key of one price box: source × condition ('' when unconditioned) × column. */
+const cellKey = (
+  source: ReferencePricingSource,
+  condition: string,
+  columnId: number
+) => `${source}|${condition}|${columnId}`
+
+/** An image model's per-image matrix: sizes across, one row per source. */
+type PerImageDraft = {
   columns: PerUnitColumn[]
   nextId: number
+  /** Price text per cell, keyed by `cellKey`; '' when the source has none. */
+  cells: Record<string, string>
   /** Each source's charge per input image as typed ('' when none). */
   inputPrices: Record<ReferencePricingSource, string>
+}
+
+/**
+ * A video model's grid: one set of resolution columns and rate conditions,
+ * priced twice over — per second and per 1M tokens — by every source.
+ */
+type VideoDraft = {
+  columns: PerUnitColumn[]
+  nextId: number
+  conditions: VideoRateCondition[]
+  perSecond: Record<string, string>
+  perToken: Record<string, string>
 }
 
 type DialogState = {
   modelName: string
   isNew: boolean
   values: DraftValues
-  /** Per-image prices (image models) and per-second prices (video models). */
-  perImage: PerUnitDraft
-  perSecond: PerUnitDraft
+  perImage: PerImageDraft
+  video: VideoDraft
 }
+
+type ColumnDraft = { columns: PerUnitColumn[]; nextId: number }
+
+const addColumn = <T extends ColumnDraft>(prev: T): T => ({
+  ...prev,
+  columns: [...prev.columns, { id: prev.nextId, size: '' }],
+  nextId: prev.nextId + 1,
+})
+
+const removeColumn = <T extends ColumnDraft>(prev: T, id: number): T => ({
+  ...prev,
+  columns: prev.columns.filter((column) => column.id !== id),
+})
+
+const relabelColumn = <T extends ColumnDraft>(
+  prev: T,
+  id: number,
+  size: string
+): T => ({
+  ...prev,
+  columns: prev.columns.map((column) =>
+    column.id === id ? { ...column, size } : column
+  ),
+})
 
 const emptyLaneDraft = (): LaneDraft => ({
   input: '',
@@ -246,49 +323,88 @@ const draftFromRows = (
 }
 
 /**
- * Columns are the union of every source's tier labels, the gateway's order
+ * Columns are the union of every source's size labels, the gateway's order
  * first (it is the order the drawer renders), then whatever the external
- * sources add. `seedTiers` supplies the columns a model type opens with when
- * nothing is configured yet, so an admin starts from the usual tiers rather
- * than a blank matrix.
+ * sources add.
  */
-const perUnitDraftFromRows = (
-  rows: Partial<Record<ReferencePricingSource, ReferencePricingRow>>,
-  field: 'per_image' | 'per_second',
-  seedTiers: readonly string[] = []
-): PerUnitDraft => {
+const perImageDraftFromRows = (
+  rows: Partial<Record<ReferencePricingSource, ReferencePricingRow>>
+): PerImageDraft => {
   const columns: PerUnitColumn[] = []
+  const cells: Record<string, string> = {}
   for (const source of PER_UNIT_SOURCES) {
-    for (const entry of rows[source]?.[field] ?? []) {
+    for (const entry of rows[source]?.per_image ?? []) {
       let column = columns.find((item) => item.size === entry.size)
       if (!column) {
-        column = {
-          id: columns.length,
-          size: entry.size,
-          prices: { gateway: '', official: '', openrouter: '' },
-        }
+        column = { id: columns.length, size: entry.size }
         columns.push(column)
       }
-      column.prices[source] = String(entry.price)
+      cells[cellKey(source, '', column.id)] = String(entry.price)
     }
   }
   const inputPrices = { gateway: '', official: '', openrouter: '' }
-  if (field === 'per_image') {
-    for (const source of PER_UNIT_SOURCES) {
-      const price = rows[source]?.per_image_input
-      if (typeof price === 'number') inputPrices[source] = String(price)
+  for (const source of PER_UNIT_SOURCES) {
+    const price = rows[source]?.per_image_input
+    if (typeof price === 'number') inputPrices[source] = String(price)
+  }
+  return { columns, nextId: columns.length, cells, inputPrices }
+}
+
+/**
+ * The stored grid defines the columns and conditions. A model priced before
+ * grids existed derives them from its stored prices, the gateway's order
+ * first, and a video model with nothing stored opens on the usual resolutions
+ * so the admin fills prices rather than inventing labels. A price stored
+ * outside the grid still gets its column and condition, so nothing on file
+ * is hidden from the editor.
+ */
+const videoDraftFromRows = (
+  rows: Partial<Record<ReferencePricingSource, ReferencePricingRow>>,
+  seedResolutions: readonly string[]
+): VideoDraft => {
+  const grid = rows.gateway?.video_grid
+  const columns: PerUnitColumn[] = (grid?.resolutions ?? []).map(
+    (size, id) => ({ id, size })
+  )
+  const conditions = new Set(
+    (grid?.conditions ?? []).filter(isVideoRateCondition)
+  )
+  const perSecond: Record<string, string> = {}
+  const perToken: Record<string, string> = {}
+  for (const source of PER_UNIT_SOURCES) {
+    for (const [field, cells] of [
+      ['per_second', perSecond],
+      ['per_token', perToken],
+    ] as const) {
+      for (const entry of rows[source]?.[field] ?? []) {
+        const condition = entry.condition ?? ''
+        if (condition !== '') {
+          if (!isVideoRateCondition(condition)) continue
+          conditions.add(condition)
+        }
+        let column = columns.find((item) => item.size === entry.size)
+        if (!column) {
+          column = { id: columns.length, size: entry.size }
+          columns.push(column)
+        }
+        cells[cellKey(source, condition, column.id)] = String(entry.price)
+      }
     }
   }
   if (columns.length === 0) {
-    for (const tier of seedTiers) {
-      columns.push({
-        id: columns.length,
-        size: tier,
-        prices: { gateway: '', official: '', openrouter: '' },
-      })
+    for (const size of seedResolutions) {
+      columns.push({ id: columns.length, size })
     }
   }
-  return { columns, nextId: columns.length, inputPrices }
+  return {
+    columns,
+    nextId: columns.length,
+    conditions: VIDEO_RATE_CONDITIONS.filter((condition) =>
+      conditions.has(condition)
+    ),
+    perSecond,
+    perToken,
+  }
 }
 
 /**
@@ -296,7 +412,7 @@ const perUnitDraftFromRows = (
  * the text is not a positive price.
  */
 const parsePerUnitInput = (
-  draft: PerUnitDraft,
+  draft: PerImageDraft,
   source: ReferencePricingSource
 ): number | null | undefined => {
   const raw = draft.inputPrices[source].trim()
@@ -307,27 +423,36 @@ const parsePerUnitInput = (
 }
 
 /**
- * The per-unit list a source submits: every column where it has a price.
- * Null flags a price that is not a positive number, or a blank/duplicate tier
- * label that still carries a price.
+ * The per-unit list a source submits: every column where it has a price,
+ * under each condition the grid splits on (a single unconditioned row when
+ * none). Null flags a price that is not a positive number, or a blank or
+ * duplicate column label that still carries a price.
  */
-const parsePerUnitDraft = (
-  draft: PerUnitDraft,
+const parseGridCells = (
+  columns: readonly PerUnitColumn[],
+  conditions: readonly VideoRateCondition[],
+  cells: Record<string, string>,
   source: ReferencePricingSource
 ): ReferencePricingImageSize[] | null => {
   const entries: ReferencePricingImageSize[] = []
   const seen = new Set<string>()
-  for (const column of draft.columns) {
-    const raw = column.prices[source].trim()
-    if (!raw) continue
+  const rowConditions: readonly string[] =
+    conditions.length > 0 ? conditions : ['']
+  for (const column of columns) {
     const size = column.size.trim()
-    if (!size || size.length > 32 || seen.has(size)) return null
-    seen.add(size)
-    const price = Number(raw)
-    if (!Number.isFinite(price) || price <= 0 || price > 1_000_000) {
-      return null
+    let priced = false
+    for (const condition of rowConditions) {
+      const raw = (cells[cellKey(source, condition, column.id)] ?? '').trim()
+      if (!raw) continue
+      if (!size || size.length > 32 || seen.has(size)) return null
+      const price = Number(raw)
+      if (!Number.isFinite(price) || price <= 0 || price > 1_000_000) {
+        return null
+      }
+      entries.push({ size, price, ...(condition ? { condition } : {}) })
+      priced = true
     }
-    entries.push({ size, price })
+    if (priced) seen.add(size)
   }
   return entries
 }
@@ -335,71 +460,45 @@ const parsePerUnitDraft = (
 /**
  * One per-unit price matrix: sources down the side, tiers across the top, and
  * a price box in every cell. Image models price by size and add a fixed
- * "input image" column; video models price by output resolution and have no
- * such column. The tier labels are free text so an admin can follow whatever
+ * "input image" column; video models price by output resolution and, when
+ * their grid splits on rate conditions, one row per condition under each
+ * source. The tier labels are free text so an admin can follow whatever
  * tiers the vendor actually publishes.
  */
 function PerUnitPriceMatrix(props: {
-  draft: PerUnitDraft
-  onChange: (update: (prev: PerUnitDraft) => PerUnitDraft) => void
+  columns: PerUnitColumn[]
+  /** Rows under each source; empty renders a single unlabelled row. */
+  conditions: readonly VideoRateCondition[]
+  cellValue: (
+    source: ReferencePricingSource,
+    condition: string,
+    columnId: number
+  ) => string
+  onCellChange: (
+    source: ReferencePricingSource,
+    condition: string,
+    columnId: number,
+    value: string
+  ) => void
+  onAddColumn: () => void
+  onRemoveColumn: (id: number) => void
+  onColumnLabelChange: (id: number, value: string) => void
+  /** The fixed input-image column (image models): each source's charge as typed. */
+  inputPrices?: Record<ReferencePricingSource, string>
+  onInputPriceChange?: (source: ReferencePricingSource, value: string) => void
+  /** Rendered beside the add-column button. */
+  action?: ReactNode
   label: string
   description: string
   addLabel: string
   tierLabel: string
   removeLabel: string
-  showInputImage?: boolean
   sourceLabel: (source: ReferencePricingSource) => string
   t: (key: string) => string
 }) {
-  const { draft, onChange, sourceLabel, t } = props
-
-  const addColumn = () =>
-    onChange((prev) => ({
-      ...prev,
-      columns: [
-        ...prev.columns,
-        {
-          id: prev.nextId,
-          size: '',
-          prices: { gateway: '', official: '', openrouter: '' },
-        },
-      ],
-      nextId: prev.nextId + 1,
-    }))
-
-  const removeColumn = (id: number) =>
-    onChange((prev) => ({
-      ...prev,
-      columns: prev.columns.filter((column) => column.id !== id),
-    }))
-
-  const setColumnLabel = (id: number, value: string) =>
-    onChange((prev) => ({
-      ...prev,
-      columns: prev.columns.map((column) =>
-        column.id === id ? { ...column, size: value } : column
-      ),
-    }))
-
-  const setInputPrice = (source: ReferencePricingSource, value: string) =>
-    onChange((prev) => ({
-      ...prev,
-      inputPrices: { ...prev.inputPrices, [source]: value },
-    }))
-
-  const setPrice = (
-    source: ReferencePricingSource,
-    id: number,
-    value: string
-  ) =>
-    onChange((prev) => ({
-      ...prev,
-      columns: prev.columns.map((column) =>
-        column.id === id
-          ? { ...column, prices: { ...column.prices, [source]: value } }
-          : column
-      ),
-    }))
+  const { columns, sourceLabel, t } = props
+  const rowConditions: readonly (VideoRateCondition | '')[] =
+    props.conditions.length > 0 ? props.conditions : ['']
 
   return (
     <div className='flex flex-col gap-2'>
@@ -408,30 +507,38 @@ function PerUnitPriceMatrix(props: {
           <Label>{props.label}</Label>
           <p className='text-muted-foreground text-xs'>{props.description}</p>
         </div>
-        <Button
-          type='button'
-          variant='outline'
-          size='sm'
-          onClick={addColumn}
-          disabled={draft.columns.length >= MAX_PRICE_TIERS}
-        >
-          <Plus data-icon='inline-start' />
-          {props.addLabel}
-        </Button>
+        <div className='flex items-center gap-2'>
+          {props.action}
+          <Button
+            type='button'
+            variant='outline'
+            size='sm'
+            onClick={props.onAddColumn}
+            disabled={columns.length >= MAX_PRICE_TIERS}
+          >
+            <Plus data-icon='inline-start' />
+            {props.addLabel}
+          </Button>
+        </div>
       </div>
       <div className='overflow-x-auto rounded-md border'>
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead className='whitespace-nowrap'>{t('Source')}</TableHead>
+              {props.conditions.length > 0 && (
+                <TableHead className='whitespace-nowrap'>
+                  {t('Rate Conditions')}
+                </TableHead>
+              )}
               {/* The input-image column is fixed: xAI-style media input is one
                * charge per attached image, not a size tier. */}
-              {props.showInputImage && (
+              {props.inputPrices && (
                 <TableHead className='min-w-32 whitespace-nowrap'>
                   {t('Input image')}
                 </TableHead>
               )}
-              {draft.columns.map((column) => (
+              {columns.map((column) => (
                 <TableHead key={column.id} className='min-w-32'>
                   <div className='flex items-center gap-1'>
                     <Input
@@ -440,7 +547,7 @@ function PerUnitPriceMatrix(props: {
                       className='h-8 font-mono'
                       value={column.size}
                       onChange={(event) =>
-                        setColumnLabel(column.id, event.target.value)
+                        props.onColumnLabelChange(column.id, event.target.value)
                       }
                     />
                     <Button
@@ -448,7 +555,7 @@ function PerUnitPriceMatrix(props: {
                       variant='ghost'
                       size='icon-sm'
                       aria-label={props.removeLabel}
-                      onClick={() => removeColumn(column.id)}
+                      onClick={() => props.onRemoveColumn(column.id)}
                     >
                       <X />
                     </Button>
@@ -458,45 +565,73 @@ function PerUnitPriceMatrix(props: {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {PER_UNIT_SOURCES.map((source) => (
-              <TableRow key={source}>
-                <TableCell className='text-xs font-medium whitespace-nowrap'>
-                  {sourceLabel(source)}
-                </TableCell>
-                {props.showInputImage && (
-                  <TableCell>
-                    <Input
-                      aria-label={`${sourceLabel(source)} · ${t('Input image')}`}
-                      type='number'
-                      min={0}
-                      step='any'
-                      inputMode='decimal'
-                      className='h-8'
-                      value={draft.inputPrices[source]}
-                      onChange={(event) =>
-                        setInputPrice(source, event.target.value)
-                      }
-                    />
-                  </TableCell>
-                )}
-                {draft.columns.map((column) => (
-                  <TableCell key={column.id}>
-                    <Input
-                      aria-label={`${sourceLabel(source)} · ${column.size || props.tierLabel}`}
-                      type='number'
-                      min={0}
-                      step='any'
-                      inputMode='decimal'
-                      className='h-8'
-                      value={column.prices[source]}
-                      onChange={(event) =>
-                        setPrice(source, column.id, event.target.value)
-                      }
-                    />
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))}
+            {PER_UNIT_SOURCES.map((source) =>
+              rowConditions.map((condition, index) => {
+                const conditionLabel = condition
+                  ? t(VIDEO_RATE_CONDITION_LABELS[condition])
+                  : ''
+                const rowLabel = conditionLabel
+                  ? `${sourceLabel(source)} · ${conditionLabel}`
+                  : sourceLabel(source)
+                return (
+                  <TableRow key={`${source}-${condition}`}>
+                    {index === 0 && (
+                      <TableCell
+                        rowSpan={rowConditions.length}
+                        className='text-xs font-medium whitespace-nowrap'
+                      >
+                        {sourceLabel(source)}
+                      </TableCell>
+                    )}
+                    {condition && (
+                      <TableCell className='text-muted-foreground text-xs whitespace-nowrap'>
+                        {conditionLabel}
+                      </TableCell>
+                    )}
+                    {props.inputPrices && (
+                      <TableCell>
+                        <Input
+                          aria-label={`${rowLabel} · ${t('Input image')}`}
+                          type='number'
+                          min={0}
+                          step='any'
+                          inputMode='decimal'
+                          className='h-8'
+                          value={props.inputPrices[source]}
+                          onChange={(event) =>
+                            props.onInputPriceChange?.(
+                              source,
+                              event.target.value
+                            )
+                          }
+                        />
+                      </TableCell>
+                    )}
+                    {columns.map((column) => (
+                      <TableCell key={column.id}>
+                        <Input
+                          aria-label={`${rowLabel} · ${column.size || props.tierLabel}`}
+                          type='number'
+                          min={0}
+                          step='any'
+                          inputMode='decimal'
+                          className='h-8'
+                          value={props.cellValue(source, condition, column.id)}
+                          onChange={(event) =>
+                            props.onCellChange(
+                              source,
+                              condition,
+                              column.id,
+                              event.target.value
+                            )
+                          }
+                        />
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                )
+              })
+            )}
           </TableBody>
         </Table>
       </div>
@@ -585,6 +720,8 @@ export function ReferencePricingCard() {
       if (
         gateway?.per_image?.length ||
         gateway?.per_second?.length ||
+        gateway?.per_token?.length ||
+        gateway?.video_grid ||
         typeof gateway?.per_image_input === 'number'
       ) {
         entry.gateway = {
@@ -594,6 +731,10 @@ export function ReferencePricingCard() {
           ...(gateway.per_second?.length
             ? { per_second: gateway.per_second }
             : {}),
+          ...(gateway.per_token?.length
+            ? { per_token: gateway.per_token }
+            : {}),
+          ...(gateway.video_grid ? { video_grid: gateway.video_grid } : {}),
           ...(typeof gateway.per_image_input === 'number'
             ? { per_image_input: gateway.per_image_input }
             : {}),
@@ -609,6 +750,7 @@ export function ReferencePricingCard() {
         }
         if (row.per_image?.length) lanes.per_image = row.per_image
         if (row.per_second?.length) lanes.per_second = row.per_second
+        if (row.per_token?.length) lanes.per_token = row.per_token
         if (typeof row.per_image_input === 'number') {
           lanes.per_image_input = row.per_image_input
         }
@@ -648,8 +790,8 @@ export function ReferencePricingCard() {
       modelName: '',
       isNew: true,
       values: draftFromRows({}),
-      perImage: perUnitDraftFromRows({}, 'per_image'),
-      perSecond: perUnitDraftFromRows({}, 'per_second'),
+      perImage: perImageDraftFromRows({}),
+      video: videoDraftFromRows({}, []),
     })
   }
 
@@ -658,26 +800,58 @@ export function ReferencePricingCard() {
       modelName: view.modelName,
       isNew: false,
       values: draftFromRows(view.rows),
-      perImage: perUnitDraftFromRows(view.rows, 'per_image'),
-      // A video model opens on the usual resolution tiers so the admin fills
-      // prices rather than first inventing column labels.
-      perSecond: perUnitDraftFromRows(
+      perImage: perImageDraftFromRows(view.rows),
+      // A video model opens on the usual resolution columns so the admin
+      // fills prices rather than first inventing column labels.
+      video: videoDraftFromRows(
         view.rows,
-        'per_second',
         pricingModels.some(
           (item) => item.model_name === view.modelName && isVideoModel(item)
         )
-          ? DEFAULT_PER_SECOND_TIERS
+          ? DEFAULT_VIDEO_RESOLUTIONS
           : []
       ),
     })
   }
 
-  const setPerUnitDraft = (
-    unit: 'perImage' | 'perSecond',
-    update: (prev: PerUnitDraft) => PerUnitDraft
-  ) => {
-    setDialog((prev) => (prev ? { ...prev, [unit]: update(prev[unit]) } : prev))
+  const setPerImage = (update: (prev: PerImageDraft) => PerImageDraft) => {
+    setDialog((prev) =>
+      prev ? { ...prev, perImage: update(prev.perImage) } : prev
+    )
+  }
+
+  const setVideo = (update: (prev: VideoDraft) => VideoDraft) => {
+    setDialog((prev) => (prev ? { ...prev, video: update(prev.video) } : prev))
+  }
+
+  // The gateway's per-token cells start from what billing actually charges:
+  // the base rate times each tier's multiplier, matched to a column by the
+  // resolution label the billing lookup reports. Written into the boxes only;
+  // the admin still reviews and saves.
+  const prefillGatewayTokenPrices = () => {
+    const rates = dialogModel?.video_rates
+    if (!dialogModel || !rates?.length) return
+    const baseUSD = tokenPriceUSD(dialogModel, 'input', 1)
+    setVideo((prev) => {
+      const perToken = { ...prev.perToken }
+      const rowConditions: readonly string[] =
+        prev.conditions.length > 0 ? prev.conditions : ['']
+      for (const column of prev.columns) {
+        const label = column.size.trim().toLowerCase()
+        for (const condition of rowConditions) {
+          const rate = rates.find(
+            (item) =>
+              item.resolution.toLowerCase() === label &&
+              item.with_video === (condition === 'with_video')
+          )
+          if (!rate) continue
+          perToken[cellKey('gateway', condition, column.id)] = String(
+            Number((baseUSD * rate.ratio).toFixed(6))
+          )
+        }
+      }
+      return { ...prev, perToken }
+    })
   }
 
   const setDraftValue = (
@@ -749,12 +923,21 @@ export function ReferencePricingCard() {
       ReferencePricingSource,
       ReferencePricingImageSize[]
     >
+    const perTokenBySource = {} as Record<
+      ReferencePricingSource,
+      ReferencePricingImageSize[]
+    >
     const perImageInputBySource = {} as Record<
       ReferencePricingSource,
       number | undefined
     >
     for (const source of PER_UNIT_SOURCES) {
-      const entries = parsePerUnitDraft(dialog.perImage, source)
+      const entries = parseGridCells(
+        dialog.perImage.columns,
+        [],
+        dialog.perImage.cells,
+        source
+      )
       const inputPrice = parsePerUnitInput(dialog.perImage, source)
       if (entries === null || inputPrice === null) {
         toast.error(
@@ -762,17 +945,53 @@ export function ReferencePricingCard() {
         )
         return
       }
-      const seconds = parsePerUnitDraft(dialog.perSecond, source)
+      const seconds = parseGridCells(
+        dialog.video.columns,
+        dialog.video.conditions,
+        dialog.video.perSecond,
+        source
+      )
       if (seconds === null) {
         toast.error(
           t('Per-second prices need a unique resolution and a positive price')
         )
         return
       }
+      const tokens = parseGridCells(
+        dialog.video.columns,
+        dialog.video.conditions,
+        dialog.video.perToken,
+        source
+      )
+      if (tokens === null) {
+        toast.error(
+          t('Per-token prices need a unique resolution and a positive price')
+        )
+        return
+      }
       perImageBySource[source] = entries
       perSecondBySource[source] = seconds
+      perTokenBySource[source] = tokens
       perImageInputBySource[source] = inputPrice
     }
+    // The grid layout travels on the gateway row. A blank column label is
+    // dropped rather than stored; a duplicate would make two columns read the
+    // same cell, so it is refused like a duplicate priced tier.
+    const videoResolutions = dialog.video.columns
+      .map((column) => column.size.trim())
+      .filter(Boolean)
+    if (new Set(videoResolutions).size !== videoResolutions.length) {
+      toast.error(
+        t('Per-second prices need a unique resolution and a positive price')
+      )
+      return
+    }
+    const videoGrid =
+      (dialogModel && isVideoModel(dialogModel)) ||
+      videoResolutions.length > 0 ||
+      dialog.video.conditions.length > 0
+        ? { conditions: dialog.video.conditions, resolutions: videoResolutions }
+        : undefined
     for (const source of SOURCES) {
       const sourceDraft = dialog.values[source]
       const defaultLanes = parseDraftLanes(sourceDraft[DEFAULT_CONDITION_KEY])
@@ -792,12 +1011,14 @@ export function ReferencePricingCard() {
       }
       const perImage = perImageBySource[source]
       const perSecond = perSecondBySource[source]
+      const perToken = perTokenBySource[source]
       const perImageInput = perImageInputBySource[source]
       const hasValue =
         Object.keys(defaultLanes).length > 0 ||
         Object.keys(conditions).length > 0 ||
         perImage.length > 0 ||
         perSecond.length > 0 ||
+        perToken.length > 0 ||
         perImageInput !== undefined
       // 清空某来源全部价格时仍要提交该行，让后端把旧值整行覆盖为空
       if (hasValue || existing?.rows[source]) {
@@ -808,6 +1029,7 @@ export function ReferencePricingCard() {
           ...(Object.keys(conditions).length > 0 ? { conditions } : {}),
           ...(perImage.length > 0 ? { per_image: perImage } : {}),
           ...(perSecond.length > 0 ? { per_second: perSecond } : {}),
+          ...(perToken.length > 0 ? { per_token: perToken } : {}),
           ...(perImageInput !== undefined
             ? { per_image_input: perImageInput }
             : {}),
@@ -816,11 +1038,14 @@ export function ReferencePricingCard() {
     }
     const gatewayPerImage = perImageBySource.gateway
     const gatewayPerSecond = perSecondBySource.gateway
+    const gatewayPerToken = perTokenBySource.gateway
     const gatewayPerImageInput = perImageInputBySource.gateway
     if (
       gatewayPerImage.length > 0 ||
       gatewayPerSecond.length > 0 ||
+      gatewayPerToken.length > 0 ||
       gatewayPerImageInput !== undefined ||
+      videoGrid ||
       existing?.rows.gateway
     ) {
       rows.push({
@@ -830,6 +1055,8 @@ export function ReferencePricingCard() {
         ...(gatewayPerSecond.length > 0
           ? { per_second: gatewayPerSecond }
           : {}),
+        ...(gatewayPerToken.length > 0 ? { per_token: gatewayPerToken } : {}),
+        ...(videoGrid ? { video_grid: videoGrid } : {}),
         ...(gatewayPerImageInput !== undefined
           ? { per_image_input: gatewayPerImageInput }
           : {}),
@@ -879,8 +1106,14 @@ export function ReferencePricingCard() {
       for (const source of SOURCES) {
         const entry = sources[source]
         if (!entry) continue
-        const { conditions, per_image, per_image_input, per_second, ...lanes } =
-          entry
+        const {
+          conditions,
+          per_image,
+          per_image_input,
+          per_second,
+          per_token,
+          ...lanes
+        } = entry
         rows.push({
           model_name: modelName,
           source,
@@ -890,6 +1123,7 @@ export function ReferencePricingCard() {
             : {}),
           ...(per_image && per_image.length > 0 ? { per_image } : {}),
           ...(per_second && per_second.length > 0 ? { per_second } : {}),
+          ...(per_token && per_token.length > 0 ? { per_token } : {}),
           ...(per_image_input !== undefined ? { per_image_input } : {}),
         })
       }
@@ -897,6 +1131,8 @@ export function ReferencePricingCard() {
       if (
         gateway?.per_image?.length ||
         gateway?.per_second?.length ||
+        gateway?.per_token?.length ||
+        gateway?.video_grid ||
         gateway?.per_image_input !== undefined
       ) {
         rows.push({
@@ -908,6 +1144,10 @@ export function ReferencePricingCard() {
           ...(gateway.per_second?.length
             ? { per_second: gateway.per_second }
             : {}),
+          ...(gateway.per_token?.length
+            ? { per_token: gateway.per_token }
+            : {}),
+          ...(gateway.video_grid ? { video_grid: gateway.video_grid } : {}),
           ...(gateway.per_image_input !== undefined
             ? { per_image_input: gateway.per_image_input }
             : {}),
@@ -1269,8 +1509,34 @@ export function ReferencePricingCard() {
                   (source) => dialog.perImage.inputPrices[source] !== ''
                 )) && (
                 <PerUnitPriceMatrix
-                  draft={dialog.perImage}
-                  onChange={(update) => setPerUnitDraft('perImage', update)}
+                  columns={dialog.perImage.columns}
+                  conditions={[]}
+                  cellValue={(source, condition, id) =>
+                    dialog.perImage.cells[cellKey(source, condition, id)] ?? ''
+                  }
+                  onCellChange={(source, condition, id, value) =>
+                    setPerImage((prev) => ({
+                      ...prev,
+                      cells: {
+                        ...prev.cells,
+                        [cellKey(source, condition, id)]: value,
+                      },
+                    }))
+                  }
+                  onAddColumn={() => setPerImage(addColumn)}
+                  onRemoveColumn={(id) =>
+                    setPerImage((prev) => removeColumn(prev, id))
+                  }
+                  onColumnLabelChange={(id, value) =>
+                    setPerImage((prev) => relabelColumn(prev, id, value))
+                  }
+                  inputPrices={dialog.perImage.inputPrices}
+                  onInputPriceChange={(source, value) =>
+                    setPerImage((prev) => ({
+                      ...prev,
+                      inputPrices: { ...prev.inputPrices, [source]: value },
+                    }))
+                  }
                   label={t('Per-image prices')}
                   description={`${t(
                     'USD per image by size or quality. The gateway row is the list price at group ratio 1; each tier scales it by its ratio.'
@@ -1280,28 +1546,143 @@ export function ReferencePricingCard() {
                   addLabel={t('Add size')}
                   tierLabel={t('Size')}
                   removeLabel={t('Remove size')}
-                  showInputImage
                   sourceLabel={sourceLabel}
                   t={t}
                 />
               )}
-              {/* Per-second prices are what the Video tab and the drawer's
-               * /Sec view read. */}
+              {/* The video grid is what the Video tab and the drawer's /Sec
+               * and /Token views read: one layout of conditions and
+               * resolutions, priced per second and per token by every source. */}
               {((dialogModel && isVideoModel(dialogModel)) ||
-                dialog.perSecond.columns.length > 0) && (
-                <PerUnitPriceMatrix
-                  draft={dialog.perSecond}
-                  onChange={(update) => setPerUnitDraft('perSecond', update)}
-                  label={t('Per-second prices')}
-                  description={t(
-                    'USD per second of video by output resolution. The gateway row is the list price at group ratio 1; each tier scales it by its ratio.'
-                  )}
-                  addLabel={t('Add resolution')}
-                  tierLabel={t('Resolution')}
-                  removeLabel={t('Remove resolution')}
-                  sourceLabel={sourceLabel}
-                  t={t}
-                />
+                dialog.video.columns.length > 0) && (
+                <>
+                  <div className='flex flex-col gap-2'>
+                    <Label>{t('Rate Conditions')}</Label>
+                    <ToggleGroup
+                      multiple
+                      variant='outline'
+                      size='sm'
+                      spacing={2}
+                      className='flex flex-wrap'
+                      value={
+                        dialog.video.conditions.length > 0
+                          ? dialog.video.conditions
+                          : [NO_CONDITION_TOGGLE]
+                      }
+                      onValueChange={(value) => {
+                        const chosen = value as string[]
+                        setVideo((prev) => {
+                          // "None" is exclusive: picking it clears the
+                          // conditions, picking a condition drops it.
+                          const cleared =
+                            chosen.includes(NO_CONDITION_TOGGLE) &&
+                            prev.conditions.length > 0
+                          return {
+                            ...prev,
+                            conditions: cleared
+                              ? []
+                              : VIDEO_RATE_CONDITIONS.filter((condition) =>
+                                  chosen.includes(condition)
+                                ),
+                          }
+                        })
+                      }}
+                      aria-label={t('Rate Conditions')}
+                    >
+                      <ToggleGroupItem value={NO_CONDITION_TOGGLE}>
+                        {t('None')}
+                      </ToggleGroupItem>
+                      {VIDEO_RATE_CONDITIONS.map((condition) => (
+                        <ToggleGroupItem key={condition} value={condition}>
+                          {t(VIDEO_RATE_CONDITION_LABELS[condition])}
+                        </ToggleGroupItem>
+                      ))}
+                    </ToggleGroup>
+                    <p className='text-muted-foreground text-xs'>
+                      {t(
+                        'Rate conditions the video prices split on; with none selected, each service has one row.'
+                      )}
+                    </p>
+                  </div>
+                  <PerUnitPriceMatrix
+                    columns={dialog.video.columns}
+                    conditions={dialog.video.conditions}
+                    cellValue={(source, condition, id) =>
+                      dialog.video.perSecond[cellKey(source, condition, id)] ??
+                      ''
+                    }
+                    onCellChange={(source, condition, id, value) =>
+                      setVideo((prev) => ({
+                        ...prev,
+                        perSecond: {
+                          ...prev.perSecond,
+                          [cellKey(source, condition, id)]: value,
+                        },
+                      }))
+                    }
+                    onAddColumn={() => setVideo(addColumn)}
+                    onRemoveColumn={(id) =>
+                      setVideo((prev) => removeColumn(prev, id))
+                    }
+                    onColumnLabelChange={(id, value) =>
+                      setVideo((prev) => relabelColumn(prev, id, value))
+                    }
+                    label={t('Per-second prices')}
+                    description={t(
+                      'USD per second of video by output resolution. The gateway row is the list price at group ratio 1; each tier scales it by its ratio.'
+                    )}
+                    addLabel={t('Add resolution')}
+                    tierLabel={t('Resolution')}
+                    removeLabel={t('Remove resolution')}
+                    sourceLabel={sourceLabel}
+                    t={t}
+                  />
+                  <PerUnitPriceMatrix
+                    columns={dialog.video.columns}
+                    conditions={dialog.video.conditions}
+                    cellValue={(source, condition, id) =>
+                      dialog.video.perToken[cellKey(source, condition, id)] ??
+                      ''
+                    }
+                    onCellChange={(source, condition, id, value) =>
+                      setVideo((prev) => ({
+                        ...prev,
+                        perToken: {
+                          ...prev.perToken,
+                          [cellKey(source, condition, id)]: value,
+                        },
+                      }))
+                    }
+                    onAddColumn={() => setVideo(addColumn)}
+                    onRemoveColumn={(id) =>
+                      setVideo((prev) => removeColumn(prev, id))
+                    }
+                    onColumnLabelChange={(id, value) =>
+                      setVideo((prev) => relabelColumn(prev, id, value))
+                    }
+                    action={
+                      dialogModel?.video_rates?.length ? (
+                        <Button
+                          type='button'
+                          variant='outline'
+                          size='sm'
+                          onClick={prefillGatewayTokenPrices}
+                        >
+                          {t('Fill from billing multipliers')}
+                        </Button>
+                      ) : undefined
+                    }
+                    label={t('Per-token prices')}
+                    description={t(
+                      'USD per million tokens by output resolution. The gateway row is the list price at group ratio 1; each tier scales it by its ratio.'
+                    )}
+                    addLabel={t('Add resolution')}
+                    tierLabel={t('Resolution')}
+                    removeLabel={t('Remove resolution')}
+                    sourceLabel={sourceLabel}
+                    t={t}
+                  />
+                </>
               )}
               <p className='text-muted-foreground text-xs'>
                 {t('Leave a field empty when the source has no such price.')}{' '}
