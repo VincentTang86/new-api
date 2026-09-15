@@ -19,7 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 import { render } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
 
-import type { PricingModel } from '../../types'
+import type { PricingModel, TokenUnit } from '../../types'
 import { ModelDetailsVideoPricingTable } from '../model-details-video-pricing-table'
 
 const USABLE_GROUPS = {
@@ -64,7 +64,8 @@ function model(overrides: Partial<PricingModel> = {}): PricingModel {
 
 function renderTable(
   target: PricingModel,
-  unit: 'second' | 'token' = 'second'
+  unit: 'second' | 'token' = 'second',
+  tokenUnit: TokenUnit = 'M'
 ) {
   return render(
     <ModelDetailsVideoPricingTable
@@ -72,7 +73,7 @@ function renderTable(
       groupRatio={GROUP_RATIO}
       usableGroup={USABLE_GROUPS}
       unit={unit}
-      tokenUnit='M'
+      tokenUnit={tokenUnit}
     />
   )
 }
@@ -105,11 +106,16 @@ describe('ModelDetailsVideoPricingTable per second', () => {
     expect(rowCells(rows[0])).toEqual([
       'Production',
       'Input without video',
-      '$0.04',
-      '$0.07',
+      '~$0.04/sec',
+      '~$0.07/sec',
       '—',
     ])
-    expect(rowCells(rows[1])).toEqual(['Input with video', '$0.08', '—', '—'])
+    expect(rowCells(rows[1])).toEqual([
+      'Input with video',
+      '~$0.08/sec',
+      '—',
+      '—',
+    ])
   })
 
   test('scales gateway cells by the plan ratio and leaves reference cells alone', () => {
@@ -118,14 +124,14 @@ describe('ModelDetailsVideoPricingTable per second', () => {
     expect(rowCells(rows[2])).toEqual([
       'Best Effort',
       'Input without video',
-      '$0.02',
-      '$0.035',
+      '~$0.02/sec',
+      '~$0.035/sec',
       '—',
     ])
     expect(rowCells(rows[4])).toEqual([
       'Direct First-Party APIReference',
       'Input without video',
-      '$0.05',
+      '~$0.05/sec',
       '—',
       '—',
     ])
@@ -145,13 +151,21 @@ describe('ModelDetailsVideoPricingTable per second', () => {
     )
     expect(headers(container)).toEqual(['Service', '480P', '720P'])
     const rows = [...container.querySelectorAll('tbody tr')]
-    expect(rowCells(rows[0])).toEqual(['Production', '$0.114', '$0.257'])
-    expect(rowCells(rows[1])).toEqual(['Best Effort', '$0.057', '$0.1285'])
+    expect(rowCells(rows[0])).toEqual([
+      'Production',
+      '~$0.114/sec',
+      '~$0.257/sec',
+    ])
+    expect(rowCells(rows[1])).toEqual([
+      'Best Effort',
+      '~$0.057/sec',
+      '~$0.1285/sec',
+    ])
     // A resolution the source does not list dashes rather than borrowing a
     // neighbour's price.
     expect(rowCells(rows[2])).toEqual([
       'Direct First-Party APIReference',
-      '$0.20',
+      '~$0.20/sec',
       '—',
     ])
   })
@@ -187,7 +201,7 @@ describe('ModelDetailsVideoPricingTable per second', () => {
     )
     expect(headers(container)).toEqual(['Service', 'Per video'])
     const rows = [...container.querySelectorAll('tbody tr')]
-    expect(rowCells(rows[0])).toEqual(['Production', '$0.0714'])
+    expect(rowCells(rows[0])).toEqual(['Production', '$0.0714/video'])
   })
 })
 
@@ -220,11 +234,11 @@ describe('ModelDetailsVideoPricingTable per token', () => {
     expect(rowCells(rows[0])).toEqual([
       'Production',
       'Input without video',
-      '$0.075',
+      '$0.075/M',
       '—',
       '—',
     ])
-    expect(rowCells(rows[1])).toEqual(['Input with video', '—', '$0.20', '—'])
+    expect(rowCells(rows[1])).toEqual(['Input with video', '—', '$0.20/M', '—'])
     expect(rowCells(rows[4])).toEqual([
       'Direct First-Party APIReference',
       'Input without video',
@@ -232,7 +246,21 @@ describe('ModelDetailsVideoPricingTable per token', () => {
       '—',
       '—',
     ])
-    expect(rowCells(rows[5])).toEqual(['Input with video', '—', '—', '$0.40'])
+    expect(rowCells(rows[5])).toEqual(['Input with video', '—', '—', '$0.40/M'])
+  })
+
+  // The unit has to follow the drawer's token-unit switch: a per-1K rate
+  // labelled "/M" misstates the price by a factor of a thousand.
+  test('states the price per thousand tokens when the drawer is on /K', () => {
+    const { container } = renderTable(model(), 'token', 'K')
+    const rows = [...container.querySelectorAll('tbody tr')]
+    expect(rowCells(rows[0])).toEqual([
+      'Production',
+      'Input without video',
+      '$0.000075/K',
+      '—',
+      '—',
+    ])
   })
 
   test('states the empty view when nothing per token is on file', () => {

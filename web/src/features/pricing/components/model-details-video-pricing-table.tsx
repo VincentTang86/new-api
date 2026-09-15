@@ -82,6 +82,14 @@ export function ModelDetailsVideoPricingTable(props: {
   let columns = grid.resolutions
   let gatewayPrices: readonly ImageSizePrice[] =
     (perSecond ? model.video_prices : model.video_token_prices) ?? []
+  // Every figure states its unit, so a cell reads as a rate rather than a bare
+  // amount once the eye has left the /Sec-/Token switch above the table.
+  let unit = perSecond ? '/sec' : `/${props.tokenUnit ?? 'M'}`
+  // A per-second figure is an approximation — the clip is billed per token, so
+  // what a second costs depends on how dense it is — and the design states it
+  // as one. A per-token rate is the rate itself, and a per-call model's clip
+  // price is the whole charge, so neither is hedged.
+  let approximate = perSecond
   const isPerCall =
     model.quota_type === QUOTA_TYPE_VALUES.REQUEST &&
     (model.model_price ?? 0) > 0
@@ -89,6 +97,8 @@ export function ModelDetailsVideoPricingTable(props: {
     const label = t('Per video')
     columns = [label]
     gatewayPrices = [{ size: label, price: model.model_price ?? 0 }]
+    unit = '/video'
+    approximate = false
   }
 
   if (columns.length === 0) {
@@ -136,10 +146,17 @@ export function ModelDetailsVideoPricingTable(props: {
   const cellClass = 'px-2.5 py-3 align-middle'
   const conditionCellClass = `${cellClass} text-xs whitespace-nowrap text-(--pd-muted-2)`
 
-  const priceCell = (price: number | undefined, ratio: number) =>
-    price === undefined
-      ? LANDING_PRICE_PLACEHOLDER
-      : formatLandingPrice((price * ratio) / divisor)
+  const priceCell = (price: number | undefined, ratio: number) => {
+    if (price === undefined) return LANDING_PRICE_PLACEHOLDER
+    const stated = formatLandingPrice((price * ratio) / divisor)
+    // An unpriced cell stays a bare dash: a unit on it would read as a rate of
+    // nothing rather than as a gap in the grid.
+    if (stated === LANDING_PRICE_PLACEHOLDER) return stated
+    // A rate too fine to state already reads as "<$…"; a tilde on top of that
+    // would hedge the same figure twice.
+    const tilde = approximate && stated.startsWith('$') ? '~' : ''
+    return `${tilde}${stated}${unit}`
+  }
 
   return (
     <div className='overflow-x-auto rounded-[10px] border border-(--pd-border)'>
