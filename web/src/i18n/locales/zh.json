@@ -5594,7 +5594,7 @@
     "Minimum top-up": "最低充值数量",
     "Crypto networks enforce their own minimums; keep this high enough to clear them after fees.": "各加密网络有自己的最低入金限额，请把此值设得足够高，扣除手续费后仍能满足。",
     "Fees paid by customer": "手续费由用户承担",
-    "The customer covers network and service fees so the full USD amount settles. NOWPayments forces a fixed rate when this is on.": "网络费与服务费由用户承担，我方按全额美元结算。开启后 NOWPayments 会强制使用固定汇率。",
+    "The customer covers network and service fees so the full USD amount settles. NOWPayments forces a fixed rate when this is on; only enable it if fixed-rate coins are available on your account.": "网络费与服务费由用户承担，我方按全额美元结算。开启后 NOWPayments 会强制使用固定汇率；仅在你的账号已开通固定汇率币种时再开启。",
     "Fixed exchange rate": "固定汇率",
     "Locks the crypto amount for 10 minutes after the customer picks a coin; unpaid invoices then expire.": "用户选币后锁定应付币量 10 分钟，超时未付款的发票将过期。",
     "Pre-selected coin": "预选币种",

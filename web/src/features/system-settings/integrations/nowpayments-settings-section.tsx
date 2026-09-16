@@ -201,7 +201,7 @@ export function NowPaymentsSettingsSection({ values, onValueChange }: Props) {
           onCheckedChange={(v) => onValueChange('NowPaymentsFeePaidByUser', v)}
           label={t('Fees paid by customer')}
           description={t(
-            'The customer covers network and service fees so the full USD amount settles. NOWPayments forces a fixed rate when this is on.'
+            'The customer covers network and service fees so the full USD amount settles. NOWPayments forces a fixed rate when this is on; only enable it if fixed-rate coins are available on your account.'
           )}
           className='py-0'
         />

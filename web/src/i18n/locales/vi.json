@@ -5594,7 +5594,7 @@
     "Minimum top-up": "Nạp tối thiểu",
     "Crypto networks enforce their own minimums; keep this high enough to clear them after fees.": "Các mạng crypto có mức tối thiểu riêng; hãy đặt đủ cao để vượt qua sau khi trừ phí.",
     "Fees paid by customer": "Phí do khách hàng trả",
-    "The customer covers network and service fees so the full USD amount settles. NOWPayments forces a fixed rate when this is on.": "Khách hàng chịu phí mạng và phí dịch vụ nên toàn bộ số tiền USD được thanh toán. Khi bật, NOWPayments buộc dùng tỷ giá cố định.",
+    "The customer covers network and service fees so the full USD amount settles. NOWPayments forces a fixed rate when this is on; only enable it if fixed-rate coins are available on your account.": "Khách hàng chịu phí mạng và phí dịch vụ nên toàn bộ số tiền USD được thanh toán. Khi bật, NOWPayments buộc dùng tỷ giá cố định; chỉ bật khi tài khoản của bạn có coin hỗ trợ tỷ giá cố định.",
     "Fixed exchange rate": "Tỷ giá cố định",
     "Locks the crypto amount for 10 minutes after the customer picks a coin; unpaid invoices then expire.": "Khóa số tiền crypto trong 10 phút sau khi khách chọn coin; hóa đơn chưa thanh toán sẽ hết hạn.",
     "Pre-selected coin": "Coin chọn sẵn",

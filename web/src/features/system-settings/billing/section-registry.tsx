@@ -193,8 +193,8 @@ const BILLING_SECTIONS = [
           NowPaymentsSandbox: settings.NowPaymentsSandbox ?? false,
           NowPaymentsUnitPrice: settings.NowPaymentsUnitPrice ?? 1,
           NowPaymentsMinTopUp: settings.NowPaymentsMinTopUp ?? 1,
-          NowPaymentsFeePaidByUser: settings.NowPaymentsFeePaidByUser ?? true,
-          NowPaymentsFixedRate: settings.NowPaymentsFixedRate ?? true,
+          NowPaymentsFeePaidByUser: settings.NowPaymentsFeePaidByUser ?? false,
+          NowPaymentsFixedRate: settings.NowPaymentsFixedRate ?? false,
           NowPaymentsPayCurrency:
             settings.NowPaymentsPayCurrency ?? 'usdttrc20',
         }}

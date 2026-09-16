@@ -5594,7 +5594,7 @@
     "Minimum top-up": "最低チャージ数",
     "Crypto networks enforce their own minimums; keep this high enough to clear them after fees.": "各暗号資産ネットワークには独自の最低額があります。手数料控除後もそれを上回るよう十分高く設定してください。",
     "Fees paid by customer": "手数料は顧客負担",
-    "The customer covers network and service fees so the full USD amount settles. NOWPayments forces a fixed rate when this is on.": "ネットワーク手数料とサービス手数料を顧客が負担し、USD 全額が決済されます。オンにすると NOWPayments は固定レートを強制します。",
+    "The customer covers network and service fees so the full USD amount settles. NOWPayments forces a fixed rate when this is on; only enable it if fixed-rate coins are available on your account.": "ネットワーク手数料とサービス手数料を顧客が負担し、USD 全額が決済されます。オンにすると NOWPayments は固定レートを強制します固定レート対応の通貨がアカウントで利用可能な場合のみ有効にしてください。",
     "Fixed exchange rate": "固定レート",
     "Locks the crypto amount for 10 minutes after the customer picks a coin; unpaid invoices then expire.": "顧客が通貨を選択してから 10 分間、暗号資産の金額を固定します。未払いの請求は期限切れになります。",
     "Pre-selected coin": "事前選択する通貨",

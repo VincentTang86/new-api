@@ -5594,7 +5594,7 @@
     "Minimum top-up": "Recharge minimale",
     "Crypto networks enforce their own minimums; keep this high enough to clear them after fees.": "Les réseaux crypto imposent leurs propres minimums ; fixez une valeur suffisante pour les dépasser une fois les frais déduits.",
     "Fees paid by customer": "Frais payés par le client",
-    "The customer covers network and service fees so the full USD amount settles. NOWPayments forces a fixed rate when this is on.": "Le client prend en charge les frais de réseau et de service afin que le montant USD complet soit réglé. NOWPayments impose alors un taux fixe.",
+    "The customer covers network and service fees so the full USD amount settles. NOWPayments forces a fixed rate when this is on; only enable it if fixed-rate coins are available on your account.": "Le client prend en charge les frais de réseau et de service afin que le montant USD complet soit réglé. NOWPayments impose alors un taux fixe ; n'activez-le que si des monnaies à taux fixe sont disponibles sur votre compte.",
     "Fixed exchange rate": "Taux de change fixe",
     "Locks the crypto amount for 10 minutes after the customer picks a coin; unpaid invoices then expire.": "Fige le montant en crypto pendant 10 minutes après le choix de la monnaie ; les factures impayées expirent ensuite.",
     "Pre-selected coin": "Monnaie présélectionnée",

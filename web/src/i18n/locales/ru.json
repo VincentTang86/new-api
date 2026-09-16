@@ -5594,7 +5594,7 @@
     "Minimum top-up": "Минимальное пополнение",
     "Crypto networks enforce their own minimums; keep this high enough to clear them after fees.": "Криптосети задают собственные минимумы; установите значение достаточно высоким, чтобы покрыть их после комиссий.",
     "Fees paid by customer": "Комиссии оплачивает клиент",
-    "The customer covers network and service fees so the full USD amount settles. NOWPayments forces a fixed rate when this is on.": "Клиент оплачивает сетевые и сервисные комиссии, поэтому зачисляется полная сумма в USD. При включении NOWPayments принудительно использует фиксированный курс.",
+    "The customer covers network and service fees so the full USD amount settles. NOWPayments forces a fixed rate when this is on; only enable it if fixed-rate coins are available on your account.": "Клиент оплачивает сетевые и сервисные комиссии, поэтому зачисляется полная сумма в USD. При включении NOWPayments принудительно использует фиксированный курс; включайте только если на вашем аккаунте доступны монеты с фиксированным курсом.",
     "Fixed exchange rate": "Фиксированный курс",
     "Locks the crypto amount for 10 minutes after the customer picks a coin; unpaid invoices then expire.": "Фиксирует сумму в криптовалюте на 10 минут после выбора монеты; неоплаченные счета затем истекают.",
     "Pre-selected coin": "Предвыбранная монета",
