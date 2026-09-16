@@ -188,6 +188,7 @@ const paymentSchema = z.object({
   NowPaymentsMinTopUp: z.coerce.number().min(1),
   NowPaymentsFeePaidByUser: z.boolean(),
   NowPaymentsFixedRate: z.boolean(),
+  NowPaymentsPayCurrency: z.string(),
 })
 
 type PaymentFormValues = z.infer<typeof paymentSchema>
@@ -500,6 +501,8 @@ export function PaymentSettingsSection({
       NowPaymentsMinTopUp: values.NowPaymentsMinTopUp,
       NowPaymentsFeePaidByUser: values.NowPaymentsFeePaidByUser,
       NowPaymentsFixedRate: values.NowPaymentsFixedRate,
+      NowPaymentsPayCurrency:
+        values.NowPaymentsPayCurrency.trim().toLowerCase(),
     }
 
     const initial = {
@@ -555,6 +558,8 @@ export function PaymentSettingsSection({
       NowPaymentsMinTopUp: initialRef.current.NowPaymentsMinTopUp,
       NowPaymentsFeePaidByUser: initialRef.current.NowPaymentsFeePaidByUser,
       NowPaymentsFixedRate: initialRef.current.NowPaymentsFixedRate,
+      NowPaymentsPayCurrency:
+        initialRef.current.NowPaymentsPayCurrency.trim().toLowerCase(),
     }
 
     const updates: Array<{ key: string; value: string | number | boolean }> = []
@@ -816,6 +821,13 @@ export function PaymentSettingsSection({
       })
     }
 
+    if (sanitized.NowPaymentsPayCurrency !== initial.NowPaymentsPayCurrency) {
+      updates.push({
+        key: 'NowPaymentsPayCurrency',
+        value: sanitized.NowPaymentsPayCurrency,
+      })
+    }
+
     const hasWaffoPancakeChanges =
       sanitized.WaffoPancakeMerchantID !== initial.WaffoPancakeMerchantID ||
       sanitized.WaffoPancakePrivateKey.length > 0 ||
@@ -919,6 +931,7 @@ export function PaymentSettingsSection({
     NowPaymentsMinTopUp: currentFormValues.NowPaymentsMinTopUp,
     NowPaymentsFeePaidByUser: currentFormValues.NowPaymentsFeePaidByUser,
     NowPaymentsFixedRate: currentFormValues.NowPaymentsFixedRate,
+    NowPaymentsPayCurrency: currentFormValues.NowPaymentsPayCurrency,
   }
 
   return (

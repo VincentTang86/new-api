@@ -5596,6 +5596,8 @@
     "Fees paid by customer": "Fees paid by customer",
     "The customer covers network and service fees so the full USD amount settles. NOWPayments forces a fixed rate when this is on.": "The customer covers network and service fees so the full USD amount settles. NOWPayments forces a fixed rate when this is on.",
     "Fixed exchange rate": "Fixed exchange rate",
-    "Locks the crypto amount for 10 minutes after the customer picks a coin; unpaid invoices then expire.": "Locks the crypto amount for 10 minutes after the customer picks a coin; unpaid invoices then expire."
+    "Locks the crypto amount for 10 minutes after the customer picks a coin; unpaid invoices then expire.": "Locks the crypto amount for 10 minutes after the customer picks a coin; unpaid invoices then expire.",
+    "Pre-selected coin": "Pre-selected coin",
+    "NOWPayments ticker pre-selected on the invoice page, e.g. usdttrc20 or btc. Leave blank to let the customer choose.": "NOWPayments ticker pre-selected on the invoice page, e.g. usdttrc20 or btc. Leave blank to let the customer choose."
   }
 }

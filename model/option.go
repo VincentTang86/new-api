@@ -124,6 +124,7 @@ func InitOptionMap() {
 	common.OptionMap["NowPaymentsMinTopUp"] = strconv.Itoa(setting.NowPaymentsMinTopUp)
 	common.OptionMap["NowPaymentsFeePaidByUser"] = strconv.FormatBool(setting.NowPaymentsFeePaidByUser)
 	common.OptionMap["NowPaymentsFixedRate"] = strconv.FormatBool(setting.NowPaymentsFixedRate)
+	common.OptionMap["NowPaymentsPayCurrency"] = setting.NowPaymentsPayCurrency
 	common.OptionMap["TopupGroupRatio"] = common.TopupGroupRatio2JSONString()
 	common.OptionMap["Chats"] = setting.Chats2JsonString()
 	common.OptionMap["AutoGroups"] = setting.AutoGroups2JsonString()
@@ -527,6 +528,8 @@ func updateOptionMap(key string, value string) (err error) {
 		setting.NowPaymentsFeePaidByUser = value == "true"
 	case "NowPaymentsFixedRate":
 		setting.NowPaymentsFixedRate = value == "true"
+	case "NowPaymentsPayCurrency":
+		setting.NowPaymentsPayCurrency = value
 	case "TopupGroupRatio":
 		err = common.UpdateTopupGroupRatioByJSONString(value)
 	case "GitHubClientId":

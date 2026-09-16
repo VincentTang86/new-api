@@ -9,4 +9,5 @@ var (
 	NowPaymentsMinTopUp      int     = 1
 	NowPaymentsFeePaidByUser bool    = true
 	NowPaymentsFixedRate     bool    = true
+	NowPaymentsPayCurrency   string  = "usdttrc20" // 发票页预选币种，空则由用户自选
 )

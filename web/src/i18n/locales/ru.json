@@ -5596,6 +5596,8 @@
     "Fees paid by customer": "Комиссии оплачивает клиент",
     "The customer covers network and service fees so the full USD amount settles. NOWPayments forces a fixed rate when this is on.": "Клиент оплачивает сетевые и сервисные комиссии, поэтому зачисляется полная сумма в USD. При включении NOWPayments принудительно использует фиксированный курс.",
     "Fixed exchange rate": "Фиксированный курс",
-    "Locks the crypto amount for 10 minutes after the customer picks a coin; unpaid invoices then expire.": "Фиксирует сумму в криптовалюте на 10 минут после выбора монеты; неоплаченные счета затем истекают."
+    "Locks the crypto amount for 10 minutes after the customer picks a coin; unpaid invoices then expire.": "Фиксирует сумму в криптовалюте на 10 минут после выбора монеты; неоплаченные счета затем истекают.",
+    "Pre-selected coin": "Предвыбранная монета",
+    "NOWPayments ticker pre-selected on the invoice page, e.g. usdttrc20 or btc. Leave blank to let the customer choose.": "Тикер NOWPayments, предвыбранный на странице счёта, например usdttrc20 или btc. Оставьте пустым, чтобы клиент выбрал сам."
   }
 }

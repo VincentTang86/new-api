@@ -39,6 +39,7 @@ type NowPaymentsPayRequest struct {
 type nowPaymentsInvoiceRequest struct {
 	PriceAmount      json.Number `json:"price_amount"`
 	PriceCurrency    string      `json:"price_currency"`
+	PayCurrency      string      `json:"pay_currency,omitempty"`
 	OrderId          string      `json:"order_id"`
 	OrderDescription string      `json:"order_description"`
 	IpnCallbackUrl   string      `json:"ipn_callback_url"`
@@ -215,6 +216,7 @@ func createNowPaymentsInvoice(ctx context.Context, tradeNo string, amount int64,
 	requestData := nowPaymentsInvoiceRequest{
 		PriceAmount:      json.Number(strconv.FormatFloat(payMoney, 'f', 2, 64)),
 		PriceCurrency:    nowPaymentsPriceCurrency,
+		PayCurrency:      strings.ToLower(strings.TrimSpace(setting.NowPaymentsPayCurrency)),
 		OrderId:          tradeNo,
 		OrderDescription: fmt.Sprintf("Recharge %d credits", amount),
 		IpnCallbackUrl:   service.GetCallbackAddress() + "/api/nowpayments/webhook",

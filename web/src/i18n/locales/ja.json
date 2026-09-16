@@ -5596,6 +5596,8 @@
     "Fees paid by customer": "手数料は顧客負担",
     "The customer covers network and service fees so the full USD amount settles. NOWPayments forces a fixed rate when this is on.": "ネットワーク手数料とサービス手数料を顧客が負担し、USD 全額が決済されます。オンにすると NOWPayments は固定レートを強制します。",
     "Fixed exchange rate": "固定レート",
-    "Locks the crypto amount for 10 minutes after the customer picks a coin; unpaid invoices then expire.": "顧客が通貨を選択してから 10 分間、暗号資産の金額を固定します。未払いの請求は期限切れになります。"
+    "Locks the crypto amount for 10 minutes after the customer picks a coin; unpaid invoices then expire.": "顧客が通貨を選択してから 10 分間、暗号資産の金額を固定します。未払いの請求は期限切れになります。",
+    "Pre-selected coin": "事前選択する通貨",
+    "NOWPayments ticker pre-selected on the invoice page, e.g. usdttrc20 or btc. Leave blank to let the customer choose.": "請求ページで事前選択される NOWPayments の通貨コード（例: usdttrc20、btc）。空欄にすると顧客が選択します。"
   }
 }

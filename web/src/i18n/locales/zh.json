@@ -5596,6 +5596,8 @@
     "Fees paid by customer": "手续费由用户承担",
     "The customer covers network and service fees so the full USD amount settles. NOWPayments forces a fixed rate when this is on.": "网络费与服务费由用户承担，我方按全额美元结算。开启后 NOWPayments 会强制使用固定汇率。",
     "Fixed exchange rate": "固定汇率",
-    "Locks the crypto amount for 10 minutes after the customer picks a coin; unpaid invoices then expire.": "用户选币后锁定应付币量 10 分钟，超时未付款的发票将过期。"
+    "Locks the crypto amount for 10 minutes after the customer picks a coin; unpaid invoices then expire.": "用户选币后锁定应付币量 10 分钟，超时未付款的发票将过期。",
+    "Pre-selected coin": "预选币种",
+    "NOWPayments ticker pre-selected on the invoice page, e.g. usdttrc20 or btc. Leave blank to let the customer choose.": "发票页默认选中的 NOWPayments 币种代码，如 usdttrc20 或 btc。留空则由用户自行选择。"
   }
 }

@@ -113,6 +113,7 @@ const defaultBillingSettings: BillingSettings = {
   NowPaymentsMinTopUp: 1,
   NowPaymentsFeePaidByUser: true,
   NowPaymentsFixedRate: true,
+  NowPaymentsPayCurrency: 'usdttrc20',
   'checkin_setting.enabled': false,
   'checkin_setting.min_quota': 1000,
   'checkin_setting.max_quota': 10000,
