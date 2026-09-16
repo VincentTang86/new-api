@@ -33,8 +33,14 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { formatLocalCurrencyAmount } from '@/lib/currency'
 
 import { DEFAULT_DISCOUNT_RATE } from '../../constants'
-import { formatCurrency, getPaymentIcon } from '../../lib'
-import type { PaymentMethod } from '../../types'
+import {
+  describeCryptoCurrency,
+  formatCurrency,
+  getPaymentIcon,
+  isNowPaymentsPayment,
+} from '../../lib'
+import type { NowPaymentsCurrency, PaymentMethod } from '../../types'
+import { CryptoCurrencyPicker } from '../crypto-currency-picker'
 
 interface PaymentConfirmDialogProps {
   open: boolean
@@ -47,6 +53,10 @@ interface PaymentConfirmDialogProps {
   processing: boolean
   discountRate?: number
   usdExchangeRate?: number
+  cryptoCurrencies?: NowPaymentsCurrency[]
+  selectedCryptoCurrency?: string
+  onCryptoCurrencyChange?: (ticker: string) => void
+  cryptoLoading?: boolean
 }
 
 export function PaymentConfirmDialog({
@@ -60,11 +70,22 @@ export function PaymentConfirmDialog({
   processing,
   discountRate = DEFAULT_DISCOUNT_RATE,
   usdExchangeRate = 1,
+  cryptoCurrencies = [],
+  selectedCryptoCurrency = '',
+  onCryptoCurrencyChange,
+  cryptoLoading = false,
 }: PaymentConfirmDialogProps) {
   const { t } = useTranslation()
   const hasDiscount = discountRate > 0 && discountRate < 1 && paymentAmount > 0
   const originalAmount = hasDiscount ? paymentAmount / discountRate : 0
   const discountAmount = hasDiscount ? originalAmount - paymentAmount : 0
+  // Stablecoins are charged 1 token = 1 USD, so the crypto amount the user
+  // sends equals the USD amount they are paying.
+  const isCrypto = isNowPaymentsPayment(paymentMethod?.type ?? '')
+  const cryptoSymbol = selectedCryptoCurrency
+    ? describeCryptoCurrency(selectedCryptoCurrency).symbol
+    : ''
+  const cryptoUnselected = isCrypto && !selectedCryptoCurrency
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -101,7 +122,9 @@ export function PaymentConfirmDialog({
             ) : (
               <div className='flex items-baseline gap-2'>
                 <span className='text-2xl font-semibold'>
-                  {formatCurrency(paymentAmount)}
+                  {isCrypto
+                    ? `${paymentAmount} ${cryptoSymbol}`.trim()
+                    : formatCurrency(paymentAmount)}
                 </span>
                 {hasDiscount && (
                   <span className='text-muted-foreground text-sm line-through'>
@@ -120,6 +143,21 @@ export function PaymentConfirmDialog({
                   {formatCurrency(discountAmount)}
                 </span>
               </div>
+            </div>
+          )}
+
+          {isCrypto && (
+            <div className='space-y-2 border-t pt-4'>
+              <span className='text-muted-foreground text-sm'>
+                {t('Coin and network')}
+              </span>
+              <CryptoCurrencyPicker
+                currencies={cryptoCurrencies}
+                selected={selectedCryptoCurrency}
+                onSelect={(ticker) => onCryptoCurrencyChange?.(ticker)}
+                loading={cryptoLoading}
+                disabled={processing}
+              />
             </div>
           )}
 
@@ -145,7 +183,10 @@ export function PaymentConfirmDialog({
           <AlertDialogCancel disabled={processing}>
             {t('Cancel')}
           </AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm} disabled={processing}>
+          <AlertDialogAction
+            onClick={onConfirm}
+            disabled={processing || cryptoUnselected}
+          >
             {processing && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
             {t('Confirm Payment')}
           </AlertDialogAction>

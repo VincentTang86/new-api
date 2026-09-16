@@ -195,8 +195,9 @@ const BILLING_SECTIONS = [
           NowPaymentsMinTopUp: settings.NowPaymentsMinTopUp ?? 1,
           NowPaymentsFeePaidByUser: settings.NowPaymentsFeePaidByUser ?? false,
           NowPaymentsFixedRate: settings.NowPaymentsFixedRate ?? false,
-          NowPaymentsPayCurrency:
-            settings.NowPaymentsPayCurrency ?? 'usdttrc20',
+          NowPaymentsPayCurrencies:
+            settings.NowPaymentsPayCurrencies ??
+            'usdterc20,usdtbsc,usdtarb,usdtmatic,usdtton,usdc,usdcbsc,usdcarb,usdcmatic,usdcalgo',
         }}
         complianceDefaults={{
           confirmed: settings['payment_setting.compliance_confirmed'] ?? false,

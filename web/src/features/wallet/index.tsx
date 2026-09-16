@@ -42,11 +42,13 @@ import {
   useWaffoPayment,
   useWaffoPancakePayment,
   useNowPaymentsPayment,
+  useNowPaymentsCurrencies,
 } from './hooks'
 import {
   getDefaultPaymentType,
   getMinTopupAmount,
   dispatchSelectedPayment,
+  isNowPaymentsPayment,
 } from './lib'
 import type {
   UserWalletData,
@@ -111,6 +113,16 @@ export function Wallet(props: WalletProps) {
     useWaffoPancakePayment()
   const { processing: nowPaymentsProcessing, processNowPaymentsPayment } =
     useNowPaymentsPayment()
+  const {
+    currencies: cryptoCurrencies,
+    loading: cryptoCurrenciesLoading,
+    selected: selectedCryptoCurrency,
+    setSelected: setSelectedCryptoCurrency,
+  } = useNowPaymentsCurrencies(
+    confirmDialogOpen &&
+      isNowPaymentsPayment(selectedPaymentMethod?.type ?? ''),
+    topupAmount
+  )
 
   // Fetch and refresh user data
   const fetchUser = useCallback(async () => {
@@ -206,7 +218,8 @@ export function Wallet(props: WalletProps) {
         waffo: processWaffoPayment,
         waffoPancake: processWaffoPancakePayment,
         nowPayments: processNowPaymentsPayment,
-      }
+      },
+      selectedCryptoCurrency
     )
 
     if (success) {
@@ -372,6 +385,10 @@ export function Wallet(props: WalletProps) {
         }
         discountRate={getDiscountRate()}
         usdExchangeRate={effectiveUsdExchangeRate}
+        cryptoCurrencies={cryptoCurrencies}
+        selectedCryptoCurrency={selectedCryptoCurrency}
+        onCryptoCurrencyChange={setSelectedCryptoCurrency}
+        cryptoLoading={cryptoCurrenciesLoading}
       />
 
       <TransferDialog

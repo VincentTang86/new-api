@@ -23,6 +23,16 @@ type TopUp struct {
 	CreateTime      int64   `json:"create_time"`
 	CompleteTime    int64   `json:"complete_time"`
 	Status          string  `json:"status"`
+
+	// 加密支付明细，仅链上收款渠道（当前为 NOWPayments 直连支付）写入。
+	// 收款页要把地址、链、应付币量原样展示给用户，所以必须落库而不是只存在上游。
+	CryptoPaymentId string  `json:"crypto_payment_id" gorm:"type:varchar(64);index"`
+	CryptoCurrency  string  `json:"crypto_currency" gorm:"type:varchar(32)"`
+	CryptoAmount    float64 `json:"crypto_amount"`
+	CryptoAddress   string  `json:"crypto_address" gorm:"type:varchar(255)"`
+	CryptoNetwork   string  `json:"crypto_network" gorm:"type:varchar(32)"`
+	CryptoExtraId   string  `json:"crypto_extra_id" gorm:"type:varchar(128)"`
+	CryptoExpiresAt int64   `json:"crypto_expires_at"`
 }
 
 const (

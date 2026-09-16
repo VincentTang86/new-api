@@ -111,7 +111,7 @@ export function isWaffoPancakePayment(paymentType: string): boolean {
 }
 
 /**
- * Check if payment method is NOWPayments (crypto hosted invoice)
+ * Check if payment method is NOWPayments (on-chain crypto deposit)
  */
 export function isNowPaymentsPayment(paymentType: string): boolean {
   return paymentType === PAYMENT_TYPES.NOWPAYMENTS
@@ -121,14 +121,15 @@ export interface PaymentProcessors {
   regular: (topupAmount: number, paymentType: string) => Promise<boolean>
   waffo: (topupAmount: number, payMethodIndex: number) => Promise<boolean>
   waffoPancake: (topupAmount: number) => Promise<boolean>
-  nowPayments: (topupAmount: number) => Promise<boolean>
+  nowPayments: (topupAmount: number, payCurrency: string) => Promise<boolean>
 }
 
 export async function dispatchSelectedPayment(
   paymentMethod: PaymentMethod,
   topupAmount: number,
   waffoMethodIndex: number | null,
-  processors: PaymentProcessors
+  processors: PaymentProcessors,
+  cryptoPayCurrency: string = ''
 ): Promise<boolean> {
   if (isWaffoPayment(paymentMethod.type)) {
     if (waffoMethodIndex === null) {
@@ -142,7 +143,10 @@ export async function dispatchSelectedPayment(
   }
 
   if (isNowPaymentsPayment(paymentMethod.type)) {
-    return processors.nowPayments(topupAmount)
+    if (!cryptoPayCurrency) {
+      return false
+    }
+    return processors.nowPayments(topupAmount, cryptoPayCurrency)
   }
 
   return processors.regular(topupAmount, paymentMethod.type)

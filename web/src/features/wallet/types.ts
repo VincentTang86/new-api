@@ -62,7 +62,37 @@ export type WaffoPancakePaymentResponse = ApiResponse<
   | string
 >
 export type NowPaymentsPaymentResponse = ApiResponse<
-  { invoice_url?: string; order_id?: string } | string
+  { trade_no?: string } | string
+>
+
+/** One accepted coin, with the chain's live minimum from NOWPayments. */
+export interface NowPaymentsCurrency {
+  ticker: string
+  /** False when the current topup amount is below this chain's minimum. */
+  available: boolean
+  min_amount?: number
+  min_amount_usd?: number
+}
+export type NowPaymentsCurrenciesResponse = ApiResponse<
+  NowPaymentsCurrency[] | string
+>
+
+/** Deposit details for the crypto checkout page. */
+export interface NowPaymentsPaymentDetail {
+  trade_no: string
+  status: string
+  topup_amount: number
+  money: number
+  pay_currency: string
+  pay_amount: number
+  pay_address: string
+  network: string
+  extra_id: string
+  expires_at: number
+  create_time: number
+}
+export type NowPaymentsPaymentDetailResponse = ApiResponse<
+  NowPaymentsPaymentDetail | string
 >
 
 /**

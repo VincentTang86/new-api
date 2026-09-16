@@ -32,7 +32,7 @@ export interface NowPaymentsSettingsValues {
   NowPaymentsMinTopUp: number
   NowPaymentsFeePaidByUser: boolean
   NowPaymentsFixedRate: boolean
-  NowPaymentsPayCurrency: string
+  NowPaymentsPayCurrencies: string
 }
 
 interface Props {
@@ -180,17 +180,17 @@ export function NowPaymentsSettingsSection({ values, onValueChange }: Props) {
       </div>
 
       <div className='grid gap-1.5'>
-        <Label>{t('Pre-selected coin')}</Label>
+        <Label>{t('Accepted coins')}</Label>
         <Input
-          placeholder='usdttrc20'
-          value={values.NowPaymentsPayCurrency}
+          placeholder='usdtbsc,usdtton,usdc'
+          value={values.NowPaymentsPayCurrencies}
           onChange={(event) =>
-            onValueChange('NowPaymentsPayCurrency', event.target.value)
+            onValueChange('NowPaymentsPayCurrencies', event.target.value)
           }
         />
         <p className='text-muted-foreground text-xs'>
           {t(
-            'NOWPayments ticker pre-selected on the invoice page, e.g. usdttrc20 or btc. Leave blank to let the customer choose.'
+            'Comma-separated NOWPayments tickers offered to the customer at checkout. Each one must also be enabled in Coins Settings on the NOWPayments dashboard, otherwise creating a payment fails.'
           )}
         </p>
       </div>

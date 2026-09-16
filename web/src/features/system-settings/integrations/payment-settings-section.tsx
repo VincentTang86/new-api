@@ -188,7 +188,7 @@ const paymentSchema = z.object({
   NowPaymentsMinTopUp: z.coerce.number().min(1),
   NowPaymentsFeePaidByUser: z.boolean(),
   NowPaymentsFixedRate: z.boolean(),
-  NowPaymentsPayCurrency: z.string(),
+  NowPaymentsPayCurrencies: z.string(),
 })
 
 type PaymentFormValues = z.infer<typeof paymentSchema>
@@ -501,8 +501,8 @@ export function PaymentSettingsSection({
       NowPaymentsMinTopUp: values.NowPaymentsMinTopUp,
       NowPaymentsFeePaidByUser: values.NowPaymentsFeePaidByUser,
       NowPaymentsFixedRate: values.NowPaymentsFixedRate,
-      NowPaymentsPayCurrency:
-        values.NowPaymentsPayCurrency.trim().toLowerCase(),
+      NowPaymentsPayCurrencies:
+        values.NowPaymentsPayCurrencies.trim().toLowerCase(),
     }
 
     const initial = {
@@ -558,8 +558,8 @@ export function PaymentSettingsSection({
       NowPaymentsMinTopUp: initialRef.current.NowPaymentsMinTopUp,
       NowPaymentsFeePaidByUser: initialRef.current.NowPaymentsFeePaidByUser,
       NowPaymentsFixedRate: initialRef.current.NowPaymentsFixedRate,
-      NowPaymentsPayCurrency:
-        initialRef.current.NowPaymentsPayCurrency.trim().toLowerCase(),
+      NowPaymentsPayCurrencies:
+        initialRef.current.NowPaymentsPayCurrencies.trim().toLowerCase(),
     }
 
     const updates: Array<{ key: string; value: string | number | boolean }> = []
@@ -821,10 +821,12 @@ export function PaymentSettingsSection({
       })
     }
 
-    if (sanitized.NowPaymentsPayCurrency !== initial.NowPaymentsPayCurrency) {
+    if (
+      sanitized.NowPaymentsPayCurrencies !== initial.NowPaymentsPayCurrencies
+    ) {
       updates.push({
-        key: 'NowPaymentsPayCurrency',
-        value: sanitized.NowPaymentsPayCurrency,
+        key: 'NowPaymentsPayCurrencies',
+        value: sanitized.NowPaymentsPayCurrencies,
       })
     }
 
@@ -931,7 +933,7 @@ export function PaymentSettingsSection({
     NowPaymentsMinTopUp: currentFormValues.NowPaymentsMinTopUp,
     NowPaymentsFeePaidByUser: currentFormValues.NowPaymentsFeePaidByUser,
     NowPaymentsFixedRate: currentFormValues.NowPaymentsFixedRate,
-    NowPaymentsPayCurrency: currentFormValues.NowPaymentsPayCurrency,
+    NowPaymentsPayCurrencies: currentFormValues.NowPaymentsPayCurrencies,
   }
 
   return (

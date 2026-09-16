@@ -16,20 +16,20 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
+import { useNavigate } from '@tanstack/react-router'
 import i18next from 'i18next'
 import { useState, useCallback } from 'react'
 import { toast } from 'sonner'
 
 import { requestNowPaymentsPayment, isApiSuccess } from '../api'
-import { isSafeHttpCheckoutUrl } from '../lib/payment'
 
-function getInvoiceUrl(data: unknown): string | null {
+function getTradeNo(data: unknown): string | null {
   if (!data || typeof data !== 'object') {
     return null
   }
 
-  if ('invoice_url' in data && typeof data.invoice_url === 'string') {
-    return data.invoice_url
+  if ('trade_no' in data && typeof data.trade_no === 'string') {
+    return data.trade_no
   }
 
   return null
@@ -44,45 +44,50 @@ function getErrorMessage(message: string | undefined, data: unknown): string {
 }
 
 /**
- * Hook for the NOWPayments hosted-invoice flow (crypto).
+ * Hook for the NOWPayments on-chain deposit flow (crypto).
  *
- * Same-tab redirect (window.location.href) rather than window.open: the
- * user-gesture context is lost across the await, so popups get blocked.
+ * The backend creates the deposit address up front, so this navigates to our
+ * own checkout route instead of redirecting to a hosted invoice page. Keeping
+ * the user in-app is what lets them leave for a wallet and come back to the
+ * same address.
  */
 export function useNowPaymentsPayment() {
+  const navigate = useNavigate()
   const [processing, setProcessing] = useState(false)
 
-  const processNowPaymentsPayment = useCallback(async (topupAmount: number) => {
-    setProcessing(true)
+  const processNowPaymentsPayment = useCallback(
+    async (topupAmount: number, payCurrency: string) => {
+      setProcessing(true)
 
-    try {
-      const response = await requestNowPaymentsPayment({
-        amount: Math.floor(topupAmount),
-      })
+      try {
+        const response = await requestNowPaymentsPayment({
+          amount: Math.floor(topupAmount),
+          pay_currency: payCurrency,
+        })
 
-      if (isApiSuccess(response)) {
-        const invoiceUrl = getInvoiceUrl(response.data)
+        if (isApiSuccess(response)) {
+          const tradeNo = getTradeNo(response.data)
 
-        if (invoiceUrl) {
-          if (!isSafeHttpCheckoutUrl(invoiceUrl)) {
-            toast.error(i18next.t('Invalid payment redirect URL'))
-            return false
+          if (tradeNo) {
+            await navigate({
+              to: '/wallet/crypto-pay/$tradeNo',
+              params: { tradeNo },
+            })
+            return true
           }
-          toast.success(i18next.t('Redirecting to payment page...'))
-          window.location.href = invoiceUrl
-          return true
         }
-      }
 
-      toast.error(getErrorMessage(response.message, response.data))
-      return false
-    } catch {
-      toast.error(i18next.t('Payment request failed'))
-      return false
-    } finally {
-      setProcessing(false)
-    }
-  }, [])
+        toast.error(getErrorMessage(response.message, response.data))
+        return false
+      } catch {
+        toast.error(i18next.t('Payment request failed'))
+        return false
+      } finally {
+        setProcessing(false)
+      }
+    },
+    [navigate]
+  )
 
   return { processing, processNowPaymentsPayment }
 }

@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -33,29 +34,44 @@ const (
 )
 
 type NowPaymentsPayRequest struct {
-	Amount int64 `json:"amount"`
+	Amount      int64  `json:"amount"`
+	PayCurrency string `json:"pay_currency"`
 }
 
-type nowPaymentsInvoiceRequest struct {
+// nowPaymentsPaymentRequest 对应 POST /v1/payment。
+// 相比托管发票（POST /v1/invoice），这里可以显式指定 pay_amount，稳定币才能按 1 枚 = 1 USD 收款；
+// 发票接口没有该字段，币量只能由 NOWPayments 按行情折算，用户会看到 19.93711671 这种数字。
+type nowPaymentsPaymentRequest struct {
 	PriceAmount      json.Number `json:"price_amount"`
 	PriceCurrency    string      `json:"price_currency"`
-	PayCurrency      string      `json:"pay_currency,omitempty"`
+	PayAmount        json.Number `json:"pay_amount"`
+	PayCurrency      string      `json:"pay_currency"`
 	OrderId          string      `json:"order_id"`
 	OrderDescription string      `json:"order_description"`
 	IpnCallbackUrl   string      `json:"ipn_callback_url"`
-	SuccessUrl       string      `json:"success_url"`
-	CancelUrl        string      `json:"cancel_url"`
-	PartiallyPaidUrl string      `json:"partially_paid_url"`
 	IsFixedRate      bool        `json:"is_fixed_rate"`
 	IsFeePaidByUser  bool        `json:"is_fee_paid_by_user"`
 }
 
-type nowPaymentsInvoiceResponse struct {
-	Id         string `json:"id"`
-	OrderId    string `json:"order_id"`
-	InvoiceUrl string `json:"invoice_url"`
-	Code       string `json:"code"`
-	Message    string `json:"message"`
+type nowPaymentsPaymentResponse struct {
+	PaymentId     json.Number `json:"payment_id"`
+	PaymentStatus string      `json:"payment_status"`
+	PayAddress    string      `json:"pay_address"`
+	PayAmount     json.Number `json:"pay_amount"`
+	PayCurrency   string      `json:"pay_currency"`
+	PayinExtraId  string      `json:"payin_extra_id"`
+	Network       string      `json:"network"`
+	ValidUntil    string      `json:"valid_until"`
+	Code          string      `json:"code"`
+	Message       string      `json:"message"`
+}
+
+type nowPaymentsMinAmountResponse struct {
+	CurrencyFrom   string      `json:"currency_from"`
+	MinAmount      json.Number `json:"min_amount"`
+	FiatEquivalent json.Number `json:"fiat_equivalent"`
+	Code           string      `json:"code"`
+	Message        string      `json:"message"`
 }
 
 // nowPaymentsIpn 是 IPN 回调体，字段与「查询支付状态」响应一致。
@@ -134,7 +150,7 @@ func RequestNowPaymentsAmount(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "success", "data": strconv.FormatFloat(payMoney, 'f', 2, 64)})
 }
 
-// RequestNowPaymentsPay 创建本地订单并在 NOWPayments 创建托管发票，返回收银台链接
+// RequestNowPaymentsPay 创建本地订单并在 NOWPayments 直接生成收款地址，返回本地订单号供收款页使用
 func RequestNowPaymentsPay(c *gin.Context) {
 	if !isNowPaymentsTopUpEnabled() {
 		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "NOWPayments 支付未启用"})
@@ -151,6 +167,11 @@ func RequestNowPaymentsPay(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "error", "data": fmt.Sprintf("充值数量不能小于 %d", minTopup)})
 		return
 	}
+	payCurrency := strings.ToLower(strings.TrimSpace(req.PayCurrency))
+	if !setting.IsNowPaymentsPayCurrencyAllowed(payCurrency) {
+		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "不支持的收款币种"})
+		return
+	}
 	id := c.GetInt("id")
 	if rejectInvalidTopUpQuota(c, id, req.Amount) {
 		return
@@ -160,6 +181,15 @@ func RequestNowPaymentsPay(c *gin.Context) {
 	payMoney := getNowPaymentsPayMoney(float64(req.Amount), group)
 	if payMoney < 0.01 {
 		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "充值金额过低"})
+		return
+	}
+
+	// 各链最低支付额差异很大，低于门槛的支付上游会直接拒绝或无法结算，先拦下来给出明确提示。
+	// 查询本身失败不阻断支付：门槛由 NOWPayments 侧再兜一次。
+	if minAmount, _, err := getNowPaymentsMinAmount(c.Request.Context(), payCurrency); err != nil {
+		logger.LogWarn(c.Request.Context(), fmt.Sprintf("NOWPayments 最低支付额查询失败，跳过本地校验 user_id=%d pay_currency=%s error=%q", id, payCurrency, err.Error()))
+	} else if payMoney < minAmount {
+		c.JSON(http.StatusOK, gin.H{"message": "error", "data": fmt.Sprintf("该链最低充值 %s %s，请提高金额或更换链", strconv.FormatFloat(minAmount, 'f', -1, 64), strings.ToUpper(payCurrency))})
 		return
 	}
 
@@ -183,6 +213,7 @@ func RequestNowPaymentsPay(c *gin.Context) {
 		PaymentProvider: model.PaymentProviderNowPayments,
 		CreateTime:      time.Now().Unix(),
 		Status:          common.TopUpStatusPending,
+		CryptoCurrency:  payCurrency,
 	}
 	if err := topUp.Insert(); err != nil {
 		logger.LogError(c.Request.Context(), fmt.Sprintf("NOWPayments 创建充值订单失败 user_id=%d trade_no=%s amount=%d error=%q", id, tradeNo, req.Amount, err.Error()))
@@ -190,77 +221,194 @@ func RequestNowPaymentsPay(c *gin.Context) {
 		return
 	}
 
-	invoiceUrl, err := createNowPaymentsInvoice(c.Request.Context(), tradeNo, req.Amount, payMoney)
+	payment, err := createNowPaymentsPayment(c.Request.Context(), tradeNo, req.Amount, payMoney, payCurrency)
 	if err != nil {
-		logger.LogError(c.Request.Context(), fmt.Sprintf("NOWPayments 创建发票失败 user_id=%d trade_no=%s money=%.2f error=%q", id, tradeNo, payMoney, err.Error()))
+		logger.LogError(c.Request.Context(), fmt.Sprintf("NOWPayments 创建支付失败 user_id=%d trade_no=%s money=%.2f pay_currency=%s error=%q", id, tradeNo, payMoney, payCurrency, err.Error()))
 		topUp.Status = common.TopUpStatusFailed
 		_ = topUp.Update()
 		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "拉起支付失败"})
 		return
 	}
 
-	logger.LogInfo(c.Request.Context(), fmt.Sprintf("NOWPayments 充值订单创建成功 user_id=%d trade_no=%s amount=%d money=%.2f pay_currency=%q fixed_rate=%t fee_paid_by_user=%t", id, tradeNo, req.Amount, payMoney, setting.NowPaymentsPayCurrency, setting.NowPaymentsFixedRate, setting.NowPaymentsFeePaidByUser))
+	// 上游可能因四舍五入或最小精度回一个与请求略有出入的 pay_amount，以它返回的为准展示给用户。
+	payAmount, err := payment.PayAmount.Float64()
+	if err != nil || payAmount <= 0 {
+		payAmount = payMoney
+	}
+	topUp.CryptoPaymentId = payment.PaymentId.String()
+	topUp.CryptoAmount = payAmount
+	topUp.CryptoAddress = payment.PayAddress
+	topUp.CryptoNetwork = payment.Network
+	topUp.CryptoExtraId = payment.PayinExtraId
+	if validUntil, parseErr := time.Parse(time.RFC3339, payment.ValidUntil); parseErr == nil {
+		topUp.CryptoExpiresAt = validUntil.Unix()
+	}
+	if err := topUp.Update(); err != nil {
+		logger.LogError(c.Request.Context(), fmt.Sprintf("NOWPayments 保存收款信息失败 user_id=%d trade_no=%s payment_id=%s error=%q", id, tradeNo, topUp.CryptoPaymentId, err.Error()))
+		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "创建订单失败"})
+		return
+	}
+
+	logger.LogInfo(c.Request.Context(), fmt.Sprintf("NOWPayments 充值订单创建成功 user_id=%d trade_no=%s payment_id=%s amount=%d money=%.2f pay_amount=%s pay_currency=%s network=%s fixed_rate=%t fee_paid_by_user=%t", id, tradeNo, topUp.CryptoPaymentId, req.Amount, payMoney, payment.PayAmount, payCurrency, payment.Network, setting.NowPaymentsFixedRate, setting.NowPaymentsFeePaidByUser))
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "success",
+		"data":    gin.H{"trade_no": tradeNo},
+	})
+}
+
+// GetNowPaymentsCurrencies 返回收款币种白名单及各自的最低支付额，供前端在确认弹窗里选链。
+// 低于门槛的链仍然返回，由前端置灰并展示门槛，比直接隐藏更容易让用户明白为什么不能选。
+func GetNowPaymentsCurrencies(c *gin.Context) {
+	if !isNowPaymentsTopUpEnabled() {
+		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "NOWPayments 支付未启用"})
+		return
+	}
+
+	amount, _ := strconv.ParseInt(c.Query("amount"), 10, 64)
+	payMoney := 0.0
+	if amount > 0 {
+		group, _ := model.GetUserGroup(c.GetInt("id"), true)
+		payMoney = getNowPaymentsPayMoney(float64(amount), group)
+	}
+
+	currencies := make([]gin.H, 0, 8)
+	for _, ticker := range setting.GetNowPaymentsPayCurrencies() {
+		entry := gin.H{"ticker": ticker, "available": true}
+		minAmount, minAmountUsd, err := getNowPaymentsMinAmount(c.Request.Context(), ticker)
+		if err != nil {
+			logger.LogWarn(c.Request.Context(), fmt.Sprintf("NOWPayments 最低支付额查询失败 pay_currency=%s error=%q", ticker, err.Error()))
+		} else {
+			entry["min_amount"] = minAmount
+			entry["min_amount_usd"] = minAmountUsd
+			if payMoney > 0 && payMoney < minAmount {
+				entry["available"] = false
+			}
+		}
+		currencies = append(currencies, entry)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "success", "data": currencies})
+}
+
+// GetNowPaymentsPayment 返回收款页所需的地址与订单状态，供用户轮询。
+func GetNowPaymentsPayment(c *gin.Context) {
+	tradeNo := c.Param("trade_no")
+	topUp := model.GetTopUpByTradeNo(tradeNo)
+	if topUp == nil || topUp.UserId != c.GetInt("id") ||
+		topUp.PaymentProvider != model.PaymentProviderNowPayments {
+		c.JSON(http.StatusOK, gin.H{"message": "error", "data": "订单不存在"})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "success",
 		"data": gin.H{
-			"invoice_url": invoiceUrl,
-			"order_id":    tradeNo,
+			"trade_no":     topUp.TradeNo,
+			"status":       topUp.Status,
+			"topup_amount": topUp.Amount,
+			"money":        topUp.Money,
+			"pay_currency": topUp.CryptoCurrency,
+			"pay_amount":   topUp.CryptoAmount,
+			"pay_address":  topUp.CryptoAddress,
+			"network":      topUp.CryptoNetwork,
+			"extra_id":     topUp.CryptoExtraId,
+			"expires_at":   topUp.CryptoExpiresAt,
+			"create_time":  topUp.CreateTime,
 		},
 	})
 }
 
-// createNowPaymentsInvoice 调用 POST /v1/invoice，返回托管收银台链接
-func createNowPaymentsInvoice(ctx context.Context, tradeNo string, amount int64, payMoney float64) (string, error) {
-	returnUrl := paymentReturnPath("/wallet?show_history=true")
-	requestData := nowPaymentsInvoiceRequest{
-		PriceAmount:      json.Number(strconv.FormatFloat(payMoney, 'f', 2, 64)),
-		PriceCurrency:    nowPaymentsPriceCurrency,
-		PayCurrency:      strings.ToLower(strings.TrimSpace(setting.NowPaymentsPayCurrency)),
-		OrderId:          tradeNo,
-		OrderDescription: fmt.Sprintf("Recharge %d credits", amount),
-		IpnCallbackUrl:   service.GetCallbackAddress() + "/api/nowpayments/webhook",
-		SuccessUrl:       returnUrl,
-		CancelUrl:        returnUrl,
-		PartiallyPaidUrl: returnUrl,
-		IsFixedRate:      setting.NowPaymentsFixedRate,
-		IsFeePaidByUser:  setting.NowPaymentsFeePaidByUser,
-	}
-	jsonData, err := common.Marshal(requestData)
-	if err != nil {
-		return "", fmt.Errorf("序列化请求数据失败: %w", err)
+// callNowPaymentsApi 发一次带鉴权的上游请求并把响应解到 out。body 为 nil 时发 GET。
+func callNowPaymentsApi(ctx context.Context, path string, body any, out any) error {
+	method := http.MethodGet
+	var payload io.Reader
+	if body != nil {
+		method = http.MethodPost
+		jsonData, err := common.Marshal(body)
+		if err != nil {
+			return fmt.Errorf("序列化请求数据失败: %w", err)
+		}
+		payload = bytes.NewReader(jsonData)
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, getNowPaymentsApiBase()+"/invoice", bytes.NewReader(jsonData))
+	req, err := http.NewRequestWithContext(ctx, method, getNowPaymentsApiBase()+path, payload)
 	if err != nil {
-		return "", fmt.Errorf("创建HTTP请求失败: %w", err)
+		return fmt.Errorf("创建HTTP请求失败: %w", err)
 	}
-	req.Header.Set("Content-Type", "application/json")
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
 	req.Header.Set("x-api-key", setting.NowPaymentsApiKey)
 
 	resp, err := service.GetHttpClient().Do(req)
 	if err != nil {
-		return "", fmt.Errorf("发送HTTP请求失败: %w", err)
+		return fmt.Errorf("发送HTTP请求失败: %w", err)
 	}
 	defer resp.Body.Close()
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", fmt.Errorf("读取响应失败: %w", err)
+		return fmt.Errorf("读取响应失败: %w", err)
 	}
-	var invoice nowPaymentsInvoiceResponse
-	if err := common.Unmarshal(respBody, &invoice); err != nil {
-		return "", fmt.Errorf("解析响应失败 status=%d body=%q: %w", resp.StatusCode, string(respBody), err)
+	if err := common.Unmarshal(respBody, out); err != nil {
+		return fmt.Errorf("解析响应失败 status=%d body=%q: %w", resp.StatusCode, string(respBody), err)
 	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return "", fmt.Errorf("NOWPayments 返回错误 status=%d code=%s message=%q", resp.StatusCode, invoice.Code, invoice.Message)
+		return fmt.Errorf("NOWPayments 返回错误 status=%d body=%q", resp.StatusCode, string(respBody))
 	}
-	if invoice.InvoiceUrl == "" {
-		return "", fmt.Errorf("响应缺少 invoice_url body=%q", string(respBody))
+	return nil
+}
+
+// getNowPaymentsMinAmount 查询某收款币种的最低支付额，并返回其美元等值。
+// 各链网络费差异极大（以太坊主网门槛远高于 BSC/TON），所以门槛必须实时取而不是写死。
+func getNowPaymentsMinAmount(ctx context.Context, ticker string) (minAmount float64, fiatEquivalent float64, err error) {
+	path := fmt.Sprintf("/min-amount?currency_from=%s&fiat_equivalent=%s&is_fixed_rate=%t&is_fee_paid_by_user=%t",
+		url.QueryEscape(ticker), nowPaymentsPriceCurrency, setting.NowPaymentsFixedRate, setting.NowPaymentsFeePaidByUser)
+
+	var result nowPaymentsMinAmountResponse
+	if err := callNowPaymentsApi(ctx, path, nil, &result); err != nil {
+		return 0, 0, err
 	}
-	return invoice.InvoiceUrl, nil
+	minAmount, err = result.MinAmount.Float64()
+	if err != nil {
+		return 0, 0, fmt.Errorf("解析 min_amount 失败: %w", err)
+	}
+	// fiat_equivalent 是可选字段，缺失时对稳定币退回币量本身（1 枚 = 1 USD）。
+	fiatEquivalent, fiatErr := result.FiatEquivalent.Float64()
+	if fiatErr != nil || fiatEquivalent <= 0 {
+		fiatEquivalent = minAmount
+	}
+	return minAmount, fiatEquivalent, nil
+}
+
+// createNowPaymentsPayment 调用 POST /v1/payment 直接生成收款地址。
+// payMoney 同时作为 price_amount(USD) 与 pay_amount(稳定币)，即 1 枚稳定币按 1 USD 收取；
+// IPN 仍以 price_amount + price_currency=usd 入账，汇率波动不影响到账额度。
+func createNowPaymentsPayment(ctx context.Context, tradeNo string, amount int64, payMoney float64, payCurrency string) (*nowPaymentsPaymentResponse, error) {
+	moneyText := json.Number(strconv.FormatFloat(payMoney, 'f', 2, 64))
+	requestData := nowPaymentsPaymentRequest{
+		PriceAmount:      moneyText,
+		PriceCurrency:    nowPaymentsPriceCurrency,
+		PayAmount:        moneyText,
+		PayCurrency:      payCurrency,
+		OrderId:          tradeNo,
+		OrderDescription: fmt.Sprintf("Recharge %d credits", amount),
+		IpnCallbackUrl:   service.GetCallbackAddress() + "/api/nowpayments/webhook",
+		IsFixedRate:      setting.NowPaymentsFixedRate,
+		IsFeePaidByUser:  setting.NowPaymentsFeePaidByUser,
+	}
+
+	var payment nowPaymentsPaymentResponse
+	if err := callNowPaymentsApi(ctx, "/payment", requestData, &payment); err != nil {
+		return nil, err
+	}
+	if payment.PayAddress == "" {
+		return nil, fmt.Errorf("响应缺少 pay_address code=%s message=%q", payment.Code, payment.Message)
+	}
+	return &payment, nil
 }
 
 func nowPaymentsSignature(payload []byte, secret string) string {

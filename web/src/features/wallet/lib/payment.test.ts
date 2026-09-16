@@ -70,7 +70,7 @@ describe('payment dispatch', () => {
     expect(calls).toEqual(['waffo:120:3'])
   })
 
-  test('routes NOWPayments to its hosted invoice flow', async () => {
+  test('routes NOWPayments to its crypto flow with the chosen coin', async () => {
     const calls: string[] = []
     const success = await dispatchSelectedPayment(
       { name: 'Crypto (NOWPayments)', type: PAYMENT_TYPES.NOWPAYMENTS },
@@ -89,15 +89,39 @@ describe('payment dispatch', () => {
           calls.push('pancake')
           return false
         },
-        nowPayments: async (amount) => {
-          calls.push(`nowpayments:${amount}`)
+        nowPayments: async (amount, payCurrency) => {
+          calls.push(`nowpayments:${amount}:${payCurrency}`)
+          return true
+        },
+      },
+      'usdtbsc'
+    )
+
+    expect(success).toBe(true)
+    expect(calls).toEqual(['nowpayments:50:usdtbsc'])
+  })
+
+  test('does not create a crypto order without a chosen coin', async () => {
+    let called = false
+    const success = await dispatchSelectedPayment(
+      { name: 'Crypto (NOWPayments)', type: PAYMENT_TYPES.NOWPAYMENTS },
+      50,
+      null,
+      {
+        regular: async () => false,
+        waffo: async () => false,
+        waffoPancake: async () => false,
+        nowPayments: async () => {
+          called = true
           return true
         },
       }
     )
 
-    expect(success).toBe(true)
-    expect(calls).toEqual(['nowpayments:50'])
+    // Every deposit address is chain-specific, so an order created without a
+    // coin would have nowhere to send funds.
+    expect(success).toBe(false)
+    expect(called).toBe(false)
   })
 
   test('does not create a Waffo order without a selected method index', async () => {
