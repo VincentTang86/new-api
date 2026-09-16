@@ -199,7 +199,7 @@ func RequestNowPaymentsPay(c *gin.Context) {
 		return
 	}
 
-	logger.LogInfo(c.Request.Context(), fmt.Sprintf("NOWPayments 充值订单创建成功 user_id=%d trade_no=%s amount=%d money=%.2f", id, tradeNo, req.Amount, payMoney))
+	logger.LogInfo(c.Request.Context(), fmt.Sprintf("NOWPayments 充值订单创建成功 user_id=%d trade_no=%s amount=%d money=%.2f pay_currency=%q fixed_rate=%t fee_paid_by_user=%t", id, tradeNo, req.Amount, payMoney, setting.NowPaymentsPayCurrency, setting.NowPaymentsFixedRate, setting.NowPaymentsFeePaidByUser))
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "success",
