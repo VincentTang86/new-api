@@ -647,7 +647,7 @@ func settleTaskBillingOnComplete(ctx context.Context, adaptor TaskPollingAdaptor
 	//    的预估准确，按次计费标记不应压制它——按秒计费的视频模型也配 ModelPrice，
 	//    如果先看 PerCallBilling 就永远等不到差额结算。
 	if actualQuota := adaptor.AdjustBillingOnComplete(task, taskResult); actualQuota > 0 {
-		RecalculateTaskQuota(ctx, task, actualQuota, "adaptor计费调整")
+		RecalculateTaskQuota(ctx, task, actualQuota, taskResult.TotalTokens, "adaptor计费调整")
 		return
 	}
 	// 2. 按次计费的任务不做基于 token 的差额结算

@@ -121,6 +121,10 @@ type RelayInfo struct {
 	// 强制预扣全额。用于异步任务（视频/音乐生成等），因为请求返回后任务仍在运行，
 	// 必须在提交前锁定全额。
 	ForcePreConsume bool
+	// EstimatedUpstreamTokens 是适配器按请求规格预估的上游 token 数，0 表示估不出。
+	// 异步任务提交时上游还没回 usage，这个值既决定押金，也写进提交日志的 token 列，
+	// 否则一笔视频消费在日志里是零 token；实际用量由结算日志记录。
+	EstimatedUpstreamTokens int
 	// Billing 是计费会话，封装了预扣费/结算/退款的统一生命周期。
 	// 初始免费组可为 nil；若 auto 重试切换到付费组，会在发送前创建。
 	Billing BillingSettler

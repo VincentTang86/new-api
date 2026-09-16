@@ -201,6 +201,7 @@ func RelayTaskSubmit(c *gin.Context, info *relaycommon.RelayInfo) (*TaskSubmitRe
 	//      则维持原基数。结算始终以上游 usage 为准，这里只决定押多少。
 	if !info.PriceData.UsePrice && info.PriceData.ModelRatio > 0 {
 		if tokens := adaptor.EstimatePreConsumeTokens(c, info); tokens > 0 {
+			info.EstimatedUpstreamTokens = tokens
 			estimated, clamp := common.QuotaFromFloatChecked(
 				float64(tokens) * info.PriceData.ModelRatio * info.PriceData.GroupRatioInfo.GroupRatio)
 			noteTaskQuotaClamp(info, clamp)
