@@ -143,10 +143,8 @@ func OpenAIChatRequestToClaudeMessages(c context.Context, info convmeta.Meta, te
 		claudeRequest.OutputConfig = json.RawMessage(fmt.Sprintf(`{"effort":"%s"}`, effortLevel))
 		if strings.HasPrefix(baseModel, "claude-opus-4-7") ||
 			strings.HasPrefix(baseModel, "claude-opus-4-8") {
+			// Defaults display to "omitted"; restore the 4.6 visible summary.
 			claudeRequest.Thinking.Display = "summarized"
-			claudeRequest.Temperature = nil
-			claudeRequest.TopP = nil
-			claudeRequest.TopK = nil
 		} else {
 			claudeRequest.TopP = nil
 			claudeRequest.Temperature = kitutil.GetPointer[float64](1.0)
@@ -157,11 +155,9 @@ func OpenAIChatRequestToClaudeMessages(c context.Context, info convmeta.Meta, te
 		trimmedModel := strings.TrimSuffix(textRequest.Model, "-thinking")
 		if strings.HasPrefix(trimmedModel, "claude-opus-4-7") ||
 			strings.HasPrefix(trimmedModel, "claude-opus-4-8") {
+			// Opus 4.7/4.8 reject thinking.type="enabled"; use adaptive at high effort.
 			claudeRequest.Thinking = &dto.Thinking{Type: "adaptive", Display: "summarized"}
 			claudeRequest.OutputConfig = json.RawMessage(`{"effort":"high"}`)
-			claudeRequest.Temperature = nil
-			claudeRequest.TopP = nil
-			claudeRequest.TopK = nil
 		} else {
 			if claudeRequest.MaxTokens == nil || *claudeRequest.MaxTokens < 1280 {
 				claudeRequest.MaxTokens = kitutil.GetPointer[uint](1280)
@@ -178,6 +174,8 @@ func OpenAIChatRequestToClaudeMessages(c context.Context, info convmeta.Meta, te
 			claudeRequest.Model = trimmedModel
 		}
 	}
+
+	claudeRequest.DropUnsupportedSamplingParams()
 
 	if textRequest.ReasoningEffort != "" {
 		switch textRequest.ReasoningEffort {
