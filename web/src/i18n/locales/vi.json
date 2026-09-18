@@ -19,7 +19,6 @@
     "Payment received. Your credits have been added.": "Đã nhận thanh toán. Số dư của bạn đã được cộng.",
     "Send exactly": "Gửi chính xác",
     "Send only {{symbol}} on {{network}}.": "Chỉ gửi {{symbol}} trên mạng {{network}}.",
-    "Send only {{symbol}} on {{network}}. This address looks identical across EVM chains — funds sent on any other network are not credited automatically.": "Chỉ gửi {{symbol}} trên mạng {{network}}. Địa chỉ này giống hệt nhau trên mọi chuỗi EVM — tiền gửi qua mạng khác sẽ không được cộng tự động.",
     "The input image column is the charge per image attached to an edit request.": "Cột ảnh đầu vào là phí cho mỗi ảnh đính kèm trong yêu cầu chỉnh sửa.",
     "\"default\": \"us-central1\", \"claude-3-5-sonnet-20240620\": \"europe-west1\"": "\"default\": \"us-central1\", \"claude-3-5-sonnet-20240620\": \"europe-west1\"",
     "#1 App": "#1 Ứng dụng",

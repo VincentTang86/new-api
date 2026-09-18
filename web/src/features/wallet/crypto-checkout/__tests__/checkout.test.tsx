@@ -116,6 +116,15 @@ describe('CryptoCheckout', () => {
     ).toBeInTheDocument()
   })
 
+  test('warns about the network without explaining EVM address reuse', async () => {
+    // usdtbsc is an EVM chain, which used to trigger a longer warning.
+    await renderCheckout(buildDetail())
+
+    const text = document.body.textContent ?? ''
+    expect(text).toContain('Send only USDT on BSC.')
+    expect(text).not.toContain('EVM')
+  })
+
   test('drops the payment rules once the order is settled', async () => {
     await renderCheckout(buildDetail({ status: 'success' }))
 

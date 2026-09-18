@@ -19,7 +19,6 @@
     "Payment received. Your credits have been added.": "已收到付款，額度已到帳。",
     "Send exactly": "請準確轉帳",
     "Send only {{symbol}} on {{network}}.": "僅可透過 {{network}} 網路轉入 {{symbol}}。",
-    "Send only {{symbol}} on {{network}}. This address looks identical across EVM chains — funds sent on any other network are not credited automatically.": "僅可透過 {{network}} 網路轉入 {{symbol}}。該地址在各 EVM 鏈上完全相同，轉錯網路的資金不會自動入帳。",
     "The input image column is the charge per image attached to an edit request.": "「輸入圖」欄是編輯請求每附帶一張輸入圖的價格。",
     "\"default\": \"us-central1\", \"claude-3-5-sonnet-20240620\": \"europe-west1\"": "\"default\": \"us-central1\", \"claude-3-5-sonnet-20240620\": \"europe-west1\"",
     "#1 App": "#1 套用程式",

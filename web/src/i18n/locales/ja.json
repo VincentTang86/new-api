@@ -19,7 +19,6 @@
     "Payment received. Your credits have been added.": "入金を確認しました。クレジットが追加されました。",
     "Send exactly": "送金額",
     "Send only {{symbol}} on {{network}}.": "{{network}} ネットワークの {{symbol}} のみ送金してください。",
-    "Send only {{symbol}} on {{network}}. This address looks identical across EVM chains — funds sent on any other network are not credited automatically.": "{{network}} ネットワークの {{symbol}} のみ送金してください。このアドレスはすべての EVM チェーンで同一に見えるため、別のネットワークに送金した資金は自動的に反映されません。",
     "The input image column is the charge per image attached to an edit request.": "「入力画像」列は、編集リクエストに添付する画像 1 枚あたりの料金です。",
     "\"default\": \"us-central1\", \"claude-3-5-sonnet-20240620\": \"europe-west1\"": "\"default \":\" us - central 1 \", \"claude -3 -5 - sonnet -20240620 \":\" europe - west 1 \"",
     "#1 App": "#1 アプリ",

@@ -19,7 +19,6 @@
     "Payment received. Your credits have been added.": "Paiement reçu. Vos crédits ont été ajoutés.",
     "Send exactly": "Envoyez exactement",
     "Send only {{symbol}} on {{network}}.": "Envoyez uniquement du {{symbol}} sur {{network}}.",
-    "Send only {{symbol}} on {{network}}. This address looks identical across EVM chains — funds sent on any other network are not credited automatically.": "Envoyez uniquement du {{symbol}} sur {{network}}. Cette adresse est identique sur toutes les chaînes EVM — les fonds envoyés sur un autre réseau ne sont pas crédités automatiquement.",
     "The input image column is the charge per image attached to an edit request.": "La colonne image d'entrée est le tarif par image jointe à une requête d'édition.",
     "\"default\": \"us-central1\", \"claude-3-5-sonnet-20240620\": \"europe-west1\"": "\"default\": \"us-central1\", \"claude-3-5-sonnet-20240620\": \"europe-west1\"",
     "#1 App": "#1 App",

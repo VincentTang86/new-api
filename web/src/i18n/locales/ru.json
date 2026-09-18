@@ -19,7 +19,6 @@
     "Payment received. Your credits have been added.": "Платёж получен. Средства зачислены.",
     "Send exactly": "Отправьте ровно",
     "Send only {{symbol}} on {{network}}.": "Отправляйте только {{symbol}} в сети {{network}}.",
-    "Send only {{symbol}} on {{network}}. This address looks identical across EVM chains — funds sent on any other network are not credited automatically.": "Отправляйте только {{symbol}} в сети {{network}}. Этот адрес выглядит одинаково во всех EVM-сетях — средства, отправленные в другой сети, не зачисляются автоматически.",
     "The input image column is the charge per image attached to an edit request.": "Столбец входного изображения — плата за каждое изображение, приложенное к запросу редактирования.",
     "\"default\": \"us-central1\", \"claude-3-5-sonnet-20240620\": \"europe-west1\"": "\"default\": \"us-central1\", \"claude-3-5-sonnet-20240620\": \"europe-west1\"",
     "#1 App": "#1 Приложение",

@@ -29,28 +29,22 @@ export interface CryptoCurrencyMeta {
   symbol: string
   /** Chain the token lives on, shown as the secondary label */
   network: string
-  /**
-   * Whether the chain uses EVM-style `0x` addresses. Those addresses are
-   * indistinguishable across chains, so sending on the wrong one produces a
-   * wrong-asset deposit that NOWPayments does not credit automatically.
-   */
-  evmAddress: boolean
 }
 
 const CRYPTO_CURRENCY_META: Record<string, CryptoCurrencyMeta> = {
-  usdterc20: { symbol: 'USDT', network: 'Ethereum', evmAddress: true },
-  usdtbsc: { symbol: 'USDT', network: 'BSC', evmAddress: true },
-  usdtarb: { symbol: 'USDT', network: 'Arbitrum One', evmAddress: true },
-  usdtmatic: { symbol: 'USDT', network: 'Polygon', evmAddress: true },
-  usdtton: { symbol: 'USDT', network: 'TON', evmAddress: false },
-  usdttrc20: { symbol: 'USDT', network: 'Tron', evmAddress: false },
-  usdtsol: { symbol: 'USDT', network: 'Solana', evmAddress: false },
-  usdc: { symbol: 'USDC', network: 'Ethereum', evmAddress: true },
-  usdcbsc: { symbol: 'USDC', network: 'BSC', evmAddress: true },
-  usdcarb: { symbol: 'USDC', network: 'Arbitrum One', evmAddress: true },
-  usdcmatic: { symbol: 'USDC', network: 'Polygon', evmAddress: true },
-  usdcalgo: { symbol: 'USDC', network: 'Algorand', evmAddress: false },
-  usdcsol: { symbol: 'USDC', network: 'Solana', evmAddress: false },
+  usdterc20: { symbol: 'USDT', network: 'Ethereum' },
+  usdtbsc: { symbol: 'USDT', network: 'BSC' },
+  usdtarb: { symbol: 'USDT', network: 'Arbitrum One' },
+  usdtmatic: { symbol: 'USDT', network: 'Polygon' },
+  usdtton: { symbol: 'USDT', network: 'TON' },
+  usdttrc20: { symbol: 'USDT', network: 'Tron' },
+  usdtsol: { symbol: 'USDT', network: 'Solana' },
+  usdc: { symbol: 'USDC', network: 'Ethereum' },
+  usdcbsc: { symbol: 'USDC', network: 'BSC' },
+  usdcarb: { symbol: 'USDC', network: 'Arbitrum One' },
+  usdcmatic: { symbol: 'USDC', network: 'Polygon' },
+  usdcalgo: { symbol: 'USDC', network: 'Algorand' },
+  usdcsol: { symbol: 'USDC', network: 'Solana' },
 }
 
 export function describeCryptoCurrency(ticker: string): CryptoCurrencyMeta {
@@ -58,7 +52,6 @@ export function describeCryptoCurrency(ticker: string): CryptoCurrencyMeta {
     CRYPTO_CURRENCY_META[ticker.toLowerCase()] ?? {
       symbol: ticker.toUpperCase(),
       network: '',
-      evmAddress: false,
     }
   )
 }

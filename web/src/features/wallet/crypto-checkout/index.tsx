@@ -317,15 +317,10 @@ export function CryptoCheckout(props: CryptoCheckoutProps) {
                     <Alert variant='destructive' className='mt-5 px-3 py-2.5'>
                       <AlertTriangle className='size-4' />
                       <AlertDescription className='text-[13px] leading-[1.45]'>
-                        {meta.evmAddress
-                          ? t(
-                              'Send only {{symbol}} on {{network}}. This address looks identical across EVM chains — funds sent on any other network are not credited automatically.',
-                              { symbol: meta.symbol, network: networkLabel }
-                            )
-                          : t('Send only {{symbol}} on {{network}}.', {
-                              symbol: meta.symbol,
-                              network: networkLabel,
-                            })}
+                        {t('Send only {{symbol}} on {{network}}.', {
+                          symbol: meta.symbol,
+                          network: networkLabel,
+                        })}
                       </AlertDescription>
                     </Alert>
 
