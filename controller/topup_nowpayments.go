@@ -61,9 +61,12 @@ type nowPaymentsPaymentResponse struct {
 	PayCurrency   string      `json:"pay_currency"`
 	PayinExtraId  string      `json:"payin_extra_id"`
 	Network       string      `json:"network"`
-	ValidUntil    string      `json:"valid_until"`
-	Code          string      `json:"code"`
-	Message       string      `json:"message"`
+	// 代币合约地址与精度，EVM 链的代币才有；精度同样时数字时字符串。
+	SmartContract    string      `json:"smart_contract"`
+	NetworkPrecision json.Number `json:"network_precision"`
+	ValidUntil       string      `json:"valid_until"`
+	Code             string      `json:"code"`
+	Message          string      `json:"message"`
 }
 
 type nowPaymentsMinAmountResponse struct {
@@ -234,12 +237,22 @@ func RequestNowPaymentsPay(c *gin.Context) {
 	payAmount, err := payment.PayAmount.Float64()
 	if err != nil || payAmount <= 0 {
 		payAmount = payMoney
+	} else {
+		// 原串留给收款页生成带金额的二维码：经 float64 再回到字符串会丢精度。
+		topUp.CryptoAmountText = payment.PayAmount.String()
 	}
 	topUp.CryptoPaymentId = payment.PaymentId.String()
 	topUp.CryptoAmount = payAmount
 	topUp.CryptoAddress = payment.PayAddress
 	topUp.CryptoNetwork = payment.Network
 	topUp.CryptoExtraId = payment.PayinExtraId
+	// 合约与精度决定收款页能否生成带金额的二维码；上游没给就留空，前端退回纯地址二维码。
+	topUp.CryptoContract = payment.SmartContract
+	if precision, precisionErr := payment.NetworkPrecision.Int64(); precisionErr == nil && precision > 0 {
+		topUp.CryptoDecimals = int(precision)
+	} else if payment.SmartContract != "" {
+		logger.LogWarn(c.Request.Context(), fmt.Sprintf("NOWPayments 未返回有效 network_precision，收款页不提供带金额二维码 trade_no=%s pay_currency=%s network_precision=%q", tradeNo, payCurrency, payment.NetworkPrecision))
+	}
 	if validUntil, parseErr := time.Parse(time.RFC3339, payment.ValidUntil); parseErr == nil {
 		topUp.CryptoExpiresAt = validUntil.Unix()
 	}
@@ -249,7 +262,7 @@ func RequestNowPaymentsPay(c *gin.Context) {
 		return
 	}
 
-	logger.LogInfo(c.Request.Context(), fmt.Sprintf("NOWPayments 充值订单创建成功 user_id=%d trade_no=%s payment_id=%s amount=%d money=%.2f pay_amount=%s pay_currency=%s network=%s fixed_rate=%t fee_paid_by_user=%t", id, tradeNo, topUp.CryptoPaymentId, req.Amount, payMoney, payment.PayAmount, payCurrency, payment.Network, setting.NowPaymentsFixedRate, setting.NowPaymentsFeePaidByUser))
+	logger.LogInfo(c.Request.Context(), fmt.Sprintf("NOWPayments 充值订单创建成功 user_id=%d trade_no=%s payment_id=%s amount=%d money=%.2f pay_amount=%s pay_currency=%s network=%s smart_contract=%s network_precision=%s fixed_rate=%t fee_paid_by_user=%t", id, tradeNo, topUp.CryptoPaymentId, req.Amount, payMoney, payment.PayAmount, payCurrency, payment.Network, payment.SmartContract, payment.NetworkPrecision, setting.NowPaymentsFixedRate, setting.NowPaymentsFeePaidByUser))
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "success",
@@ -316,6 +329,10 @@ func GetNowPaymentsPayment(c *gin.Context) {
 			"extra_id":     topUp.CryptoExtraId,
 			"expires_at":   topUp.CryptoExpiresAt,
 			"create_time":  topUp.CreateTime,
+			// 三者齐全前端才会生成带金额的二维码，任一为空退回纯地址二维码。
+			"contract":        topUp.CryptoContract,
+			"decimals":        topUp.CryptoDecimals,
+			"pay_amount_text": topUp.CryptoAmountText,
 		},
 	})
 }

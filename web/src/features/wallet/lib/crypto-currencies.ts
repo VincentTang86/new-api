@@ -35,20 +35,62 @@ export interface CryptoCurrencyMeta {
    * wrong-asset deposit that NOWPayments does not credit automatically.
    */
   evmAddress: boolean
+  /**
+   * EIP-155 chain id, set only for EVM chains. Goes into the EIP-681 payment
+   * URI so a scanning wallet switches to the right network before it sends.
+   * Keyed by our own ticker rather than NOWPayments' network string because
+   * the tickers are the fixed whitelist we send them.
+   */
+  chainId?: number
 }
 
+const ETHEREUM = 1
+const BSC = 56
+const POLYGON = 137
+const ARBITRUM_ONE = 42161
+
 const CRYPTO_CURRENCY_META: Record<string, CryptoCurrencyMeta> = {
-  usdterc20: { symbol: 'USDT', network: 'Ethereum', evmAddress: true },
-  usdtbsc: { symbol: 'USDT', network: 'BSC', evmAddress: true },
-  usdtarb: { symbol: 'USDT', network: 'Arbitrum One', evmAddress: true },
-  usdtmatic: { symbol: 'USDT', network: 'Polygon', evmAddress: true },
+  usdterc20: {
+    symbol: 'USDT',
+    network: 'Ethereum',
+    evmAddress: true,
+    chainId: ETHEREUM,
+  },
+  usdtbsc: { symbol: 'USDT', network: 'BSC', evmAddress: true, chainId: BSC },
+  usdtarb: {
+    symbol: 'USDT',
+    network: 'Arbitrum One',
+    evmAddress: true,
+    chainId: ARBITRUM_ONE,
+  },
+  usdtmatic: {
+    symbol: 'USDT',
+    network: 'Polygon',
+    evmAddress: true,
+    chainId: POLYGON,
+  },
   usdtton: { symbol: 'USDT', network: 'TON', evmAddress: false },
   usdttrc20: { symbol: 'USDT', network: 'Tron', evmAddress: false },
   usdtsol: { symbol: 'USDT', network: 'Solana', evmAddress: false },
-  usdc: { symbol: 'USDC', network: 'Ethereum', evmAddress: true },
-  usdcbsc: { symbol: 'USDC', network: 'BSC', evmAddress: true },
-  usdcarb: { symbol: 'USDC', network: 'Arbitrum One', evmAddress: true },
-  usdcmatic: { symbol: 'USDC', network: 'Polygon', evmAddress: true },
+  usdc: {
+    symbol: 'USDC',
+    network: 'Ethereum',
+    evmAddress: true,
+    chainId: ETHEREUM,
+  },
+  usdcbsc: { symbol: 'USDC', network: 'BSC', evmAddress: true, chainId: BSC },
+  usdcarb: {
+    symbol: 'USDC',
+    network: 'Arbitrum One',
+    evmAddress: true,
+    chainId: ARBITRUM_ONE,
+  },
+  usdcmatic: {
+    symbol: 'USDC',
+    network: 'Polygon',
+    evmAddress: true,
+    chainId: POLYGON,
+  },
   usdcalgo: { symbol: 'USDC', network: 'Algorand', evmAddress: false },
   usdcsol: { symbol: 'USDC', network: 'Solana', evmAddress: false },
 }

@@ -24,10 +24,11 @@ import {
   RouterProvider,
 } from '@tanstack/react-router'
 import { act, render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
-import type { NowPaymentsPaymentDetail } from '../../types'
 import { CryptoCheckout } from '..'
+import type { NowPaymentsPaymentDetail } from '../../types'
 
 const getNowPaymentsPaymentDetail = vi.hoisted(() => vi.fn())
 
@@ -56,6 +57,9 @@ function buildDetail(
     // 02:15:30 out.
     expires_at: Math.floor(NOW_MS / 1000) + 8130,
     create_time: Math.floor(NOW_MS / 1000),
+    contract: '0x55d398326f99059fF775485246999027B3197955',
+    decimals: 18,
+    pay_amount_text: '2',
     ...overrides,
   }
 }
@@ -136,5 +140,38 @@ describe('CryptoCheckout', () => {
     expect(
       screen.queryByRole('button', { name: 'Copy Payment ID' })
     ).not.toBeInTheDocument()
+  })
+
+  test('offers an amount-prefilled QR behind a tab that defaults to the plain address', async () => {
+    await renderCheckout(buildDetail())
+
+    expect(screen.getByRole('tab', { name: 'Address' })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    )
+    expect(
+      screen.queryByText(
+        'Scanning this code prefills the token and amount in wallets that support it.'
+      )
+    ).not.toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('tab', { name: 'With amount' }))
+
+    expect(
+      screen.getByText(
+        'Scanning this code prefills the token and amount in wallets that support it.'
+      )
+    ).toBeInTheDocument()
+  })
+
+  test('shows only the plain address QR when the order has no token contract', async () => {
+    // Non-EVM chains and orders created before the contract was recorded must
+    // render exactly as before rather than offer a QR that cannot be built.
+    await renderCheckout(buildDetail({ pay_currency: 'usdtton', contract: '' }))
+
+    expect(screen.queryByRole('tab')).not.toBeInTheDocument()
+    expect(
+      screen.getByText('0xbfa3a1eC1dce8Ab7962f350d41Cffc3934c390A8')
+    ).toBeInTheDocument()
   })
 })

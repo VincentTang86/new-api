@@ -245,6 +245,37 @@ func TestNowPaymentsWebhookCreditsOnlyFinishedFullPayments(t *testing.T) {
 	})
 }
 
+// 上游对 network_precision 时发数字时发字符串；任一形态都不能让建单响应解析失败，
+// 缺失或 null 则按"精度未知"处理，由收款页退回纯地址二维码。
+func TestNowPaymentsPaymentResponseNetworkPrecision(t *testing.T) {
+	testCases := []struct {
+		name string
+		body string
+		want int64
+		ok   bool
+	}{
+		{name: "integer", body: `{"smart_contract": "0x55d398326f99059fF775485246999027B3197955", "network_precision": 18}`, want: 18, ok: true},
+		{name: "quoted string", body: `{"smart_contract": "0xdAC17F958D2ee523a2206206994597C13D831ec7", "network_precision": "6"}`, want: 6, ok: true},
+		{name: "missing", body: `{"pay_address": "EQabc"}`, ok: false},
+		{name: "null", body: `{"smart_contract": null, "network_precision": null}`, ok: false},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var payment nowPaymentsPaymentResponse
+			require.NoError(t, common.Unmarshal([]byte(tc.body), &payment))
+
+			got, err := payment.NetworkPrecision.Int64()
+			if !tc.ok {
+				assert.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, tc.want, got)
+		})
+	}
+}
+
 func TestNowPaymentsWebhookRejectedWhenDisabled(t *testing.T) {
 	setupNowPaymentsWebhookTest(t)
 	setting.NowPaymentsEnabled = false

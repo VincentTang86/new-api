@@ -92,6 +92,12 @@ export interface NowPaymentsPaymentDetail {
   extra_id: string
   expires_at: number
   create_time: number
+  /** ERC-20 contract NOWPayments watches for this order; empty on non-EVM chains and on orders created before it was recorded. */
+  contract: string
+  /** Token decimals; 0 when unknown. */
+  decimals: number
+  /** `pay_amount` exactly as NOWPayments returned it, so the QR can carry it without a float round-trip. */
+  pay_amount_text: string
 }
 export type NowPaymentsPaymentDetailResponse = ApiResponse<
   NowPaymentsPaymentDetail | string

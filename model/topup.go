@@ -33,6 +33,11 @@ type TopUp struct {
 	CryptoNetwork   string  `json:"crypto_network" gorm:"type:varchar(32)"`
 	CryptoExtraId   string  `json:"crypto_extra_id" gorm:"type:varchar(128)"`
 	CryptoExpiresAt int64   `json:"crypto_expires_at"`
+	// 代币合约与精度来自上游建单响应，收款页据此生成带金额的 EIP-681 二维码；非 EVM 币种合约为空。
+	// 应付币量另存原串：float64 往返会丢精度，而二维码里的金额必须与上游期望的分毫不差。
+	CryptoContract   string `json:"crypto_contract" gorm:"type:varchar(64)"`
+	CryptoDecimals   int    `json:"crypto_decimals"`
+	CryptoAmountText string `json:"crypto_amount_text" gorm:"type:varchar(64)"`
 }
 
 const (

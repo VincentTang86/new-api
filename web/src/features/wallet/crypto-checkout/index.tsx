@@ -29,11 +29,16 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { copyToClipboard } from '@/lib/copy-to-clipboard'
 import { cn } from '@/lib/utils'
 
 import { getNowPaymentsPaymentDetail, isApiSuccess } from '../api'
-import { describeCryptoCurrency, formatCryptoAmount } from '../lib'
+import {
+  buildErc20PaymentUri,
+  describeCryptoCurrency,
+  formatCryptoAmount,
+} from '../lib'
 import type { NowPaymentsPaymentDetail } from '../types'
 
 /** How often to re-check the order while it is still awaiting funds. */
@@ -175,6 +180,9 @@ export function CryptoCheckout(props: CryptoCheckoutProps) {
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [secondsLeft, setSecondsLeft] = useState(0)
+  // Address is the default: every wallet scans a bare address, while support
+  // for amount-carrying EIP-681 codes is uneven.
+  const [qrMode, setQrMode] = useState<'address' | 'amount'>('address')
 
   const fetchDetail = useCallback(async () => {
     const response = await getNowPaymentsPaymentDetail(props.tradeNo)
@@ -257,6 +265,15 @@ export function CryptoCheckout(props: CryptoCheckoutProps) {
   const meta = describeCryptoCurrency(detail.pay_currency)
   const networkLabel = meta.network || detail.network || detail.pay_currency
   const payAmountText = formatCryptoAmount(detail.pay_amount)
+  // The QR must carry the amount byte-exact as NOWPayments expects it, so it
+  // prefers the upstream string over the float round-trip; older orders lack it.
+  const paymentUri = buildErc20PaymentUri({
+    contract: detail.contract,
+    chainId: meta.chainId,
+    decimals: detail.decimals,
+    address: detail.pay_address,
+    amountText: detail.pay_amount_text || payAmountText,
+  })
   const isPending = detail.status === 'pending'
   const isPaid = detail.status === 'success'
 
@@ -333,14 +350,45 @@ export function CryptoCheckout(props: CryptoCheckoutProps) {
                         inverts the code in dark mode, but not every wallet app
                         scans an inverted QR and a failed scan here means a
                         mis-sent transfer. The padding is the quiet zone. */}
-                    <div className='flex justify-center py-7'>
+                    <div className='flex flex-col items-center gap-4 py-7'>
+                      {/* The amount-carrying code only exists when the order
+                          recorded the token contract and decimals; otherwise
+                          the layout is exactly the bare-address one. */}
+                      {paymentUri && (
+                        <Tabs
+                          value={qrMode}
+                          onValueChange={(value) =>
+                            setQrMode(value === 'amount' ? 'amount' : 'address')
+                          }
+                        >
+                          <TabsList>
+                            <TabsTrigger value='address'>
+                              {t('Address')}
+                            </TabsTrigger>
+                            <TabsTrigger value='amount'>
+                              {t('With amount')}
+                            </TabsTrigger>
+                          </TabsList>
+                        </Tabs>
+                      )}
                       <div className='rounded-lg bg-white p-3'>
                         <QRCodeSVG
-                          value={detail.pay_address}
+                          value={
+                            paymentUri && qrMode === 'amount'
+                              ? paymentUri
+                              : detail.pay_address
+                          }
                           size={202}
                           className='size-[188px] sm:size-[202px]'
                         />
                       </div>
+                      {paymentUri && qrMode === 'amount' && (
+                        <p className='text-muted-foreground max-w-[320px] text-center text-xs'>
+                          {t(
+                            'Scanning this code prefills the token and amount in wallets that support it.'
+                          )}
+                        </p>
+                      )}
                     </div>
 
                     <CopyRow
