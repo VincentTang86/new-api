@@ -80,6 +80,8 @@ export type NowPaymentsCurrenciesResponse = ApiResponse<
 /** Deposit details for the crypto checkout page. */
 export interface NowPaymentsPaymentDetail {
   trade_no: string
+  /** NOWPayments' own id for the order, quoted to support when a transfer needs reconciling. */
+  payment_id: string
   status: string
   topup_amount: number
   money: number

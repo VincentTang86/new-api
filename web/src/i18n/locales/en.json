@@ -5616,6 +5616,13 @@
     "Fees paid by customer": "Fees paid by customer",
     "The customer covers network and service fees so the full USD amount settles. NOWPayments forces a fixed rate when this is on; only enable it if fixed-rate coins are available on your account.": "The customer covers network and service fees so the full USD amount settles. NOWPayments forces a fixed rate when this is on; only enable it if fixed-rate coins are available on your account.",
     "Fixed exchange rate": "Fixed exchange rate",
-    "Locks the crypto amount for 10 minutes after the customer picks a coin; unpaid invoices then expire.": "Locks the crypto amount for 10 minutes after the customer picks a coin; unpaid invoices then expire."
+    "Locks the crypto amount for 10 minutes after the customer picks a coin; unpaid invoices then expire.": "Locks the crypto amount for 10 minutes after the customer picks a coin; unpaid invoices then expire.",
+    "Key things to note": "Key things to note",
+    "We recommend staying on this page until the payment is completed": "We recommend staying on this page until the payment is completed",
+    "Send the exact amount before the timer expires": "Send the exact amount before the timer expires",
+    "Payments below the amount due can't be processed": "Payments below the amount due can't be processed",
+    "Completed payments are non-refundable": "Completed payments are non-refundable",
+    "Payment ID": "Payment ID",
+    "Copy {{label}}": "Copy {{label}}"
   }
 }

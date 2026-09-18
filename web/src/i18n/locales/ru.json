@@ -5616,6 +5616,13 @@
     "Fees paid by customer": "Комиссии оплачивает клиент",
     "The customer covers network and service fees so the full USD amount settles. NOWPayments forces a fixed rate when this is on; only enable it if fixed-rate coins are available on your account.": "Клиент оплачивает сетевые и сервисные комиссии, поэтому зачисляется полная сумма в USD. При включении NOWPayments принудительно использует фиксированный курс; включайте только если на вашем аккаунте доступны монеты с фиксированным курсом.",
     "Fixed exchange rate": "Фиксированный курс",
-    "Locks the crypto amount for 10 minutes after the customer picks a coin; unpaid invoices then expire.": "Фиксирует сумму в криптовалюте на 10 минут после выбора монеты; неоплаченные счета затем истекают."
+    "Locks the crypto amount for 10 minutes after the customer picks a coin; unpaid invoices then expire.": "Фиксирует сумму в криптовалюте на 10 минут после выбора монеты; неоплаченные счета затем истекают.",
+    "Key things to note": "Важно знать",
+    "We recommend staying on this page until the payment is completed": "Рекомендуем оставаться на этой странице до завершения оплаты",
+    "Send the exact amount before the timer expires": "Отправьте точную сумму до окончания таймера",
+    "Payments below the amount due can't be processed": "Платежи на сумму ниже суммы к оплате не обрабатываются",
+    "Completed payments are non-refundable": "Завершённые платежи не возвращаются",
+    "Payment ID": "ID платежа",
+    "Copy {{label}}": "Копировать {{label}}"
   }
 }

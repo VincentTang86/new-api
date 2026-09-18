@@ -10,7 +10,7 @@
     "Comma-separated NOWPayments tickers offered to the customer at checkout. Each one must also be enabled in Coins Settings on the NOWPayments dashboard, otherwise creating a payment fails.": "決済時にユーザーへ提示する NOWPayments のティッカー（カンマ区切り）。各ティッカーは NOWPayments 管理画面の Coins Settings でも有効にする必要があります。無効だと支払いの作成に失敗します。",
     "Credits {{amount}} on arrival": "着金後に {{amount}} を反映",
     "Crypto payment": "暗号資産決済",
-    "Expires in {{time}}": "{{time}} 後に期限切れ",
+    "Expires in {{time}}": "有効期限 {{time}}",
     "Memo / Tag (required)": "Memo / Tag（必須）",
     "Min {{amount}}": "最低 {{amount}}",
     "No coins are available for crypto payment right now.": "現在、暗号資産決済に利用できる通貨がありません。",
@@ -5616,6 +5616,13 @@
     "Fees paid by customer": "手数料は顧客負担",
     "The customer covers network and service fees so the full USD amount settles. NOWPayments forces a fixed rate when this is on; only enable it if fixed-rate coins are available on your account.": "ネットワーク手数料とサービス手数料を顧客が負担し、USD 全額が決済されます。オンにすると NOWPayments は固定レートを強制します固定レート対応の通貨がアカウントで利用可能な場合のみ有効にしてください。",
     "Fixed exchange rate": "固定レート",
-    "Locks the crypto amount for 10 minutes after the customer picks a coin; unpaid invoices then expire.": "顧客が通貨を選択してから 10 分間、暗号資産の金額を固定します。未払いの請求は期限切れになります。"
+    "Locks the crypto amount for 10 minutes after the customer picks a coin; unpaid invoices then expire.": "顧客が通貨を選択してから 10 分間、暗号資産の金額を固定します。未払いの請求は期限切れになります。",
+    "Key things to note": "ご注意",
+    "We recommend staying on this page until the payment is completed": "支払いが完了するまで、このページを開いたままにすることをおすすめします",
+    "Send the exact amount before the timer expires": "タイマーが終了する前に正確な金額を送金してください",
+    "Payments below the amount due can't be processed": "お支払い金額に満たない送金は処理できません",
+    "Completed payments are non-refundable": "完了した支払いは返金できません",
+    "Payment ID": "支払い ID",
+    "Copy {{label}}": "{{label}}をコピー"
   }
 }

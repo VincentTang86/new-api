@@ -5616,6 +5616,13 @@
     "Fees paid by customer": "Phí do khách hàng trả",
     "The customer covers network and service fees so the full USD amount settles. NOWPayments forces a fixed rate when this is on; only enable it if fixed-rate coins are available on your account.": "Khách hàng chịu phí mạng và phí dịch vụ nên toàn bộ số tiền USD được thanh toán. Khi bật, NOWPayments buộc dùng tỷ giá cố định; chỉ bật khi tài khoản của bạn có coin hỗ trợ tỷ giá cố định.",
     "Fixed exchange rate": "Tỷ giá cố định",
-    "Locks the crypto amount for 10 minutes after the customer picks a coin; unpaid invoices then expire.": "Khóa số tiền crypto trong 10 phút sau khi khách chọn coin; hóa đơn chưa thanh toán sẽ hết hạn."
+    "Locks the crypto amount for 10 minutes after the customer picks a coin; unpaid invoices then expire.": "Khóa số tiền crypto trong 10 phút sau khi khách chọn coin; hóa đơn chưa thanh toán sẽ hết hạn.",
+    "Key things to note": "Điều cần lưu ý",
+    "We recommend staying on this page until the payment is completed": "Bạn nên ở lại trang này cho đến khi thanh toán hoàn tất",
+    "Send the exact amount before the timer expires": "Hãy gửi đúng số tiền trước khi hết giờ",
+    "Payments below the amount due can't be processed": "Khoản thanh toán thấp hơn số tiền phải trả không thể xử lý",
+    "Completed payments are non-refundable": "Các khoản thanh toán đã hoàn tất không được hoàn tiền",
+    "Payment ID": "ID thanh toán",
+    "Copy {{label}}": "Sao chép {{label}}"
   }
 }

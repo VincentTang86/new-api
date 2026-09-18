@@ -305,6 +305,7 @@ func GetNowPaymentsPayment(c *gin.Context) {
 		"message": "success",
 		"data": gin.H{
 			"trade_no":     topUp.TradeNo,
+			"payment_id":   topUp.CryptoPaymentId,
 			"status":       topUp.Status,
 			"topup_amount": topUp.Amount,
 			"money":        topUp.Money,
