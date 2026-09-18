@@ -33,7 +33,7 @@ const pricingSearchSchema = z.object({
   model: z.string().optional(),
   /** Tab the catalogue opens on; the home preview's "View all models" link
    * carries the tab the visitor was reading. */
-  type: z.enum(['llm', 'image']).optional().catch(undefined),
+  type: z.enum(['llm', 'image', 'video']).optional().catch(undefined),
   search: z.string().optional(),
   sort: z.string().optional(),
   vendor: z.string().optional(),

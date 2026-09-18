@@ -202,3 +202,20 @@ describe('hasTokenPricing', () => {
     expect(hasTokenPricing(tiered('p * 3 + c * 15'))).toBe(true)
   })
 })
+
+// A video model's listed prices split by its admin-defined grid, not by
+// expression tiers, so its billing multipliers must not surface here as
+// conditions the settings matrix would offer per-token lanes for.
+describe('getRateConditions for video models', () => {
+  test('a video model without an expression keeps the generic condition', () => {
+    const seedance = model({
+      model_name: 'doubao-seedance-2-0-260128',
+      output_modalities: ['video'],
+      video_rates: [
+        { key: 'base', resolution: '480p / 720p', with_video: false, ratio: 1 },
+        { key: '1080p', resolution: '1080p', with_video: false, ratio: 1.1 },
+      ],
+    })
+    expect(getRateConditions(seedance, t).map((row) => row.key)).toEqual([''])
+  })
+})

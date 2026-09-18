@@ -110,17 +110,26 @@ export function isWaffoPancakePayment(paymentType: string): boolean {
   return paymentType === PAYMENT_TYPES.WAFFO_PANCAKE
 }
 
+/**
+ * Check if payment method is NOWPayments (on-chain crypto deposit)
+ */
+export function isNowPaymentsPayment(paymentType: string): boolean {
+  return paymentType === PAYMENT_TYPES.NOWPAYMENTS
+}
+
 export interface PaymentProcessors {
   regular: (topupAmount: number, paymentType: string) => Promise<boolean>
   waffo: (topupAmount: number, payMethodIndex: number) => Promise<boolean>
   waffoPancake: (topupAmount: number) => Promise<boolean>
+  nowPayments: (topupAmount: number, payCurrency: string) => Promise<boolean>
 }
 
 export async function dispatchSelectedPayment(
   paymentMethod: PaymentMethod,
   topupAmount: number,
   waffoMethodIndex: number | null,
-  processors: PaymentProcessors
+  processors: PaymentProcessors,
+  cryptoPayCurrency: string = ''
 ): Promise<boolean> {
   if (isWaffoPayment(paymentMethod.type)) {
     if (waffoMethodIndex === null) {
@@ -131,6 +140,13 @@ export async function dispatchSelectedPayment(
 
   if (isWaffoPancakePayment(paymentMethod.type)) {
     return processors.waffoPancake(topupAmount)
+  }
+
+  if (isNowPaymentsPayment(paymentMethod.type)) {
+    if (!cryptoPayCurrency) {
+      return false
+    }
+    return processors.nowPayments(topupAmount, cryptoPayCurrency)
   }
 
   return processors.regular(topupAmount, paymentMethod.type)
@@ -161,6 +177,10 @@ export function getDefaultPaymentType(topupInfo: TopupInfo | null): string {
     return PAYMENT_TYPES.WAFFO_PANCAKE
   }
 
+  if (topupInfo.enable_nowpayments_topup) {
+    return PAYMENT_TYPES.NOWPAYMENTS
+  }
+
   return DEFAULT_PAYMENT_TYPE
 }
 
@@ -186,6 +206,10 @@ export function getMinTopupAmount(topupInfo: TopupInfo | null): number {
 
   if (topupInfo.enable_waffo_pancake_topup) {
     return topupInfo.waffo_pancake_min_topup || DEFAULT_MIN_TOPUP
+  }
+
+  if (topupInfo.enable_nowpayments_topup) {
+    return topupInfo.nowpayments_min_topup || DEFAULT_MIN_TOPUP
   }
 
   return DEFAULT_MIN_TOPUP

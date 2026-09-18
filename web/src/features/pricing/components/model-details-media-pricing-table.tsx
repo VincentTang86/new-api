@@ -36,17 +36,18 @@ import type { ImageSizePrice, PricingModel } from '../types'
 /**
  * The /Pic view of an image model's prices, as the design lays it out: one
  * column per listed size, one row per plan the viewer can use, closed by the
- * external list prices for the same sizes.
+ * external list prices for the same sizes. (Video models render their own
+ * grid; see ModelDetailsVideoPricingTable.)
  *
- * The gateway's per-image list (kept beside the benchmark prices, at ratio 1)
- * scales by each plan's group ratio, exactly like the per-token table. A
- * per-call image model without such a list states its per-call price as a
- * single "per image" column. A model that charges for input images (xAI's
- * "media input") opens with that per-image charge: the gateway's from its
- * admin-maintained row, else straight from its per-request expression; the
- * reference sources' from their rows.
+ * The gateway's list (kept beside the benchmark prices, at ratio 1) scales by
+ * each plan's group ratio, exactly like the per-token table. A per-call model
+ * without such a list states its per-call price as a single "per image"
+ * column. A model that charges for input images (xAI's "media input") opens
+ * with that per-image charge: the gateway's from its admin-maintained row,
+ * else straight from its per-request expression; the reference sources' from
+ * their rows.
  */
-export function ModelDetailsImagePricingTable(props: {
+export function ModelDetailsMediaPricingTable(props: {
   model: PricingModel
   groupRatio: Record<string, number>
   usableGroup: Record<string, { desc: string; ratio: number }>

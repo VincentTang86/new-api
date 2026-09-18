@@ -1,6 +1,10 @@
 package doubao
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/QuantumNous/new-api/setting/ratio_setting"
+)
 
 var ModelList = []string{
 	"doubao-seedance-1-0-pro-250528",
@@ -20,9 +24,11 @@ type videoPriceKey struct {
 	hasVideo bool
 }
 
-// videoPriceTable 各模型在不同 (输出分辨率档, 是否含视频输入) 下的单价（元/百万 token）。
+// videoPriceTable 各模型在不同 (输出分辨率档, 是否含视频输入) 下的每百万 token 单价。
+// 它是后台 ModelResolutionRatio 未配置该档位时的回落，新接入的模型优先走后台配置。
 // 其中零值键 {480p/720p, 不含视频} 为基准价，等于管理员应配置的 ModelRatio；
-// 计费时取 实际单价/基准价 作为 OtherRatio。
+// 计费时取 实际单价/基准价 作为 OtherRatio——只有同一模型内的比值参与计算，
+// 所以各模型的单价用哪种货币记并不影响结果（2.0 两行记的是元价，2.5 记的是实测美元价）。
 var videoPriceTable = map[string]map[videoPriceKey]float64{
 	"doubao-seedance-2-0-260128": {
 		{hasVideo: false}:                46.0,
@@ -36,11 +42,47 @@ var videoPriceTable = map[string]map[videoPriceKey]float64{
 		{hasVideo: false}: 37.0,
 		{hasVideo: true}:  22.0,
 	},
+	// 2.5 经数眼（dataeyes，渠道 dataeyes1_doubao）转售。基准两档取自 2026-09-14 的
+	// dev 实测对账：480p/4s 两笔（含视频的一笔输入也计 token）上游净扣 $0.322288 /
+	// $0.384754，除以回传的 38830 / 77260 token 正是每 1M $8.30 与 $4.98。此前按
+	// 「火山刊例 ÷7」推出的 $10.00 / $6.00 高了两成，作废——比值 0.6 倒是推对了。
+	//
+	// 1080p 两档未实测，沿用火山刊例内部的比值（77/70、46/70）乘到实测基准价上；
+	// 数眼若不照这个比例分档就是错价，跑一笔 1080p 即可钉死。官方与数眼都未公布
+	// 4K 专档，未配置的组合按基准价计——2.0 的 4K 是降价档，若 2.5 也有而这里缺行，
+	// 会按基准价多收，拿到单价后需补一行。
+	"doubao-seedance-2-5-oinone": {
+		{hasVideo: false}:                8.30,
+		{hasVideo: true}:                 4.98,
+		{is1080p: true, hasVideo: false}: 8.30 * 77 / 70,
+		{is1080p: true, hasVideo: true}:  8.30 * 46 / 70,
+	},
+}
+
+// VideoRateKey 是「输出分辨率档 × 输入是否含视频」这个计费维度在后台
+// ModelResolutionRatio 里的键：基准档（480p/720p 及未指定）写 base，其余写分辨率名，
+// 含视频输入的组合加 +video 后缀。
+func VideoRateKey(resolution string, hasVideo bool) string {
+	tier := strings.ToLower(strings.TrimSpace(resolution))
+	switch tier {
+	case "1080p", "4k":
+	default:
+		tier = "base"
+	}
+	if hasVideo {
+		return tier + "+video"
+	}
+	return tier
 }
 
 // GetVideoInputRatio 返回指定模型在给定输出分辨率/是否含视频输入下，相对基准价的计费倍率。
-// 第二个返回值表示该模型是否配置了价格表；倍率为 1.0 时调用方可忽略该 OtherRatio。
+// 后台 ModelResolutionRatio 的配置优先：上游调价时运营改配置即可，不必为一张价表发版；
+// 该档位没配则回落到下面内置的上游官方比值。
+// 第二个返回值表示该档位是否取到了倍率；取不到时调用方按基准价计费。
 func GetVideoInputRatio(modelName, resolution string, hasVideo bool) (float64, bool) {
+	if ratio, ok := ratio_setting.GetModelResolutionRatio(modelName, VideoRateKey(resolution, hasVideo)); ok {
+		return ratio, true
+	}
 	prices, ok := videoPriceTable[modelName]
 	base := prices[videoPriceKey{}] // 零值键 = {480p/720p, 不含视频} 基准价
 	if !ok || base <= 0 {
@@ -53,4 +95,73 @@ func GetVideoInputRatio(modelName, resolution string, hasVideo bool) (float64, b
 		return 1.0, true
 	}
 	return price / base, true
+}
+
+// VideoRate 一个计价档：输出分辨率档 × 输入是否含视频，值是相对基准价的倍率。
+// 纯展示用，定价页的 /Token 矩阵按它渲染。
+type VideoRate struct {
+	Key        string
+	Resolution string
+	WithVideo  bool
+	Ratio      float64
+}
+
+// videoRateTiers 是 VideoRateMatrix 的遍历顺序：基准档 → 1080p → 4k，
+// 每档先「不含视频」后「含视频」，与定价页的列顺序一致。
+var videoRateTiers = []struct {
+	resolution string
+	label      string
+}{
+	// 基准档覆盖 480p 与 720p 两个分辨率，它们的每 token 单价相同。
+	{"", "480p / 720p"},
+	{"1080p", "1080p"},
+	{"4k", "4K"},
+}
+
+// VideoRateMatrix 返回该模型真实标了价的计价档，供定价页展示。倍率逐档取自
+// GetVideoInputRatio——即计费本身用的那个函数，页面因此不可能与实际扣费口径漂移。
+// 模型没有「输入是否含视频」这一维时返回 nil：那是 Seedance 价表独有的维度，
+// 只有分辨率阶梯的视频模型（xAI、MiniMax）画不成这张矩阵，调用方回退到普通的
+// 按 token 价表。
+func VideoRateMatrix(modelName string) []VideoRate {
+	rates := make([]VideoRate, 0, len(videoRateTiers)*2)
+	hasVideoTier := false
+	for _, tier := range videoRateTiers {
+		for _, hasVideo := range []bool{false, true} {
+			if !videoRateListed(modelName, tier.resolution, hasVideo) {
+				continue
+			}
+			ratio, ok := GetVideoInputRatio(modelName, tier.resolution, hasVideo)
+			if !ok {
+				continue
+			}
+			hasVideoTier = hasVideoTier || hasVideo
+			rates = append(rates, VideoRate{
+				Key:        VideoRateKey(tier.resolution, hasVideo),
+				Resolution: tier.label,
+				WithVideo:  hasVideo,
+				Ratio:      ratio,
+			})
+		}
+	}
+	if !hasVideoTier {
+		return nil
+	}
+	return rates
+}
+
+// videoRateListed 判断该档位是否真的有标价：后台配了，或内置价表里有这一行。
+// 计费时上游不支持的组合按基准价放行（fast 没有 1080p，上游自己会报错），但价目
+// 页不能因此列出一个买不到的档位——那等于在宣传一个不存在的价。
+func videoRateListed(modelName, resolution string, hasVideo bool) bool {
+	if _, ok := ratio_setting.GetModelResolutionRatio(modelName, VideoRateKey(resolution, hasVideo)); ok {
+		return true
+	}
+	prices, ok := videoPriceTable[modelName]
+	if !ok {
+		return false
+	}
+	res := strings.ToLower(strings.TrimSpace(resolution))
+	_, ok = prices[videoPriceKey{is1080p: res == "1080p", is4k: res == "4k", hasVideo: hasVideo}]
+	return ok
 }

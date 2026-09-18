@@ -356,3 +356,37 @@ func TestTestAllChannelsRejectsExistingActiveTask(t *testing.T) {
 	require.Contains(t, recorder.Body.String(), existing.TaskID)
 	require.Contains(t, recorder.Body.String(), "已有通道测试任务正在运行或等待中")
 }
+
+// 图片模型走 chat 端点时上游会拒绝（"模型价格未配置"）或按文本模型计费，
+// 自动端点检测必须给它们发图片生成请求。
+func TestBuildTestRequestPicksImageRequestForImageModels(t *testing.T) {
+	tests := []struct {
+		name        string
+		channelType int
+		model       string
+		wantImage   bool
+	}{
+		{name: "gpt-image", channelType: constant.ChannelTypeOpenAI, model: "gpt-image-2.5-sunburst", wantImage: true},
+		{name: "grok imagine image", channelType: constant.ChannelTypeOpenAI, model: "grok-imagine-image-2.0", wantImage: true},
+		{name: "dall-e", channelType: constant.ChannelTypeOpenAI, model: "dall-e-3", wantImage: true},
+		{name: "volcengine seedream", channelType: constant.ChannelTypeVolcEngine, model: "doubao-seedream-4-0", wantImage: true},
+		{name: "seedream on other channel stays chat", channelType: constant.ChannelTypeOpenAI, model: "doubao-seedream-4-0"},
+		{name: "gemini image answers on chat", channelType: constant.ChannelTypeGemini, model: "gemini-3-pro-image"},
+		{name: "text model", channelType: constant.ChannelTypeOpenAI, model: "gpt-5.6-sol"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			request := buildTestRequest(test.model, "", &model.Channel{Type: test.channelType}, false)
+
+			if !test.wantImage {
+				assert.IsType(t, &dto.GeneralOpenAIRequest{}, request)
+				return
+			}
+			imageRequest, ok := request.(*dto.ImageRequest)
+			require.True(t, ok, "expected an image request, got %T", request)
+			assert.Equal(t, test.model, imageRequest.Model)
+			assert.NotEmpty(t, imageRequest.Prompt)
+		})
+	}
+}

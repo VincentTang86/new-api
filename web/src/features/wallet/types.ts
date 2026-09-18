@@ -61,6 +61,41 @@ export type WaffoPancakePaymentResponse = ApiResponse<
     }
   | string
 >
+export type NowPaymentsPaymentResponse = ApiResponse<
+  { trade_no?: string } | string
+>
+
+/** One accepted coin, with the chain's live minimum from NOWPayments. */
+export interface NowPaymentsCurrency {
+  ticker: string
+  /** False when the current topup amount is below this chain's minimum. */
+  available: boolean
+  min_amount?: number
+  min_amount_usd?: number
+}
+export type NowPaymentsCurrenciesResponse = ApiResponse<
+  NowPaymentsCurrency[] | string
+>
+
+/** Deposit details for the crypto checkout page. */
+export interface NowPaymentsPaymentDetail {
+  trade_no: string
+  /** NOWPayments' own id for the order, quoted to support when a transfer needs reconciling. */
+  payment_id: string
+  status: string
+  topup_amount: number
+  money: number
+  pay_currency: string
+  pay_amount: number
+  pay_address: string
+  network: string
+  extra_id: string
+  expires_at: number
+  create_time: number
+}
+export type NowPaymentsPaymentDetailResponse = ApiResponse<
+  NowPaymentsPaymentDetail | string
+>
 
 /**
  * Creem product configuration
@@ -152,6 +187,10 @@ export interface TopupInfo {
   enable_waffo_pancake_topup?: boolean
   /** Minimum topup amount for Waffo Pancake */
   waffo_pancake_min_topup?: number
+  /** Whether NOWPayments (crypto) topup is enabled */
+  enable_nowpayments_topup?: boolean
+  /** Minimum topup amount for NOWPayments */
+  nowpayments_min_topup?: number
   /** Whether redemption code usage is enabled */
   enable_redemption?: boolean
   /** Whether compliance confirmation has been completed */

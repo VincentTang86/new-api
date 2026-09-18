@@ -27,13 +27,13 @@ import {
 
 import { LANDING_PROVIDER_ORDER } from '../constants'
 import type {
-  ImagePricingRow,
   LandingProviderKey,
+  MediaPricingRow,
   PricingBenchmark,
   PricingModelType,
   PricingRow,
 } from '../types'
-import { buildImagePricingRows } from './build-image-pricing-rows'
+import { buildMediaPricingRows } from './build-media-pricing-rows'
 import { buildPricingRows } from './build-pricing-rows'
 import { buildOfficialPricingCatalog } from './official-pricing'
 import { LANDING_PROVIDERS } from './providers'
@@ -65,7 +65,9 @@ export interface UseLandingPricingRowsOptions {
 interface UseLandingPricingRows {
   rows: PricingRow[]
   /** Image models, catalogued per image; shown by the Image tab. */
-  imageRows: ImagePricingRow[]
+  imageRows: MediaPricingRow[]
+  /** Video models, catalogued per second; shown by the Video tab. */
+  videoRows: MediaPricingRow[]
   modelType: PricingModelType
   setModelType: (type: PricingModelType) => void
   groups: PricingGroupOption[]
@@ -177,8 +179,9 @@ export function useLandingPricingRows(
 
   const allImageRows = useMemo(
     () =>
-      buildImagePricingRows({
+      buildMediaPricingRows({
         models,
+        kind: 'image',
         language: i18n.language,
         selectedGroup,
         groupRatio,
@@ -187,16 +190,30 @@ export function useLandingPricingRows(
     [models, i18n.language, selectedGroup, groupRatio, benchmark]
   )
 
+  const allVideoRows = useMemo(
+    () =>
+      buildMediaPricingRows({
+        models,
+        kind: 'video',
+        language: i18n.language,
+        selectedGroup,
+        groupRatio,
+        benchmark,
+      }),
+    [models, i18n.language, selectedGroup, groupRatio, benchmark]
+  )
+
+
   // Vendor tabs list only the vendors present in the selected group and
   // model type, in the marketing order, so an empty filter can never be
   // selected.
   const providers = useMemo<PricingProviderOption[]>(() => {
-    const activeRows = modelType === 'image' ? allImageRows : allRows
-    const present = new Set(activeRows.map((row) => row.provider))
+    const byType = { llm: allRows, image: allImageRows, video: allVideoRows }
+    const present = new Set(byType[modelType].map((row) => row.provider))
     return LANDING_PROVIDER_ORDER.filter((key) => present.has(key)).map(
       (key) => ({ key, label: LANDING_PROVIDERS[key].label })
     )
-  }, [allRows, allImageRows, modelType])
+  }, [allRows, allImageRows, allVideoRows, modelType])
 
   // Each tier carries its own vendor line-up, so the pick only survives a tier
   // switch when the new tier still lists that vendor; otherwise it falls back
@@ -219,9 +236,15 @@ export function useLandingPricingRows(
     return allImageRows.filter((row) => row.provider === activeProviderFilter)
   }, [allImageRows, activeProviderFilter])
 
+  const videoRows = useMemo(() => {
+    if (activeProviderFilter === 'all') return allVideoRows
+    return allVideoRows.filter((row) => row.provider === activeProviderFilter)
+  }, [allVideoRows, activeProviderFilter])
+
   return {
     rows,
     imageRows,
+    videoRows,
     modelType,
     setModelType,
     groups,

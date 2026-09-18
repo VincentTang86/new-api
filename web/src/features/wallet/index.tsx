@@ -41,11 +41,14 @@ import {
   useCreemPayment,
   useWaffoPayment,
   useWaffoPancakePayment,
+  useNowPaymentsPayment,
+  useNowPaymentsCurrencies,
 } from './hooks'
 import {
   getDefaultPaymentType,
   getMinTopupAmount,
   dispatchSelectedPayment,
+  isNowPaymentsPayment,
 } from './lib'
 import type {
   UserWalletData,
@@ -108,6 +111,18 @@ export function Wallet(props: WalletProps) {
   const { processing: waffoProcessing, processWaffoPayment } = useWaffoPayment()
   const { processing: pancakeProcessing, processWaffoPancakePayment } =
     useWaffoPancakePayment()
+  const { processing: nowPaymentsProcessing, processNowPaymentsPayment } =
+    useNowPaymentsPayment()
+  const {
+    currencies: cryptoCurrencies,
+    loading: cryptoCurrenciesLoading,
+    selected: selectedCryptoCurrency,
+    setSelected: setSelectedCryptoCurrency,
+  } = useNowPaymentsCurrencies(
+    confirmDialogOpen &&
+      isNowPaymentsPayment(selectedPaymentMethod?.type ?? ''),
+    topupAmount
+  )
 
   // Fetch and refresh user data
   const fetchUser = useCallback(async () => {
@@ -202,7 +217,9 @@ export function Wallet(props: WalletProps) {
         regular: processPayment,
         waffo: processWaffoPayment,
         waffoPancake: processWaffoPancakePayment,
-      }
+        nowPayments: processNowPaymentsPayment,
+      },
+      selectedCryptoCurrency
     )
 
     if (success) {
@@ -360,9 +377,18 @@ export function Wallet(props: WalletProps) {
         paymentAmount={paymentAmount}
         paymentMethod={selectedPaymentMethod}
         calculating={calculating}
-        processing={processing || waffoProcessing || pancakeProcessing}
+        processing={
+          processing ||
+          waffoProcessing ||
+          pancakeProcessing ||
+          nowPaymentsProcessing
+        }
         discountRate={getDiscountRate()}
         usdExchangeRate={effectiveUsdExchangeRate}
+        cryptoCurrencies={cryptoCurrencies}
+        selectedCryptoCurrency={selectedCryptoCurrency}
+        onCryptoCurrencyChange={setSelectedCryptoCurrency}
+        cryptoLoading={cryptoCurrenciesLoading}
       />
 
       <TransferDialog

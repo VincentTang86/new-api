@@ -116,6 +116,18 @@ export function isImageModel(model: PricingModel): boolean {
   )
 }
 
+/**
+ * A video model is one that produces video: it lives on the Video tab of the
+ * catalogue and its drawer opens on per-second prices. A model that merely
+ * accepts video input is not a video model.
+ */
+export function isVideoModel(model: PricingModel): boolean {
+  return (
+    Array.isArray(model.output_modalities) &&
+    model.output_modalities.includes('video')
+  )
+}
+
 export function isTokenBasedModel(model: PricingModel): boolean {
   return model.quota_type === QUOTA_TYPE_VALUES.TOKEN
 }

@@ -119,7 +119,17 @@ func (a *TaskAdaptor) Init(info *relaycommon.RelayInfo) {
 // ValidateRequestAndSetAction parses body, validates fields and sets default action.
 func (a *TaskAdaptor) ValidateRequestAndSetAction(c *gin.Context, info *relaycommon.RelayInfo) (taskErr *taskdto.TaskError) {
 	// Accept only POST /v1/video/generations as "generate" action.
-	return relaycommon.ValidateBasicTaskRequest(c, info, constant.TaskActionGenerate)
+	if taskErr = relaycommon.ValidateBasicTaskRequest(c, info, constant.TaskActionGenerate); taskErr != nil {
+		return taskErr
+	}
+	req, err := relaycommon.GetTaskRequest(c)
+	if err != nil {
+		return service.TaskErrorWrapperLocal(err, "get_task_request_failed", http.StatusBadRequest)
+	}
+	if err := ValidateVideoBounds(&req); err != nil {
+		return service.TaskErrorWrapperLocal(err, "invalid_video_spec", http.StatusBadRequest)
+	}
+	return nil
 }
 
 // BuildRequestURL constructs the upstream URL.
@@ -148,6 +158,18 @@ func (a *TaskAdaptor) EstimateBilling(c *gin.Context, info *relaycommon.RelayInf
 		return nil
 	}
 	return map[string]float64{"video_input": ratio}
+}
+
+// EstimatePreConsumeTokens 预估本次生成的上游视频 token 数，让押金随视频规格走。
+// Seedance 按 token 计费，而通用预扣基数（模型倍率的一半）与请求规格无关：它相当于
+// 固定押 QuotaPerUnit/2 个 token，1080p 五秒、4K 一秒多就能把它吃光，差额要等结算
+// 补扣，余额不足就是透支。
+func (a *TaskAdaptor) EstimatePreConsumeTokens(c *gin.Context, _ *relaycommon.RelayInfo) int {
+	req, err := relaycommon.GetTaskRequest(c)
+	if err != nil {
+		return 0
+	}
+	return EstimateVideoTokens(&req)
 }
 
 // hasVideoInMetadata 直接检查 metadata 的 content 数组是否包含 video_url 条目，

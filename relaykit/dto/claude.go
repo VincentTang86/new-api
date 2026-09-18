@@ -370,6 +370,20 @@ func (c *ClaudeRequest) SetModelName(modelName string) {
 	}
 }
 
+// DropUnsupportedSamplingParams clears temperature/top_p/top_k for Claude models
+// that reject them outright. Opus 4.7 and 4.8 removed the sampling parameters
+// entirely and answer any of the three with a 400, regardless of whether
+// thinking is enabled, so they must never reach upstream for those models.
+func (c *ClaudeRequest) DropUnsupportedSamplingParams() {
+	if !strings.HasPrefix(c.Model, "claude-opus-4-7") &&
+		!strings.HasPrefix(c.Model, "claude-opus-4-8") {
+		return
+	}
+	c.Temperature = nil
+	c.TopP = nil
+	c.TopK = nil
+}
+
 func (c *ClaudeRequest) SearchToolNameByToolCallId(toolCallId string) string {
 	for _, message := range c.Messages {
 		content, _ := message.ParseContent()

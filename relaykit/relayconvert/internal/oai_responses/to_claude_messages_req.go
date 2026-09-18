@@ -63,6 +63,7 @@ func OpenAIResponsesRequestToClaudeMessages(c context.Context, info convmeta.Met
 		claudeRequest.ToolChoice = sharedclaude.MapOpenAIToolChoice(toolChoice, ParallelToolCalls(req.ParallelToolCalls))
 	}
 	applyResponsesReasoningToClaude(req, claudeRequest)
+	claudeRequest.DropUnsupportedSamplingParams()
 
 	systemMessages := make([]dto.ClaudeMediaMessage, 0)
 	if RawJSONPresent(req.Instructions) {

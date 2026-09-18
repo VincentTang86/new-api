@@ -22,6 +22,24 @@ func Marshal(v any) ([]byte, error) {
 	return json.Marshal(v)
 }
 
+// UnmarshalUseNumber decodes JSON keeping numbers as json.Number so their original text survives re-encoding.
+func UnmarshalUseNumber(data []byte, v any) error {
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	decoder.UseNumber()
+	return decoder.Decode(v)
+}
+
+// MarshalNoHTMLEscape encodes v compactly without escaping <, > and &, matching JavaScript JSON.stringify output.
+func MarshalNoHTMLEscape(v any) ([]byte, error) {
+	var buf bytes.Buffer
+	encoder := json.NewEncoder(&buf)
+	encoder.SetEscapeHTML(false)
+	if err := encoder.Encode(v); err != nil {
+		return nil, err
+	}
+	return bytes.TrimRight(buf.Bytes(), "\n"), nil
+}
+
 func GetJsonType(data json.RawMessage) string {
 	trimmed := bytes.TrimSpace(data)
 	if len(trimmed) == 0 {

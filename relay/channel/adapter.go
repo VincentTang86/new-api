@@ -46,6 +46,16 @@ type TaskAdaptor interface {
 	// Return nil to use the base model price without extra ratios.
 	EstimateBilling(c *gin.Context, info *relaycommon.RelayInfo) map[string]float64
 
+	// EstimatePreConsumeTokens returns how many upstream tokens this request is
+	// expected to consume, for models billed per token rather than per call.
+	// The generic pre-charge for those models is a flat baseline unrelated to the
+	// request, which under-charges a large video by an order of magnitude; an
+	// adaptor that can read the output spec should size the pre-charge here.
+	// Return 0 when no estimate is possible — the caller then keeps the baseline.
+	// Settlement always uses the upstream usage, so an imprecise estimate only
+	// affects how much is held, never what is finally charged.
+	EstimatePreConsumeTokens(c *gin.Context, info *relaycommon.RelayInfo) int
+
 	// AdjustBillingOnSubmit returns adjusted OtherRatios from the upstream
 	// submit response. Called after a successful DoResponse.
 	// If the upstream returned actual parameters that differ from the estimate

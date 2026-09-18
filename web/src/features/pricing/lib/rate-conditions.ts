@@ -317,10 +317,11 @@ export function rateConditionKey(
 }
 
 /**
- * Every rate condition the model's billing expression defines, in the order
- * the pricing table renders them. A model without a tiered expression yields
- * the single generic condition (key ''), which reference pricing resolves to
- * the default price.
+ * Every rate condition the model prices under, in the order the pricing table
+ * renders them, derived from its billing expression. A model without tiers
+ * yields the single generic condition (key ''), which reference pricing
+ * resolves to the default price. A video model's listed prices split by its
+ * admin-defined grid instead (see lib/video-grid), not by conditions here.
  */
 export function getRateConditions(
   model: PricingModel,

@@ -20,7 +20,7 @@ import { render } from '@testing-library/react'
 import { describe, expect, test } from 'vitest'
 
 import type { PricingModel } from '../../types'
-import { ModelDetailsImagePricingTable } from '../model-details-image-pricing-table'
+import { ModelDetailsMediaPricingTable } from '../model-details-media-pricing-table'
 
 // xAI's grid as the per-request preset writes it: four output cells plus
 // $0.01 per input image.
@@ -58,7 +58,7 @@ function model(overrides: Partial<PricingModel> = {}): PricingModel {
 
 function renderTable(target: PricingModel) {
   return render(
-    <ModelDetailsImagePricingTable
+    <ModelDetailsMediaPricingTable
       model={target}
       groupRatio={GROUP_RATIO}
       usableGroup={USABLE_GROUPS}
@@ -78,7 +78,7 @@ function rowCells(row: Element): string[] {
   )
 }
 
-describe('ModelDetailsImagePricingTable', () => {
+describe('ModelDetailsMediaPricingTable', () => {
   test('states the per-input-image charge the expression carries, at each plan ratio', () => {
     const { container } = renderTable(
       model({ billing_mode: 'tiered_expr', billing_expr: GROK_EXPR })

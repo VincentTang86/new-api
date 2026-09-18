@@ -21,6 +21,7 @@ import { describe, expect, test } from 'vitest'
 import { PAYMENT_TYPES } from '../constants'
 import {
   dispatchSelectedPayment,
+  isNowPaymentsPayment,
   isStripePayment,
   isWaffoPayment,
   isWaffoPancakePayment,
@@ -33,6 +34,8 @@ describe('payment type classification', () => {
     expect(isWaffoPancakePayment(PAYMENT_TYPES.WAFFO_PANCAKE)).toBe(true)
     expect(isWaffoPancakePayment(PAYMENT_TYPES.WAFFO)).toBe(false)
     expect(isStripePayment(PAYMENT_TYPES.STRIPE)).toBe(true)
+    expect(isNowPaymentsPayment(PAYMENT_TYPES.NOWPAYMENTS)).toBe(true)
+    expect(isNowPaymentsPayment(PAYMENT_TYPES.WAFFO_PANCAKE)).toBe(false)
   })
 })
 
@@ -56,11 +59,69 @@ describe('payment dispatch', () => {
           calls.push('pancake')
           return false
         },
+        nowPayments: async () => {
+          calls.push('nowpayments')
+          return false
+        },
       }
     )
 
     expect(success).toBe(true)
     expect(calls).toEqual(['waffo:120:3'])
+  })
+
+  test('routes NOWPayments to its crypto flow with the chosen coin', async () => {
+    const calls: string[] = []
+    const success = await dispatchSelectedPayment(
+      { name: 'Crypto (NOWPayments)', type: PAYMENT_TYPES.NOWPAYMENTS },
+      50,
+      null,
+      {
+        regular: async () => {
+          calls.push('regular')
+          return false
+        },
+        waffo: async () => {
+          calls.push('waffo')
+          return false
+        },
+        waffoPancake: async () => {
+          calls.push('pancake')
+          return false
+        },
+        nowPayments: async (amount, payCurrency) => {
+          calls.push(`nowpayments:${amount}:${payCurrency}`)
+          return true
+        },
+      },
+      'usdtbsc'
+    )
+
+    expect(success).toBe(true)
+    expect(calls).toEqual(['nowpayments:50:usdtbsc'])
+  })
+
+  test('does not create a crypto order without a chosen coin', async () => {
+    let called = false
+    const success = await dispatchSelectedPayment(
+      { name: 'Crypto (NOWPayments)', type: PAYMENT_TYPES.NOWPAYMENTS },
+      50,
+      null,
+      {
+        regular: async () => false,
+        waffo: async () => false,
+        waffoPancake: async () => false,
+        nowPayments: async () => {
+          called = true
+          return true
+        },
+      }
+    )
+
+    // Every deposit address is chain-specific, so an order created without a
+    // coin would have nowhere to send funds.
+    expect(success).toBe(false)
+    expect(called).toBe(false)
   })
 
   test('does not create a Waffo order without a selected method index', async () => {
@@ -76,6 +137,7 @@ describe('payment dispatch', () => {
           return true
         },
         waffoPancake: async () => false,
+        nowPayments: async () => false,
       }
     )
 

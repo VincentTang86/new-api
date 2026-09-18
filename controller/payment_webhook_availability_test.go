@@ -167,3 +167,30 @@ func TestEpayWebhookEnabledRequiresTopUpAndWebhookConfig(t *testing.T) {
 	operation_setting.PayMethods = nil
 	require.False(t, isEpayWebhookEnabled())
 }
+
+func TestNowPaymentsWebhookEnabledRequiresTopUpAndWebhookConfig(t *testing.T) {
+	confirmPaymentComplianceForTest(t)
+	originalEnabled := setting.NowPaymentsEnabled
+	originalAPIKey := setting.NowPaymentsApiKey
+	originalIpnSecret := setting.NowPaymentsIpnSecret
+	t.Cleanup(func() {
+		setting.NowPaymentsEnabled = originalEnabled
+		setting.NowPaymentsApiKey = originalAPIKey
+		setting.NowPaymentsIpnSecret = originalIpnSecret
+	})
+
+	setting.NowPaymentsEnabled = true
+	setting.NowPaymentsApiKey = "api-key"
+	setting.NowPaymentsIpnSecret = ""
+	require.False(t, isNowPaymentsWebhookEnabled())
+
+	setting.NowPaymentsIpnSecret = "ipn-secret"
+	require.True(t, isNowPaymentsWebhookEnabled())
+
+	setting.NowPaymentsApiKey = ""
+	require.False(t, isNowPaymentsWebhookEnabled())
+
+	setting.NowPaymentsApiKey = "api-key"
+	setting.NowPaymentsEnabled = false
+	require.False(t, isNowPaymentsWebhookEnabled())
+}

@@ -70,6 +70,19 @@ const IMAGE_MODEL = {
   official_price: { per_image: [{ size: '1K·Low', price: 0.04 }] },
 } as PricingModel
 
+const VIDEO_MODEL = {
+  id: 3,
+  model_name: 'seedance-2.0',
+  vendor_name: 'ByteDance',
+  quota_type: 0,
+  model_ratio: 5.95,
+  completion_ratio: 1,
+  enable_groups: ['all'],
+  output_modalities: ['video'],
+  video_prices: [{ size: '480P', price: 0.114 }],
+  official_price: { per_second: [{ size: '480P', price: 0.2 }] },
+} as PricingModel
+
 async function renderPreview(): Promise<void> {
   const rootRoute = createRootRoute()
   const indexRoute = createRoute({
@@ -87,7 +100,10 @@ async function renderPreview(): Promise<void> {
     path: '/pricing',
     validateSearch: (search: Record<string, unknown>) => ({
       model: typeof search.model === 'string' ? search.model : undefined,
-      type: search.type === 'image' ? ('image' as const) : undefined,
+      type:
+        search.type === 'image' || search.type === 'video'
+          ? (search.type as 'image' | 'video')
+          : undefined,
     }),
     component: () => null,
   })
@@ -104,7 +120,7 @@ async function renderPreview(): Promise<void> {
 beforeEach(() => {
   usePricingData.mockReset()
   usePricingData.mockReturnValue({
-    models: [LLM_MODEL, IMAGE_MODEL],
+    models: [LLM_MODEL, IMAGE_MODEL, VIDEO_MODEL],
     usableGroup: { Production: { desc: 'reliable', ratio: 1 } },
     groupRatio: { Production: 1 },
     isLoading: false,
@@ -120,6 +136,7 @@ describe('LandingPricingPreview', () => {
 
     expect(screen.getAllByText('gpt-5').length).toBeGreaterThan(0)
     expect(screen.queryByText('grok-imagine-image-2.0')).toBeNull()
+    expect(screen.queryByText('seedance-2.0')).toBeNull()
     expect(
       screen.getByRole('link', { name: /View all models/ })
     ).toHaveAttribute('href', '/pricing')
@@ -165,5 +182,20 @@ describe('LandingPricingPreview', () => {
     expect(
       screen.getAllByText('No models are available right now.').length
     ).toBeGreaterThan(0)
+  })
+
+  test('the Video tab lists video models per second of video', async () => {
+    await renderPreview()
+    const user = userEvent.setup()
+
+    await user.click(screen.getByRole('tab', { name: 'Video' }))
+
+    expect(screen.getAllByText('seedance-2.0').length).toBeGreaterThan(0)
+    expect(screen.queryByText('gpt-5')).toBeNull()
+    expect(screen.getAllByText('from ~$0.114 / sec').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('from ~$0.20 / sec').length).toBeGreaterThan(0)
+    expect(
+      screen.getByRole('link', { name: /View all models/ })
+    ).toHaveAttribute('href', '/pricing?type=video')
   })
 })

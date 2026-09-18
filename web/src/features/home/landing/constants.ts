@@ -16,7 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import type { LandingProviderKey } from './types'
+import type { LandingProviderKey, PricingModelType } from './types'
 
 /**
  * Horizontal rhythm the design repeats on every band: a 1440px column with
@@ -61,3 +61,15 @@ export const LANDING_FALLBACK_DOCS_URL = 'https://docs.newapi.pro'
  * dark: the snippet reads as a terminal, not as page chrome.
  */
 export const LANDING_CODE_SURFACE = '#0d1122'
+
+/**
+ * The blurb under the pricing heading: each tab states the unit it prices in.
+ * Shared by the home preview and the catalogue page so the two never drift.
+ */
+export const PRICING_SUBTITLE_KEYS: Record<PricingModelType, string> = {
+  llm: 'Compare {{name}} rates with the selected benchmark. Prices are shown in USD per million tokens.',
+  image:
+    'Compare {{name}} image rates with the vendor list price. Prices are estimated per image and shown in USD. Open a model for its per-token rates.',
+  video:
+    'Compare {{name}} video rates with the vendor list price. Prices are estimated per second of video and shown in USD. Open a model for its per-token rates.',
+}

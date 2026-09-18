@@ -186,6 +186,19 @@ const BILLING_SECTIONS = [
         }}
         waffoPancakeProvisionedStoreID={settings.WaffoPancakeStoreID ?? ''}
         waffoPancakeProvisionedProductID={settings.WaffoPancakeProductID ?? ''}
+        nowPaymentsDefaultValues={{
+          NowPaymentsEnabled: settings.NowPaymentsEnabled ?? false,
+          NowPaymentsApiKey: settings.NowPaymentsApiKey ?? '',
+          NowPaymentsIpnSecret: settings.NowPaymentsIpnSecret ?? '',
+          NowPaymentsSandbox: settings.NowPaymentsSandbox ?? false,
+          NowPaymentsUnitPrice: settings.NowPaymentsUnitPrice ?? 1,
+          NowPaymentsMinTopUp: settings.NowPaymentsMinTopUp ?? 1,
+          NowPaymentsFeePaidByUser: settings.NowPaymentsFeePaidByUser ?? false,
+          NowPaymentsFixedRate: settings.NowPaymentsFixedRate ?? false,
+          NowPaymentsPayCurrencies:
+            settings.NowPaymentsPayCurrencies ??
+            'usdterc20,usdtbsc,usdtarb,usdtmatic,usdtton,usdc,usdcbsc,usdcarb,usdcmatic,usdcalgo',
+        }}
         complianceDefaults={{
           confirmed: settings['payment_setting.compliance_confirmed'] ?? false,
           termsVersion:

@@ -10,15 +10,41 @@ import (
 const (
 	ReferencePricingSourceOfficial   = "official"
 	ReferencePricingSourceOpenRouter = "openrouter"
-	// ReferencePricingSourceGateway 存网关自己的按张标价（分组倍率 1 的基准价），
-	// 只有 per_image 有意义。放在同一张表里是为了让对比价后台一处录入图片模型的每张价。
+	// ReferencePricingSourceGateway 存网关自己的按张 / 按秒 / 每 token 标价（分组倍率 1
+	// 的基准价），只有 per_image、per_second、per_token、video_grid 有意义。放在同一张表里
+	// 是为了让对比价后台一处录入图片模型的每张价与视频模型的定价网格。
 	ReferencePricingSourceGateway = "gateway"
 )
 
-// ImageSizePrice 图片模型的按张标价：一档分辨率/规格（如 "1K"）对应一个每张美元价。
+// ImageSizePrice 一档规格对应一个美元价：图片模型按张（Size 是 "1K" 一类的分辨率/规格），
+// 视频模型按秒或按百万 token（Size 是 "720p" 一类的分辨率档）。几种口径的结构完全相同，共用一个类型。
 type ImageSizePrice struct {
 	Size  string  `json:"size"`
 	Price float64 `json:"price"`
+	// Condition 计价条件键，空串表示该模型不分条件；视频模型取 VideoCondition*，
+	// (Size, Condition) 组成唯一的格子坐标。老数据没有这个字段，反序列化后即为空串。
+	Condition string `json:"condition,omitempty"`
+}
+
+// 视频模型定价表的计价条件：输入是否带参考视频。这是纯展示口径，
+// 与计费用的 ModelResolutionRatio 档位键（base+video 等）无关。
+const (
+	VideoConditionWithoutVideo = "without_video"
+	VideoConditionWithVideo    = "with_video"
+)
+
+// IsVideoCondition 判断条件键是否是定价表认识的视频条件（空串表示不分条件）。
+func IsVideoCondition(condition string) bool {
+	return condition == "" || condition == VideoConditionWithoutVideo || condition == VideoConditionWithVideo
+}
+
+// VideoGrid 视频定价表的展示网格定义，仅 source='gateway' 行有意义（一个模型一行），
+// 三个来源的按秒价 / 每 token 价共用这一份行列定义。
+type VideoGrid struct {
+	// Conditions 是 VideoCondition* 的子集，空切片表示不分条件，前端隐藏 Rate Conditions 列。
+	Conditions []string `json:"conditions"`
+	// Resolutions 是列头自由文本（如 "480p / 720p"），顺序即展示顺序。
+	Resolutions []string `json:"resolutions"`
 }
 
 // ReferencePricing 存储用于对比展示的外部标价（模型官方 API / OpenRouter），
@@ -44,6 +70,20 @@ type ReferencePricing struct {
 	// PerImageInput 每张输入图的标价（USD / 张），图生图模型才有（如 xAI 的 media input）；
 	// 与 ImageInput（按 token）并存，两者分别对应按张、按 token 两种计价口径。
 	PerImageInput *float64 `json:"per_image_input" gorm:"column:per_image_input"`
+	// PerSecond 视频模型的按秒标价，JSON 文本（如 [{"size":"720p","price":0.06}]），顺序即展示顺序。
+	// 与 PerImage 同形，只是档位是输出分辨率、单位是每秒视频。
+	PerSecond string `json:"-" gorm:"type:text"`
+	// PerSecondTiers 是 PerSecond 的 API 出入参形态，不落库。
+	PerSecondTiers []ImageSizePrice `json:"per_second,omitempty" gorm:"-"`
+	// PerToken 视频模型的每百万 token 标价，JSON 文本，结构同 PerSecond；
+	// 仅供定价页 /Token 视图展示，与实际按 token 结算的倍率无关。
+	PerToken string `json:"-" gorm:"type:text"`
+	// PerTokenTiers 是 PerToken 的 API 出入参形态，不落库。
+	PerTokenTiers []ImageSizePrice `json:"per_token,omitempty" gorm:"-"`
+	// VideoGrid 视频定价表的行列定义，JSON 文本，只在 gateway 行写。
+	VideoGrid string `json:"-" gorm:"type:text"`
+	// VideoGridDef 是 VideoGrid 的 API 出入参形态，不落库。
+	VideoGridDef *VideoGrid `json:"video_grid,omitempty" gorm:"-"`
 	// Conditions 按计价条件的专属价，JSON 文本（如 {"peak":{"input":0.2}}）。
 	// 键由前端按模型计费表达式派生（rate-conditions 模块），后端只存取；
 	// 上面的扁平价位是默认价，供首页对比与看板节省估算消费。
@@ -54,8 +94,9 @@ type ReferencePricing struct {
 	UpdatedAt      int64                     `json:"updated_at"`
 }
 
-// NormalizeConditions 在写库前把 ConditionLanes / PerImageSizes 序列化进对应的文本列；
-// 空值归一为空串，使"清空"与"从未配置"落库形态一致。
+// NormalizeConditions 在写库前把 ConditionLanes / PerImageSizes / PerSecondTiers /
+// PerTokenTiers / VideoGridDef 序列化进对应的文本列；空值归一为空串，
+// 使"清空"与"从未配置"落库形态一致。
 func (rp *ReferencePricing) NormalizeConditions() error {
 	rp.Conditions = ""
 	if len(rp.ConditionLanes) > 0 {
@@ -72,6 +113,30 @@ func (rp *ReferencePricing) NormalizeConditions() error {
 			return err
 		}
 		rp.PerImage = string(data)
+	}
+	rp.PerSecond = ""
+	if len(rp.PerSecondTiers) > 0 {
+		data, err := common.Marshal(rp.PerSecondTiers)
+		if err != nil {
+			return err
+		}
+		rp.PerSecond = string(data)
+	}
+	rp.PerToken = ""
+	if len(rp.PerTokenTiers) > 0 {
+		data, err := common.Marshal(rp.PerTokenTiers)
+		if err != nil {
+			return err
+		}
+		rp.PerToken = string(data)
+	}
+	rp.VideoGrid = ""
+	if rp.VideoGridDef != nil && (len(rp.VideoGridDef.Conditions) > 0 || len(rp.VideoGridDef.Resolutions) > 0) {
+		data, err := common.Marshal(rp.VideoGridDef)
+		if err != nil {
+			return err
+		}
+		rp.VideoGrid = string(data)
 	}
 	return nil
 }
@@ -100,6 +165,24 @@ func GetAllReferencePricing() ([]*ReferencePricing, error) {
 				row.PerImageSizes = nil
 			}
 		}
+		if row.PerSecond != "" {
+			if err := common.UnmarshalJsonStr(row.PerSecond, &row.PerSecondTiers); err != nil {
+				common.SysError(fmt.Sprintf("invalid reference pricing per_second for %s/%s: %s", row.ModelName, row.Source, err.Error()))
+				row.PerSecondTiers = nil
+			}
+		}
+		if row.PerToken != "" {
+			if err := common.UnmarshalJsonStr(row.PerToken, &row.PerTokenTiers); err != nil {
+				common.SysError(fmt.Sprintf("invalid reference pricing per_token for %s/%s: %s", row.ModelName, row.Source, err.Error()))
+				row.PerTokenTiers = nil
+			}
+		}
+		if row.VideoGrid != "" {
+			if err := common.UnmarshalJsonStr(row.VideoGrid, &row.VideoGridDef); err != nil {
+				common.SysError(fmt.Sprintf("invalid reference pricing video_grid for %s/%s: %s", row.ModelName, row.Source, err.Error()))
+				row.VideoGridDef = nil
+			}
+		}
 	}
 	return rows, nil
 }
@@ -122,7 +205,8 @@ func UpsertReferencePricingRows(rows []ReferencePricing) error {
 		Columns: []clause.Column{{Name: "model_name"}, {Name: "source"}},
 		DoUpdates: clause.AssignmentColumns([]string{
 			"input", "output", "cached_input", "cache_creation", "cache_creation_1h", "cache_hit",
-			"image_input", "image_output", "per_image", "per_image_input", "conditions", "updated_at",
+			"image_input", "image_output", "per_image", "per_image_input", "per_second",
+			"per_token", "video_grid", "conditions", "updated_at",
 		}),
 	}).Create(&rows).Error
 }

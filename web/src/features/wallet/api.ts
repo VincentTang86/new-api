@@ -39,6 +39,9 @@ import type {
   WaffoPaymentResponse,
   WaffoPancakePaymentRequest,
   WaffoPancakePaymentResponse,
+  NowPaymentsPaymentResponse,
+  NowPaymentsCurrenciesResponse,
+  NowPaymentsPaymentDetailResponse,
 } from './types'
 
 // ============================================================================
@@ -178,6 +181,62 @@ export async function requestWaffoPancakePayment(
   const res = await api.post('/api/user/waffo-pancake/pay', request, {
     skipBusinessError: true,
   } as Record<string, unknown>)
+  return res.data
+}
+
+/**
+ * Calculate payment amount for NOWPayments (crypto) payment
+ */
+export async function calculateNowPaymentsAmount(
+  request: AmountRequest
+): Promise<AmountResponse> {
+  const res = await api.post('/api/user/nowpayments/amount', request, {
+    skipBusinessError: true,
+  } as Record<string, unknown>)
+  return res.data
+}
+
+/**
+ * List accepted coins with each chain's live minimum.
+ *
+ * `amount` lets the backend mark chains whose minimum the current topup cannot
+ * clear, so the picker can grey them out instead of failing at payment time.
+ */
+export async function getNowPaymentsCurrencies(
+  amount: number
+): Promise<NowPaymentsCurrenciesResponse> {
+  const res = await api.get('/api/user/nowpayments/currencies', {
+    params: { amount },
+    skipBusinessError: true,
+  } as Record<string, unknown>)
+  return res.data
+}
+
+/**
+ * Create a NOWPayments deposit for the chosen coin.
+ *
+ * Returns the local trade number; deposit address and amount are then read from
+ * getNowPaymentsPaymentDetail on the checkout page.
+ */
+export async function requestNowPaymentsPayment(
+  request: AmountRequest & { pay_currency: string }
+): Promise<NowPaymentsPaymentResponse> {
+  const res = await api.post('/api/user/nowpayments/pay', request, {
+    skipBusinessError: true,
+  } as Record<string, unknown>)
+  return res.data
+}
+
+/**
+ * Read deposit address and current status for a crypto topup order.
+ */
+export async function getNowPaymentsPaymentDetail(
+  tradeNo: string
+): Promise<NowPaymentsPaymentDetailResponse> {
+  const res = await api.get(
+    `/api/user/nowpayments/payment/${encodeURIComponent(tradeNo)}`,
+    { skipBusinessError: true } as Record<string, unknown>
+  )
   return res.data
 }
 

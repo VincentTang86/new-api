@@ -353,3 +353,59 @@ func TestRechargeEpayEnforcesFinalWalletQuotaLimit(t *testing.T) {
 		})
 	}
 }
+
+func TestRechargeNowPaymentsCreditsQuotaExactlyOnce(t *testing.T) {
+	truncateTables(t)
+
+	oldQuotaPerUnit := common.QuotaPerUnit
+	common.QuotaPerUnit = 500000
+	t.Cleanup(func() { common.QuotaPerUnit = oldQuotaPerUnit })
+
+	user := insertUserForPaymentGuardTest(t, 601, 0)
+	insertTopUpForPaymentGuardTest(t, "NOWPAY-601-once", user.Id, PaymentProviderNowPayments)
+
+	require.NoError(t, RechargeNowPayments("NOWPAY-601-once", 9.99, "127.0.0.1"))
+	assert.Equal(t, 2*500000, getUserQuotaForPaymentGuardTest(t, user.Id))
+
+	reloaded := GetTopUpByTradeNo("NOWPAY-601-once")
+	require.NotNil(t, reloaded)
+	assert.Equal(t, common.TopUpStatusSuccess, reloaded.Status)
+	assert.NotZero(t, reloaded.CompleteTime)
+
+	require.NoError(t, RechargeNowPayments("NOWPAY-601-once", 9.99, "127.0.0.1"))
+	assert.Equal(t, 2*500000, getUserQuotaForPaymentGuardTest(t, user.Id))
+}
+
+func TestRechargeNowPaymentsRejectsUnsettleableOrders(t *testing.T) {
+	truncateTables(t)
+
+	user := insertUserForPaymentGuardTest(t, 602, 0)
+	insertTopUpForPaymentGuardTest(t, "NOWPAY-602-foreign", user.Id, PaymentProviderStripe)
+	insertTopUpForPaymentGuardTest(t, "NOWPAY-602-money", user.Id, PaymentProviderNowPayments)
+	insertTopUpForPaymentGuardTest(t, "NOWPAY-602-failed", user.Id, PaymentProviderNowPayments)
+	require.NoError(t, UpdatePendingTopUpStatus("NOWPAY-602-failed", PaymentProviderNowPayments, common.TopUpStatusFailed))
+
+	testCases := []struct {
+		name        string
+		tradeNo     string
+		paidAmount  float64
+		wantErr     error
+		wantStatus  string
+		wantMissing bool
+	}{
+		{name: "unknown order", tradeNo: "NOWPAY-602-missing", paidAmount: 9.99, wantErr: ErrTopUpNotFound, wantMissing: true},
+		{name: "foreign provider", tradeNo: "NOWPAY-602-foreign", paidAmount: 9.99, wantErr: ErrPaymentMethodMismatch, wantStatus: common.TopUpStatusPending},
+		{name: "paid amount mismatch", tradeNo: "NOWPAY-602-money", paidAmount: 5, wantErr: ErrTopUpMoneyMismatch, wantStatus: common.TopUpStatusPending},
+		{name: "non-pending order", tradeNo: "NOWPAY-602-failed", paidAmount: 9.99, wantErr: ErrTopUpStatusInvalid, wantStatus: common.TopUpStatusFailed},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := RechargeNowPayments(tc.tradeNo, tc.paidAmount, "127.0.0.1")
+			require.ErrorIs(t, err, tc.wantErr)
+			if !tc.wantMissing {
+				assert.Equal(t, tc.wantStatus, getTopUpStatusForPaymentGuardTest(t, tc.tradeNo))
+			}
+			assert.Equal(t, 0, getUserQuotaForPaymentGuardTest(t, user.Id))
+		})
+	}
+}

@@ -21,7 +21,7 @@ import { describe, expect, test } from 'vitest'
 import type { PricingModel } from '@/features/pricing/types'
 
 import type { PricingBenchmark } from '../../types'
-import { buildPricingRows } from '../build-pricing-rows'
+import { buildPricingRows, resolveProviderKey } from '../build-pricing-rows'
 import type { OfficialPricingMap } from '../official-pricing'
 import { LANDING_PRICE_PLACEHOLDER } from '../pricing'
 
@@ -322,5 +322,27 @@ describe('buildPricingRows', () => {
       {}
     )
     expect(row.name).toBe('Demo Model\n(Codename)')
+  })
+})
+
+// The vendor table names several vendors in Chinese, so a vendor is otherwise
+// recognised only when its models carry the brand in their id. ByteDance's
+// seedance-* do not, and their pricing rows lost the brand chip because of it.
+describe('resolveProviderKey', () => {
+  test('resolves a vendor named in Chinese', () => {
+    expect(resolveProviderKey('字节跳动', 'seedance-2.0')).toBe('doubao')
+    expect(resolveProviderKey('阿里巴巴', 'some-model')).toBe('alibaba')
+    expect(resolveProviderKey('智谱', 'some-model')).toBe('zhipu')
+  })
+
+  test('resolves seedance models with no vendor configured', () => {
+    expect(resolveProviderKey(undefined, 'seedance-2.5')).toBe('doubao')
+    expect(resolveProviderKey(undefined, 'doubao-seedance-2-0-260128')).toBe(
+      'doubao'
+    )
+  })
+
+  test('still falls back to null for an unknown vendor', () => {
+    expect(resolveProviderKey('Acme Inc', 'acme-1')).toBeNull()
   })
 })

@@ -1,0 +1,355 @@
+package doubao
+
+import (
+	"testing"
+
+	relaycommon "github.com/QuantumNous/new-api/relay/common"
+	"github.com/QuantumNous/new-api/setting/ratio_setting"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+// 押金必须随视频规格走：固定基数下 4K 一秒就押不住，而 token 数是分辨率与帧数
+// 的乘积。期望值按火山 Ark 公式（宽 × 高 × 帧数 ÷ 1024）手算，480p / 720p 两档
+// 已用真实请求核对过上游 usage。
+func TestEstimateVideoTokensScalesWithSpec(t *testing.T) {
+	cases := []struct {
+		name string
+		req  relaycommon.TaskSubmitReq
+		want int
+	}{
+		{
+			// 实测 seedance-2.0-mini 480p/4s 上游报 40594 token，预估与之相等。
+			name: "480p four seconds",
+			req: relaycommon.TaskSubmitReq{
+				Seconds:  "4",
+				Metadata: map[string]interface{}{"resolution": "480p"},
+			},
+			want: 864 * 496 * (4*VideoFPS + upstreamExtraFrames) / 1024,
+		},
+		{
+			// 不传 resolution / 时长时上游出 720p、5 秒，实测 108900 token。
+			name: "defaults to 720p five seconds",
+			req:  relaycommon.TaskSubmitReq{},
+			want: 1280 * 720 * (defaultDurationSeconds*VideoFPS + upstreamExtraFrames) / 1024,
+		},
+		{
+			name: "1080p costs far more than 480p at equal length",
+			req: relaycommon.TaskSubmitReq{
+				Seconds:  "4",
+				Metadata: map[string]interface{}{"resolution": "1080p"},
+			},
+			want: 1920 * 1088 * (4*VideoFPS + upstreamExtraFrames) / 1024,
+		},
+		{
+			name: "resolution label is case-insensitive",
+			req: relaycommon.TaskSubmitReq{
+				Seconds:  "4",
+				Metadata: map[string]interface{}{"resolution": " 4K "},
+			},
+			want: 3840 * 2176 * (4*VideoFPS + upstreamExtraFrames) / 1024,
+		},
+		{
+			// metadata.duration 是顶层 seconds 之外的第二条通道。
+			name: "falls back to metadata duration",
+			req: relaycommon.TaskSubmitReq{
+				Metadata: map[string]interface{}{"resolution": "480p", "duration": float64(10)},
+			},
+			want: 864 * 496 * (10*VideoFPS + upstreamExtraFrames) / 1024,
+		},
+		{
+			// frames 与「时长 × 帧率」取大者，否则只填 frames 的请求会按默认 5 秒押。
+			name: "frames wins when larger than duration",
+			req: relaycommon.TaskSubmitReq{
+				Seconds:  "2",
+				Metadata: map[string]interface{}{"resolution": "720p", "frames": float64(600)},
+			},
+			want: 1280 * 720 * (600 + upstreamExtraFrames) / 1024,
+		},
+		{
+			name: "unknown resolution keeps the flat baseline",
+			req: relaycommon.TaskSubmitReq{
+				Seconds:  "4",
+				Metadata: map[string]interface{}{"resolution": "8k"},
+			},
+			want: 0,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, EstimateVideoTokens(&tc.req))
+		})
+	}
+}
+
+// 越界的时长 / 帧数不能变成无界的押金乘数，也不能在乘法里溢出成负数。
+func TestEstimateVideoTokensClampsHostileInput(t *testing.T) {
+	capped := 3840 * 2176 * MaxFrames / 1024
+
+	huge := relaycommon.TaskSubmitReq{
+		Metadata: map[string]interface{}{"resolution": "4k", "frames": float64(1 << 40)},
+	}
+	assert.Equal(t, capped, EstimateVideoTokens(&huge))
+
+	// 18446744073686646784 这类「回绕的负数」以 float64 到达，同样要收进上限，
+	// 既不能溢出成负押金，也不能被当成未设置而悄悄放行（见下面的校验用例）。
+	wrapped := relaycommon.TaskSubmitReq{
+		Seconds:  "4",
+		Metadata: map[string]interface{}{"resolution": "4k", "frames": float64(18446744073686646784)},
+	}
+	assert.Equal(t, capped, EstimateVideoTokens(&wrapped))
+
+	negative := relaycommon.TaskSubmitReq{
+		Metadata: map[string]interface{}{"resolution": "480p", "duration": float64(-99)},
+	}
+	assert.Positive(t, EstimateVideoTokens(&negative))
+}
+
+// metadata 绕过了顶层 seconds 的校验，两条通道都必须在请求入口被拒。
+func TestValidateVideoBoundsRejectsOversizedSpec(t *testing.T) {
+	cases := []struct {
+		name    string
+		req     relaycommon.TaskSubmitReq
+		wantErr bool
+	}{
+		{
+			name: "normal request",
+			req: relaycommon.TaskSubmitReq{
+				Seconds:  "5",
+				Metadata: map[string]interface{}{"resolution": "720p"},
+			},
+		},
+		{
+			// relaycommon.MaxTaskDurationSeconds 允许到 3600 秒，对视频过松。
+			name:    "top-level seconds beyond the video cap",
+			req:     relaycommon.TaskSubmitReq{Seconds: "600"},
+			wantErr: true,
+		},
+		{
+			name:    "metadata duration beyond the video cap",
+			req:     relaycommon.TaskSubmitReq{Metadata: map[string]interface{}{"duration": float64(3600)}},
+			wantErr: true,
+		},
+		{
+			name:    "metadata frames beyond the frame cap",
+			req:     relaycommon.TaskSubmitReq{Metadata: map[string]interface{}{"frames": float64(MaxFrames + 1)}},
+			wantErr: true,
+		},
+		{
+			name: "frames at the cap is allowed",
+			req:  relaycommon.TaskSubmitReq{Metadata: map[string]interface{}{"frames": float64(MaxFrames)}},
+		},
+		{
+			// 超出 int32 的巨数不能因为「装不下」就被当成未设置放行。
+			name:    "frames beyond int32 is still rejected",
+			req:     relaycommon.TaskSubmitReq{Metadata: map[string]interface{}{"frames": float64(18446744073686646784)}},
+			wantErr: true,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := ValidateVideoBounds(&tc.req)
+			if tc.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
+}
+
+// 价表的作用是把各档刊例还原成相对基准价的倍率：管理员只配基准价（ModelRatio），
+// 其余档位靠倍率跟随。倍率错了就是直接的错价，所以逐档钉住数眼的刊例。
+func TestGetVideoInputRatioMapsListedRates(t *testing.T) {
+	const model = "doubao-seedance-2-5-oinone"
+	// 基准档单价 = 实测的数眼上游单价，对应应配置的 ModelRatio 4.15（× 2 得每 1M 美元价）。
+	const baseUSD = 8.30
+
+	cases := []struct {
+		name       string
+		resolution string
+		hasVideo   bool
+		wantUSD    float64
+	}{
+		// 这两档是 2026-09-14 dev 实测对上的上游实收单价。
+		{"base tier without reference video", "720p", false, 8.30},
+		{"base tier with reference video", "720p", true, 4.98},
+		// 1080p 未实测，按火山刊例的档位比值（77/70、46/70）推出。
+		{"1080p without reference video", "1080p", false, 9.13},
+		{"1080p with reference video", "1080p", true, 5.4543},
+		{"480p shares the base tier", "480p", false, 8.30},
+		// 数眼未列 4K 档，未配置的组合按基准价计费。
+		{"4k falls back to the base rate", "4k", false, 8.30},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			ratio, ok := GetVideoInputRatio(model, tc.resolution, tc.hasVideo)
+			require.True(t, ok)
+			assert.InDelta(t, tc.wantUSD, baseUSD*ratio, 0.01)
+		})
+	}
+
+	_, ok := GetVideoInputRatio("seedance-2.5", "720p", false)
+	assert.False(t, ok, "keystone 的短名走另一套单价，不该命中数眼价表")
+}
+
+func setResolutionRatio(t *testing.T, jsonStr string) {
+	t.Helper()
+	require.NoError(t, ratio_setting.UpdateModelResolutionRatioByJSONString(jsonStr))
+	t.Cleanup(func() {
+		require.NoError(t, ratio_setting.UpdateModelResolutionRatioByJSONString("{}"))
+	})
+}
+
+// 上游调价时运营应当能改配置而不是等发版，所以后台的档位倍率必须压过内置价表，
+// 而没配到的档位仍要按内置比值走，不能整表失效。
+func TestGetVideoInputRatioPrefersConfiguredTiers(t *testing.T) {
+	const model = "doubao-seedance-2-5-oinone"
+	setResolutionRatio(t, `{"doubao-seedance-2-5-oinone":{"1080p":1.5,"base+video":0.4}}`)
+
+	cases := []struct {
+		name       string
+		resolution string
+		hasVideo   bool
+		want       float64
+	}{
+		{"configured 1080p overrides the built-in 1.1", "1080p", false, 1.5},
+		{"configured base+video overrides the built-in 0.6", "720p", true, 0.4},
+		// 后台没配这一档，仍走内置表的 46/70。
+		{"unconfigured tier falls back to the table", "1080p", true, 46.0 / 70.0},
+		{"base tier stays at parity", "720p", false, 1.0},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			ratio, ok := GetVideoInputRatio(model, tc.resolution, tc.hasVideo)
+			require.True(t, ok)
+			assert.InDelta(t, tc.want, ratio, 0.0001)
+		})
+	}
+}
+
+// 内置表里没有的模型也能纯靠后台定档，这是新模型接入不再需要发版的前提。
+func TestGetVideoInputRatioWorksWithoutBuiltinTable(t *testing.T) {
+	const model = "doubao-seedance-9-9-preview"
+	setResolutionRatio(t, `{"doubao-seedance-9-9-preview":{"4k":0.5}}`)
+
+	ratio, ok := GetVideoInputRatio(model, "4k", false)
+	require.True(t, ok)
+	assert.InDelta(t, 0.5, ratio, 0.0001)
+
+	// 未配置的档位在没有内置表可回落时报告「无倍率」，调用方按基准价计费。
+	_, ok = GetVideoInputRatio(model, "1080p", false)
+	assert.False(t, ok)
+}
+
+func TestVideoRateKey(t *testing.T) {
+	cases := []struct {
+		resolution string
+		hasVideo   bool
+		want       string
+	}{
+		{"720p", false, "base"},
+		{"480p", false, "base"},
+		{"", false, "base"},
+		{"720p", true, "base+video"},
+		{"1080p", false, "1080p"},
+		{" 1080P ", true, "1080p+video"},
+		{"4k", true, "4k+video"},
+	}
+	for _, tc := range cases {
+		assert.Equal(t, tc.want, VideoRateKey(tc.resolution, tc.hasVideo))
+	}
+}
+
+// 带参考视频时上游把输入的帧也计进 total_tokens，押金必须跟着翻倍：不翻就只押住
+// 一半，差额要等任务跑完才补扣，中途把余额花在别处的用户会被扣成负数。
+func TestEstimateVideoTokensCoversTheReferenceVideoInput(t *testing.T) {
+	spec := map[string]interface{}{"resolution": "480p"}
+	withVideo := map[string]interface{}{
+		"resolution": "480p",
+		"content": []interface{}{
+			map[string]interface{}{
+				"type":      "video_url",
+				"video_url": map[string]interface{}{"url": "https://example.com/ref.mp4"},
+				"role":      "reference_video",
+			},
+		},
+	}
+
+	plain := EstimateVideoTokens(&relaycommon.TaskSubmitReq{Seconds: "4", Metadata: spec})
+	referenced := EstimateVideoTokens(&relaycommon.TaskSubmitReq{Seconds: "4", Metadata: withVideo})
+
+	assert.Equal(t, plain*videoInputHoldMultiplier, referenced)
+	// 2026-09-14 实测：480p/4s 带参考视频的一笔上游报 77260 token（输出 38830 +
+	// 输入 38430）。押金必须押得住它，否则结算又要补扣。
+	assert.GreaterOrEqual(t, referenced, 77260)
+}
+
+// hasVideoInMetadata 决定走 +video 档（基准价六成）还是基准档，判错就是四成的
+// 错价且不会报错，所以把上游真正认的那几种 content 形状钉住。
+func TestHasVideoInMetadata(t *testing.T) {
+	cases := []struct {
+		name     string
+		metadata map[string]interface{}
+		want     bool
+	}{
+		{"nil metadata", nil, false},
+		{"no content key", map[string]interface{}{"resolution": "480p"}, false},
+		{
+			// 2026-09-14 dev 实测命中 +video 档的形状。
+			name: "typed video_url entry",
+			metadata: map[string]interface{}{"content": []interface{}{
+				map[string]interface{}{"type": "text", "text": "push in slowly"},
+				map[string]interface{}{
+					"type":      "video_url",
+					"video_url": map[string]interface{}{"url": "https://example.com/ref.mp4"},
+					"role":      "reference_video",
+				},
+			}},
+			want: true,
+		},
+		{
+			// 火山接受省略 type 的写法，计费也必须认，否则这类请求按基准价多收。
+			name: "video_url key without a type field",
+			metadata: map[string]interface{}{"content": []interface{}{
+				map[string]interface{}{"video_url": map[string]interface{}{"url": "https://example.com/ref.mp4"}},
+			}},
+			want: true,
+		},
+		{
+			name: "image reference is not a video reference",
+			metadata: map[string]interface{}{"content": []interface{}{
+				map[string]interface{}{"type": "image_url", "image_url": map[string]interface{}{"url": "https://example.com/a.png"}},
+				map[string]interface{}{"type": "text", "text": "animate this"},
+			}},
+			want: false,
+		},
+		{
+			// content 来自客户端 JSON，形状不受控；认错或 panic 都比多收更糟。
+			name:     "content is not an array",
+			metadata: map[string]interface{}{"content": "video_url"},
+			want:     false,
+		},
+		{
+			name:     "content holds non-object entries",
+			metadata: map[string]interface{}{"content": []interface{}{"video_url", 42, nil}},
+			want:     false,
+		},
+		{
+			name:     "empty content",
+			metadata: map[string]interface{}{"content": []interface{}{}},
+			want:     false,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, hasVideoInMetadata(tc.metadata))
+		})
+	}
+}

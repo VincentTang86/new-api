@@ -20,10 +20,13 @@ import { getRouteApi } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 
 import { PublicLayout } from '@/components/layout'
-import { ImagePricingList } from '@/features/home/landing/components/pricing/image-pricing-list'
+import { MediaPricingList } from '@/features/home/landing/components/pricing/media-pricing-list'
 import { PricingModelList } from '@/features/home/landing/components/pricing/pricing-model-list'
 import { PricingTableControls } from '@/features/home/landing/components/pricing/pricing-table-controls'
-import { LANDING_CONTAINER } from '@/features/home/landing/constants'
+import {
+  LANDING_CONTAINER,
+  PRICING_SUBTITLE_KEYS,
+} from '@/features/home/landing/constants'
 import { useLandingPricingRows } from '@/features/home/landing/lib/use-landing-pricing-rows'
 import { ModelDetailsDrawerHost } from '@/features/pricing/components/model-details-drawer-host'
 import { useSystemConfig } from '@/hooks/use-system-config'
@@ -35,6 +38,8 @@ export function ModelsPricing() {
   const { systemName } = useSystemConfig()
   const { type } = route.useSearch()
   const table = useLandingPricingRows({ initialModelType: type })
+  const isImageTab = table.modelType === 'image'
+  const isVideoTab = table.modelType === 'video'
 
   return (
     <PublicLayout showMainContainer={false}>
@@ -54,15 +59,7 @@ export function ModelsPricing() {
             {t('Models & pricing, made clear')}
           </h1>
           <p className='text-base text-(--pd-muted)'>
-            {table.modelType === 'image'
-              ? t(
-                  'Compare {{name}} image rates with the vendor list price. Prices are estimated per image and shown in USD. Open a model for its per-token rates.',
-                  { name: systemName }
-                )
-              : t(
-                  'Compare {{name}} rates with the selected benchmark. Prices are shown in USD per million tokens.',
-                  { name: systemName }
-                )}
+            {t(PRICING_SUBTITLE_KEYS[table.modelType], { name: systemName })}
           </p>
         </div>
 
@@ -82,9 +79,9 @@ export function ModelsPricing() {
 
           <ModelDetailsDrawerHost />
 
-          {table.modelType === 'image' ? (
-            <ImagePricingList
-              rows={table.imageRows}
+          {isImageTab || isVideoTab ? (
+            <MediaPricingList
+              rows={isVideoTab ? table.videoRows : table.imageRows}
               benchmark={table.benchmark}
               isLoading={table.isLoading}
               isError={table.isError}

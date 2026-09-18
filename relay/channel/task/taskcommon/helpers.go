@@ -86,6 +86,11 @@ func (BaseBilling) EstimateBilling(_ *gin.Context, _ *relaycommon.RelayInfo) map
 	return nil
 }
 
+// EstimatePreConsumeTokens returns 0 (no token estimate; keep the flat baseline).
+func (BaseBilling) EstimatePreConsumeTokens(_ *gin.Context, _ *relaycommon.RelayInfo) int {
+	return 0
+}
+
 // AdjustBillingOnSubmit returns nil (no submit-time adjustment).
 func (BaseBilling) AdjustBillingOnSubmit(_ *relaycommon.RelayInfo, _ []byte) map[string]float64 {
 	return nil
