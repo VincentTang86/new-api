@@ -14,6 +14,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/QuantumNous/new-api/common"
@@ -61,12 +62,9 @@ type nowPaymentsPaymentResponse struct {
 	PayCurrency   string      `json:"pay_currency"`
 	PayinExtraId  string      `json:"payin_extra_id"`
 	Network       string      `json:"network"`
-	// 代币合约地址与精度，EVM 链的代币才有；精度同样时数字时字符串。
-	SmartContract    string      `json:"smart_contract"`
-	NetworkPrecision json.Number `json:"network_precision"`
-	ValidUntil       string      `json:"valid_until"`
-	Code             string      `json:"code"`
-	Message          string      `json:"message"`
+	ValidUntil    string      `json:"valid_until"`
+	Code          string      `json:"code"`
+	Message       string      `json:"message"`
 }
 
 type nowPaymentsMinAmountResponse struct {
@@ -246,12 +244,14 @@ func RequestNowPaymentsPay(c *gin.Context) {
 	topUp.CryptoAddress = payment.PayAddress
 	topUp.CryptoNetwork = payment.Network
 	topUp.CryptoExtraId = payment.PayinExtraId
-	// 合约与精度决定收款页能否生成带金额的二维码；上游没给就留空，前端退回纯地址二维码。
-	topUp.CryptoContract = payment.SmartContract
-	if precision, precisionErr := payment.NetworkPrecision.Int64(); precisionErr == nil && precision > 0 {
-		topUp.CryptoDecimals = int(precision)
-	} else if payment.SmartContract != "" {
-		logger.LogWarn(c.Request.Context(), fmt.Sprintf("NOWPayments 未返回有效 network_precision，收款页不提供带金额二维码 trade_no=%s pay_currency=%s network_precision=%q", tradeNo, payCurrency, payment.NetworkPrecision))
+	// 合约与精度决定收款页能否生成带金额的二维码。建单响应不带这两项，要另查币种元数据；查不到就留空，前端退回纯地址二维码。
+	if info, ok := getNowPaymentsCurrencyInfo(c.Request.Context(), payCurrency); ok {
+		topUp.CryptoContract = info.SmartContract
+		if precision, precisionErr := info.NetworkPrecision.Int64(); precisionErr == nil && precision > 0 {
+			topUp.CryptoDecimals = int(precision)
+		} else if info.SmartContract != "" {
+			logger.LogWarn(c.Request.Context(), fmt.Sprintf("NOWPayments 币种元数据缺少有效 network_precision，收款页不提供带金额二维码 trade_no=%s pay_currency=%s network_precision=%q", tradeNo, payCurrency, info.NetworkPrecision))
+		}
 	}
 	if validUntil, parseErr := time.Parse(time.RFC3339, payment.ValidUntil); parseErr == nil {
 		topUp.CryptoExpiresAt = validUntil.Unix()
@@ -262,7 +262,7 @@ func RequestNowPaymentsPay(c *gin.Context) {
 		return
 	}
 
-	logger.LogInfo(c.Request.Context(), fmt.Sprintf("NOWPayments 充值订单创建成功 user_id=%d trade_no=%s payment_id=%s amount=%d money=%.2f pay_amount=%s pay_currency=%s network=%s smart_contract=%s network_precision=%s fixed_rate=%t fee_paid_by_user=%t", id, tradeNo, topUp.CryptoPaymentId, req.Amount, payMoney, payment.PayAmount, payCurrency, payment.Network, payment.SmartContract, payment.NetworkPrecision, setting.NowPaymentsFixedRate, setting.NowPaymentsFeePaidByUser))
+	logger.LogInfo(c.Request.Context(), fmt.Sprintf("NOWPayments 充值订单创建成功 user_id=%d trade_no=%s payment_id=%s amount=%d money=%.2f pay_amount=%s pay_currency=%s network=%s smart_contract=%s network_precision=%d fixed_rate=%t fee_paid_by_user=%t", id, tradeNo, topUp.CryptoPaymentId, req.Amount, payMoney, payment.PayAmount, payCurrency, payment.Network, topUp.CryptoContract, topUp.CryptoDecimals, setting.NowPaymentsFixedRate, setting.NowPaymentsFeePaidByUser))
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "success",
@@ -400,6 +400,55 @@ func getNowPaymentsMinAmount(ctx context.Context, ticker string) (minAmount floa
 		fiatEquivalent = minAmount
 	}
 	return minAmount, fiatEquivalent, nil
+}
+
+// nowPaymentsCurrencyInfo 是 GET /v1/full-currencies 里一条币种的元数据。建单与状态查询响应都不带合约与精度，只有这个接口有。
+// network_precision 是链上 decimals（时数字时字符串）；precision 只是展示位数（BSC 的 USDT 为 8），不能用于换算。
+type nowPaymentsCurrencyInfo struct {
+	Code             string      `json:"code"`
+	Network          string      `json:"network"`
+	SmartContract    string      `json:"smart_contract"`
+	NetworkPrecision json.Number `json:"network_precision"`
+}
+
+type nowPaymentsFullCurrenciesResponse struct {
+	Currencies []nowPaymentsCurrencyInfo `json:"currencies"`
+}
+
+// 币种元数据几乎不变，进程内缓存一份；只在建单时查，不进收款页轮询路径。
+var nowPaymentsCurrencyCache struct {
+	sync.Mutex
+	fetchedAt time.Time
+	byTicker  map[string]nowPaymentsCurrencyInfo
+}
+
+const nowPaymentsCurrencyCacheTTL = 6 * time.Hour
+
+// getNowPaymentsCurrencyInfo 返回 ticker 对应的合约与精度；拉取失败或未收录返回 false，由收款页退回纯地址二维码。
+func getNowPaymentsCurrencyInfo(ctx context.Context, ticker string) (nowPaymentsCurrencyInfo, bool) {
+	nowPaymentsCurrencyCache.Lock()
+	defer nowPaymentsCurrencyCache.Unlock()
+
+	if nowPaymentsCurrencyCache.byTicker == nil || time.Since(nowPaymentsCurrencyCache.fetchedAt) > nowPaymentsCurrencyCacheTTL {
+		var result nowPaymentsFullCurrenciesResponse
+		err := callNowPaymentsApi(ctx, "/full-currencies", nil, &result)
+		if err == nil && len(result.Currencies) == 0 {
+			err = errors.New("响应里没有 currencies")
+		}
+		if err != nil {
+			// 过期的旧缓存若还在就继续用，比没有强。
+			logger.LogWarn(ctx, fmt.Sprintf("NOWPayments 币种元数据拉取失败 error=%q", err.Error()))
+		} else {
+			byTicker := make(map[string]nowPaymentsCurrencyInfo, len(result.Currencies))
+			for _, info := range result.Currencies {
+				byTicker[strings.ToLower(info.Code)] = info
+			}
+			nowPaymentsCurrencyCache.byTicker = byTicker
+			nowPaymentsCurrencyCache.fetchedAt = time.Now()
+		}
+	}
+	info, ok := nowPaymentsCurrencyCache.byTicker[ticker]
+	return info, ok
 }
 
 // createNowPaymentsPayment 调用 POST /v1/payment 直接生成收款地址。

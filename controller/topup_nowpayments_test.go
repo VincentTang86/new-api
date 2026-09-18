@@ -245,33 +245,37 @@ func TestNowPaymentsWebhookCreditsOnlyFinishedFullPayments(t *testing.T) {
 	})
 }
 
-// 上游对 network_precision 时发数字时发字符串；任一形态都不能让建单响应解析失败，
-// 缺失或 null 则按"精度未知"处理，由收款页退回纯地址二维码。
-func TestNowPaymentsPaymentResponseNetworkPrecision(t *testing.T) {
+// full-currencies 的 network_precision 实测是字符串（"18"），文档形态是数字；非 EVM 币种的 smart_contract 为 null。
+// 任一形态都不能让解析失败；精度缺失按"未知"处理，由收款页退回纯地址二维码。同条目里的 precision 是展示位数，不能拿来当 decimals。
+func TestNowPaymentsCurrencyInfoParsing(t *testing.T) {
 	testCases := []struct {
-		name string
-		body string
-		want int64
-		ok   bool
+		name         string
+		body         string
+		wantContract string
+		wantDecimals int64
+		precisionOk  bool
 	}{
-		{name: "integer", body: `{"smart_contract": "0x55d398326f99059fF775485246999027B3197955", "network_precision": 18}`, want: 18, ok: true},
-		{name: "quoted string", body: `{"smart_contract": "0xdAC17F958D2ee523a2206206994597C13D831ec7", "network_precision": "6"}`, want: 6, ok: true},
-		{name: "missing", body: `{"pay_address": "EQabc"}`, ok: false},
-		{name: "null", body: `{"smart_contract": null, "network_precision": null}`, ok: false},
+		{name: "string precision as the API actually sends it", body: `{"currencies":[{"code":"USDTBSC","network":"bsc","smart_contract":"0x55d398326f99059ff775485246999027b3197955","network_precision":"18","precision":8}]}`, wantContract: "0x55d398326f99059ff775485246999027b3197955", wantDecimals: 18, precisionOk: true},
+		{name: "numeric precision", body: `{"currencies":[{"code":"USDTERC20","network":"eth","smart_contract":"0xdAC17F958D2ee523a2206206994597C13D831ec7","network_precision":6}]}`, wantContract: "0xdAC17F958D2ee523a2206206994597C13D831ec7", wantDecimals: 6, precisionOk: true},
+		{name: "null contract on a non-EVM chain", body: `{"currencies":[{"code":"USDCALGO","network":"algo","smart_contract":null,"network_precision":"6","precision":8}]}`, wantContract: "", wantDecimals: 6, precisionOk: true},
+		{name: "missing precision", body: `{"currencies":[{"code":"XYZ","network":"xyz"}]}`, precisionOk: false},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			var payment nowPaymentsPaymentResponse
-			require.NoError(t, common.Unmarshal([]byte(tc.body), &payment))
+			var result nowPaymentsFullCurrenciesResponse
+			require.NoError(t, common.Unmarshal([]byte(tc.body), &result))
+			require.Len(t, result.Currencies, 1)
+			info := result.Currencies[0]
+			assert.Equal(t, tc.wantContract, info.SmartContract)
 
-			got, err := payment.NetworkPrecision.Int64()
-			if !tc.ok {
+			decimals, err := info.NetworkPrecision.Int64()
+			if !tc.precisionOk {
 				assert.Error(t, err)
 				return
 			}
 			require.NoError(t, err)
-			assert.Equal(t, tc.want, got)
+			assert.Equal(t, tc.wantDecimals, decimals)
 		})
 	}
 }
