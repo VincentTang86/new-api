@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/QuantumNous/new-api/common"
+	"github.com/QuantumNous/new-api/model"
 	relaycommon "github.com/QuantumNous/new-api/relay/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -282,4 +283,16 @@ func TestConvertToAliRequestWan30DurationBounds(t *testing.T) {
 			assert.Equal(t, tt.duration, aliReq.Parameters.Duration)
 		})
 	}
+}
+
+func TestParseTaskResultAcceptsFloatUsageFromDedicatedInstance(t *testing.T) {
+	// 专属实例把 usage 里的秒数写成 5.0 / 0.0；轮询器靠这里解析终态，解析失败任务就永久卡住。
+	body := []byte(`{"request_id":"r1","output":{"task_id":"t1","task_status":"SUCCEEDED","video_url":"https://example.com/v.mp4"},
+		"usage":{"video_count":1,"duration":5.0,"SR":480,"output_video_duration":5.0,"input_video_duration":0.0,"fps":30,"ratio":"16:9"}}`)
+
+	result, err := (&TaskAdaptor{}).ParseTaskResult(body)
+
+	require.NoError(t, err)
+	assert.Equal(t, model.TaskStatusSuccess, result.Status)
+	assert.Equal(t, "https://example.com/v.mp4", result.Url)
 }

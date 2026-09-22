@@ -210,3 +210,16 @@ func TestAdjustBillingOnCompleteWan30PricesByOriginNameAndChargesConfiguredInput
 	want := int(testUnitQuota*5*3 + testUnitQuota*4*0.5)
 	assert.Equal(t, want, got)
 }
+
+func TestAdjustBillingOnCompleteWan30AcceptsFloatSecondsFromDedicatedInstance(t *testing.T) {
+	// 2026-09-22 实测：专属实例（*.maas.aliyuncs.com）把秒数序列化成 5.0 / 0.0，公共端点是 5 / 0。
+	// 解析不了这份报文，任务就永远卡在 in_progress、押金永不结算——这条锁住的是那次事故。
+	dedicated := `{"output":{"task_id":"t1","task_status":"SUCCEEDED","video_url":"https://example.com/v.mp4"},
+		"usage":{"video_count":1,"duration":5.0,"SR":480,"output_video_duration":5.0,"input_video_duration":0.0,"fps":30,"ratio":"16:9"}}`
+	props := model.Properties{OriginModelName: "wan3.0-video-prime", UpstreamModelName: "wan3.0-video-prime"}
+	bc := wan30Billing(map[string]float64{"seconds": 30, "resolution": 1})
+
+	got := (&TaskAdaptor{}).AdjustBillingOnComplete(settledTask(props, bc, dedicated), nil)
+
+	assert.Equal(t, int(testUnitQuota*5), got)
+}

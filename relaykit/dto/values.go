@@ -2,6 +2,8 @@ package dto
 
 import (
 	"encoding/json"
+	"fmt"
+	"math"
 	"strconv"
 )
 
@@ -27,6 +29,11 @@ func (s StringValue) MarshalJSON() ([]byte, error) {
 	return json.Marshal(string(s))
 }
 
+// IntValue is an integer that tolerates the number spellings providers actually
+// emit: a plain integer, a float that is an integer in disguise (DashScope's
+// dedicated instances serialise seconds as 5.0 while the public endpoint sends
+// 5), or either of those quoted as a string. Fractional values round to the
+// nearest integer; NaN, ±Inf and magnitudes beyond int64 are rejected.
 type IntValue int
 
 func (i *IntValue) UnmarshalJSON(b []byte) error {
@@ -35,15 +42,32 @@ func (i *IntValue) UnmarshalJSON(b []byte) error {
 		*i = IntValue(n)
 		return nil
 	}
+	var num json.Number
+	if err := json.Unmarshal(b, &num); err == nil {
+		return i.setFromNumber(num)
+	}
 	var s string
 	if err := json.Unmarshal(b, &s); err != nil {
-		return err
+		return fmt.Errorf("dto: cannot parse %s as an integer", string(b))
 	}
-	v, err := strconv.Atoi(s)
+	if v, err := strconv.Atoi(s); err == nil {
+		*i = IntValue(v)
+		return nil
+	}
+	return i.setFromNumber(json.Number(s))
+}
+
+// setFromNumber handles the decimal literals strconv.Atoi rejects, i.e. anything
+// with a fraction or exponent.
+func (i *IntValue) setFromNumber(num json.Number) error {
+	f, err := num.Float64()
 	if err != nil {
-		return err
+		return fmt.Errorf("dto: cannot parse %q as an integer: %w", num, err)
 	}
-	*i = IntValue(v)
+	if math.IsNaN(f) || math.IsInf(f, 0) || f >= math.MaxInt64 || f <= math.MinInt64 {
+		return fmt.Errorf("dto: %q is out of range for an integer", num)
+	}
+	*i = IntValue(int64(math.Round(f)))
 	return nil
 }
 
