@@ -15,7 +15,8 @@
       "gemini-3.1-flash-lite-image context/max_output copied from gemini-3.1-flash-image; release_date/knowledge_cutoff left empty pending a first-party source (added 2026-09-08)",
       "gpt-image-2.5-flare / -sunburst follow developers.openai.com model pages (added 2026-09-09): context/max_output not published so kept 0 like gpt-image-2; both priced identically ($5/$1.25 text in, $8/$2 image in, $30 image out per 1M); OpenRouter does not list them yet, so no cross-check source",
       "seedance-2.0/-fast/-mini/-2.5 为 keystone（渠道 21，豆包视频类型）上的短模型名，与火山长名 doubao-seedance-2-0-260128 并存；mini/2.5 发布日期未核实，留空",
-      "seedance-2.0-mini(Volcengine) 是数眼渠道上的对外名（经模型重定向打到上游 doubao-seedance-2-0-mini-oinone），元数据与 keystone 线的短名 seedance-2.0-mini 相同，故用 alias_of（2026-09-22 新增）"
+      "seedance-2.0-mini(Volcengine) 是数眼渠道上的对外名（经模型重定向打到上游 doubao-seedance-2-0-mini-oinone），元数据与 keystone 线的短名 seedance-2.0-mini 相同，故用 alias_of（2026-09-22 新增）",
+      "wan3.0-video / wan3.0-video-prime 基本信息取自公开资料（added 2026-09-22）：正式上线 2026-08-24、公测 2026-08-06（阿里云开发者社区 / 少数派 / 知乎报道，控制台页需登录未直接读到）；四模态参考 + 最长 30 秒，标准版另支持文档输入故多一个 file 模态，prime 未明示文档能力故不标 file；百炼控制台搜索只出 prime，但两个名字经 API 阴性对照（假名字提交即 400 Model not exist）均可调；价格：prime ¥0.45/0.9/1.8 每秒已由控制台截图核实；标准版 ¥0.3/0.6/1.2（限时 7 折至 2026-09-23 为 ¥0.21/0.42/0.84）来自 qianwenai.com，未在控制台核实；lobehub 图标集无万相专属图标，沿用阿里其他模型的 Qwen.Color"
     ]
   },
   "models": {
@@ -545,6 +546,50 @@
         "ru": "Qwen3.8 Max — флагман серии Qwen3.8 от Alibaba: мультимодальная модель рассуждений с контекстом 1 млн токенов для понимания текста, изображений и видео.",
         "ja": "Qwen3.8 Max はアリババ Qwen3.8 シリーズのフラッグシップで、1M トークンのコンテキストを備えたマルチモーダル推論モデルとして、テキスト・画像・動画の理解をカバーします。",
         "vi": "Qwen3.8 Max là mô hình chủ lực của dòng Qwen3.8 từ Alibaba — mô hình suy luận đa phương thức với ngữ cảnh 1M token cho hiểu văn bản, hình ảnh và video."
+      }
+    },
+    "wan3.0-video": {
+      "vendor": "阿里巴巴",
+      "vendor_display_name": "Alibaba",
+      "icon": "Qwen.Color",
+      "output_modalities": "video",
+      "context_length": 0,
+      "max_output_tokens": 0,
+      "release_date": "2026-08-24",
+      "knowledge_cutoff": "",
+      "parameter_count": "",
+      "capabilities": "",
+      "input_modalities": "text,image,audio,video,file",
+      "description": {
+        "en": "Wan3.0 is Alibaba's all-in-one video generation model: it takes text, image, video, audio and document references, keeps production-grade character consistency with synchronised audio, and produces clips of up to 30 seconds.",
+        "zh-CN": "万相3.0 是阿里巴巴的 all-in-one 视频生成模型，支持文本、图片、视频、音频与文档全能参考，生产级角色一致性、音画同步，单次最长生成 30 秒视频。",
+        "zh-TW": "萬相3.0 是阿里巴巴的 all-in-one 影片生成模型，支援文字、圖像、影片、音訊與文件的全能參考，具備生產級角色一致性與音畫同步，單次最長可生成 30 秒影片。",
+        "fr": "Wan3.0 est le modèle de génération vidéo tout-en-un d'Alibaba : il accepte des références texte, image, vidéo, audio et documents, conserve une cohérence des personnages de niveau production avec un son synchronisé et produit des clips jusqu'à 30 secondes.",
+        "ru": "Wan3.0 — универсальная модель генерации видео от Alibaba: принимает текст, изображения, видео, аудио и документы в качестве референсов, сохраняет продакшн-уровень согласованности персонажей с синхронным звуком и создаёт ролики длительностью до 30 секунд.",
+        "ja": "Wan3.0 は Alibaba のオールインワン動画生成モデルで、テキスト・画像・動画・音声・ドキュメントを参照入力として受け取り、プロダクション品質のキャラクター一貫性と同期音声を保ちながら最長 30 秒の動画を生成します。",
+        "vi": "Wan3.0 là mô hình tạo video tất-cả-trong-một của Alibaba: nhận tham chiếu văn bản, ảnh, video, âm thanh và tài liệu, giữ tính nhất quán nhân vật ở mức sản xuất với âm thanh đồng bộ và tạo video dài tới 30 giây."
+      }
+    },
+    "wan3.0-video-prime": {
+      "vendor": "阿里巴巴",
+      "vendor_display_name": "Alibaba",
+      "icon": "Qwen.Color",
+      "output_modalities": "video",
+      "context_length": 0,
+      "max_output_tokens": 0,
+      "release_date": "2026-08-24",
+      "knowledge_cutoff": "",
+      "parameter_count": "",
+      "capabilities": "",
+      "input_modalities": "text,image,audio,video",
+      "description": {
+        "en": "Wan3.0 Video Prime is the high-speed variant of Wan3.0 with the same capabilities as the standard model — text, image, video and audio references and clips of up to 30 seconds — at markedly lower end-to-end latency.",
+        "zh-CN": "万相3.0 高速版，能力对齐 Wan3.0 标准版：支持文本、图片、视频、音频四模态参考，单次最长生成 30 秒视频，端到端速度显著提升。",
+        "zh-TW": "萬相3.0 高速版，能力對齊 Wan3.0 標準版：支援文字、圖像、影片、音訊四模態參考，單次最長可生成 30 秒影片，端到端速度顯著提升。",
+        "fr": "Wan3.0 Video Prime est la variante haute vitesse de Wan3.0, aux capacités identiques au modèle standard — références texte, image, vidéo et audio, clips jusqu'à 30 secondes — avec une latence de bout en bout nettement réduite.",
+        "ru": "Wan3.0 Video Prime — высокоскоростная версия Wan3.0 с теми же возможностями, что у стандартной модели: текстовые, графические, видео- и аудиореференсы, ролики до 30 секунд — при заметно меньшей сквозной задержке.",
+        "ja": "Wan3.0 Video Prime は Wan3.0 の高速版で、標準モデルと同等の能力（テキスト・画像・動画・音声の参照入力、最長 30 秒の動画生成）を保ちながら、エンドツーエンドの処理速度を大幅に向上させています。",
+        "vi": "Wan3.0 Video Prime là phiên bản tốc độ cao của Wan3.0, giữ nguyên năng lực của bản tiêu chuẩn — tham chiếu văn bản, ảnh, video và âm thanh, video dài tới 30 giây — với độ trễ đầu-cuối thấp hơn đáng kể."
       }
     },
     "grok-imagine-image-2.0": {
