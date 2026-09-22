@@ -14,7 +14,8 @@
       "vendor_display_name is a per-model override shown to users in place of the vendor name (e.g. Bailian-hosted deepseek-v4-pro displays DeepSeek)",
       "gemini-3.1-flash-lite-image context/max_output copied from gemini-3.1-flash-image; release_date/knowledge_cutoff left empty pending a first-party source (added 2026-09-08)",
       "gpt-image-2.5-flare / -sunburst follow developers.openai.com model pages (added 2026-09-09): context/max_output not published so kept 0 like gpt-image-2; both priced identically ($5/$1.25 text in, $8/$2 image in, $30 image out per 1M); OpenRouter does not list them yet, so no cross-check source",
-      "seedance-2.0/-fast/-mini/-2.5 为 keystone（渠道 21，豆包视频类型）上的短模型名，与火山长名 doubao-seedance-2-0-260128 并存；mini/2.5 发布日期未核实，留空"
+      "seedance-2.0/-fast/-mini/-2.5 为 keystone（渠道 21，豆包视频类型）上的短模型名，与火山长名 doubao-seedance-2-0-260128 并存；mini/2.5 发布日期未核实，留空",
+      "seedance-2.0-mini(Volcengine) 是数眼渠道上的对外名（经模型重定向打到上游 doubao-seedance-2-0-mini-oinone），元数据与 keystone 线的短名 seedance-2.0-mini 相同，故用 alias_of（2026-09-22 新增）"
     ]
   },
   "models": {
@@ -632,6 +633,9 @@
         "ja": "Seedance 2.0 Mini は Seedance 2.0 ファミリーで最もコスト効率の高いモデルで、画像から動画・動画から動画の生成に最適化されています。",
         "vi": "Seedance 2.0 Mini là mô hình tiết kiệm chi phí nhất trong dòng Seedance 2.0, được tối ưu cho tạo video từ ảnh và từ video."
       }
+    },
+    "seedance-2.0-mini(Volcengine)": {
+      "alias_of": "seedance-2.0-mini"
     },
     "seedance-2.5": {
       "vendor": "字节跳动",
