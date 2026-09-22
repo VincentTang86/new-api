@@ -86,31 +86,16 @@ type AliVideoOutput struct {
 	Message       string `json:"message,omitempty"`
 }
 
-// AliUsage 使用统计
+// AliUsage 使用统计。SR 是实际输出分辨率（480/720/1080），万相 3.0 的结算以它定档；
+// output_video_duration / input_video_duration 是产物秒数与参考视频输入秒数。
 type AliUsage struct {
-	Duration   dto.IntValue `json:"duration,omitempty"`
-	VideoCount dto.IntValue `json:"video_count,omitempty"`
-	SR         dto.IntValue `json:"SR,omitempty"`
-}
-
-type AliMetadata struct {
-	// Input 相关
-	AudioURL       string          `json:"audio_url,omitempty"`       // 音频URL
-	ImgURL         string          `json:"img_url,omitempty"`         // 图片URL（图生视频）
-	FirstFrameURL  string          `json:"first_frame_url,omitempty"` // 首帧图片URL（首尾帧生视频）
-	LastFrameURL   string          `json:"last_frame_url,omitempty"`  // 尾帧图片URL（首尾帧生视频）
-	Media          []AliVideoMedia `json:"media,omitempty"`           // 媒体列表（wan2.7-i2v新协议）
-	NegativePrompt string          `json:"negative_prompt,omitempty"` // 反向提示词
-	Template       string          `json:"template,omitempty"`        // 视频特效模板
-
-	// Parameters 相关
-	Resolution   *string `json:"resolution,omitempty"`    // 分辨率: 480P/720P/1080P
-	Size         *string `json:"size,omitempty"`          // 尺寸: 如 "832*480"
-	Duration     *int    `json:"duration,omitempty"`      // 时长
-	PromptExtend *bool   `json:"prompt_extend,omitempty"` // 是否开启prompt智能改写
-	Watermark    *bool   `json:"watermark,omitempty"`     // 是否添加水印
-	Audio        *bool   `json:"audio,omitempty"`         // 是否添加音频
-	Seed         *int    `json:"seed,omitempty"`          // 随机数种子
+	Duration            dto.IntValue `json:"duration,omitempty"`
+	OutputVideoDuration dto.IntValue `json:"output_video_duration,omitempty"`
+	InputVideoDuration  dto.IntValue `json:"input_video_duration,omitempty"`
+	VideoCount          dto.IntValue `json:"video_count,omitempty"`
+	FPS                 dto.IntValue `json:"fps,omitempty"`
+	SR                  dto.IntValue `json:"SR,omitempty"`
+	Ratio               string       `json:"ratio,omitempty"`
 }
 
 // ============================
@@ -348,6 +333,38 @@ func normalizeWan27I2VInput(aliReq *AliVideoRequest, req relaycommon.TaskSubmitR
 	return nil
 }
 
+// normalizeWan30Request 把万相 3.0 的请求收敛到它认识的参数形态，并给绕过顶层校验的
+// 时长补上边界。万相 3.0 不认 size 只认 resolution（实测传 size "832*480" 出的是
+// 1920x1080）：size 在这里反查成分辨率档下发，让上游真的出请求的档位，计费口径才能
+// 与产物对齐。放在 metadata 合并之后，metadata 里塞进来的 size / duration 同样被兜住。
+func normalizeWan30Request(aliReq *AliVideoRequest) error {
+	if !IsWan30Model(aliReq.Model) {
+		return nil
+	}
+	if aliReq.Parameters == nil {
+		aliReq.Parameters = &AliVideoParameters{}
+	}
+	params := aliReq.Parameters
+
+	if params.Size != "" {
+		resolution, err := sizeToResolution(params.Size)
+		if err != nil {
+			return err
+		}
+		params.Resolution = resolution
+		params.Size = ""
+	}
+	if params.Resolution == "" {
+		params.Resolution = wan30DefaultResolution
+	}
+	params.Resolution = strings.ToUpper(params.Resolution)
+
+	if params.Duration != UnlimitedDurationSentinel && (params.Duration < 1 || params.Duration > MaxWan30DurationSeconds) {
+		return fmt.Errorf("duration must be between 1 and %d seconds, or %d to let the model decide", MaxWan30DurationSeconds, UnlimitedDurationSentinel)
+	}
+	return nil
+}
+
 func (a *TaskAdaptor) convertToAliRequest(info *relaycommon.RelayInfo, req relaycommon.TaskSubmitReq) (*AliVideoRequest, error) {
 	upstreamModel := req.Model
 	if info.IsModelMapped {
@@ -440,6 +457,9 @@ func (a *TaskAdaptor) convertToAliRequest(info *relaycommon.RelayInfo, req relay
 	if err := normalizeWan27I2VInput(aliReq, req); err != nil {
 		return nil, err
 	}
+	if err := normalizeWan30Request(aliReq); err != nil {
+		return nil, err
+	}
 
 	return aliReq, nil
 }
@@ -455,6 +475,22 @@ func (a *TaskAdaptor) EstimateBilling(c *gin.Context, info *relaycommon.RelayInf
 	aliReq, err := a.convertToAliRequest(info, taskReq)
 	if err != nil {
 		return nil
+	}
+
+	if IsWan30Model(aliReq.Model) {
+		// 不走 ProcessAliOtherRatios：那是 wan2.x 的 size 优先逻辑，正是万相 3.0 少收的来源。
+		// 不定长按上限预扣，结算以上游 usage 为准退差额；显式时长已在 normalizeWan30Request 兜过边界。
+		seconds := aliReq.Parameters.Duration
+		if seconds == UnlimitedDurationSentinel {
+			seconds = MaxWan30DurationSeconds
+		}
+		otherRatios := map[string]float64{
+			"seconds": float64(min(seconds, MaxWan30DurationSeconds)),
+		}
+		if ratio, ok := Wan30ResolutionRatio(info.OriginModelName, aliReq.Parameters.Resolution); ok {
+			otherRatios["resolution"] = ratio
+		}
+		return otherRatios
 	}
 
 	// metadata can override Duration past standard request validation;
