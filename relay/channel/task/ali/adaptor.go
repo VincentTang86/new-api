@@ -484,6 +484,15 @@ func (a *TaskAdaptor) EstimateBilling(c *gin.Context, info *relaycommon.RelayInf
 		if seconds == UnlimitedDurationSentinel {
 			seconds = MaxWan30DurationSeconds
 		}
+		// 带参考视频时上游把输入秒数也计入 usage.duration，按输出档同价结算（见 billing.go）。
+		// 输入视频的真实时长提交时读不到——手里只有一个 URL——按与输出等长近似把押金翻倍，
+		// 更长的部分结算时补扣、押多的退回；与 doubao 的 videoInputHoldMultiplier 同一思路。
+		for _, media := range aliReq.Input.Media {
+			if media.Type == wan30ReferenceVideoMediaType {
+				seconds *= 2
+				break
+			}
+		}
 		otherRatios := map[string]float64{
 			"seconds": float64(min(seconds, MaxWan30DurationSeconds)),
 		}

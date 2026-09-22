@@ -97,6 +97,27 @@ func TestEstimateBillingWan30(t *testing.T) {
 				Metadata: map[string]interface{}{"parameters": map[string]interface{}{"duration": -1}}},
 			want: map[string]float64{"seconds": 30, "resolution": 1},
 		},
+		{
+			name: "a reference video doubles the held seconds",
+			req: relaycommon.TaskSubmitReq{Model: "wan3.0-video-prime", Prompt: "a cat", Size: "832*480", Duration: 5,
+				Metadata: map[string]interface{}{"input": map[string]interface{}{"media": []interface{}{
+					map[string]interface{}{"type": "reference_video", "url": "https://example.com/in.mp4"}}}}},
+			want: map[string]float64{"seconds": 10, "resolution": 1},
+		},
+		{
+			name: "the reference video hold never exceeds the ceiling",
+			req: relaycommon.TaskSubmitReq{Model: "wan3.0-video-prime", Prompt: "a cat", Size: "832*480", Duration: 20,
+				Metadata: map[string]interface{}{"input": map[string]interface{}{"media": []interface{}{
+					map[string]interface{}{"type": "reference_video", "url": "https://example.com/in.mp4"}}}}},
+			want: map[string]float64{"seconds": 30, "resolution": 1},
+		},
+		{
+			name: "a reference image does not change the hold",
+			req: relaycommon.TaskSubmitReq{Model: "wan3.0-video-prime", Prompt: "a cat", Size: "832*480", Duration: 5,
+				Metadata: map[string]interface{}{"input": map[string]interface{}{"media": []interface{}{
+					map[string]interface{}{"type": "reference_image", "url": "https://example.com/in.png"}}}}},
+			want: map[string]float64{"seconds": 5, "resolution": 1},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -200,15 +221,36 @@ func TestAdjustBillingOnCompleteWan30KeepsPreChargeWhenItCannotSettle(t *testing
 }
 
 func TestAdjustBillingOnCompleteWan30PricesByOriginNameAndChargesConfiguredInputVideo(t *testing.T) {
-	// 协议按上游名判定，倍率按原始名查——用户按原始名付费；input_video 配了才收。
+	// 协议按上游名判定，倍率按原始名查——用户按原始名付费。input_video 是相对输出档单价的
+	// 倍率：1080p 输出带 4 秒参考视频，输入秒按 1080p 档价 × 0.5 计。
 	setResolutionRatio(t, `{"my-video":{"1080p":3,"input_video":0.5}}`)
 	props := model.Properties{OriginModelName: "my-video", UpstreamModelName: "wan3.0-video-prime"}
 	bc := wan30Billing(map[string]float64{"seconds": 5, "resolution": 1})
 
 	got := (&TaskAdaptor{}).AdjustBillingOnComplete(settledTask(props, bc, wan30Usage(1080, 5, 4)), nil)
 
-	want := int(testUnitQuota*5*3 + testUnitQuota*4*0.5)
+	want := int(testUnitQuota*5*3 + testUnitQuota*4*3*0.5)
 	assert.Equal(t, want, got)
+}
+
+func TestAdjustBillingOnCompleteWan30BillsInputVideoAtTheOutputTier(t *testing.T) {
+	// 采用的口径：上游按 usage.duration（输入+输出）× 输出档单价计费，input_video=1 即同价。
+	setResolutionRatio(t, `{"wan3.0-video-prime":{"input_video":1}}`)
+	props := model.Properties{OriginModelName: "wan3.0-video-prime", UpstreamModelName: "wan3.0-video-prime"}
+	tests := []struct {
+		name string
+		data string
+		want int
+	}{
+		{"480p output with 5s reference video bills 10 seconds at 480p", wan30Usage(480, 5, 5), testUnitQuota * 10},
+		{"1080p output with 5s reference video bills 10 seconds at 1080p", wan30Usage(1080, 5, 5), testUnitQuota * 10 * 4},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			bc := wan30Billing(map[string]float64{"seconds": 10, "resolution": 1})
+			assert.Equal(t, tt.want, (&TaskAdaptor{}).AdjustBillingOnComplete(settledTask(props, bc, tt.data), nil))
+		})
+	}
 }
 
 func TestAdjustBillingOnCompleteWan30AcceptsFloatSecondsFromDedicatedInstance(t *testing.T) {

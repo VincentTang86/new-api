@@ -10,9 +10,10 @@ import (
 	"github.com/QuantumNous/new-api/setting/ratio_setting"
 )
 
-// InputVideoRateKey 是参考视频输入秒数在后台 ModelResolutionRatio 里的键。百炼是否对
-// 输入视频单独计价尚未实测，所以配了才收：未配置时这部分秒数不计费并记日志，运营
-// 实测后填上即可开启，不必发版。
+// InputVideoRateKey 是参考视频输入秒数在后台 ModelResolutionRatio 里的键，值是**相对输出档
+// 单价**的倍率：1 表示输入秒与输出秒同价——上游把输入秒计入 usage.duration，推断按输出档
+// 计费，这是 2026-09-22 决定采用的口径（账单未核，见 Teambition #99）。配了才收：未配置
+// 时这部分秒数不计费并记日志；账单证明输入有折扣时改倍率即可，不必发版。
 const InputVideoRateKey = "input_video"
 
 // AdjustBillingOnComplete 用上游回传的真实用量重算万相 3.0 的最终额度（绝对值，非增量）。
@@ -58,11 +59,12 @@ func (a *TaskAdaptor) AdjustBillingOnComplete(task *model.Task, _ *relaycommon.T
 	// 用户按原始模型名付费，倍率与单价一律按它查。
 	modelName := task.Properties.OriginModelName
 	unitQuota := bc.ModelPrice * common.QuotaPerUnit * bc.GroupRatio
-	quota := unitQuota * float64(outputSeconds) * settledResolutionRatio(modelName, bc, usage, task.TaskID)
+	resolutionRatio := settledResolutionRatio(modelName, bc, usage, task.TaskID)
+	quota := unitQuota * float64(outputSeconds) * resolutionRatio
 
 	if inputSeconds := min(int(usage.InputVideoDuration), MaxWan30DurationSeconds); inputSeconds > 0 {
-		if ratio, ok := ratio_setting.GetModelResolutionRatio(modelName, InputVideoRateKey); ok {
-			quota += unitQuota * float64(inputSeconds) * ratio
+		if inputRatio, ok := ratio_setting.GetModelResolutionRatio(modelName, InputVideoRateKey); ok {
+			quota += unitQuota * float64(inputSeconds) * resolutionRatio * inputRatio
 		} else {
 			common.SysError(fmt.Sprintf("ali: task %s reported %d seconds of input video but %s has no %q ratio configured, not charged",
 				task.TaskID, inputSeconds, modelName, InputVideoRateKey))

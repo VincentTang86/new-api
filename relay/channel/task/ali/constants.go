@@ -32,6 +32,10 @@ const (
 
 	// wan30DefaultResolution 是未指定分辨率时下发的档位。
 	wan30DefaultResolution = "720P"
+
+	// wan30ReferenceVideoMediaType 是 input.media 里参考视频的 type 值（万相 3.0 文档口径）。
+	// 上游会把输入视频的秒数计入 usage.duration，押金与结算都要认得它。
+	wan30ReferenceVideoMediaType = "reference_video"
 )
 
 // wan30OfficialResolutionRatios 是各分辨率档相对基准档（480P）的倍率，后台
